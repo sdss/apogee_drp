@@ -127,7 +127,7 @@ def status(label,key,jobid):
     
     # Check if the slurm job is still running
     state = slurmstatus(label,jobid)
-    if len(stat)==0:
+    if len(state)==0:
         return None,None,None
     node = len(state)
     ndone = np.sum(state['done'])
