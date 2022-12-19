@@ -186,7 +186,7 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
         if noderunning==0 and taskrunning==0:
             done = True
 
-def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',shared=True,walltime='336:00:00',
+def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=True,walltime='336:00:00',
            notification=False,memory=7500,numpy_num_threads=2,verbose=True,logger=None):
     """
     Submit a bunch of jobs
@@ -201,7 +201,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',shared=True,walltime='336
         logger = dln.basiclogger()
     
     ppn = 64
-    slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn,
+    slurmpars = {'nodes':nodes, 'alloc':alloc, 'ppn':ppn, 'qos':qos, 'shared':shared,
                  'cpus':cpus, 'walltime':walltime, 'notification':False}
 
     username = getpwuid(getuid())[0]
