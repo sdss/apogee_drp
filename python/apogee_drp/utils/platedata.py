@@ -281,6 +281,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             have_flag_changes = 1
 
     # Get SDSS-V FPS photometry from targetdb
+    import pdb; pdb.set_trace()
     if fps:
         print('Querying targetdb/catalogdb')
         ph = catalogdb.getdata(designid=plugmap['design_id'])
