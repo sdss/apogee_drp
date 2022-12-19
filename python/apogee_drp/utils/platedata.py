@@ -168,7 +168,6 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         platedata['guidedata'] = guide
         return platedata
 
-    import pdb; pdb.set_trace()
     # Plates or FPS
     fps = False  # default
     if mjd>=59556:
