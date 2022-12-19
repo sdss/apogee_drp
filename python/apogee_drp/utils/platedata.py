@@ -284,6 +284,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     if fps:
         print('Querying targetdb/catalogdb')
         ph = catalogdb.getdata(designid=plugmap['design_id'])
+        import pdb; pdb.set_trace()
         ph['target_ra'] = ph['ra']
         ph['target_dec'] = ph['dec']
         ph['tmass_j'] = ph['jmag']
