@@ -186,7 +186,7 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
         if noderunning==0 and taskrunning==0:
             done = True
 
-def submit(tasks,label,nodes=5,alloc='sdss-np',shared=True,walltime='336:00:00',
+def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',shared=True,walltime='336:00:00',
            notification=False,memory=7500,numpy_num_threads=2,verbose=True,logger=None):
     """
     Submit a bunch of jobs
@@ -202,7 +202,7 @@ def submit(tasks,label,nodes=5,alloc='sdss-np',shared=True,walltime='336:00:00',
     
     ppn = 64
     slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn,
-                 'walltime':walltime, 'notification':False}
+                 'cpus':cpus, 'walltime':walltime, 'notification':False}
 
     username = getpwuid(getuid())[0]
     slurmdir = SLURMDIR+username+'/slurm/'
@@ -424,7 +424,7 @@ class Queue(object):
         self.logger.info('numpy_num_thread = %s' % str(self.numpy_num_thread))
         self.logger.info('verbose = %s' % self.verbose)
         self.logger.info('Ntasks = %d' % self.ntasks)
-        self.logger.info('submitted = %s' % self.submitted)
+        self.logger.info('submitted = %s' $ self.submitted)
         if self.submitted:
             self.logger.info('jobid = %d' % self.jobid)
             self.logger.info('jobdir = %s' % self.jobdir)
