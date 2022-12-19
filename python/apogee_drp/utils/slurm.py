@@ -165,7 +165,7 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
         time.sleep(sleeptime)
         # Check that state
         noderunning,taskrunning,percent = status(label,key,jobid)
-        if nodrunning is not None:
+        if noderunning is not None:
             # Check if the slurm job is still running
             state = slurmstatus(label,jobid)
             node = len(state)
