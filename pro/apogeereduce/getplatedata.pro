@@ -649,7 +649,7 @@ if platenum ge 15000 then begin
   ;; Get catalogdb information using coordinates (tellurics don't have IDs)    
   if nbdid gt 0 then begin
     print,'Querying catalogdb using coordinates for ',strtrim(nbdid,2),' stars'
-    if objdata[bdind].catalogid ne -999 then begin
+    if objdata[bdid].catalogid ne -999 then begin
         catalogdb2 = get_catalogdb_data(ra=objdata[bdid].ra,dec=objdata[bdid].dec)
         ;; this returns a q3c_dist columns that we don't want to keep
         if size(catalogdb2,/type) eq 8 then begin
