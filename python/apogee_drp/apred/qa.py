@@ -4070,6 +4070,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
 
     lineSearchRad = 40
+    prefix = 'ap'
+    if instrument == 'apogee-s': prefix = 'as'
 
     outfile = load.filename('QAcal', mjd=mjd)
     if (os.path.exists(outfile) is False) | (clobber is True):
