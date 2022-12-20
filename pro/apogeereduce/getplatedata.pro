@@ -336,6 +336,7 @@ if keyword_set(fps) then begin
        p[ind1].e_kmag = catinfo[ind2].e_kmag
        p[ind1].phflag = catinfo[ind2].twomflag
        ; Deal with instances of Gaia source ID = 'None'
+       stop
        g = where(strtrim(catinfo[ind2].gaia,2) ne 'None',ng)
        p[ind1[g]].gaiadr2_sourceid = catinfo[ind2[g]].gaia
        p[ind1].gaiadr2_ra = catinfo[ind2].ra
