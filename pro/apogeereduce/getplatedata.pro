@@ -658,6 +658,7 @@ if platenum ge 15000 then begin
           push,catalogdb,catalogdb2
         endif else begin
           print,'No results'
+        endelse
     endif else begin
       print,'No results'
     endelse
