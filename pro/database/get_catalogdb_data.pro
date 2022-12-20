@@ -104,7 +104,7 @@ scriptfile = tbase+'.py'
 WRITELINE,scriptfile,cmd
 FILE_CHMOD,scriptfile,'755'o
 SPAWN,scriptfile,out,errout,/noshell
-
+stop
 if errout[0] ne '' or n_elements(errout) gt 1 then begin
   print,'Problems inserting apVisitSum catalog into the database'
   for i=0,n_elements(errout)-1 do print,errout[i]
