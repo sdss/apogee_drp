@@ -124,6 +124,7 @@ FOR i=0L,nplanfiles-1 do begin
                            fixfiberid=fixfiberid,badfiberid=badfiberid,mapper_data=mapper_data)
   endelse
   if keyword_set(stp) then stop
+stop
 
   if n_elements(plugerror) gt 0 then goto,BOMB
 
