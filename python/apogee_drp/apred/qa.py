@@ -3932,6 +3932,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         for i in range(nplates):
             color = '#ffb3b3'
+
+            prefix = 'ap'
+            if itel[i] == 'lco25m': prefix = 'as'
+
             if len(iprogram[i]) < 3:
                 if iprogram[i] == 'RM': 
                     color = '#B3E5FC'
