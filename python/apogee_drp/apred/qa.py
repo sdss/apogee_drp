@@ -2437,7 +2437,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
     prefix = 'ap'
     if telescope == 'lco25m': prefix = 'as'
 
-    if objid is None:
+    if objid == None:
         print("----> makeStarHTML: Running plate "+plate+", MJD "+mjd)
     else:
         print("----> makeStarHTML: Running on single star:" + objid)
@@ -2454,7 +2454,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
     nfiber = 300
-    if objid is None: 
+    if objid == None: 
         # Load in the apPlate file
         apPlate = load.apPlate(int(plate), mjd)
         data = apPlate['a'][11].data[::-1]
@@ -2468,189 +2468,191 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
 
     # Loop over the fibers
     for j in range(nfiber):
-        if objid is None:
+        if objid == None:
             jdata = data[j]
             fiber = jdata['FIBERID']
         else:
             fiber = 100
         if fiber > 0:
-            if objid is None:
+            if objid == None:
                 objtype = jdata['OBJTYPE']
                 objid = jdata['OBJECT']
             else:
                 objtype = 'SCI'
-            if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
-                print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
 
-                # Find which healpix this star is in
-                healpix = apload.obj2healpix(objid)
-                healpixgroup = str(healpix // 1000)
-                healpix = str(healpix)
+            if (objtype == 'SKY') | (objid == '2MNone') | (objid == '2M') | (objid == ''): continue
 
-                # Find the associated healpix html directories and make them if they don't already exist
-                starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
-                starHtmlDir = starDir + 'html/'
-                if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir)
-                starHTMLpath = starHtmlDir + objid + '.html'
+            print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
 
-                starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-                starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
-                apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
-                pdb.set_trace()
-                if len(apStarCheck) > 0:
-                    # Find the newest apStar file
-                    apStarCheck.sort()
-                    apStarCheck = np.array(apStarCheck)
-                    apStarNewest = os.path.basename(apStarCheck[-1])
-                    apStarRelPath = starRelPath + apStarNewest
-                    apStarPath = starDir + apStarNewest
-                    apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
+            # Find which healpix this star is in
+            healpix = apload.obj2healpix(objid)
+            healpixgroup = str(healpix // 1000)
+            healpix = str(healpix)
 
-                    # Set up plot directories and plot file name
-                    starPlotDir = starDir + 'plots/'
-                    if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
-                    starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
-                    starPlotFilePath = starPlotDir + starPlotFile
-                    starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
-                else:
-                    apStarRelPath = None
+            # Find the associated healpix html directories and make them if they don't already exist
+            starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+            starHtmlDir = starDir + 'html/'
+            if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir)
+            starHTMLpath = starHtmlDir + objid + '.html'
 
-                # DB query to get visit info
-                vcat = db.query('visit_latest', where="apogee_id='" + objid + "' and telescope='"+ telescope + "'", fmt='table')
+            starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+            starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
+            apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+            pdb.set_trace()
+            if len(apStarCheck) > 0:
+                # Find the newest apStar file
+                apStarCheck.sort()
+                apStarCheck = np.array(apStarCheck)
+                apStarNewest = os.path.basename(apStarCheck[-1])
+                apStarRelPath = starRelPath + apStarNewest
+                apStarPath = starDir + apStarNewest
+                apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
-                # Get visit info from DB
-                cgl = str("%.5f" % round(vcat['glon'][0],5))
-                cgb = str("%.5f" % round(vcat['glat'][0],5))
-                cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
-                cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
-                cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
-                hmag = vcat['hmag'][0]
-                cjmag = str("%.3f" % round(vcat['jmag'][0], 3))
-                chmag = str("%.3f" % round(vcat['hmag'][0], 3))
-                ckmag = str("%.3f" % round(vcat['kmag'][0],3 ))
-                jkcolor = vcat['jmag'][0] - vcat['kmag'][0]
-                if (vcat['jmag'][0] < 0) | (vcat['kmag'][0] < 0): jkcolor = -9.999
-                cjkcolor = str("%.3f" % round(jkcolor, 3))
-                cra = str("%.5f" % round(vcat['ra'][0], 5))
-                cdec = str("%.5f" % round(vcat['dec'][0], 5))
-                txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
-                txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
-                simbadlink = txt1 + txt2
+                # Set up plot directories and plot file name
+                starPlotDir = starDir + 'plots/'
+                if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
+                starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
+                starPlotFilePath = starPlotDir + starPlotFile
+                starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
+            else:
+                apStarRelPath = None
 
-                nvis = len(vcat)
-                cvrad = '----';  cvscatter = '----'
-                gd, = np.where(np.absolute(vcat['vrad']) < 400)
-                if len(gd) > 0:
-                    vels = vcat['vrad'][gd]
-                    cvrad = str("%.2f" % round(np.mean(vels),2))
-                    cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
+            # DB query to get visit info
+            vcat = db.query('visit_latest', where="apogee_id='" + objid + "' and telescope='"+ telescope + "'", fmt='table')
 
-                rvteff = '----'; rvlogg = '----'; rvfeh = '---'
-                gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
-                if len(gd) > 0:
-                    rvteff = str(int(round(vcat['rv_teff'][gd][0])))
-                    rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
-                    rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
+            # Get visit info from DB
+            cgl = str("%.5f" % round(vcat['glon'][0],5))
+            cgb = str("%.5f" % round(vcat['glat'][0],5))
+            cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
+            cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
+            cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
+            hmag = vcat['hmag'][0]
+            cjmag = str("%.3f" % round(vcat['jmag'][0], 3))
+            chmag = str("%.3f" % round(vcat['hmag'][0], 3))
+            ckmag = str("%.3f" % round(vcat['kmag'][0],3 ))
+            jkcolor = vcat['jmag'][0] - vcat['kmag'][0]
+            if (vcat['jmag'][0] < 0) | (vcat['kmag'][0] < 0): jkcolor = -9.999
+            cjkcolor = str("%.3f" % round(jkcolor, 3))
+            cra = str("%.5f" % round(vcat['ra'][0], 5))
+            cdec = str("%.5f" % round(vcat['dec'][0], 5))
+            txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
+            txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
+            simbadlink = txt1 + txt2
 
-                starHTML = open(starHTMLpath, 'w')
-                starHTML.write('<HTML>\n')
-                starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
-                starHTML.write('<BODY>\n')
-                starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1> <HR>\n')
-                if apStarRelPath is not None:
-                    starHTML.write('<P>' + simbadlink + '<BR><A HREF=' + apStarRelPath + '>apStar File</A>\n')
-                else:
-                    starHTML.write('<P>' + simbadlink + '<BR>apStar File???\n')
+            nvis = len(vcat)
+            cvrad = '----';  cvscatter = '----'
+            gd, = np.where(np.absolute(vcat['vrad']) < 400)
+            if len(gd) > 0:
+                vels = vcat['vrad'][gd]
+                cvrad = str("%.2f" % round(np.mean(vels),2))
+                cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
+
+            rvteff = '----'; rvlogg = '----'; rvfeh = '---'
+            gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
+            if len(gd) > 0:
+                rvteff = str(int(round(vcat['rv_teff'][gd][0])))
+                rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
+                rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
+
+            starHTML = open(starHTMLpath, 'w')
+            starHTML.write('<HTML>\n')
+            starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
+            starHTML.write('<BODY>\n')
+            starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1> <HR>\n')
+            if apStarRelPath is not None:
+                starHTML.write('<P>' + simbadlink + '<BR><A HREF=' + apStarRelPath + '>apStar File</A>\n')
+            else:
+                starHTML.write('<P>' + simbadlink + '<BR>apStar File???\n')
+            starHTML.write('<HR>\n')
+            starHTML.write('<H3>Star info:</H3>')
+            starHTML.write('<TABLE BORDER=2>\n')
+            starHTML.write('<TR bgcolor="' + thcolor + '">')
+
+            # Star metadata table
+            starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT')
+            starHTML.write('<TH bgcolor="#E6FFE6">2MASS<BR>J<BR>(mag) <TH bgcolor="#E6FFE6">2MASS<BR>H<BR>(mag) <TH bgcolor="#E6FFE6">2MASS<BR>K<BR>(mag) <TH bgcolor="#E6FFE6">Raw J-K')
+            starHTML.write('<TH bgcolor="#FFFFE6">Gaia DR2<BR>PMRA<BR>(mas) <TH bgcolor="#FFFFE6">Gaia DR2<BR>PMDEC<BR>(mas) <TH bgcolor="#FFFFE6">Gaia DR2<BR>G<BR>(mag)') 
+            starHTML.write('<TH bgcolor="#E6F2FF">Mean<BR>Vrad<BR>(km/s) <TH bgcolor="#E6F2FF">Min-max<BR>Vrad<BR>(km/s) <TH bgcolor="#E6F2FF">RV Teff<BR>(K)')
+            starHTML.write('<TH bgcolor="#E6F2FF">RV logg <TH bgcolor="#E6F2FF">RV [Fe/H] \n')
+            starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
+            starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
+            starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
+            starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag + '<TD ALIGN=right>' + cvrad)
+            starHTML.write('<TD ALIGN=right>' + cvscatter)
+            starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
+            starHTML.write('</TABLE>\n<BR>\n')
+            starHTML.write('<HR>\n')
+
+            # Star + best fitting model plot
+            starHTML.write('<H3>apStar (black), best Doppler Cannon model fit (red), and model-apStar residuals (blue):</H3>')
+            if apStarRelPath is not None:
+                starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
+            else:
+                starHTML.write('<P>No apStar file for this object!</P>\n')
+            starHTML.write('<HR>\n')
+
+            # Star visit table
+            starHTML.write('<H3>Visit info:</H3>')
+            starHTML.write('<P><B>MJD links:</B> QA page for the plate+MJD of the visit.<BR><B>Date-Obs links:</B> apVisit file download.</P>\n')
+            starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
+            starHTML.write('<TR bgcolor="'+thcolor+'">')
+            starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vrad <TH>Spectrum Plot </TR>\n')
+            for k in range(nvis):
+                mjd = vcat['mjd'][k]
+                fps = True
+                if mjd < 59556: fps = False
+                cmjd = str(mjd)
+                dateobs = Time(vcat['jd'][k], format='jd').fits.replace('T', '<BR>')
+                cplate = vcat['plate'][k]
+                cfield = vcat['field'][k]
+                cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
+                cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
+                ccart = '?'
+                platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd, fps=fps)
+                if os.path.exists(platefile):
+                    platetab = fits.getdata(platefile,1)
+                    ccart = str(platetab['CART'][0])
+                
+                csnr = str("%.1f" % round(vcat['snr'][k],1))
+                cvrad = str("%.2f" % round(vcat['vrad'][k],2))
+                visplotname = prefix+'Plate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
+                visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
+                visplot = visplotpath + visplotname
+                apvispath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/'
+                apqahtml = apvispath + '/html/' + prefix + 'QA-' + cplate + '-' + cmjd + '.html'
+                apvisfile = 'apVisit-' + apred + '-' + telescope + '-' + cplate + '-' + cmjd + '-' + cfib + '.fits'
+                apvis = apvispath + apvisfile
+
+                starHTML.write('<TR><TD ALIGN=center><A HREF="' + apqahtml + '">' + cmjd + '</A>\n')
+                starHTML.write('<TD ALIGN=center><A HREF="' + apvis + '">' + dateobs + '</A>\n')
+                starHTML.write('<TD ALIGN=center>' + cfield + '\n')
+                starHTML.write('<TD ALIGN=center>' + cplate + '\n')
+                starHTML.write('<TD ALIGN=center>' + cfib + '\n')
+                starHTML.write('<TD ALIGN=center>' + cblock + '\n')
+                starHTML.write('<TD ALIGN=center>' + ccart + '\n')
+                fcol='black'  
+                if float(csnr) < 20: fcol='red'
+                starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + csnr + '</FONT>\n')
+                fcol='black'  
+                if np.absolute(float(cvrad)) > 300: fcol='red'
+                starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + cvrad + '</FONT>\n')
+                starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
+            starHTML.write('</TABLE>\n<BR>\n')
+            starHTML.write('<HR>\n')
+
+            # Insert Doppler output plots
+            if apStarRelPath is not None:
+                starHTML.write('<H3>Doppler Cross-Correlation Plots:</H3>')
+                ccfplot = '../plots/' + apStarNewest.replace('.fits', '_ccf.png')
+                spec1plot = ccfplot.replace('ccf', 'spec')
+                spec2plot = ccfplot.replace('ccf', 'spec2')
+                starHTML.write('<A HREF=' + ccfplot + ' target="_blank"><IMG SRC=' + ccfplot + ' WIDTH=600></A>\n')
                 starHTML.write('<HR>\n')
-                starHTML.write('<H3>Star info:</H3>')
-                starHTML.write('<TABLE BORDER=2>\n')
-                starHTML.write('<TR bgcolor="' + thcolor + '">')
-
-                # Star metadata table
-                starHTML.write('<TH>RA <TH>DEC <TH>GLON <TH>GLAT')
-                starHTML.write('<TH bgcolor="#E6FFE6">2MASS<BR>J<BR>(mag) <TH bgcolor="#E6FFE6">2MASS<BR>H<BR>(mag) <TH bgcolor="#E6FFE6">2MASS<BR>K<BR>(mag) <TH bgcolor="#E6FFE6">Raw J-K')
-                starHTML.write('<TH bgcolor="#FFFFE6">Gaia DR2<BR>PMRA<BR>(mas) <TH bgcolor="#FFFFE6">Gaia DR2<BR>PMDEC<BR>(mas) <TH bgcolor="#FFFFE6">Gaia DR2<BR>G<BR>(mag)') 
-                starHTML.write('<TH bgcolor="#E6F2FF">Mean<BR>Vrad<BR>(km/s) <TH bgcolor="#E6F2FF">Min-max<BR>Vrad<BR>(km/s) <TH bgcolor="#E6F2FF">RV Teff<BR>(K)')
-                starHTML.write('<TH bgcolor="#E6F2FF">RV logg <TH bgcolor="#E6F2FF">RV [Fe/H] \n')
-                starHTML.write('<TR> <TD ALIGN=right>' + cra + '<TD ALIGN=right>' + cdec + ' <TD ALIGN=right>' + cgl)
-                starHTML.write('<TD ALIGN=right>' + cgb + '<TD ALIGN=right>' + cjmag + ' <TD ALIGN=right>' +chmag)
-                starHTML.write('<TD ALIGN=right>' + ckmag + '<TD ALIGN=right>' + cjkcolor + ' <TD ALIGN=right>' +cpmra)
-                starHTML.write('<TD ALIGN=right>' + cpmde + '<TD ALIGN=right>' + cgmag + '<TD ALIGN=right>' + cvrad)
-                starHTML.write('<TD ALIGN=right>' + cvscatter)
-                starHTML.write('<TD ALIGN=right>' + rvteff + ' <TD ALIGN=right>' + rvlogg + ' <TD ALIGN=right>' + rvfeh + '</TR>')
-                starHTML.write('</TABLE>\n<BR>\n')
-                starHTML.write('<HR>\n')
-
-                # Star + best fitting model plot
-                starHTML.write('<H3>apStar (black), best Doppler Cannon model fit (red), and model-apStar residuals (blue):</H3>')
-                if apStarRelPath is not None:
-                    starHTML.write('<TD><A HREF=' + starPlotFileRelPath + ' target="_blank"><IMG SRC=' + starPlotFileRelPath + ' WIDTH=1000></A></TR>\n')
-                else:
-                    starHTML.write('<P>No apStar file for this object!</P>\n')
-                starHTML.write('<HR>\n')
-
-                # Star visit table
-                starHTML.write('<H3>Visit info:</H3>')
-                starHTML.write('<P><B>MJD links:</B> QA page for the plate+MJD of the visit.<BR><B>Date-Obs links:</B> apVisit file download.</P>\n')
-                starHTML.write('<TABLE BORDER=2 CLASS="sortable">\n')
-                starHTML.write('<TR bgcolor="'+thcolor+'">')
-                starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vrad <TH>Spectrum Plot </TR>\n')
-                for k in range(nvis):
-                    mjd = vcat['mjd'][k]
-                    fps = True
-                    if mjd < 59556: fps = False
-                    cmjd = str(mjd)
-                    dateobs = Time(vcat['jd'][k], format='jd').fits.replace('T', '<BR>')
-                    cplate = vcat['plate'][k]
-                    cfield = vcat['field'][k]
-                    cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
-                    cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
-                    ccart = '?'
-                    platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd, fps=fps)
-                    if os.path.exists(platefile):
-                        platetab = fits.getdata(platefile,1)
-                        ccart = str(platetab['CART'][0])
-                    
-                    csnr = str("%.1f" % round(vcat['snr'][k],1))
-                    cvrad = str("%.2f" % round(vcat['vrad'][k],2))
-                    visplotname = prefix+'Plate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
-                    visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
-                    visplot = visplotpath + visplotname
-                    apvispath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/'
-                    apqahtml = apvispath + '/html/' + prefix + 'QA-' + cplate + '-' + cmjd + '.html'
-                    apvisfile = 'apVisit-' + apred + '-' + telescope + '-' + cplate + '-' + cmjd + '-' + cfib + '.fits'
-                    apvis = apvispath + apvisfile
-
-                    starHTML.write('<TR><TD ALIGN=center><A HREF="' + apqahtml + '">' + cmjd + '</A>\n')
-                    starHTML.write('<TD ALIGN=center><A HREF="' + apvis + '">' + dateobs + '</A>\n')
-                    starHTML.write('<TD ALIGN=center>' + cfield + '\n')
-                    starHTML.write('<TD ALIGN=center>' + cplate + '\n')
-                    starHTML.write('<TD ALIGN=center>' + cfib + '\n')
-                    starHTML.write('<TD ALIGN=center>' + cblock + '\n')
-                    starHTML.write('<TD ALIGN=center>' + ccart + '\n')
-                    fcol='black'  
-                    if float(csnr) < 20: fcol='red'
-                    starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + csnr + '</FONT>\n')
-                    fcol='black'  
-                    if np.absolute(float(cvrad)) > 300: fcol='red'
-                    starHTML.write('<TD ALIGN=right><FONT color=' + fcol + '>' + cvrad + '</FONT>\n')
-                    starHTML.write('<TD><A HREF=' + visplot + ' target="_blank"><IMG SRC=' + visplot + ' WIDTH=1000></A></TR>\n')
-                starHTML.write('</TABLE>\n<BR>\n')
-                starHTML.write('<HR>\n')
-
-                # Insert Doppler output plots
-                if apStarRelPath is not None:
-                    starHTML.write('<H3>Doppler Cross-Correlation Plots:</H3>')
-                    ccfplot = '../plots/' + apStarNewest.replace('.fits', '_ccf.png')
-                    spec1plot = ccfplot.replace('ccf', 'spec')
-                    spec2plot = ccfplot.replace('ccf', 'spec2')
-                    starHTML.write('<A HREF=' + ccfplot + ' target="_blank"><IMG SRC=' + ccfplot + ' WIDTH=600></A>\n')
-                    starHTML.write('<HR>\n')
-                    starHTML.write('<H3>Doppler Visit+Model Plots:</H3>')
-                    starHTML.write('<A HREF=' + spec1plot + ' target="_blank"><IMG SRC=' + spec1plot + ' WIDTH=600></A>\n')
-                    starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
-                starHTML.write('<BR><BR><BR><BR>\n')
-                starHTML.close()
+                starHTML.write('<H3>Doppler Visit+Model Plots:</H3>')
+                starHTML.write('<A HREF=' + spec1plot + ' target="_blank"><IMG SRC=' + spec1plot + ' WIDTH=600></A>\n')
+                starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
+            starHTML.write('<BR><BR><BR><BR>\n')
+            starHTML.close()
 
     if objid is None:
         print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
