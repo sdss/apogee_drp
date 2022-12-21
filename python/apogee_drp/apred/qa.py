@@ -2496,6 +2496,7 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
                 starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
                 starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
                 apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+                pdb.set_trace()
                 if len(apStarCheck) > 0:
                     # Find the newest apStar file
                     apStarCheck.sort()
