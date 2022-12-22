@@ -2096,7 +2096,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     nfiber = len(data)
 
     # Read in flux file to get an idea of throughput
-    pdb.set_trace()
+    # fluxid might equal 0 for some reason.
     try:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
         flux = load.apFlux(fluxid)
