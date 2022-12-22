@@ -2096,11 +2096,16 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     nfiber = len(data)
 
     # Read in flux file to get an idea of throughput
-    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
-    flux = load.apFlux(fluxid)
-    #pdb.set_trace()
-    medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
-    throughput = medflux / np.nanmax(medflux)
+    try:
+        fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+        flux = load.apFlux(fluxid)
+        pdb.set_trace()
+        medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
+        throughput = medflux / np.nanmax(medflux)
+    except:
+        print("----> makeVisHTML: PROBLEM! fluxid probably =0 for plate " + plate + ", MJD " + mjd)
+        throughput = np.zeros(300)
+        pass
 
     # DB query for this visit
     db = apogeedb.DBSession()
