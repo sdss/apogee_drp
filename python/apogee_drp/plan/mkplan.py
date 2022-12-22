@@ -904,6 +904,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     quartzind, = np.where((expinfo['exptype']=='QUARTZFLAT') & (qachk['okay']==True))
     quartz = list(expinfo['num'][quartzind].astype(int))
 
+    import pdb; pdb.set_trace()
+
     # Check which apPSF and apFlux files exist and can be used for calibration files
     # Which domeflat apPSF files exist
     psfdome_exist = np.zeros(len(dome),bool)
