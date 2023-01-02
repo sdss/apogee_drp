@@ -2893,6 +2893,9 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     mjdstart = np.min(mjds)
     mjdstop = np.max(mjds)
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    if logger is None:
+        logger = dln.basiclogger()
     
     # Get plan files for these MJDs
     planfiles = getplanfiles(load,mjds,logger=logger)
