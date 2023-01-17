@@ -21,6 +21,8 @@ import slurm
 from slurm import queue as pbsqueue
 import time
 
+logging.getLogger('matplotlib.font_manager').disabled = True
+
 def lastnightmjd5():
     """ Compute last night's MJD."""
     tnow = Time.now()
