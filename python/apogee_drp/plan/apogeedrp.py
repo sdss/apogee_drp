@@ -2930,7 +2930,8 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         logfile = fdir+'/apqa-'+plate+'-'+mjd+'_pbs.'+logtime+'.log'
         errfile = logfile.replace('.log','.err')
         cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjd,observatory,apred,telescope,plate)
-        cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
+        #cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
+        cmd += ' --masterqa False --starhtml True --starplots True --nightqa False --monitor False'
         logger.info('Command : '+cmd)
         logger.info('Logfile : '+logfile)
         queue.append(cmd, outfile=logfile, errfile=errfile)
