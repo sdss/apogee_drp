@@ -610,6 +610,7 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
 
     # FPI fibers
     fpirows = [75,225]
+    if telescope == 'lco25m': fpirows = [82,213]
 
     # Loop over all frames in the planfile and assess FPI lines in each
     grid = []
