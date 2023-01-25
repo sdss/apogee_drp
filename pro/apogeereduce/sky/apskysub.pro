@@ -108,7 +108,10 @@ endfor
 outframe = CREATE_STRUCT(outframe,'shift',frame.shift)
 
 ;; FPS
-if long(plugmap.mjd) ge 59556 then fps=1 else fps=0
+fpifibers=[75,225]
+fps=0
+if long(plugmap.mjd) ge 59556 then fps=1
+if dirs.telescope eq 'lco25m' then fpifibers=[82,213]
 
 ; Load the AIRGLOW linelist
 ;---------------------------
@@ -282,7 +285,7 @@ CASE suboption of
     starg  = plugmap.fiberdata[iplugind].target2
 
     ;; Don't correct dedicated FPI fibers
-    if not keyword_set(fps) or (i ne 75 and i ne 225) then begin
+    if not keyword_set(fps) or (i ne fpifibers[0] and i ne fpifibers[1]) then begin
 
       ; Loop through the chips
       For j=0,2 do begin
