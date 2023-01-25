@@ -413,6 +413,7 @@ For i=0,2 do begin
   broken = where(finite(medratio) eq 0,nbroken)
   if mjd5 ge 59556 then begin
     dointerp = [75,225]
+    if dirs.telescope eq 'lco25m' then dointerp = [82,213]
     if nbroken gt 0 then dointerp=[dointerp,broken]
   endif else begin
     if nbroken gt 0 then dointerp=broken
