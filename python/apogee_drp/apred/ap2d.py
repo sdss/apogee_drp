@@ -1329,6 +1329,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 exptime = head0['exptime']
                 flux, head = fits.getdata(outfile1,1,header=True)
                 flux1 = flux[[75,225],:]
+                # Different FPI fibers for lco25m
+                if load.telescope == 'lco25m': flux1 = flux[[82,213],:]
                 # average on the level of the lsf, ~13 pixels
                 bflux1 = flux1[:,0:157*13].reshape(2,157,13).mean(axis=2) 
                 medbflux = np.nanmedian(bflux1) 
