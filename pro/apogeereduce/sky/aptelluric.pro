@@ -128,7 +128,10 @@ endfor
 outframe = CREATE_STRUCT(outframe,'shift',frame.shift)
 
 ;; FPS
-if long(plugmap.mjd) ge 59556 then fps=1 else fps=0
+fpifibers=[75,225]
+fps=0
+if long(plugmap.mjd) ge 59556 then fps=1
+if dirs.telescope eq 'lco25m' then fpifibers=[82,213]
 
 species = ['CH4','CO2','H2O']
 nspecies = n_elements(species)
@@ -708,7 +711,7 @@ for i=0,nfibers-1 do begin
     goto,BOMB
   endif
   ;; Don't correct dedicated FPI fibers
-  if keyword_set(fps) and (i eq 75 or i eq 225) then goto,BOMB
+  if keyword_set(fps) and (i eq fpifibers[0] or i eq fpifibers[1]) then goto,BOMB
 
   ; Getting the spectrum, concatenate them
   spec = [frame.(0).flux[*,i], frame.(1).flux[*,i], $
