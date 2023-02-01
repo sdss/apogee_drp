@@ -2940,65 +2940,6 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     queue_wait(queue,sleeptime=60,logger=logger,verbose=True)  # wait for jobs to complete 
     del queue
 
-''''
-    # Make apStar plots and html
-    if len(mjds)>1:
-        sql = "SELECT apogee_id,mjd,apred_vers,telescope from apogee_drp.visit WHERE apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope)        
-    else:
-        sql = "SELECT apogee_id,mjd,apred_vers,telescope from apogee_drp.visit WHERE apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjds[0],telescope)
-    db = apogeedb.DBSession()
-    allvisit = db.query(sql=sql)
-    db.close()
-    if len(allvisit)==0:
-        logger.info('No visits found for MJDs')
-        return None
-
-    # Remove rows with missing or blank apogee_ids
-    bd, = np.where((allvisit['apogee_id']=='') | (allvisit['apogee_id']=='None') | (allvisit['apogee_id']=='2MNone') | (allvisit['apogee_id']=='2M'))
-    if len(bd)>0:
-        allvisit = np.delete(allvisit,bd)
- 
-    # Loop over the stars and figure out the ones that need to be run
-    dostarqa = np.zeros(len(allvisit),bool)
-    for i,obj in enumerate(allvisit['apogee_id']):
-        # We are going to run RV on ALL the visits
-        # Use the MAXMJD in the table, now called MJD
-        apstarfile = load.filename('Star',obj=obj)
-        # Check if file exists already
-        dostarqa[i] = False
-        if os.path.exists(apstarfile):
-            logger.info(str(i+1)+': making apStar plot+html for '+obj)
-            dostarqa[i] = True
-        else:
-            logger.info(str(i+1)+': apStar file not found for '+obj)
-    logger.info(str(np.sum(dostarqa))+' objects to run')
-    
-    # Loop over the objects and make the commands for the ones that we will run
-    torun, = np.where(dostarqa==True)
-    ntorun = len(torun)
-    if ntorun>0:
-        slurmpars1 = slurmpars.copy()
-        if ntorun<64:
-            slurmpars1['cpus'] = ntorun
-        slurmpars1['numpy_num_threads'] = 2
-        del slurmpars1['ppn']
-        logger.info('Slurm settings: '+str(slurmpars1))
-        tasks = np.zeros(ntorun).astype(str)
-        for i in range(ntorun):
-            obj = allvisit['apogee_id'][torun[i]]
-            # We are going to run RV on ALL the visits
-            # Use the MAXMJD in the table, now called MJD
-            apstarfile = load.filename('Star',obj=obj)
-            outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
-            if os.path.exists(outdir)==False:
-                os.makedirs(outdir)
-            tasks[i] = 'starqa %s %s %s -p' % (obj,apred,telescope)
-        logger.info('Running star QA on '+str(ntorun)+' stars')
-        key,jobid = slrm.submit(tasks,label='starqa',verbose=True,logger=logger,**slurmpars1)
-        logger.info('PBS key is '+key)
-        slrm.queue_wait('starqa',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
-''''
-
     # Make nightly QA/summary pages
     # we should parallelize this
     for m in mjds:
