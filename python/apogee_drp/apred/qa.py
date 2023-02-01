@@ -2437,7 +2437,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
 ###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
-def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, makeplot=False): 
+def makeStarHTML(objid=None, apred=None, telescope=None, load=None, plate=None, mjd=None, survey=None, makeplot=False): 
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
     prefix = 'ap'
