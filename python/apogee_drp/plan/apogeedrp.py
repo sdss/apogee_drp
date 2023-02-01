@@ -2956,41 +2956,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     bd, = np.where((allvisit['apogee_id']=='') | (allvisit['apogee_id']=='None') | (allvisit['apogee_id']=='2MNone') | (allvisit['apogee_id']=='2M'))
     if len(bd)>0:
         allvisit = np.delete(allvisit,bd)
-    
-    # Pick on the MJDs we want
-    ind = []
-    for m in mjds:
-        gd, = np.where(allvisit['mjd']==m)
-        if len(gd)>0: ind += list(gd)
-    ind = np.array(ind)
-    if len(ind)==0:
-        logger.info('No visits found for MJDs')
-        return None
-    allvisit = allvisit[ind]
-
-    # Get MAXMJD for each unique star
-    if len(mjds)>1:
-        star_index = dln.create_index(allvisit['apogee_id'])
-        dtype = [('apogee_id',(str,50)),('mjd',int),('maxmjd',int),('nvisits',int),('apred_vers',(str,50)),('telescope',(str,50))]
-        vcat = np.zeros(len(star_index['value']),dtype=np.dtype(dtype))
-        vcat['apogee_id'] = star_index['value']
-        vcat['nvisits'] = star_index['num']
-        for i in range(len(star_index['value'])):
-            ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
-            maxmjd = np.max(allvisit['mjd'][ind])
-            vcat['mjd'][i] = maxmjd
-            vcat['maxmjd'][i] = maxmjd
-            vcat['apred_vers'][i] = allvisit['apred_vers'][ind][0]
-            vcat['telescope'][i] = allvisit['telescope'][ind][0]            
-    else:
-        vcat = allvisit
-            
-    logger.info(str(len(vcat))+' stars to run')
-    
-    # Change MJD to MAXMJD because the apStar file will have MAXMJD in the name
-    if daily==False:
-        vcat['mjd'] = vcat['maxmjd']    
-        
+ 
     # Loop over the stars and figure out the ones that need to be run
     dostarqa = np.zeros(len(vcat),bool)
     for i,obj in enumerate(vcat['apogee_id']):
@@ -2998,11 +2964,6 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         # Use the MAXMJD in the table, now called MJD
         mjd = vcat['mjd'][i]
         apstarfile = load.filename('Star',obj=obj)
-        if daily:
-            # Want all visits up to this day
-            apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
-        else:
-            apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
         # Check if file exists already
         dostarqa[i] = False
         if os.path.exists(apstarfile):
@@ -3030,17 +2991,9 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
             # Use the MAXMJD in the table, now called MJD
             mjd = vcat['mjd'][torun[i]]
             apstarfile = load.filename('Star',obj=obj)
-            if daily:
-                # Want all visits up to this day
-                apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
-            else:
-                apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
             if os.path.exists(outdir)==False:
                 os.makedirs(outdir)
-            logfile = apstarfile.replace('.fits','_pbs.'+logtime+'.log')
-            errfile = logfile.replace('.log','.err')
-            # Run with --verbose
             cmd = 'starqa %s %s %s -p' % (obj,apred,telescope)
             tasks['cmd'][i] = cmd
         logger.info('Running star QA on '+str(ntorun)+' stars')
