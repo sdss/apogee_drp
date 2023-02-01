@@ -2437,7 +2437,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
 ###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
-def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None): 
+def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred=None, telescope=None, makeplot=False): 
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
     prefix = 'ap'
@@ -2660,8 +2660,8 @@ def makeStarHTML(objid=None, load=None, plate=None, mjd=None, survey=None, apred
     if objid is None:
         print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
     else:
+        if makeplot: apStarPlots(objid=objid, load=load, apred=apred, telescope=telescope)
         print("----> makeStarHTML: Done with " + objid)
-
 
 ###################################################################################################
 ''' APVISITPLOTS: plots of the apVisit spectra '''
