@@ -2437,7 +2437,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
 ###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
-def makeStarHTML(objid=None, apred=None, telescope=None, load=None, plate=None, mjd=None, survey=None, makeplot=False): 
+def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=None, plate=None, mjd=None, survey=None): 
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
     prefix = 'ap'
@@ -2519,7 +2519,6 @@ def makeStarHTML(objid=None, apred=None, telescope=None, load=None, plate=None, 
         else:
             apStarRelPath = None
 
-        pdb.set_trace()
         # DB query to get visit info
         vcat = db.query('visit_latest', where="apogee_id='" + objid + "' and telescope='"+ telescope + "'", fmt='table')
 
