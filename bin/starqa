@@ -1,0 +1,58 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: David Nidever, Drew Chojnowski
+# @Date: Nov 2020
+# @Filename: apqa
+# @License: BSD 3-Clause
+# @Copyright: David Nidever, Drew Chojnowski
+
+# Run QA for a single night
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import time
+import datetime
+import glob
+import numpy as np
+from astropy.table import Table,Column
+import logging
+import traceback
+
+from apogee_drp.apred import qa
+from dlnpyutils import utils as dln
+
+if __name__ == '__main__' :
+
+    parser = argparse.ArgumentParser(
+        prog=os.path.basename(sys.argv[0]),
+        description='Run Star QA')
+
+    parser.add_argument('objid', type=str, nargs=1,  help='APOGEE ID')
+    parser.add_argument('--apred', type=str, nargs=1, default='daily', help='APOGEE reduction version')
+    parser.add_argument('--telescope', type=str, nargs=1, default='apo25m', help='Telescope')
+    args = parser.parse_args()
+
+    logger = dln.basiclogger()
+    logger.handlers[0].setFormatter(logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s"))
+    logger.handlers[0].setStream(sys.stdout)   
+
+    now = datetime.datetime.now()
+    start = time.time()
+    logger.info("Start: "+now.strftime("%Y-%m-%d %H:%M:%S"))
+
+    # Run the star html and plot codes
+    try:
+        qa.makeStarHTML(objid=objid, apred=apred, telescope=telescope, makeplot=True)        
+    except:
+        traceback.print_exc()
+
+    now = datetime.datetime.now()
+    logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info("elapsed: %0.1f sec." % (time.time()-start))
