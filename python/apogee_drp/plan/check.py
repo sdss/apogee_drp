@@ -267,6 +267,8 @@ def check_domeflat(num,apred,telescope):
     # Go over the cases
     #------------------
 
+    import pdb; pdb.set_trace()
+
     # 0 - 3D file does not exist 
     if expinfo['exists3d']==False:
         mask |= 2**0
