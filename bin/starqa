@@ -52,6 +52,7 @@ if __name__ == '__main__' :
     apred = args.apred[0]
     telescope = args.telescope[0]
 
+    print(star,apred,telescope)
     # Run the star html and plot codes
     try:
         qa.makeStarHTML(star,apred=apred,telescope=telescope,makeplot=args.plot)        
