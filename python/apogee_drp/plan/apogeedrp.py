@@ -2931,7 +2931,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         errfile = logfile.replace('.log','.err')
         cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjd,observatory,apred,telescope,plate)
         #cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
-        cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
+        cmd += ' --masterqa False --starhtml True --starplots True --nightqa False --monitor False'
         logger.info('Command : '+cmd)
         logger.info('Logfile : '+logfile)
         queue.append(cmd, outfile=logfile, errfile=errfile)
@@ -2940,6 +2940,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     queue_wait(queue,sleeptime=60,logger=logger,verbose=True)  # wait for jobs to complete 
     del queue
 
+''''
     # Make apStar plots and html
     if len(mjds)>1:
         sql = "SELECT apogee_id,mjd,apred_vers,telescope from apogee_drp.visit WHERE apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope)        
@@ -2996,6 +2997,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         key,jobid = slrm.submit(tasks,label='starqa',verbose=True,logger=logger,**slurmpars1)
         logger.info('PBS key is '+key)
         slrm.queue_wait('starqa',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
+''''
 
     # Make nightly QA/summary pages
     # we should parallelize this
