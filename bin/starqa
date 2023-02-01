@@ -34,10 +34,10 @@ if __name__ == '__main__' :
         prog=os.path.basename(sys.argv[0]),
         description='Run Star QA')
 
-    parser.add_argument('objid', type=str, nargs=1,  help='APOGEE ID')
-    parser.add_argument('--apred', type=str, nargs=1, default='daily', help='APOGEE reduction version')
-    parser.add_argument('--telescope', type=str, nargs=1, default='apo25m', help='Telescope')
-    parser.add_argument('--makeplot', type=str, nargs=1, default='true', help='Option to make apStar plot')
+    parser.add_argument('star', type=str, nargs=1,  help='APOGEE ID')
+    parser.add_argument('apred', type=str, nargs=1, default='daily', help='APOGEE reduction version')
+    parser.add_argument('telescope', type=str, nargs=1, default='apo25m', help='Telescope')
+    parser.add_argument('-p','--plot', action='store_true', help='Make a plot')
     args = parser.parse_args()
 
     logger = dln.basiclogger()
@@ -48,22 +48,13 @@ if __name__ == '__main__' :
     start = time.time()
     logger.info("Start: "+now.strftime("%Y-%m-%d %H:%M:%S"))
 
-    # Make kwargs
-    adict = vars(args)
-    kws = {}
-    for k in adict.keys():
-        val = adict[k]
-        # Convert 'True' to True and 'False' to False                    
-        if type(val) is str:
-            if val.lower()=='false':
-                val = False
-            elif val.lower()=='true':
-                val = True
-        kws[k] = val
+    star = args.star[0]
+    apred = args.apred[0]
+    telescope = args.telescope[0]
 
     # Run the star html and plot codes
     try:
-        qa.makeStarHTML(**kws)        
+        qa.makeStarHTML(star,apred=apred,telescope=telescope,makeplot=args.plot)        
     except:
         traceback.print_exc()
 
