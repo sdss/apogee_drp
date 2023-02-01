@@ -267,8 +267,6 @@ def check_domeflat(num,apred,telescope):
     # Go over the cases
     #------------------
 
-    import pdb; pdb.set_trace()
-
     # 0 - 3D file does not exist 
     if expinfo['exists3d']==False:
         mask |= 2**0
@@ -282,11 +280,11 @@ def check_domeflat(num,apred,telescope):
     if expinfo['gangstate'] != '' and telescope != 'lco25m':    
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
-    # 3 - Wrong shutter state
-    if expinfo['shutter'] != '':
-        # shutter must be open for domeflat exposures
-        if expinfo['shutter']=='Closed':
-            mask |= 2**3
+    ## 3 - Wrong shutter state
+    #if expinfo['shutter'] != '':
+    #    # shutter must be open for domeflat exposures
+    #    if expinfo['shutter']=='Closed':
+    #        mask |= 2**3
     # 4 - Wrong flux
     if expinfo['exists2d']==True:
         im = fits.getdata(expinfo['filename2d'],1)
