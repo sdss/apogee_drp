@@ -2940,6 +2940,114 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     queue_wait(queue,sleeptime=60,logger=logger,verbose=True)  # wait for jobs to complete 
     del queue
 
+    # Make apStar plots and html
+    if len(mjds)>1:
+        sql = "SELECT apogee_id,mjd,apred_vers,telescope from apogee_drp.visit WHERE apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope)        
+    else:
+        sql = "SELECT apogee_id,mjd,apred_vers,telescope from apogee_drp.visit WHERE apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjds[0],telescope)
+    db = apogeedb.DBSession()
+    allvisit = db.query(sql=sql)
+    db.close()
+    if len(allvisit)==0:
+        logger.info('No visits found for MJDs')
+        return None
+
+    # Remove rows with missing or blank apogee_ids
+    bd, = np.where((allvisit['apogee_id']=='') | (allvisit['apogee_id']=='None') | (allvisit['apogee_id']=='2MNone') | (allvisit['apogee_id']=='2M'))
+    if len(bd)>0:
+        allvisit = np.delete(allvisit,bd)
+    
+    # Pick on the MJDs we want
+    ind = []
+    for m in mjds:
+        gd, = np.where(allvisit['mjd']==m)
+        if len(gd)>0: ind += list(gd)
+    ind = np.array(ind)
+    if len(ind)==0:
+        logger.info('No visits found for MJDs')
+        return None
+    allvisit = allvisit[ind]
+
+    # Get MAXMJD for each unique star
+    if len(mjds)>1:
+        star_index = dln.create_index(allvisit['apogee_id'])
+        dtype = [('apogee_id',(str,50)),('mjd',int),('maxmjd',int),('nvisits',int),('apred_vers',(str,50)),('telescope',(str,50))]
+        vcat = np.zeros(len(star_index['value']),dtype=np.dtype(dtype))
+        vcat['apogee_id'] = star_index['value']
+        vcat['nvisits'] = star_index['num']
+        for i in range(len(star_index['value'])):
+            ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
+            maxmjd = np.max(allvisit['mjd'][ind])
+            vcat['mjd'][i] = maxmjd
+            vcat['maxmjd'][i] = maxmjd
+            vcat['apred_vers'][i] = allvisit['apred_vers'][ind][0]
+            vcat['telescope'][i] = allvisit['telescope'][ind][0]            
+    else:
+        vcat = allvisit
+            
+    logger.info(str(len(vcat))+' stars to run')
+    
+    # Change MJD to MAXMJD because the apStar file will have MAXMJD in the name
+    if daily==False:
+        vcat['mjd'] = vcat['maxmjd']    
+        
+    # Loop over the stars and figure out the ones that need to be run
+    dostarqa = np.zeros(len(vcat),bool)
+    for i,obj in enumerate(vcat['apogee_id']):
+        # We are going to run RV on ALL the visits
+        # Use the MAXMJD in the table, now called MJD
+        mjd = vcat['mjd'][i]
+        apstarfile = load.filename('Star',obj=obj)
+        if daily:
+            # Want all visits up to this day
+            apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
+        else:
+            apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
+        # Check if file exists already
+        dostarqa[i] = False
+        if os.path.exists(apstarfile):
+            logger.info(str(i+1)+': making apStar plot+html for '+obj)
+            dostarqa[i] = True
+        else:
+            logger.info(str(i+1)+': apStar file not found for '+obj)
+    logger.info(str(np.sum(dostarqa))+' objects to run')
+    
+    # Loop over the objects and make the commands for the ones that we will run
+    torun, = np.where(dostarqa==True)
+    ntorun = len(torun)
+    if ntorun>0:
+        slurmpars1 = slurmpars.copy()
+        if ntorun<64:
+            slurmpars1['cpus'] = ntorun
+        slurmpars1['numpy_num_threads'] = 2
+        del slurmpars1['ppn']
+        logger.info('Slurm settings: '+str(slurmpars1))
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000)]))
+        tasks = Table(tasks)
+        for i in range(ntorun):
+            obj = vcat['apogee_id'][torun[i]]
+            # We are going to run RV on ALL the visits
+            # Use the MAXMJD in the table, now called MJD
+            mjd = vcat['mjd'][torun[i]]
+            apstarfile = load.filename('Star',obj=obj)
+            if daily:
+                # Want all visits up to this day
+                apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
+            else:
+                apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
+            outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
+            if os.path.exists(outdir)==False:
+                os.makedirs(outdir)
+            logfile = apstarfile.replace('.fits','_pbs.'+logtime+'.log')
+            errfile = logfile.replace('.log','.err')
+            # Run with --verbose
+            cmd = 'starqa %s %s %s' % (obj,apred,telescope)
+            tasks['cmd'][i] = cmd
+        logger.info('Running star QA on '+str(ntorun)+' stars')
+        key,jobid = slrm.submit(tasks,label='starqa',verbose=True,logger=logger,**slurmpars1)
+        logger.info('PBS key is '+key)
+        slrm.queue_wait('starqa',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
+
     # Make nightly QA/summary pages
     # we should parallelize this
     for m in mjds:
