@@ -2982,8 +2982,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         slurmpars1['numpy_num_threads'] = 2
         del slurmpars1['ppn']
         logger.info('Slurm settings: '+str(slurmpars1))
-        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000)]))
-        tasks = Table(tasks)
+        tasks = np.zeros(ntorun).astype(str)
         for i in range(ntorun):
             obj = allvisit['apogee_id'][torun[i]]
             # We are going to run RV on ALL the visits
@@ -2992,8 +2991,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
             if os.path.exists(outdir)==False:
                 os.makedirs(outdir)
-            cmd = 'starqa %s %s %s -p' % (obj,apred,telescope)
-            tasks['cmd'][i] = cmd
+            tasks[i] = 'starqa %s %s %s -p' % (obj,apred,telescope)
         logger.info('Running star QA on '+str(ntorun)+' stars')
         key,jobid = slrm.submit(tasks,label='starqa',verbose=True,logger=logger,**slurmpars1)
         logger.info('PBS key is '+key)
