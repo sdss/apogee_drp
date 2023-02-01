@@ -2958,11 +2958,10 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         allvisit = np.delete(allvisit,bd)
  
     # Loop over the stars and figure out the ones that need to be run
-    dostarqa = np.zeros(len(vcat),bool)
-    for i,obj in enumerate(vcat['apogee_id']):
+    dostarqa = np.zeros(len(allvisit),bool)
+    for i,obj in enumerate(allvisit['apogee_id']):
         # We are going to run RV on ALL the visits
         # Use the MAXMJD in the table, now called MJD
-        mjd = vcat['mjd'][i]
         apstarfile = load.filename('Star',obj=obj)
         # Check if file exists already
         dostarqa[i] = False
@@ -2986,10 +2985,9 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000)]))
         tasks = Table(tasks)
         for i in range(ntorun):
-            obj = vcat['apogee_id'][torun[i]]
+            obj = allvisit['apogee_id'][torun[i]]
             # We are going to run RV on ALL the visits
             # Use the MAXMJD in the table, now called MJD
-            mjd = vcat['mjd'][torun[i]]
             apstarfile = load.filename('Star',obj=obj)
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
             if os.path.exists(outdir)==False:
