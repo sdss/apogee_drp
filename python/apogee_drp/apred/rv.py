@@ -172,12 +172,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['sigfib'] = sigfib
     starmask = bitmask.StarBitMask()
 
-
-    import pdb; pdb.set_trace()
     # Select good visit spectra
     gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
                    (allvisits['snr'] > snmin) )
-    import pdb; pdb.set_trace()
     # No good visits, but still write to star table
     if len(gd)==0:
         logger.info('No visits passed QA cuts')
@@ -231,7 +228,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         logger.info('Doppler failed for {:s}'.format(star))
         raise
 
-    import pdb; pdb.set_trace()
     # Now load the Doppler results
     visits = []
     ncomponents = 0
@@ -292,7 +288,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
 
 
-    import pdb; pdb.set_trace()
     # Set STARFLAGS for the visits (successful and failed ones)
     for i in range(len(starvisits)):
         starvisits['starflags'][i] = starmask.getname(starvisits['starflag'][i])
@@ -376,6 +371,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     else:
         gdrv = []
 
+    import pdb; pdb.set_trace()
     # Load information into the database
     dbingest(startab,starvisits)
 
