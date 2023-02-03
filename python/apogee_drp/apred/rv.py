@@ -371,7 +371,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     else:
         gdrv = []
 
-    import pdb; pdb.set_trace()
     # Load information into the database
     dbingest(startab,starvisits)
 
@@ -382,6 +381,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     else:
         logger.info('No good visits for '+star)
 
+    import pdb; pdb.set_trace()
     # Run QA code to make final plot and HTML page
     qa.apStarPlots(objid=star,apred=apred,telescope=telescope)
     qa.makeStarHTML(objid=star,apred=apred,telescope=telescope) 
@@ -817,6 +817,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         # MWM target flags?
             
 
+    import pdb; pdb.set_trace()
     # Create final spectrum
     if nvisit>1:
         zeros = np.zeros([nvisit+2,nwave])
