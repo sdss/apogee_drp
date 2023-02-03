@@ -171,7 +171,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['meanfib'] = meanfib
     startab['sigfib'] = sigfib
     starmask = bitmask.StarBitMask()
-
+    
     # Select good visit spectra
     gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
                    (allvisits['snr'] > snmin) )
@@ -227,6 +227,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     except:
         logger.info('Doppler failed for {:s}'.format(star))
         raise
+
 
     # Now load the Doppler results
     visits = []
@@ -286,7 +287,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
         elif (np.abs(starvisits['vrad'][vind]-starvisits['xcorr_vrad'][vind]) > 0) :
             starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
-
 
     # Set STARFLAGS for the visits (successful and failed ones)
     for i in range(len(starvisits)):
@@ -381,7 +381,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     else:
         logger.info('No good visits for '+star)
 
-    import pdb; pdb.set_trace()
     # Run QA code to make final plot and HTML page
     qa.apStarPlots(objid=star,apred=apred,telescope=telescope)
     qa.makeStarHTML(objid=star,apred=apred,telescope=telescope) 
@@ -817,7 +816,6 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         # MWM target flags?
             
 
-    import pdb; pdb.set_trace()
     # Create final spectrum
     if nvisit>1:
         zeros = np.zeros([nvisit+2,nwave])
