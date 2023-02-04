@@ -10,6 +10,7 @@ import matplotlib.pyplot as plt
 import esutil
 import pickle
 import yaml
+import traceback
 from astropy.io import fits
 from ..utils import apload, applot, bitmask, spectra, norm, yanny, plan
 from ..utils.apspec import ApSpec
@@ -22,6 +23,7 @@ from scipy.ndimage.filters import median_filter, gaussian_filter
 import doppler 
 import multiprocessing as mp
 from astropy.table import Table, Column
+from astropy.time import Time
 from apogee_drp.apred import bc, qa
 
 
@@ -217,7 +219,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     starvisits.add_column(rv_components)
     rvtab = Column(name='rvtab',dtype=Table,length=len(starvisits))
     starvisits.add_column(rvtab)
-
 
     # Run Doppler with dorv() on the good visits
     try:
@@ -433,60 +434,74 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     speclist = []
     pixelmask = bitmask.PixelBitMask()
     badval = pixelmask.badval()|pixelmask.getval('SIG_SKYLINE')|pixelmask.getval('LITTROW_GHOST')
-   
-    # If we have a significant number of low S/N visits, combine first using
-    #    barycentric correction only, use that to get an estimate of systemic
-    #    velocity, then do RV determination restricting RVs to within 50 km/s
-    #    of estimate. This seems to help significant for faint visits
-    lowsnr_visits, = np.where(allvisit['snr']<10)
-    if (len(lowsnr_visits) > 1) & (len(lowsnr_visits)/len(allvisit) > 0.1) :
-        try :
-            apstar_bc = visitcomb(allvisit,starver,bconly=True,load=load,write=False,dorvfit=False,apstar_vers=apstar_vers) 
-            apstar_bc.setmask(badval)
-            spec = doppler.Spec1D(apstar_bc.flux[0,:],err=apstar_bc.err[0,:],bitmask=apstar_bc.bitmask[0,:],
-                                  mask=apstar_bc.mask[0,:],wave=apstar_bc.wave,lsfpars=np.array([0]),
-                                  lsfsigma=apstar_bc.wave/22500/2.354,instrument='APOGEE',
-                                  filename=apstar_bc.filename)
-            logger.info('Lots of low-S/N visits. Running BC jointfit for :',obj)
-            out = doppler.rv.jointfit([spec],verbose=verbose,plot=plot,tweak=tweak,maxvel=[-500,500],logger=logger)
-            rvrange = [out[1][0]['vrel']-50, out[1][0]['vrel']+50]
-        except :
-            logger.info('  BC jointfit failed')
-            rvrange = [-500,500]
-    elif allvisit['hmag'].max() > 13.5 : 
-        # If it's faint, restrict to +/- 500 km/s
-        rvrange = [-500,500]
-    else:
-        # Otherwise, restrict to +/ 1000 km/s
-        rvrange = [-1000,1000]
 
     # Loop over visits
     for i in range(len(allvisit)):
 
         # Load all of the visits into doppler Spec1D objects
-        if load.telescope == 'apo1m' :
+        if load.telescope == 'apo1m':
             visitfile = load.allfile('Visit',plate=allvisit['plate'][i],mjd=allvisit['mjd'][i],
                                      reduction=allvisit['apogee_id'][i],field=allvisit['field'][i])
-        else :
+        else:
             visitfile = load.allfile('Visit',plate=int(allvisit['plate'][i]),mjd=allvisit['mjd'][i],
                                      fiber=allvisit['fiberid'][i],field=allvisit['field'][i])
         spec = doppler.read(visitfile,badval=badval)
 
         if windows is not None :
             # If we have spectral windows to mask, do so here
-            for ichip in range(3) :
+            for ichip in range(3):
                 mask = np.full_like(spec.mask[:,ichip],True)
                 gd = []
-                for window in windows :
+                for window in windows:
                     gd.extend(np.where((spec.wave[:,ichip] > window[0]) & (spec.wave[:,ichip] < window[1]))[0])
                 mask[gd] = False
                 spec.mask[:,ichip] |= mask
                  
-        if spec is not None : speclist.append(spec)
-
+        if spec is not None:
+            speclist.append(spec)
+            allvisit['bc'][i] = spec.barycorr()
+            
     if len(speclist)==0:
         raise Exception('No visit spectra loaded')
 
+   
+    # If we have a significant number of low S/N visits, combine first using
+    #    barycentric correction only, use that to get an estimate of systemic
+    #    velocity, then do RV determination restricting RVs to within 50 km/s
+    #    of estimate. This seems to help significant for faint visits
+    lowsnr_visits, = np.where(allvisit['snr']<10)
+    if (len(lowsnr_visits) > 1) & (len(lowsnr_visits)/len(allvisit) > 0.1):
+        logger.info('Lots of low-S/N visits. Running BC jointfit for: '+str(obj))        
+        try:
+            apstar_bc = visitcomb(allvisit,starver,bconly=True,load=load,write=False,dorvfit=False,apstar_vers=apstar_vers) 
+            apstar_bc.setmask(badval)
+            spec = doppler.Spec1D(apstar_bc.flux[0,:],err=apstar_bc.err[0,:],bitmask=apstar_bc.bitmask[0,:],
+                                  mask=apstar_bc.mask[0,:],wave=apstar_bc.wave,lsfpars=np.array([0]),
+                                  lsfsigma=apstar_bc.wave/22500/2.354,instrument='APOGEE',
+                                  filename=apstar_bc.filename)
+            spec.observatory = 'APO'
+            spec.bc = np.nanmean(allvisit['bc'])
+            spec.head = fits.Header()
+            spec.head['RA'] = np.nanmedian(allvisit['ra'])
+            spec.head['DEC'] = np.nanmedian(allvisit['dec'])
+            spec.head['DATE-OBS'] = Time(np.nanmedian(allvisit['jd']),format='jd').fits
+            spec.head['EXPTIME'] = np.nanmedian(allvisit['exptime'])        
+            out = doppler.rv.fit(spec,verbose=verbose,plot=plot,tweak=tweak,maxvel=[-500,500],logger=logger)
+            logger.info('BC-combined VREL : {:.3f} km/s'.format(out[0][0]['vrel']))
+            rvrange = [out[0][0]['vrel']-50, out[0][0]['vrel']+50]
+        except:
+            logger.info('  BC jointfit failed')
+            traceback.print_exc()
+            rvrange = [-500,500]
+    elif allvisit['hmag'].max() > 13.5: 
+        # If it's faint, restrict to +/- 500 km/s
+        rvrange = [-500,500]
+    else:
+        # Otherwise, restrict to +/ 1000 km/s
+        rvrange = [-1000,1000]
+    logger.info('RV range = [{:.1f},{:.1f}]'.format(rvrange[0],rvrange[1]))
+    logger.info(' ')
+    
     # Now do the Doppler jointfit to get RVs
     # Dump empty pickle to stand in case of failure (to prevent redo if not clobber)
     try:
@@ -512,14 +527,17 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     except ValueError as err:
         logger.error('Exception raised in dorv for: '+obj)
         logger.error("ValueError: {0}".format(err))
+        traceback.print_exc()
         return
     except RuntimeError as err:
         logger.error('Exception raised in dorv for: '+obj)
         logger.error("Runtime error: {0}".format(err))
+        traceback.print_exc()        
         return
     except :
         raise
         logger.error('Exception raised in dorv for: ', field, obj)
+        traceback.print_exc()        
         return
 
     # Return summary RV info, visit RV info, decomp info 
@@ -710,6 +728,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     starmask = bitmask.StarBitMask()
 
     # Loop over each visit and interpolate to final wavelength grid
+    pixelmask = bitmask.PixelBitMask()
     if plot : fig,ax=plots.multi(1,2,hspace=0.001)
     for i,visit in enumerate(allvisit) :
 
@@ -724,7 +743,6 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             apvisit = load.apVisit1m(visit['plate'],visit['mjd'],visit['apogee_id'],load=True)
         else:
             apvisit = load.apVisit(int(visit['plate']),visit['mjd'],visit['fiberid'],load=True)
-        pixelmask = bitmask.PixelBitMask()
 
         # Rest-frame wavelengths transformed to this visit spectra
         w = norm.apStarWave()*(1.0+vrel/cspeed)
@@ -738,7 +756,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             # Get a smoothed, filtered spectrum to use as replacement for bad values
             cont = gaussian_filter(median_filter(apvisit.flux[chip,:],[501],mode='reflect'),100)
             errcont = gaussian_filter(median_filter(apvisit.err[chip,:],[501],mode='reflect'),100)
-            bd, = np.where(apvisit.bitmask[chip,:]&pixelmask.badval())
+            bd, = np.where(apvisit.bitmask[chip,:] & pixelmask.badval())
             if len(bd) > 0: 
                 apvisit.flux[chip,bd] = cont[bd] 
                 apvisit.err[chip,bd] = errcont[bd] 
@@ -778,16 +796,16 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
                     iout += 1
 
         # Increase uncertainties for persistence pixels
-        bd, = np.where((stack.bitmask[i,:]&pixelmask.getval('PERSIST_HIGH')) > 0)
+        bd, = np.where((stack.bitmask[i,:] & pixelmask.getval('PERSIST_HIGH')) > 0)
         if len(bd) > 0: stack.err[i,bd] *= np.sqrt(5)
-        bd, = np.where(((stack.bitmask[i,:]&pixelmask.getval('PERSIST_HIGH')) == 0) &
-                       ((stack.bitmask[i,:]&pixelmask.getval('PERSIST_MED')) > 0) )
+        bd, = np.where(((stack.bitmask[i,:] & pixelmask.getval('PERSIST_HIGH')) == 0) &
+                       ((stack.bitmask[i,:] & pixelmask.getval('PERSIST_MED')) > 0) )
         if len(bd) > 0: stack.err[i,bd] *= np.sqrt(4)
-        bd, = np.where(((stack.bitmask[i,:]&pixelmask.getval('PERSIST_HIGH')) == 0) &
-                       ((stack.bitmask[i,:]&pixelmask.getval('PERSIST_MED')) == 0) &
-                       ((stack.bitmask[i,:]&pixelmask.getval('PERSIST_LOW')) > 0) )
+        bd, = np.where(((stack.bitmask[i,:] & pixelmask.getval('PERSIST_HIGH')) == 0) &
+                       ((stack.bitmask[i,:] & pixelmask.getval('PERSIST_MED')) == 0) &
+                       ((stack.bitmask[i,:] & pixelmask.getval('PERSIST_LOW')) > 0) )
         if len(bd) > 0: stack.err[i,bd] *= np.sqrt(3)
-        bd, = np.where((stack.bitmask[i,:]&pixelmask.getval('SIG_SKYLINE')) > 0)
+        bd, = np.where((stack.bitmask[i,:] & pixelmask.getval('SIG_SKYLINE')) > 0)
         if len(bd) > 0: stack.err[i,bd] *= np.sqrt(100)
 
         if plot:
@@ -814,7 +832,6 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             apogee_target2 |= visit['APOGEE_TARGET2'] 
             apogee2_target2 |= visit['APOGEE_TARGET2'] 
         # MWM target flags?
-            
 
     # Create final spectrum
     if nvisit>1:
@@ -842,12 +859,12 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     apstar.err[0,:] =  np.sqrt(1./np.sum(1./stack.err**2,axis=0)) * cont
     apstar.bitmask[0,:] = np.bitwise_and.reduce(stack.bitmask,0)
     apstar.cont[0,:] = cont
-
+    
     # global weighting and individual visits
     if nvisit > 1 :
         # "global" weighted average
         newerr = median_filter(stack.err,[1,100],mode='reflect')
-        bd = np.where((stack.bitmask&pixelmask.getval('SIG_SKYLINE')) > 0)[0]
+        bd = np.where((stack.bitmask & pixelmask.getval('SIG_SKYLINE')) > 0)[0]
         if len(bd) > 0 : newerr[bd[0],bd[1]] *= np.sqrt(100)
         apstar.flux[1,:] = np.sum(stack.flux/newerr**2,axis=0)/np.sum(1./newerr**2,axis=0) * cont
         apstar.err[1,:] =  np.sqrt(1./np.sum(1./newerr**2,axis=0)) * cont
@@ -917,13 +934,23 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
     try: apstar.header['N_COMP'] = (allvisit['n_components'].max(),'Maximum number of components in RV CCFs')
     except: pass
-    apstar.header['VRAD'] = ((allvisit['vrad']*allvisit['snr']).sum() / allvisit['snr'].sum(),'S/N weighted mean barycentric RV')
-    if len(allvisit) > 1 : apstar.header['vscatter'] = (allvisit['vrad'].std(ddof=1), 'standard deviation of visit RVs')
+    vrad = (allvisit['vrad']*allvisit['snr']).sum() / allvisit['snr'].sum()
+    if np.isfinite(vrad)==False: vrad = 'NaN'
+    apstar.header['VRAD'] = (vrad,'S/N weighted mean barycentric RV')
+    vscatter = allvisit['vrad'].std(ddof=1)
+    if np.isfinite(vscatter)==False: vscatter = 'NaN'
+    if len(allvisit) > 1 : apstar.header['vscatter'] = (vscatter, 'standard deviation of visit RVs')
     else: apstar.header['VSCATTER'] = (0., 'standard deviation of visit RVs')
     apstar.header['VERR'] = (0.,'unused')
-    apstar.header['RV_TEFF'] = (allvisit['rv_teff'].max(),'Effective temperature from RV fit')
-    apstar.header['RV_LOGG'] = (allvisit['rv_logg'].max(),'Surface gravity from RV fit')
-    apstar.header['RV_FEH'] = (allvisit['rv_feh'].max(),'Metallicity from RV fit')
+    rv_teff = allvisit['rv_teff'].max()
+    if np.isfinite(rv_teff)==False: rv_teff = 'NaN'
+    apstar.header['RV_TEFF'] = (rv_teff,'Effective temperature from RV fit')
+    rv_logg = allvisit['rv_logg'].max()
+    if np.isfinite(rv_logg)==False: rv_logg = 'NaN'
+    apstar.header['RV_LOGG'] = (rv_logg,'Surface gravity from RV fit')
+    rv_feh = allvisit['rv_feh'].max()
+    if np.isfinite(rv_feh)==False: rv_feh = 'NaN'
+    apstar.header['RV_FEH'] = (rv_feh,'Metallicity from RV fit')
 
     if len(allvisit) > 0: meanfib=(allvisit['fiberid']*allvisit['snr']).sum()/allvisit['snr'].sum()
     else: meanfib = 999999.
@@ -943,10 +970,16 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         #apstar.header['HJD{:d}'.format(i)] = 
         apstar.header['FIBER{:d}'.format(i)] = (visit['fiberid'],' Fiber, visit {:d}'.format(i))
         apstar.header['BC{:d}'.format(i)] = (visit['bc'],' Barycentric correction (km/s), visit {:d}'.format(i))
-        apstar.header['CHISQ{:d}'.format(i)] = (visit['chisq'],' Chi-squared fit of Cannon model, visit {:d}'.format(i))
-        apstar.header['VRAD{:d}'.format(i)] = (visit['vrel'],' Doppler shift (km/s) of visit {:d}'.format(i))
-        #apstar.header['VERR%d'.format(i)] = 
-        apstar.header['VRAD{:d}'.format(i)] = (visit['vrad'],' Barycentric velocity (km/s), visit {:d}'.format(i))
+        visit_chisq = visit['chisq']
+        if np.isfinite(visit_chisq)==False: visit_chisq = 'NaN'
+        apstar.header['CHISQ{:d}'.format(i)] = (visit_chisq,' Chi-squared fit of Cannon model, visit {:d}'.format(i))
+        visit_vrel = visit['vrel']
+        if np.isfinite(visit_vrel)==False: visit_vrel = 'NaN'
+        apstar.header['VREL{:d}'.format(i)] = (visit_vrel,' Doppler shift (km/s) of visit {:d}'.format(i))
+        #apstar.header['VERR%d'.format(i)] =
+        visit_vrad = visit['vrad']
+        if np.isfinite(visit_vrad)==False: visit_vrad = 'NaN'
+        apstar.header['VRAD{:d}'.format(i)] = (visit_vrad,' Barycentric velocity (km/s), visit {:d}'.format(i))
         apstar.header['SNRVIS{:d}'.format(i)] = (visit['snr'],' Signal/Noise ratio, visit {:d}'.format(i))
         apstar.header['FLAG{:d}'.format(i)] = (visit['starflag'],' STARFLAG for visit {:d}'.format(i))
         apstar.header.insert('SFILE{:d}'.format(i),('COMMENT','VISIT {:d} INFORMATION'.format(i)))
