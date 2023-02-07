@@ -280,11 +280,11 @@ def check_domeflat(num,apred,telescope):
     if expinfo['gangstate'] != '' and telescope != 'lco25m':    
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
-    ## 3 - Wrong shutter state
-    #if expinfo['shutter'] != '':
-    #    # shutter must be open for domeflat exposures
-    #    if expinfo['shutter']=='Closed':
-    #        mask |= 2**3
+    # 3 - Wrong shutter state
+    if expinfo['shutter'] != '' and telescope != 'lco25m':
+        # shutter must be open for domeflat exposures for apo25m
+        if expinfo['shutter']=='Closed':
+            mask |= 2**3
     # 4 - Wrong flux
     if expinfo['exists2d']==True:
         im = fits.getdata(expinfo['filename2d'],1)
@@ -347,8 +347,8 @@ def check_quartzflat(num,apred,telescope):
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong APOGEE shutter state
-    if expinfo['shutter'] != '':
-        # shutter must be open for quartzflat exposures
+    if expinfo['shutter'] != '' and telescope != 'lco25m':
+        # shutter must be open for quartzflat exposures for apo25m
         if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
@@ -418,11 +418,12 @@ def check_arclamp(num,apred,telescope):
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] != '':
+    if expinfo['shutter'] != '' and telescope != 'lco25m':
         # shutter must be open for arclamp exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
+    import pdb; pdb.set_trace()
     if expinfo['calshutter'] != '':
         # shutter must be open for arclamp exposures
         if expinfo['calshutter']==False:
@@ -504,8 +505,8 @@ def check_fpi(num,apred,telescope):
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] != '':
-        # shutter must be open for FPI exposures
+    if expinfo['shutter'] != '' and telescope != 'lco25m':
+        # shutter must be open for FPI exposures for apo25m
         if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
@@ -522,6 +523,7 @@ def check_fpi(num,apred,telescope):
         peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
         avgpeakflux = np.nanmean(peakflux)
         # Check the flux
+        import pdb; pdb.set_trace()
         if avgpeakflux/expinfo['nread']<70:
             mask |= 2**4
 
@@ -576,7 +578,7 @@ def check_internalflat(num,apred,telescope):
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] != '':
+    if expinfo['shutter'] != '' and telescope != 'lco25m':
         # shutter must be open good internalflat exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
@@ -585,6 +587,7 @@ def check_internalflat(num,apred,telescope):
         im = fits.getdata(expinfo['filename2d'],1)
         med = np.nanmedian(im)
         # Check the flux
+        import pdb; pdb.set_trace()
         if med/expinfo['nread']<300:
             mask |= 2**4
         #print('internalflat',med/expinfo['nread'])
