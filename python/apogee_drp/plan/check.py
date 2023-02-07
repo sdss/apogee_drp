@@ -423,7 +423,6 @@ def check_arclamp(num,apred,telescope):
         if expinfo['shutter']=='Closed':
             mask |= 2**3
     # cal shutter state
-    import pdb; pdb.set_trace()
     if expinfo['calshutter'] != '':
         # shutter must be open for arclamp exposures
         if expinfo['calshutter']==False:
@@ -523,7 +522,6 @@ def check_fpi(num,apred,telescope):
         peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
         avgpeakflux = np.nanmean(peakflux)
         # Check the flux
-        import pdb; pdb.set_trace()
         if avgpeakflux/expinfo['nread']<70:
             mask |= 2**4
 
@@ -587,7 +585,6 @@ def check_internalflat(num,apred,telescope):
         im = fits.getdata(expinfo['filename2d'],1)
         med = np.nanmedian(im)
         # Check the flux
-        import pdb; pdb.set_trace()
         if med/expinfo['nread']<300:
             mask |= 2**4
         #print('internalflat',med/expinfo['nread'])
