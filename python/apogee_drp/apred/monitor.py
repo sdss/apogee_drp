@@ -678,7 +678,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                                 if allexpi['UNE'][iexp] == 1:
                                     sub = flx[:,1452-100:1452+100]
                                     thresh = 40
-                                if allexpi['THAR'] == 1:
+                                if allexpi['THAR'][iexp] == 1:
                                     sub = flx[:,1566-100:1566+100]
                                     thresh = 1000
                                 smsub = medfilt2d(sub,(1,7))  # smooth in spectral axis
