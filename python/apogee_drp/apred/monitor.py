@@ -621,12 +621,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #                                         1       2       3      4         5          6          7         8       9          10        11         12        13         14         15
         headertext = '<TR bgcolor="#DCDCDC"> <TH>DATE <TH>MJD <TH># <TH>TYPE <TH>EXPTIME <TH>NREAD <TH>SHUTTER <TH>CONFIG <TH>DESIGN <TH>FIELD <TH>2D? <TH>1D? <TH>CFRAME? <TH>VISIT? <TH>2D MED FLUX\n'
         exphtml.write(headertext)
-        g, = np.where((allexp['MJD'] >= startFPS+100) & (allexp['IMAGETYP'] != 'Object'))
+        g, = np.where((allexp['MJD'] >= startFPS) & (allexp['IMAGETYP'] != 'Object'))
         allexpG = allexp[g]
         umjd = np.unique(allexpG['MJD'])
         nmjd = len(umjd)
-        for imjd in range(3):
-            print("----> monitor:  exptable for MJD " + str(umjd[imjd]))
+        for imjd in range(nmjd):
+            print("----> monitor:  exptable for MJD " + str(umjd[imjd])+' ('+str(imjd+1)+'/'+str(nmjd)+')')
             g, = np.where(allexpG['MJD'] == umjd[imjd])
             if len(g) < 1: continue
             allexpi = allexpG[g]
@@ -695,8 +695,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                                 avgpeakflux = np.nanmean(peakflux)
                             p15 = str(int(round(avgpeakflux/hdr['NREAD'])))
 
-
-                exphtml.write('<TR bgcolor="'+bgcolor+'"><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'+p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD align=center>'+p11+'<TD align=center>'+p12+'<TD align=center>'+p13+'<TD align=center>'+p14+'<TD align=right>'+p15+'\n')
+                out1 = '<TR bgcolor="'+bgcolor+'"><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'
+                out2 = p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD align=center>'+p11+'<TD align=center>'+p12
+                out3 = '<TD align=center>'+p13+'<TD align=center>'+p14+'<TD align=right>'+p15+'\n'
+                exphtml.write(out1+out2+out3)
         exphtml.write('</TABLE></BODY></HTML>\n')
         exphtml.close()
 
