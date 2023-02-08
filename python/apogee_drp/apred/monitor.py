@@ -626,6 +626,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allexpG = allexp[g]
             nexp = len(allexpG)
             if imjd > 0: exphtml.write(headertext)
+            pdb.set_trace()
             for iexp in range(nexp):
                 num = allexpG['NUM'][iexp]
                 p1 = allexpG['DATEOBS'][iexp]
