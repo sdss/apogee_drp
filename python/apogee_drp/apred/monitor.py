@@ -615,8 +615,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         exphtml.write('<H1>' + exptit + '</H1>\n')
         exphtml.write('<HR>\n')
         exphtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
-        #                                         1       2       3      4         5          6          7         8       9          10        11         12        13         14
-        headertext = '<TR bgcolor="#DCDCDC"> <TH>DATE <TH>MJD <TH># <TH>TYPE <TH>EXPTIME <TH>NREAD <TH>SHUTTER <TH>CONFIG <TH>DESIGN <TH>FIELD <TH>2D? <TH>1D? <TH>CFRAME? <TH>VISIT?\n'
+        #                                         1       2       3      4         5          6          7         8       9          10        11         12        13         14         15
+        headertext = '<TR bgcolor="#DCDCDC"> <TH>DATE <TH>MJD <TH># <TH>TYPE <TH>EXPTIME <TH>NREAD <TH>SHUTTER <TH>CONFIG <TH>DESIGN <TH>FIELD <TH>2D? <TH>1D? <TH>CFRAME? <TH>VISIT? <TH>2D MED FLUX\n'
         exphtml.write(headertext)
         g, = np.where(allexp['MJD'] >= startFPS)
         allexpG = allexp[g]
@@ -631,10 +631,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for iexp in range(nexp):
                 num = allexpi['NUM'][iexp]
                 smjd = str(umjd[imjd])
+                exptype = allexpi['IMAGETYP'][iexp]
+                if exptype == 'Dark': bgcolor = '#fad7a0'
+                if exptype == 'ArcLamp': bgcolor = '#d2b4de'
+                if exptype == 'QuartzFlat': bgcolor = '#aed6f1'
+                if exptype == 'DomeFlat': bgcolor = '#f9e79f'
                 p1 = allexpi['DATEOBS'][iexp]
                 p2 = smjd
                 p3 = str(num)
-                p4 = allexpi['IMAGETYP'][iexp]
+                p4 = exptype
                 p5 = ' '
                 p6 = ' '
                 p7 = ' '
@@ -649,6 +654,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if os.path.exists(twodfile):
                     flx = fits.getdata(twodfile)
                     hdr = fits.getheader(twodfile)
+                    if hdr['OBSCMNT'][0:3] == 'FPI': 
+                        p4 = 'FPI'
+                        bgcolor = '#f5b7b1 '
                     p5 = str(int(round(hdr['EXPTIME'])))
                     p6 = str(hdr['NREAD'])
                     p7 = hdr['SHUTTER']
@@ -663,7 +671,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         visits = glob.glob(os.path.dirname(cframe)+'/'+prefix+'Visit-*fits')
                         if len(visits) > 1: p14 = 'yes'
 
-                exphtml.write('<TR><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'+p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD>'+p11+'<TD>'+p12+'<TD>'+p13+'<TD>'+p14+'\n')
+                exphtml.write('<TR bgcolor="'+bgcolor+'"><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'+p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD>'+p11+'<TD>'+p12+'<TD>'+p13+'<TD>'+p14+'\n')
         exphtml.write('</TABLE></BODY></HTML>\n')
         exphtml.close()
 
