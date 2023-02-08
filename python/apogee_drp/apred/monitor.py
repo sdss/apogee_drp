@@ -657,6 +657,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     p10 = hdr['FIELDID']
                     p11 = 'yes'
                     if os.path.exists(twodfile.replace('2D','1D')): p12 = 'yes'
+                    pdb.set_trace()
                     cframe = load.filename('Cframe', plate=hdr['CONFIGID'], mjd=smjd, num=num, chips=True, fps=True).replace('Cframe-','Cframe-b-')
                     if os.path.exists(cframe): p13 = 'yes'
                     visits = glob.glob(os.path.dirname(cframe)+'/'+prefix+'Visit-*fits')
