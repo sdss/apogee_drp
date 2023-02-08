@@ -624,7 +624,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         allexpG = allexp[g]
         umjd = np.unique(allexpG['MJD'])
         nmjd = len(umjd)
-        for imjd in range(10):
+        for imjd in range(2):
             print("----> monitor:  exptable for  MJD " + str(umjd[imjd]))
             g, = np.where(allexpG['MJD'] == umjd[imjd])
             if len(g) < 1: continue
@@ -637,8 +637,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 bgcolor = '#f8f9f9'
                 exptype = allexpi['IMAGETYP'][iexp]
                 if exptype == 'Dark': bgcolor = ' #f6ddcc'
-                if exptype == 'ArcLamp': bgcolor = ' #fcf3cf'
-                if exptype == 'QuartzFlat': bgcolor = ' #d5f5e3'
+                if exptype == 'ArcLamp': bgcolor = '#fcf3cf'
+                if exptype == 'QuartzFlat': bgcolor = '#d5f5e3'
                 if exptype == 'DomeFlat': bgcolor = ' #d6eaf8'
                 p1 = allexpi['DATEOBS'][iexp]
                 p2 = smjd
