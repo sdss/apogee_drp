@@ -624,7 +624,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         allexpG = allexp[g]
         umjd = np.unique(allexpG['MJD'])
         nmjd = len(umjd)
-        for imjd in range(5):
+        for imjd in range(3):
             print("----> monitor:  exptable for MJD " + str(umjd[imjd]))
             g, = np.where(allexpG['MJD'] == umjd[imjd])
             if len(g) < 1: continue
