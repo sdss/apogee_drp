@@ -664,7 +664,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         visits = glob.glob(os.path.dirname(cframe)+'/'+prefix+'Visit-*fits')
                         if len(visits) > 1: p14 = 'yes'
 
-                exphtml.write('<TR bgcolor="'+bgcolor+'"><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'+p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD>'+p11+'<TD>'+p12+'<TD>'+p13+'<TD>'+p14+'\n')
+                exphtml.write('<TR bgcolor="'+bgcolor+'"><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'+p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD>'+p11+'<TD>'+p12+'<TD>'+p13+'<TD>'+p14+'<TD>'+p15+'\n')
         exphtml.write('</TABLE></BODY></HTML>\n')
         exphtml.close()
 
