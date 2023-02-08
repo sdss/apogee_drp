@@ -620,7 +620,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         exphtml.write(headertext)
         umjd = np.unique(allexp['MJD'])
         nmjd = len(umjd)
-        for imjd in range(5):
+        for imjd in range(20):
             g, = np.where(allexp['MJD'] == umjd)
             if len(g) < 1: continue
             allexpG = allexp[g]
