@@ -497,7 +497,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> <a href=#detectors> Detectors\n')
     html.write('<li> <a href=#sky> Sky brightness\n')
     html.write('<li> <a href=' + instrument + '/flatflux.html target="_blank">Flat Field Relative Flux Plots</a>\n')
-    html.write('<li> <a href=' + instrument + '/expInfo_'+instrument+'.html target="_blank">Exposure info table\n')
+    html.write('<li> <a href=' + instrument + '/expInfo_'+instrument+'.html target="_blank">Cal exposure info table\n')
     html.write('</ul>\n')
     html.write('<HR>\n')
 
@@ -610,7 +610,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     ###############################################################################################
     if exptable:
         # HTML for exposure info table
-        exptit = instrument.upper() + ' Exposure Info'
+        exptit = instrument.upper() + ' Cal Exposure Info'
         exphtmlfile = specdir5 + 'monitor/' + instrument + '/expInfo_'+instrument+'.html'
         print("----> monitor:  Making " + os.path.basename(exphtmlfile))
         exphtml = open(exphtmlfile, 'w')
@@ -670,7 +670,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         visits = glob.glob(os.path.dirname(cframe)+'/'+prefix+'Visit-*fits')
                         if len(visits) > 1: p14 = 'yes'
                         if exptype == 'Dark': 
-                            p15 = str("%.3f" % round(np.nanmedian(flx[:,900:1100])/hdr['NREAD'], 3))
+                            p15 = str(int(round(np.nanmedian(flx[:,900:1100])/hdr['NREAD'])))
                         else:
                             if exptype == 'DomeFlat' or exptype == 'QuartzFlat': 
                                 medim = np.nanmedian(flx[:,900:1100],axis=1)
@@ -693,7 +693,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                                 resmsub = dln.rebin(smsub,(2048//8,200),tot=True) # rebin in spatial axis
                                 peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
                                 avgpeakflux = np.nanmean(peakflux)
-                            p15 = str("%.3f" % round(avgpeakflux/hdr['NREAD'], 3))
+                            p15 = str(int(round(avgpeakflux/hdr['NREAD'])))
 
 
                 exphtml.write('<TR bgcolor="'+bgcolor+'"><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'+p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD align=center>'+p11+'<TD align=center>'+p12+'<TD align=center>'+p13+'<TD align=center>'+p14+'<TD align=right>'+p15+'\n')
