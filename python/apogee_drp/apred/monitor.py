@@ -622,7 +622,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         allexpG = allexp[g]
         umjd = np.unique(allexpG['MJD'])
         nmjd = len(umjd)
-        for imjd in range(5):
+        for imjd in range(10):
             g, = np.where(allexpG['MJD'] == umjd[imjd])
             if len(g) < 1: continue
             allexpi = allexpG[g]
@@ -633,10 +633,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 smjd = str(umjd[imjd])
                 bgcolor = '#f8f9f9'
                 exptype = allexpi['IMAGETYP'][iexp]
-                if exptype == 'Dark': bgcolor = '#fad7a0'
-                if exptype == 'ArcLamp': bgcolor = '#d2b4de'
-                if exptype == 'QuartzFlat': bgcolor = '#aed6f1'
-                if exptype == 'DomeFlat': bgcolor = '#f9e79f'
+                if exptype == 'Dark': bgcolor = ' #f6ddcc'
+                if exptype == 'ArcLamp': bgcolor = ' #fcf3cf'
+                if exptype == 'QuartzFlat': bgcolor = ' #d5f5e3'
+                if exptype == 'DomeFlat': bgcolor = ' #d6eaf8'
                 p1 = allexpi['DATEOBS'][iexp]
                 p2 = smjd
                 p3 = str(num)
@@ -649,7 +649,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     hdr = fits.getheader(twodfile)
                     if hdr['OBSCMNT'][0:3] == 'FPI': 
                         p4 = 'FPI'
-                        bgcolor = '#f5b7b1 '
+                        bgcolor = '#fadbd8'
                     p5 = str(int(round(hdr['EXPTIME'])))
                     p6 = str(hdr['NREAD'])
                     p7 = hdr['SHUTTER']
