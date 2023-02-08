@@ -620,11 +620,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #                                         1       2       3      4         5          6          7         8       9          10        11         12        13         14         15
         headertext = '<TR bgcolor="#DCDCDC"> <TH>DATE <TH>MJD <TH># <TH>TYPE <TH>EXPTIME <TH>NREAD <TH>SHUTTER <TH>CONFIG <TH>DESIGN <TH>FIELD <TH>2D? <TH>1D? <TH>CFRAME? <TH>VISIT? <TH>2D MED FLUX\n'
         exphtml.write(headertext)
-        g, = np.where(allexp['MJD'] >= startFPS)
+        g, = np.where(allexp['MJD'] >= startFPS+100)
         allexpG = allexp[g]
         umjd = np.unique(allexpG['MJD'])
         nmjd = len(umjd)
-        for imjd in range(2):
+        for imjd in range(5):
             print("----> monitor:  exptable for MJD " + str(umjd[imjd]))
             g, = np.where(allexpG['MJD'] == umjd[imjd])
             if len(g) < 1: continue
