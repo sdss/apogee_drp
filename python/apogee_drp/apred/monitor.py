@@ -655,7 +655,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if hdr['OBSCMNT'][0:3] == 'FPI': 
                         exptype = 'FPI'
                         p4 = exptype
-                        bgcolor = '#d6eaf8'
+                        bgcolor = '#f8bbd0'
                     p5 = str(int(round(hdr['EXPTIME'])))
                     p6 = str(hdr['NREAD'])
                     p7 = hdr['SHUTTER']
