@@ -653,7 +653,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     flx = fits.getdata(twodfile)
                     hdr = fits.getheader(twodfile)
                     if hdr['OBSCMNT'][0:3] == 'FPI': 
-                        p4 = 'FPI'
+                        exptype = 'FPI'
+                        p4 = exptype
                         bgcolor = '#d6eaf8'
                     p5 = str(int(round(hdr['EXPTIME'])))
                     p6 = str(hdr['NREAD'])
