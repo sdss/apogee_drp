@@ -52,7 +52,7 @@ nplotfibs = len(fibers)
 
 ###############################################################################################
 ''' MONITOR: Instrument monitoring plots and html '''
-def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True,
+def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=True, exptable=False,
             makeplots=True, makedomeplots=True, makequartzplots=True,
             makecomplots=False, fiberdaysbin=20, allv4=None, allv5=None):
 
@@ -496,6 +496,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> <a href=#detectors> Detectors\n')
     html.write('<li> <a href=#sky> Sky brightness\n')
     html.write('<li> <a href=' + instrument + '/flatflux.html target="_blank">Flat Field Relative Flux Plots</a>\n')
+    html.write('<li> <a href=#exptable>Exposure info table\n')
     html.write('</ul>\n')
     html.write('<HR>\n')
 
@@ -604,6 +605,63 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         deadfibersPlate = deadfibersPlate_S
         badfibersFPS = badfibersFPS_S
         deadfibersFPS = deadfibersFPS_S
+
+    ###############################################################################################
+    if exptable:
+        # HTML for exposure info table
+        exptit = instrument.upper() + ' Exposure Info'
+        exphtml = open(specdir5 + 'monitor/' + instrument + '/expInfo_'+instrument+'.html', 'w')
+        exphtml.write('<HTML><HEAD><script src="../../../../sorttable.js"></script><title>' + exptit + '</title></head><BODY>\n')
+        exphtml.write('<H1>' + exptit + '</H1>\n')
+        exphtml.write('<HR>\n')
+        exphtml.write('<TABLE BORDER=2 CLASS="sortable">\n')
+        #                                         1       2       3      4         5          6          7         8       9          10        11         12        13         14
+        headertext = '<TR bgcolor="#DCDCDC"> <TH>DATE <TH>MJD <TH># <TH>TYPE <TH>EXPTIME <TH>NREAD <TH>SHUTTER <TH>CONFIG <TH>DESIGN <TH>FIELD <TH>2D? <TH>1D? <TH>CFRAME? <TH>VISIT?\n'
+        exphtml.write(headertext)
+        umjd = np.unique(allexp['MJD']
+        nmjd = len(umjd)
+        for imjd in range(nmjd):
+            g, = np.where(allexp['MJD'] == umjd)
+            if len(g) < 1: continue
+            allexpG = allexp[g]
+            nexp = len(allexpG)
+            if imjd > 0: exphtml.write(headertext)
+            for iexp in range(nexp):
+                num = allexpG['NUM'][iexp]
+                p1 = allexpG['DATEOBS'][iexp]
+                p2 = str(umjd[imjd])
+                p3 = str(num)
+                p4 = allexpG['IMAGETYP'][iexp]
+                p5 = ' '
+                p6 = ' '
+                p7 = ' '
+                p8 = ' '
+                p9 = ' '
+                p10 = ' '
+                p11 = ' '
+                p12 = ' '
+                p13 = ' '
+                p14 = ' '
+                twodfile = load.filename('2D',num=num, chips=True).replace('2D-','2D-b-')
+                if os.path.exists(twodfile):
+                    flx = fits.getdata(twodfile)
+                    hdr = fits.getheader(twodfile)
+                    p5 = str(int(round(hdr['EXPTIME'])))
+                    p6 = str(hdr['NREAD'])
+                    p7 = hdr['SHUTTER']
+                    p8 = str(hdr['CONFIGID'])
+                    p9 = str(hdr['DESIGNID'])
+                    p10 = hdr['FIELDID']
+                    p11 = 'yes'
+                    if os.path.exists(twodfile.replace('2D','1D')): p12 = 'yes'
+                    cframe = load.filename('Cframe', plate=hdr['CONFIGID'], mjd=umjd[imjd], num=num, chips=True, fps=fps).replace('Cframe-','Cframe-b-')
+                    if os.path.exists(cframe): p13 = 'yes'
+                    visits = glob.glob(os.path.dirname(cframe)+'/'+prefix+'Visit-*fits')
+                    if len(visits) > 1: p14 = 'yes'
+
+                exphtml.write('<TR><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'+p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD>'+p11+'<TD>'+p12+'<TD>'+p13+'<TD>'+p14+'\n')
+        exphtml.write('</TABLE></BODY></HTML>\n')
+        exphtml.close()
 
     ###############################################################################################
     # HTML for individual fiber throughput plots (dome flats)
@@ -1560,6 +1618,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             fig = plt.figure(figsize=(30,14))
             ymax = 30000
+            if instrument == 'apogee-s': ymax = 20000
             ymin = 0 - ymax*0.05
             yspan = ymax - ymin
 
