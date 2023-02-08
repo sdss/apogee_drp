@@ -658,42 +658,44 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         bgcolor = '#f8bbd0'
                     p5 = str(int(round(hdr['EXPTIME'])))
                     p6 = str(hdr['NREAD'])
-                    p7 = hdr['SHUTTER']
-                    p8 = str(hdr['CONFIGID'])
-                    p9 = str(hdr['DESIGNID'])
-                    p10 = hdr['FIELDID']
-                    p11 = 'yes'
-                    if os.path.exists(twodfile.replace('2D','1D')): p12 = 'yes'
-                    if hdr['CONFIGID'] != '':
-                        cframe = load.filename('Cframe', plate=hdr['CONFIGID'], mjd=smjd, num=num, chips=True, fps=True).replace('Cframe-','Cframe-b-')
-                        if os.path.exists(cframe): p13 = 'yes'
-                        visits = glob.glob(os.path.dirname(cframe)+'/'+prefix+'Visit-*fits')
-                        if len(visits) > 1: p14 = 'yes'
-                        if exptype == 'Dark': 
-                            p15 = str(int(round(np.nanmedian(flx[:,900:1100])/hdr['NREAD'])))
-                        else:
-                            if exptype == 'DomeFlat' or exptype == 'QuartzFlat': 
-                                medim = np.nanmedian(flx[:,900:1100],axis=1)
-                                remedim = dln.rebin(medim,2048//8,tot=True) # rebin in spatial axis
-                                avgpeakflux = np.nanmean(remedim)
-                            if exptype == 'ArcLamp':
-                                if allexpi['UNE'][iexp] == 1:
-                                    sub = flx[:,1452-100:1452+100]
-                                    thresh = 40
-                                if allexpi['THAR'][iexp] == 1:
-                                    sub = flx[:,1566-100:1566+100]
-                                    thresh = 1000
-                                smsub = medfilt2d(sub,(1,7))  # smooth in spectral axis
-                                resmsub = dln.rebin(smsub,(2048//8,200),tot=True) # rebin in spatial axis
-                                peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
-                                avgpeakflux = np.nanmean(peakflux)
-                            if exptype == 'FPI':
-                                sub = flx[:,900:1100]
-                                smsub = medfilt2d(sub,(1,7))  # smooth in spectral axis
-                                resmsub = dln.rebin(smsub,(2048//8,200),tot=True) # rebin in spatial axis
-                                peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
-                                avgpeakflux = np.nanmean(peakflux)
-                            p15 = str(int(round(avgpeakflux/hdr['NREAD'])))
+                    try:
+                        p7 = hdr['SHUTTER']
+                        p8 = str(hdr['CONFIGID'])
+                        p9 = str(hdr['DESIGNID'])
+                        p10 = hdr['FIELDID']
+                        p11 = 'yes'
+                        if os.path.exists(twodfile.replace('2D','1D')): p12 = 'yes'
+                        if hdr['CONFIGID'] != '':
+                            cframe = load.filename('Cframe', plate=hdr['CONFIGID'], mjd=smjd, num=num, chips=True, fps=True).replace('Cframe-','Cframe-b-')
+                            if os.path.exists(cframe): p13 = 'yes'
+                            visits = glob.glob(os.path.dirname(cframe)+'/'+prefix+'Visit-*fits')
+                            if len(visits) > 1: p14 = 'yes'
+                            if exptype == 'Dark': 
+                                p15 = str(int(round(np.nanmedian(flx[:,900:1100])/hdr['NREAD'])))
+                            else:
+                                if exptype == 'DomeFlat' or exptype == 'QuartzFlat': 
+                                    medim = np.nanmedian(flx[:,900:1100],axis=1)
+                                    remedim = dln.rebin(medim,2048//8,tot=True) # rebin in spatial axis
+                                    avgpeakflux = np.nanmean(remedim)
+                                if exptype == 'ArcLamp':
+                                    if allexpi['UNE'][iexp] == 1:
+                                        sub = flx[:,1452-100:1452+100]
+                                        thresh = 40
+                                    if allexpi['THAR'][iexp] == 1:
+                                        sub = flx[:,1566-100:1566+100]
+                                        thresh = 1000
+                                    smsub = medfilt2d(sub,(1,7))  # smooth in spectral axis
+                                    resmsub = dln.rebin(smsub,(2048//8,200),tot=True) # rebin in spatial axis
+                                    peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
+                                    avgpeakflux = np.nanmean(peakflux)
+                                if exptype == 'FPI':
+                                    sub = flx[:,900:1100]
+                                    smsub = medfilt2d(sub,(1,7))  # smooth in spectral axis
+                                    resmsub = dln.rebin(smsub,(2048//8,200),tot=True) # rebin in spatial axis
+                                    peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
+                                    avgpeakflux = np.nanmean(peakflux)
+                                p15 = str(int(round(avgpeakflux/hdr['NREAD'])))
+                    except: continue
 
                 out1 = '<TR bgcolor="'+bgcolor+'"><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'
                 out2 = p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD align=center>'+p11+'<TD align=center>'+p12
