@@ -657,11 +657,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     p10 = hdr['FIELDID']
                     p11 = 'yes'
                     if os.path.exists(twodfile.replace('2D','1D')): p12 = 'yes'
-                    pdb.set_trace()
-                    cframe = load.filename('Cframe', plate=hdr['CONFIGID'], mjd=smjd, num=num, chips=True, fps=True).replace('Cframe-','Cframe-b-')
-                    if os.path.exists(cframe): p13 = 'yes'
-                    visits = glob.glob(os.path.dirname(cframe)+'/'+prefix+'Visit-*fits')
-                    if len(visits) > 1: p14 = 'yes'
+                    if hdr['CONFIGID'] != '':
+                        cframe = load.filename('Cframe', plate=hdr['CONFIGID'], mjd=smjd, num=num, chips=True, fps=True).replace('Cframe-','Cframe-b-')
+                        if os.path.exists(cframe): p13 = 'yes'
+                        visits = glob.glob(os.path.dirname(cframe)+'/'+prefix+'Visit-*fits')
+                        if len(visits) > 1: p14 = 'yes'
 
                 exphtml.write('<TR><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'+p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD>'+p11+'<TD>'+p12+'<TD>'+p13+'<TD>'+p14+'\n')
         exphtml.write('</TABLE></BODY></HTML>\n')
