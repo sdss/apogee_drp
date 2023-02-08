@@ -620,14 +620,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         exphtml.write(headertext)
         umjd = np.unique(allexp['MJD'])
         nmjd = len(umjd)
-        pdb.set_trace()
-        for imjd in range(20):
-            g, = np.where(allexp['MJD'] == umjd)
+        for imjd in range(5):
+            g, = np.where(allexp['MJD'] == umjd[imjd])
             if len(g) < 1: continue
             allexpG = allexp[g]
             nexp = len(allexpG)
             if imjd > 0: exphtml.write(headertext)
-            pdb.set_trace()
             for iexp in range(nexp):
                 num = allexpG['NUM'][iexp]
                 p1 = allexpG['DATEOBS'][iexp]
