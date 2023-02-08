@@ -37,8 +37,9 @@ if __name__ == "__main__":
         qos = 'sdss-fast'
 
     # Run daily reduction
-    #try:
-    #    runapogee.run_daily(observatory,mjd5=mjd,apred=vers)
-    #except:
-    #    email.send('apogee-pipeline-log@sdss.org',subject='Daily APOGEE reduction crashed',message='Daily APOGEE reduction crashed')
-    runapogee.run_daily(observatory,mjd5=mjd,apred=vers,qos=qos)
+    try:
+        runapogee.run_daily(observatory,mjd5=mjd,apred=vers,qos=qos)
+    except:
+        message = 'Daily APOGEE reduction '+observatory+' '+str(mjd)+' CRASHED!!'
+        email.send('apogee-pipeline-log@sdss.org',subject=message,message=message)
+    #runapogee.run_daily(observatory,mjd5=mjd,apred=vers,qos=qos)
