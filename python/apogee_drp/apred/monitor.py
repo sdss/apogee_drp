@@ -610,7 +610,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     if exptable:
         # HTML for exposure info table
         exptit = instrument.upper() + ' Exposure Info'
-        exphtml = open(specdir5 + 'monitor/' + instrument + '/expInfo_'+instrument+'.html', 'w')
+        exphtmlfile = specdir5 + 'monitor/' + instrument + '/expInfo_'+instrument+'.html'
+        print("----> monitor:  Making " + os.path.basename(exphtmlfile))
+        exphtml = open(exphtmlfile, 'w')
         exphtml.write('<HTML><HEAD><script src="../../../../sorttable.js"></script><title>' + exptit + '</title></head><BODY>\n')
         exphtml.write('<H1>' + exptit + '</H1>\n')
         exphtml.write('<HR>\n')
@@ -623,6 +625,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         umjd = np.unique(allexpG['MJD'])
         nmjd = len(umjd)
         for imjd in range(10):
+            print("----> monitor:  exptable for  MJD " + str(umjd[imjd]))
             g, = np.where(allexpG['MJD'] == umjd[imjd])
             if len(g) < 1: continue
             allexpi = allexpG[g]
