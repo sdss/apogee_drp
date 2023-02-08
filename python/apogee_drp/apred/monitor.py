@@ -32,6 +32,7 @@ from matplotlib import cm as cmaps
 from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 from datetime import date,datetime
+from scipy.signal import medfilt2d
 
 ###############################################################################################
 # Set up some basic plotting parameters
