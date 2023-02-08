@@ -631,6 +631,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for iexp in range(nexp):
                 num = allexpi['NUM'][iexp]
                 smjd = str(umjd[imjd])
+                bgcolor = '#f8f9f9'
                 exptype = allexpi['IMAGETYP'][iexp]
                 if exptype == 'Dark': bgcolor = '#fad7a0'
                 if exptype == 'ArcLamp': bgcolor = '#d2b4de'
@@ -640,16 +641,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 p2 = smjd
                 p3 = str(num)
                 p4 = exptype
-                p5 = ' '
-                p6 = ' '
-                p7 = ' '
-                p8 = ' '
-                p9 = ' '
-                p10 = ' '
-                p11 = ' '
-                p12 = ' '
-                p13 = ' '
-                p14 = ' '
+                p5 = ' '; p6 = ' '; p7 = ' '; p8 = ' '; p9 = ' '; p10 = ' '
+                p11 = ' '; p12 = ' '; p13 = ' '; p14 = ' '; p15 = ' '
                 twodfile = load.filename('2D',num=num, chips=True).replace('2D-','2D-b-')
                 if os.path.exists(twodfile):
                     flx = fits.getdata(twodfile)
