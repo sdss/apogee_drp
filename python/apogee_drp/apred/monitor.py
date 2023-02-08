@@ -620,7 +620,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #                                         1       2       3      4         5          6          7         8       9          10        11         12        13         14         15
         headertext = '<TR bgcolor="#DCDCDC"> <TH>DATE <TH>MJD <TH># <TH>TYPE <TH>EXPTIME <TH>NREAD <TH>SHUTTER <TH>CONFIG <TH>DESIGN <TH>FIELD <TH>2D? <TH>1D? <TH>CFRAME? <TH>VISIT? <TH>2D MED FLUX\n'
         exphtml.write(headertext)
-        g, = np.where(allexp['MJD'] >= startFPS+100)
+        g, = np.where((allexp['MJD'] >= startFPS) & (allexp['IMAGETYP'] != 'Object'))
         allexpG = allexp[g]
         umjd = np.unique(allexpG['MJD'])
         nmjd = len(umjd)
@@ -636,10 +636,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 smjd = str(umjd[imjd])
                 bgcolor = '#f8f9f9'
                 exptype = allexpi['IMAGETYP'][iexp]
-                if exptype == 'Dark': bgcolor = '#f6ddcc'
+                #if exptype == 'Dark': bgcolor = '#f6ddcc'
                 if exptype == 'ArcLamp': bgcolor = '#fcf3cf'
                 if exptype == 'QuartzFlat': bgcolor = '#d5f5e3'
                 if exptype == 'DomeFlat': bgcolor = '#d6eaf8'
+                if exptype == 'InternalFlat': bgcolor = '#e8daef'
                 p1 = allexpi['DATEOBS'][iexp]
                 p2 = smjd
                 p3 = str(num)
@@ -666,8 +667,34 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         if os.path.exists(cframe): p13 = 'yes'
                         visits = glob.glob(os.path.dirname(cframe)+'/'+prefix+'Visit-*fits')
                         if len(visits) > 1: p14 = 'yes'
+                        if exptype == 'Dark': 
+                            p15 = str("%.3f" % round(np.nanmedian(flx[:,900:1100])/hdr['NREAD'], 3))
+                        else:
+                            if exptype == 'DomeFlat' or exptype == 'QuartzFlat': 
+                                medim = np.nanmedian(flx[:,900:1100],axis=1)
+                                remedim = dln.rebin(medim,2048//8,tot=True) # rebin in spatial axis
+                                avgpeakflux = np.nanmean(remedim)
+                            if exptype == 'ArcLamp':
+                                if allexpi['UNE'][iexp] == 1:
+                                    sub = flx[:,1452-100:1452+100]
+                                    thresh = 40
+                                if allexpi['THAR'] == 1:
+                                    sub = flx[:,1566-100:1566+100]
+                                    thresh = 1000
+                                smsub = medfilt2d(sub,(1,7))  # smooth in spectral axis
+                                resmsub = dln.rebin(smsub,(2048//8,200),tot=True) # rebin in spatial axis
+                                peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
+                                avgpeakflux = np.nanmean(peakflux)
+                            if exptype == 'FPI':
+                                sub = flx[:,900:1100]
+                                smsub = medfilt2d(sub,(1,7))  # smooth in spectral axis
+                                resmsub = dln.rebin(smsub,(2048//8,200),tot=True) # rebin in spatial axis
+                                peakflux = np.nanmax(resmsub,axis=1)  # peak flux feature in spectral dim.
+                                avgpeakflux = np.nanmean(peakflux)
+                            p15 = str("%.3f" % round(avgpeakflux/hdr['NREAD'], 3))
 
-                exphtml.write('<TR bgcolor="'+bgcolor+'"><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'+p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD>'+p11+'<TD>'+p12+'<TD>'+p13+'<TD>'+p14+'<TD>'+p15+'\n')
+
+                exphtml.write('<TR bgcolor="'+bgcolor+'"><TD>'+p1+'<TD>'+p2+'<TD>'+p3+'<TD>'+p4+'<TD>'+p5+'<TD>'+p6+'<TD>'+p7+'<TD>'+p8+'<TD>'+p9+'<TD>'+p10+'<TD align=center>'+p11+'<TD align=center>'+p12+'<TD align=center>'+p13+'<TD align=center>'+p14+'<TD align=right>'+p15+'\n')
         exphtml.write('</TABLE></BODY></HTML>\n')
         exphtml.close()
 
