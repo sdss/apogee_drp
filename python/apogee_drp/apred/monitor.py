@@ -496,7 +496,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> <a href=#detectors> Detectors\n')
     html.write('<li> <a href=#sky> Sky brightness\n')
     html.write('<li> <a href=' + instrument + '/flatflux.html target="_blank">Flat Field Relative Flux Plots</a>\n')
-    html.write('<li> <a href=#exptable>Exposure info table\n')
+    html.write('<li> <a href=' + instrument + '/expInfo_'+instrument+'.html target="_blank">Exposure info table\n')
     html.write('</ul>\n')
     html.write('<HR>\n')
 
