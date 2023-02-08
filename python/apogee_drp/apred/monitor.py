@@ -618,20 +618,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         #                                         1       2       3      4         5          6          7         8       9          10        11         12        13         14
         headertext = '<TR bgcolor="#DCDCDC"> <TH>DATE <TH>MJD <TH># <TH>TYPE <TH>EXPTIME <TH>NREAD <TH>SHUTTER <TH>CONFIG <TH>DESIGN <TH>FIELD <TH>2D? <TH>1D? <TH>CFRAME? <TH>VISIT?\n'
         exphtml.write(headertext)
-        umjd = np.unique(allexp['MJD'])
+        g, = np.where(allexp['MJD'] >= startFPS)
+        allexpG = allexp[g]
+        umjd = np.unique(allexpG['MJD'])
         nmjd = len(umjd)
         for imjd in range(5):
-            g, = np.where(allexp['MJD'] == umjd[imjd])
+            g, = np.where(allexpG['MJD'] == umjd[imjd])
             if len(g) < 1: continue
-            allexpG = allexp[g]
-            nexp = len(allexpG)
+            allexpi = allexpG[g]
+            nexp = len(allexpi)
             if imjd > 0: exphtml.write(headertext)
             for iexp in range(nexp):
-                num = allexpG['NUM'][iexp]
-                p1 = allexpG['DATEOBS'][iexp]
+                num = allexpi['NUM'][iexp]
+                p1 = allexpi['DATEOBS'][iexp]
                 p2 = str(umjd[imjd])
                 p3 = str(num)
-                p4 = allexpG['IMAGETYP'][iexp]
+                p4 = allexpi['IMAGETYP'][iexp]
                 p5 = ' '
                 p6 = ' '
                 p7 = ' '
