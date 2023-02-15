@@ -39,6 +39,10 @@ if __name__ == "__main__":
     # Run daily reduction
     try:
         runapogee.run_daily(observatory,mjd5=mjd,apred=vers,qos=qos)
+    except KeyboardInterrupt:
+        print('Quitting')
+        # quit
+        sys.exit()
     except:
         # Reduction crashed
         if mjd is None:
