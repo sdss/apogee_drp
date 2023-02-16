@@ -910,8 +910,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         cntr=1
         while len(dome) == 0:
             expinfo1 = info.expinfo(observatory=observatory,mjd5=mjd-cntr)
-            qachk = check.check(expinfo1['num'],apred,telescope,verbose=False)
-            domeind, = np.where((expinfo1['exptype']=='DOMEFLAT') & (qachk['okay']==True) )
+            qachk1 = check.check(expinfo1['num'],apred,telescope,verbose=False)
+            domeind, = np.where((expinfo1['exptype']=='DOMEFLAT') & (qachk1['okay']==True) )
             dome = list(expinfo1['num'][domeind].astype(int))
             cntr +=1
         domepluggroup = expinfo1['pluggroup'][domeind]
