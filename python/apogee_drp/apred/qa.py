@@ -1031,12 +1031,6 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=600></A>\n')
     html.write('<HR>\n')
 
-
-    g, = np.where((expinfo['exptype'] == 'QUARTZFLAT'))
-    qnum = np.min(expinfo['num'][g])
-    qachk = qacheck.check(qnum,apred,telescope,verbose=False)
-    plotfile = fluxfile.replace('.fits', '.png').replace('Flux','Tput').replace(str(fluxid), str(qnum))
-
     # Flat field/throughput plots.
     if fluxid is not None:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
