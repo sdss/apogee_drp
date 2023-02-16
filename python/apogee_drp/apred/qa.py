@@ -17,8 +17,9 @@ from numpy.lib.recfunctions import append_fields, merge_arrays
 from astroplan import moon_illumination
 from astropy.coordinates import SkyCoord, get_moon
 from astropy import units as astropyUnits
-from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit,colorteff
+from apogee_drp.utils import plan,apload,yanny,plugmap,platedata,bitmask,peakfit,colorteff,info
 from apogee_drp.apred import wave,monitor
+from apogee_drp.plan import check as qacheck
 from apogee_drp.database import apogeedb
 from dlnpyutils import utils as dln
 from sdss_access.path import path
@@ -1240,6 +1241,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     chiplab = np.array(['blue','green','red'])
     nchips = len(chips)
 
+    expinfo = info.expinfo(observatory=load.observatory, mjd5=int(mjd))
+
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))
     plotsdir = platedir+'/plots/'
@@ -1556,9 +1559,69 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     # PLOTS 8: throughput histograms
     #----------------------------------------------------------------------------------------------
 
+    # DOME FLAT
     oneD = load.ap1D(fluxid)
     plotfile = fluxfile.replace('.fits', '.png').replace('Flux','Tput')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
+        print("----> makeObsPlots: Making "+plotfile)
+
+        fig=plt.figure(figsize=(20,10))
+        xmin = 0.5
+        xmax = 300.5
+        ymin = 0
+        ymax = 1.08
+        xspan = xmax-xmin
+        yspan = ymax-ymin
+        nbins = 300
+
+        mtpLabelPos = np.arange(0,330,30)
+        xarr = np.arange(0,300,1)+1
+        for ichip in range(nchips):
+            c = chiplab[ichip]
+            ax = plt.subplot2grid((3,1), (ichip,0))
+            ax.minorticks_on()
+            ax.grid(True)
+            ax.set_xlim(xmin,xmax)
+            ax.set_ylim(ymin,ymax)
+            ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
+            ax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+            ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+            ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.2))
+            ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True,labelsize=fontsize*0.75)
+            ax.tick_params(axis='both',which='major',length=axmajlen)
+            ax.tick_params(axis='both',which='minor',length=axminlen)
+            ax.tick_params(axis='both',which='both',width=axwidth)
+            for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
+            if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
+            if ichip == 1: ax.set_ylabel(r'Flux / Max Flux')
+            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+            #ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey', zorder=1)
+            ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=1, linestyles='dashed', zorder=11)
+
+            chip = chips[ichip]
+            try:
+                med = np.nanmedian(oneD[chip][1].data, axis=1)[::-1]
+                tput = med / np.nanmax(med)
+                ax.bar(xarr, tput, label=chiplab[ichip]+'\n'+'chip', color=c, width=1, zorder=10)
+                for imtp in range(len(mtpLabelPos)-1):
+                    if ichip == 0: ax.text(mtpLabelPos[imtp]+15, 1.28, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
+                    g, = np.where((np.isfinite(tput)) & (tput > 0.2) & (xarr > mtpLabelPos[imtp]) & (xarr <= mtpLabelPos[imtp+1]))
+                    tputPercentage = str(int(round(np.nanmean(tput[g]*100))))+'%'
+                    ax.text(mtpLabelPos[imtp]+15, 1.12, tputPercentage, ha='center', color=c, fontsize=fontsize*0.75)
+            except: continue
+
+
+        fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.2,wspace=0.07)
+        plt.savefig(plotsdir+plotfile)
+        plt.close('all')
+
+    # QUARTZ FLAT
+    g, = np.where((expinfo['exptype'] == 'QUARTZFLAT'))
+    num = np.min(expinfo['num'][g])
+    qachk = qacheck.check(num,apred,telescope,verbose=False)
+    plotfile = fluxfile.replace('.fits', '.png').replace('Flux','QTput')
+    pdb.set_trace()
+    if qachk['okay'][0] == True and (os.path.exists(plotsdir+plotfile) == False or clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
         fig=plt.figure(figsize=(20,10))
