@@ -914,6 +914,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             domeind, = np.where((expinfo1['exptype']=='DOMEFLAT') & (qachk1['okay']==True) )
             dome = list(expinfo1['num'][domeind].astype(int))
             cntr +=1
+        pdb.set_trace()
         domepluggroup = expinfo1['pluggroup'][domeind]
     #import pdb; pdb.set_trace()
 
