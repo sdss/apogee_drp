@@ -1630,7 +1630,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if qachk['okay'][0] == True and (os.path.exists(plotsdir+plotfile) == False or clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        oneD = load.ap1D(qnum)
+        oneD = load.ap2D(qnum)
         fig=plt.figure(figsize=(20,10))
         xmin = 0.5
         xmax = 300.5
@@ -1667,7 +1667,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             chip = chips[ichip]
             try:
                 med = np.nanmedian(oneD[chip][1].data[:,1024-100:1024+100], axis=1)[::-1]
-                #pdb.set_trace()
+                pdb.set_trace()
                 tput = med / np.nanmax(med)
                 ax.bar(xarr, tput, label=chiplab[ichip]+'\n'+'chip', color=c, width=1, zorder=10)
                 for imtp in range(len(mtpLabelPos)-1):
