@@ -904,7 +904,18 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     quartzind, = np.where((expinfo['exptype']=='QUARTZFLAT') & (qachk['okay']==True))
     quartz = list(expinfo['num'][quartzind].astype(int))
 
-    if len(dome) == 0: import pdb; pdb.set_trace()
+    # Check if good domes exist for this night. Otherwise try using domes from previous nights.
+    if len(dome) == 0: 
+        logger.info('Dome flats are bad for this MJD. Trying previous MJDs...')
+        cntr=1
+        while len(dome) == 0:
+            expinfo1 = info.expinfo(observatory=observatory,mjd5=mjd-cntr)
+            qachk = check.check(expinfo1['num'],apred,telescope,verbose=False)
+            domeind, = np.where((expinfo1['exptype']=='DOMEFLAT') & (qachk['okay']==True) )
+            dome = list(expinfo1['num'][domeind].astype(int))
+            cntr +=1
+        domepluggroup = expinfo1['pluggroup'][domeind]
+    #import pdb; pdb.set_trace()
 
     # Check which apPSF and apFlux files exist and can be used for calibration files
     # Which domeflat apPSF files exist
