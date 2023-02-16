@@ -923,7 +923,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                     if np.sum(np.array(exist))==3:
                         psfdome_exist[j] = True
                 gddome, = np.where(psfdome_exist == True)
-                if len(gddome)>1: dome = []
+                if len(gddome)<1: dome = []
             cntr +=1
         #domepluggroup = expinfo1['pluggroup'][domeind]
         logger.info('Using dome flats from MJD '+str(oldmjd))
