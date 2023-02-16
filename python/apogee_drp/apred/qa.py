@@ -965,6 +965,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
             fps = False
         prefix = 'as'
 
+    expinfo = info.expinfo(observatory=load.observatory, mjd5=int(mjd))
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
@@ -1030,15 +1031,27 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<A HREF=../plots/'+snrplot2+' target="_blank"><IMG SRC=../plots/'+snrplot2+' WIDTH=600></A>\n')
     html.write('<HR>\n')
 
-    # Flat field plots.
+
+    g, = np.where((expinfo['exptype'] == 'QUARTZFLAT'))
+    qnum = np.min(expinfo['num'][g])
+    qachk = qacheck.check(qnum,apred,telescope,verbose=False)
+    plotfile = fluxfile.replace('.fits', '.png').replace('Flux','Tput').replace(str(fluxid), str(qnum))
+
+    # Flat field/throughput plots.
     if fluxid is not None:
-        fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
+        fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+        plotfile = fluxfile.replace('.fits','.png').replace('Flux','Tput')
         html.write('<H3>Fiber Throughput:</H3>\n')
         html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
         html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
         html.write('<BR><BR>\n')
         html.write('<P><b>Note:</b> Percentages above each panel give the mean throughput of each MTP for each chip (excluding chronically low throughput, broken, and FPI fibers).</P>\n')
-        html.write('<A HREF="'+'../plots/'+fluxfile.replace('Flux','Tput')+'" target="_blank"><IMG SRC=../plots/'+fluxfile.replace('Flux','Tput')+' WIDTH=800></A>')
+        html.write('<A HREF="'+'../plots/'+plotfile+'" target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=600></A>')
+        g, = np.where((expinfo['exptype'] == 'QUARTZFLAT'))
+        qnum = np.min(expinfo['num'][g])
+        plotfile = plotfile.replace(str(fluxid), str(qnum))
+        html.write('<A HREF="'+'../plots/'+plotfile+'" target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=600></A>')
+
         html.write('<HR>\n')
 
     # Fiber location plots.
@@ -1560,11 +1573,11 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     #----------------------------------------------------------------------------------------------
 
     # DOME FLAT
-    oneD = load.ap1D(fluxid)
     plotfile = fluxfile.replace('.fits', '.png').replace('Flux','Tput')
     if (os.path.exists(plotsdir+plotfile) == False) | (clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
+        oneD = load.ap1D(fluxid)
         fig=plt.figure(figsize=(20,10))
         xmin = 0.5
         xmax = 300.5
@@ -1593,7 +1606,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.tick_params(axis='both',which='both',width=axwidth)
             for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
             if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
-            if ichip == 1: ax.set_ylabel(r'Flux / Max Flux')
+            if ichip == 1: ax.set_ylabel(r'Dome Flux / Max Dome Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
             #ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey', zorder=1)
             ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=1, linestyles='dashed', zorder=11)
@@ -1617,13 +1630,13 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
     # QUARTZ FLAT
     g, = np.where((expinfo['exptype'] == 'QUARTZFLAT'))
-    num = np.min(expinfo['num'][g])
-    qachk = qacheck.check(num,apred,telescope,verbose=False)
-    plotfile = fluxfile.replace('.fits', '.png').replace('Flux','QTput')
-    pdb.set_trace()
+    qnum = np.min(expinfo['num'][g])
+    qachk = qacheck.check(qnum,apred,telescope,verbose=False)
+    plotfile = fluxfile.replace('.fits', '.png').replace('Flux','Tput').replace(str(fluxid), str(qnum))
     if qachk['okay'][0] == True and (os.path.exists(plotsdir+plotfile) == False or clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
+        oneD = load.ap1D(qnum)
         fig=plt.figure(figsize=(20,10))
         xmin = 0.5
         xmax = 300.5
@@ -1652,10 +1665,13 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ax.tick_params(axis='both',which='both',width=axwidth)
             for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
             if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
-            if ichip == 1: ax.set_ylabel(r'Flux / Max Flux')
+            if ichip == 1: ax.set_ylabel(r'Quartz Flux / Max Quartz Flux')
             if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
             #ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey', zorder=1)
             ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=1, linestyles='dashed', zorder=11)
+
+                med = np.nanmedian(flux[chip][1].data, axis=1)
+                tput = med[ypos] / np.nanmax(med[ypos])
 
             chip = chips[ichip]
             try:
