@@ -909,13 +909,14 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         logger.info('Dome flats are bad for this MJD. Trying previous MJDs...')
         cntr=1
         while len(dome) == 0:
-            expinfo1 = info.expinfo(observatory=observatory,mjd5=mjd-cntr)
+            oldmjd = mjd-cntr
+            expinfo1 = info.expinfo(observatory=observatory,mjd5=oldmjd)
             qachk1 = check.check(expinfo1['num'],apred,telescope,verbose=False)
             domeind, = np.where((expinfo1['exptype']=='DOMEFLAT') & (qachk1['okay']==True) )
             dome = list(expinfo1['num'][domeind].astype(int))
             cntr +=1
-        pdb.set_trace()
         domepluggroup = expinfo1['pluggroup'][domeind]
+        logger.info('Using dome flats from MJD '+str(oldmjd))
     #import pdb; pdb.set_trace()
 
     # Check which apPSF and apFlux files exist and can be used for calibration files
