@@ -1041,10 +1041,10 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         html.write('<BR><BR>\n')
         html.write('<P><b>Note:</b> Percentages above each panel give the mean throughput of each MTP for each chip (excluding chronically low throughput, broken, and FPI fibers).</P>\n')
         html.write('<A HREF="'+'../plots/'+plotfile+'" target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=600></A>')
-        g, = np.where((expinfo['exptype'] == 'QUARTZFLAT'))
-        qnum = np.min(expinfo['num'][g])
-        plotfile = plotfile.replace(str(fluxid), str(qnum))
-        html.write('<A HREF="'+'../plots/'+plotfile+'" target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=600></A>')
+        #g, = np.where((expinfo['exptype'] == 'QUARTZFLAT'))
+        #qnum = np.min(expinfo['num'][g])
+        #plotfile = plotfile.replace(str(fluxid), str(qnum))
+        #html.write('<A HREF="'+'../plots/'+plotfile+'" target="_blank"><IMG SRC=../plots/'+plotfile+' WIDTH=600></A>')
 
         html.write('<HR>\n')
 
@@ -1623,64 +1623,64 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         plt.close('all')
 
     # QUARTZ FLAT
-    g, = np.where((expinfo['exptype'] == 'QUARTZFLAT'))
-    qnum = np.min(expinfo['num'][g])
-    qachk = qacheck.check(qnum,apred,telescope,verbose=False)
-    plotfile = fluxfile.replace('.fits', '.png').replace('Flux','Tput').replace(str(fluxid), str(qnum))
-    if qachk['okay'][0] == True and (os.path.exists(plotsdir+plotfile) == False or clobber == True):
-        print("----> makeObsPlots: Making "+plotfile)
+    #g, = np.where((expinfo['exptype'] == 'QUARTZFLAT'))
+    #qnum = np.min(expinfo['num'][g])
+    #qachk = qacheck.check(qnum,apred,telescope,verbose=False)
+    #plotfile = fluxfile.replace('.fits', '.png').replace('Flux','Tput').replace(str(fluxid), str(qnum))
+    #if qachk['okay'][0] == True and (os.path.exists(plotsdir+plotfile) == False or clobber == True):
+    #    print("----> makeObsPlots: Making "+plotfile)
 
-        oneD = load.ap2D(qnum)
-        fig=plt.figure(figsize=(20,10))
-        xmin = 0.5
-        xmax = 300.5
-        ymin = 0
-        ymax = 1.08
-        xspan = xmax-xmin
-        yspan = ymax-ymin
-        nbins = 300
+    #    oneD = load.ap1D(qnum)
+    #    fig=plt.figure(figsize=(20,10))
+    #    xmin = 0.5
+    #    xmax = 300.5
+    #    ymin = 0
+    #    ymax = 1.08
+    #    xspan = xmax-xmin
+    #    yspan = ymax-ymin
+    #    nbins = 300
 
-        mtpLabelPos = np.arange(0,330,30)
-        xarr = np.arange(0,300,1)+1
-        for ichip in range(nchips):
-            c = chiplab[ichip]
-            ax = plt.subplot2grid((3,1), (ichip,0))
-            ax.minorticks_on()
-            ax.grid(True)
-            ax.set_xlim(xmin,xmax)
-            ax.set_ylim(ymin,ymax)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
-            ax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
-            ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-            ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.2))
-            ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True,labelsize=fontsize*0.75)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
-            if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
-            if ichip == 1: ax.set_ylabel(r'Quartz Flux / Max Quartz Flux')
-            if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-            #ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey', zorder=1)
-            ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=1, linestyles='dashed', zorder=11)
+    #    mtpLabelPos = np.arange(0,330,30)
+    #    xarr = np.arange(0,300,1)+1
+    #    for ichip in range(nchips):
+    #        c = chiplab[ichip]
+    #        ax = plt.subplot2grid((3,1), (ichip,0))
+    #        ax.minorticks_on()
+    #        ax.grid(True)
+    #        ax.set_xlim(xmin,xmax)
+    #        ax.set_ylim(ymin,ymax)
+    #        ax.xaxis.set_major_locator(ticker.MultipleLocator(30))
+    #        ax.xaxis.set_minor_locator(ticker.MultipleLocator(10))
+    #        ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+    #        ax.yaxis.set_minor_locator(ticker.MultipleLocator(0.2))
+    #        ax.tick_params(axis='both',which='both',direction='out',bottom=True,top=True,left=True,right=True,labelsize=fontsize*0.75)
+    #        ax.tick_params(axis='both',which='major',length=axmajlen)
+    #        ax.tick_params(axis='both',which='minor',length=axminlen)
+    #        ax.tick_params(axis='both',which='both',width=axwidth)
+    #        for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
+    #        if ichip == nchips-1: ax.set_xlabel(r'Fiber ID')
+    #        if ichip == 1: ax.set_ylabel(r'Quartz Flux / Max Quartz Flux')
+    #        if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+    #        #ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey', zorder=1)
+    #        ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=1, linestyles='dashed', zorder=11)
 
-            chip = chips[ichip]
-            try:
-                med = np.nanmedian(oneD[chip][1].data[:,1024-100:1024+100], axis=1)[::-1]
-                pdb.set_trace()
-                tput = med / np.nanmax(med)
-                ax.bar(xarr, tput, label=chiplab[ichip]+'\n'+'chip', color=c, width=1, zorder=10)
-                for imtp in range(len(mtpLabelPos)-1):
-                    if ichip == 0: ax.text(mtpLabelPos[imtp]+15, 1.28, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
-                    g, = np.where((np.isfinite(tput)) & (tput > 0.2) & (xarr > mtpLabelPos[imtp]) & (xarr <= mtpLabelPos[imtp+1]))
-                    tputPercentage = str(int(round(np.nanmean(tput[g]*100))))+'%'
-                    ax.text(mtpLabelPos[imtp]+15, 1.12, tputPercentage, ha='center', color=c, fontsize=fontsize*0.75)
-            except: continue
+    #        chip = chips[ichip]
+    #        try:
+    #            med = np.nanmedian(oneD[chip][1].data[:,1024-100:1024+100], axis=1)[::-1]
+    #            #pdb.set_trace()
+    #            tput = med / np.nanmax(med)
+    #            ax.bar(xarr, tput, label=chiplab[ichip]+'\n'+'chip', color=c, width=1, zorder=10)
+    #            for imtp in range(len(mtpLabelPos)-1):
+    #                if ichip == 0: ax.text(mtpLabelPos[imtp]+15, 1.28, 'MTP '+str(imtp+1), ha='center', fontsize=fontsize*0.75)
+    #                g, = np.where((np.isfinite(tput)) & (tput > 0.2) & (xarr > mtpLabelPos[imtp]) & (xarr <= mtpLabelPos[imtp+1]))
+    #                tputPercentage = str(int(round(np.nanmean(tput[g]*100))))+'%'
+    #                ax.text(mtpLabelPos[imtp]+15, 1.12, tputPercentage, ha='center', color=c, fontsize=fontsize*0.75)
+    #        except: continue
 
 
-        fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.2,wspace=0.07)
-        plt.savefig(plotsdir+plotfile)
-        plt.close('all')
+    #    fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.2,wspace=0.07)
+    #    plt.savefig(plotsdir+plotfile)
+    #    plt.close('all')
 
     #----------------------------------------------------------------------------------------------
     # PLOTS 7: sky, telluric, science fiber positions, colored by Hmag
