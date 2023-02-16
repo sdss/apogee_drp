@@ -1670,9 +1670,6 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             #ax.hlines([1,0.75,0.50,0.25], xmin=xmin, xmax=xmax, linestyles='dashed', colors='grey', zorder=1)
             ax.vlines([30,60,90,120,150,180,210,240,270], ymin=ymin, ymax=ymax, colors='k', linewidths=1, linestyles='dashed', zorder=11)
 
-                med = np.nanmedian(flux[chip][1].data, axis=1)
-                tput = med[ypos] / np.nanmax(med[ypos])
-
             chip = chips[ichip]
             try:
                 med = np.nanmedian(oneD[chip][1].data, axis=1)[::-1]
