@@ -1033,8 +1033,8 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
 
     # Flat field/throughput plots.
     if fluxid is not None:
-        fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
-        plotfile = fluxfile.replace('.fits','.png').replace('Flux','Tput')
+        fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
+        plotfile = fluxfile.replace('Flux','Tput')
         html.write('<H3>Fiber Throughput:</H3>\n')
         html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
         html.write('<A HREF="'+'../plots/'+fluxfile+'" target="_blank"><IMG SRC=../plots/'+fluxfile+' WIDTH=1200></A>')
@@ -1630,7 +1630,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     if qachk['okay'][0] == True and (os.path.exists(plotsdir+plotfile) == False or clobber == True):
         print("----> makeObsPlots: Making "+plotfile)
 
-        oneD = load.ap1D(qnum)
+        oneD = load.ap2D(qnum)
         fig=plt.figure(figsize=(20,10))
         xmin = 0.5
         xmax = 300.5
