@@ -8,7 +8,7 @@ from astropy.io import fits
 from astropy.table import Table
 from argparse import ArgumentParser
 from dlnpyutils import utils as dln
-import subprocess
+import traceback
 from apogee_drp.plan import runapogee
 from apogee_drp.utils import email
 
@@ -39,7 +39,22 @@ if __name__ == "__main__":
     # Run daily reduction
     try:
         runapogee.run_daily(observatory,mjd5=mjd,apred=vers,qos=qos)
+    except KeyboardInterrupt:
+        print('Quitting')
+        # quit
+        sys.exit()
     except:
-        message = 'Daily APOGEE reduction '+observatory+' '+str(mjd)+' CRASHED!!'
-        email.send('apogee-pipeline-log@sdss.org',subject=message,message=message)
+        # Reduction crashed
+        if mjd is None:
+            mjd5 = runapogee.getNextMJD(observatory)
+        else:
+            mjd5 = mjd
+        message = 'APOGEE '+vers+' reduction '+observatory+' '+str(mjd5)+' CRASHED!!'
+        tracemessage = traceback.format_exc()
+        # Add last 20 traceback lines to message body
+        body = message+'\n\n' + '\n'.join(tracemessage.split()[-20:])
+        logdir = os.environ['APOGEE_REDUX']+'/'+vers+'/log/'+observatory+'/'
+        logfile = logdir+str(mjd5)+'.log.crash'
+        dln.writelines(logfile,tracemessage)
+        email.send('apogee-pipeline-log@sdss.org',subject=message,message=body,files=logfile)
     #runapogee.run_daily(observatory,mjd5=mjd,apred=vers,qos=qos)
