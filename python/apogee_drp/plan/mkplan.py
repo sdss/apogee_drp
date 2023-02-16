@@ -917,7 +917,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             cntr +=1
         #domepluggroup = expinfo1['pluggroup'][domeind]
         logger.info('Using dome flats from MJD '+str(oldmjd))
-    #import pdb; pdb.set_trace()
+    import pdb; pdb.set_trace()
 
     # Check which apPSF and apFlux files exist and can be used for calibration files
     # Which domeflat apPSF files exist
