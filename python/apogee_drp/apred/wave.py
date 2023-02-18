@@ -851,16 +851,18 @@ def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
             y[ichip*300+np.arange(300)] = allpars[npoly+group*3+ichip,:]-allpars[npoly+ichip,:]
         mjd.append(frame//10000+55562)
         # reject bad fibers
-        gd=np.where(abs(y) > 1.e-5)[0]
-        design=design[gd,:]
-        y=y[gd]
+        gd = np.where(abs(y) > 1.e-5)[0]
+        design = design[gd,:]
+        y = y[gd]
         # solve
         try : 
             w = np.linalg.solve(np.dot(design.T,design), np.dot(design.T, y))
             wgroup.append(w)
-        except : 
+        except :
+            traceback.print_exc()
             print('fit failed ....')
-            import pdb; pdb.set_trace()
+            return
+            #import pdb; pdb.set_trace()
         print('fit parameters: ', w)
     # subtract median parameter value for this wavecal, so we can compare across different wavecals
     wgroup=np.array(wgroup)
@@ -870,9 +872,9 @@ def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
     grid.append(['../plots/'+rootname+'.png','../plots/'+rootname+'_chiploc.png','../plots/'+rootname+'_sum.png','../plots/'+rootname+'_rms.png'])
     yt.append('{:08d}'.format(num))
 
-  mjd=np.array(mjd)
-  wfit=np.array(wfit)
-  fig,ax=plots.multi(1,4,hspace=0.001)
+  mjd = np.array(mjd)
+  wfit = np.array(wfit)
+  fig,ax = plots.multi(1,4,hspace=0.001)
   plots.plotp(ax[0],mjd,wfit[:,0],yr=[-1.e-3,1.e-3],yt='slope')
   plots.plotp(ax[1],mjd,wfit[:,2],yr=[-5,5],yt='g')
   plots.plotp(ax[2],mjd,wfit[:,1],yr=[-0.2,0.2],yt='r-g')
@@ -1662,9 +1664,10 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
             if p['telescope'].strip("'") == 'apo1m' : design = design[:,1:4]
             # Solve
             try : w = np.linalg.solve(np.dot(design.T,design), np.dot(design.T, y))
-            except : 
+            except :
+                traceback.print_exc()
                 print('fit failed ....')
-                pdb.set_trace()
+                #pdb.set_trace()
             if p['telescope'].strip("'") == 'apo1m' : w=np.append([0.],w)
             print('fit parameters: ', w)
 
@@ -2180,9 +2183,10 @@ def refine(oldpars,npoly=4,verbose=False):
             for ichip in range(3) : 
                 gd, = np.where(allpars[npoly+iframe*3+ichip,:] != 0.)
                 allpars[npoly+iframe*3+ichip,gd] -= (w[0]*np.arange(300)[gd] + w[ichip+1])
-        except: 
+        except:
             print('fit failed ....frame:',iframe)
-            pdb.set_trace()
+            continue
+            #pdb.set_trace()
     # Replace chip offsets of first group with average chip offsets
     # Then calculate wavelength array for all chips and rows/fibers with this fit
     # Also calculate smoothed wavelength array (across rows/fibers at each column). We will use this for a new fit
@@ -2216,7 +2220,8 @@ def refine(oldpars,npoly=4,verbose=False):
                 swaves[chip][gd,col] = np.polyval(pfit,rows[gd]) + waves[chip][gd,1024]
             except:
                 print('fit across rows failed, col: ',col)
-                pdb.set_trace()
+                continue
+                #pdb.set_trace()
 
     # Now refit the full wavelength solutions using swaves as input
     newpars = []

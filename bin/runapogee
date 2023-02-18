@@ -3,6 +3,7 @@
 # Run the daily APOGEE data reduction.  Newer version of autored.pro
 
 import os
+import sys
 import time
 from astropy.io import fits
 from astropy.table import Table
