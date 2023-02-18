@@ -57,7 +57,7 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
   ;; Get the wavelength calibration files
   waveid = long((strsplit(tellid,'-',/extract))[0])
   wavedir = apogee_filename('Wave',num=0,chip='a',/dir)
-  wavefiles = wavedir+'/apWave-'+chips+'-'+strtrim(waveid,2)+'.fits'
+  wavefiles = wavedir+'/'+dirs.prefix+'Wave-'+chips+'-'+strtrim(waveid,2)+'.fits'
   if total(file_test(wavefiles),/int) ne 3 then begin
     print,'Wave '+strtrim(waveid,2)+' files not all found'
     file_delete,lockfile,/allow
@@ -98,7 +98,7 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
   ;; Check that the calibration file was successfully created
   tellfiles = apogee_filename('Telluric',num=tellid,chip=chips)
   if total(file_test(outfile),/int) eq 3 then begin
-    print,'Telluric file apTelluric-'+strtrim(tellid,2)+' completely successfully'
+    print,'Telluric file '+dirs.prefix+'Telluric-'+strtrim(tellid,2)+' completely successfully'
     openw,lock,/get_lun,telldir+file+'.dat'
     free_lun,lock
   endif else print,'PROBLEMS with apTelluric-'+strtrim(tellid,2)+' files'
