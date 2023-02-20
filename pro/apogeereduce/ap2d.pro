@@ -310,7 +310,7 @@ FOR i=0L,nplanfiles-1 do begin
       exptime = sxpar(head0,'exptime')
       fits_read,outfile1,flux,head,exten=1
       flux1 = flux[*,[75,225]]
-      if planstr.telescope eq 'lco25m' then flux1 = flux[*,[82,213]]
+      if planstr.telescope eq 'lco25m' then flux1 = flux[*,[87,218]]
       ;; average on the level of the LSF, ~13 pixels
       bflux1 = rebin(flux1[0:157*13-1],157,2)
       medbflux = median(bflux1)
