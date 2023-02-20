@@ -248,7 +248,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     while rootLogger.hasHandlers(): # some existing loggers, remove them   
         rootLogger.removeHandler(rootLogger.handlers[0]) 
     rootLogger = logging.getLogger()
-    logfile = logdir+str(mjd5)+'.log'
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S")     
+    logfile = logdir+str(mjd5)+'.'+logtime+'.log'
     if os.path.exists(logfile): os.remove(logfile)
     fileHandler = logging.FileHandler(logfile)
     fileHandler.setFormatter(logFormatter)
@@ -257,8 +258,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
     rootLogger.setLevel(logging.NOTSET)
-    logtime = datetime.now().strftime("%Y%m%d%H%M%S") 
 
+    
     rootLogger.info('Running daily APOGEE data reduction for '+str(observatory).upper()+' '+str(mjd5)+' '+apred)
 
     # Initialize the DB connection
@@ -333,7 +334,10 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     rootLogger.info('--------------------')
     rootLogger.info('3) Making plan files')
     rootLogger.info('====================')
-    planfiles = apogeedrp.makeplanfiles(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
+    # Default is to remake the plan files, just in case something changed since
+    #  the same thing this was run.  For example, the daily wave crashed and it
+    #  tried to use an old multiwave file
+    planfiles = apogeedrp.makeplanfiles(load,[mjd5],slurm,clobber=True,logger=rootLogger)
     nplanfiles = len(planfiles)
     # Start entry in daily_status table
     daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),

@@ -6,6 +6,7 @@ from glob import glob
 import pdb
 import subprocess
 import yaml
+import filecmp
 try:
     from yaml import CLoader as Loader, CDumper as Dumper
 except ImportError:
@@ -1252,14 +1253,20 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         planfile = load.filename('ExtraPlan',mjd=mjd)
         planfiles.append(planfile)
 
+    # Check if the existing and non-auto files are the same
+    outfile2 = outfile.replace('auto','')
+    same = True
+    if os.path.exists(outfile) and os.path.exists(outfile2):
+        same = filecmp.cmp(outfile,outfile2)
+    
     # Write out the MJD5 file
     if os.path.exists(outfile): os.remove(outfile)
     logger.info('Writing MJD5.yaml file to '+outfile)
     with open(outfile,'w') as file:
         dum = yaml.dump(out,file,default_flow_style=False, sort_keys=False)
     # Copy it to the non-"auto" version
-    outfile2 = outfile.replace('auto','')
-    if os.path.exists(outfile2)==False:
+    #  only if it doesn't already exist, or is the same as the non-auto version (was not modified)
+    if os.path.exists(outfile2)==False or same:
         shutil.copyfile(outfile,outfile2)
     else:
         logger.info(outfile2+' already exists.  NOT overwriting.')

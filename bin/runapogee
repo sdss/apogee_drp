@@ -3,6 +3,7 @@
 # Run the daily APOGEE data reduction.  Newer version of autored.pro
 
 import os
+import sys
 import time
 from astropy.io import fits
 from astropy.table import Table
@@ -49,12 +50,12 @@ if __name__ == "__main__":
             mjd5 = runapogee.getNextMJD(observatory)
         else:
             mjd5 = mjd
-        message = 'APOGEE '+vers+' reduction '+observatory+' '+str(mjd5)+' CRASHED!!'
+        message = 'APOGEE '+vers+' reduction '+observatory+' '+str(dln.first_el(mjd5))+' CRASHED!!'
         tracemessage = traceback.format_exc()
         # Add last 20 traceback lines to message body
         body = message+'\n\n' + '\n'.join(tracemessage.split()[-20:])
         logdir = os.environ['APOGEE_REDUX']+'/'+vers+'/log/'+observatory+'/'
-        logfile = logdir+str(mjd5)+'.log.crash'
+        logfile = logdir+str(dln.first_el(mjd5))+'.log.crash'
         dln.writelines(logfile,tracemessage)
         email.send('apogee-pipeline-log@sdss.org',subject=message,message=body,files=logfile)
     #runapogee.run_daily(observatory,mjd5=mjd,apred=vers,qos=qos)
