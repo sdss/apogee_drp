@@ -55,7 +55,7 @@ if __name__ == "__main__":
         # Add last 20 traceback lines to message body
         body = message+'\n\n' + '\n'.join(tracemessage.split()[-20:])
         logdir = os.environ['APOGEE_REDUX']+'/'+vers+'/log/'+observatory+'/'
-        logfile = logdir+str(mjd5)+'.log.crash'
+        logfile = logdir+str(dln.first_el(mjd5))+'.log.crash'
         dln.writelines(logfile,tracemessage)
         email.send('apogee-pipeline-log@sdss.org',subject=message,message=body,files=logfile)
     #runapogee.run_daily(observatory,mjd5=mjd,apred=vers,qos=qos)

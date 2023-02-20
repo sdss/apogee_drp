@@ -248,7 +248,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     while rootLogger.hasHandlers(): # some existing loggers, remove them   
         rootLogger.removeHandler(rootLogger.handlers[0]) 
     rootLogger = logging.getLogger()
-    logfile = logdir+str(mjd5)+'.log'
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S")     
+    logfile = logdir+str(mjd5)+'.'+logtime+'.log'
     if os.path.exists(logfile): os.remove(logfile)
     fileHandler = logging.FileHandler(logfile)
     fileHandler.setFormatter(logFormatter)
@@ -257,8 +258,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
     rootLogger.setLevel(logging.NOTSET)
-    logtime = datetime.now().strftime("%Y%m%d%H%M%S") 
 
+    
     rootLogger.info('Running daily APOGEE data reduction for '+str(observatory).upper()+' '+str(mjd5)+' '+apred)
 
     # Initialize the DB connection
