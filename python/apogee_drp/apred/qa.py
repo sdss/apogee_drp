@@ -2990,9 +2990,9 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     for j in range(nfiber):
         #if objid is None:
         jdata = allv[j]
-        fiber = jdata['FIBERID']
+        fiber = jdata['fiberid']
         #objtype = jdata['OBJTYPE']
-        objid = jdata['OBJECT']
+        objid = jdata['objid']
         #else:
         #    objtype = 'SCI'
         #fiber = 100
