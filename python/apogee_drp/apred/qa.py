@@ -2530,9 +2530,9 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
     nfiber = 300
+    allvfile = apodir + apred + '/summary/allVisit-'+apred+'-'+telescope+'.fits'
+    allv1 = fits.getdata(allvfile)
     if objid == None: 
-        allvfile = apodir + apred + '/summary/allVisit-'+apred+'-'+telescope+'.fits'
-        allv1 = fits.getdata(allvfile)
         g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == int(mjd)))
         if len(g) < 1: 
             print("----> makeStarHTML: no entries in allVisit for "+plate+", MJD "+mjd)
@@ -2546,6 +2546,8 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
             #data = apPlate['a'][11].data[::-1]
             #cnfiber = str(nfiber)
     else:
+        g, = np.where(allv1['apogee_id'] == objid)
+        allv = allv1[g][0]
         nfiber = 1
         cnfiber = '1'
 
@@ -2554,13 +2556,13 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
 
     # Loop over the fibers
     for j in range(nfiber):
-        if objid == None:
-            jdata = allv[j]
-            fiber = jdata['fiberid']
+        #if objid == None:
+        jdata = allv[j]
+        fiber = jdata['fiberid']
             #objtype = jdata['OBJTYPE']
-            objid = jdata['apogee_id']
-        else:
-            fiber = 100
+        objid = jdata['apogee_id']
+        #else:
+        #    fiber = 100
             #objtype = 'SCI'
 
         #if (fiber <= 0) | (objtype == 'SKY') | (objid == '2MNone') | (objid == '2M') | (objid == ''): continue
