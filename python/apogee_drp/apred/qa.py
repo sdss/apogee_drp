@@ -2987,7 +2987,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     #    nfib = 1
 
     # Loop over the fibers
-    for j in range(nfib):
+    for j in range(nfiber):
         #if objid is None:
         jdata = allv[j]
         fiber = jdata['FIBERID']
