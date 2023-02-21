@@ -2603,20 +2603,20 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         #vcat = db.query('visit_latest', where="apogee_id='" + objid + "' and telescope='"+ telescope + "'", fmt='table')
 
         # Get visit info from DB
-        cgl = str("%.5f" % round(jdata['glon'][0],5))
-        cgb = str("%.5f" % round(jdata['glat'][0],5))
-        cpmra = str("%.2f" % round(jdata['gaiadr2_pmra'][0],2))
-        cpmde = str("%.2f" % round(jdata['gaiadr2_pmdec'][0],2))
-        cgmag = str("%.3f" % round(jdata['gaiadr2_gmag'][0],3))
-        hmag = jdata['hmag'][0]
-        cjmag = str("%.3f" % round(jdata['jmag'][0], 3))
-        chmag = str("%.3f" % round(jdata['hmag'][0], 3))
-        ckmag = str("%.3f" % round(jdata['kmag'][0],3 ))
-        jkcolor = jdata['jmag'][0] - jdata['kmag'][0]
-        if (jdata['jmag'][0] < 0) | (jdata['kmag'][0] < 0): jkcolor = -9.999
+        cgl = str("%.5f" % round(jdata['glon'],5))
+        cgb = str("%.5f" % round(jdata['glat'],5))
+        cpmra = str("%.2f" % round(jdata['gaiadr2_pmra'],2))
+        cpmde = str("%.2f" % round(jdata['gaiadr2_pmdec'],2))
+        cgmag = str("%.3f" % round(jdata['gaiadr2_gmag'],3))
+        hmag = jdata['hmag']
+        cjmag = str("%.3f" % round(jdata['jmag'], 3))
+        chmag = str("%.3f" % round(jdata['hmag'], 3))
+        ckmag = str("%.3f" % round(jdata['kmag'],3 ))
+        jkcolor = jdata['jmag'] - jdata['kmag']
+        if (jdata['jmag'] < 0) | (jdata['kmag'] < 0): jkcolor = -9.999
         cjkcolor = str("%.3f" % round(jkcolor, 3))
-        cra = str("%.5f" % round(jdata['ra'][0], 5))
-        cdec = str("%.5f" % round(jdata['dec'][0], 5))
+        cra = str("%.5f" % round(jdata['ra'], 5))
+        cdec = str("%.5f" % round(jdata['dec'], 5))
         txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
         txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
         simbadlink = txt1 + txt2
@@ -2633,9 +2633,9 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         rvteff = '----'; rvlogg = '----'; rvfeh = '---'
         #gd, = np.where((jdata['rv_teff'] > 0) & (np.absolute(jdata['rv_teff']) < 99999))
         #if len(gd) > 0:
-        rvteff = str(int(round(jdata['rv_teff'][0])))
-        rvlogg = str("%.3f" % round(jdata['rv_logg'][0],3))
-        rvfeh = str("%.3f" % round(jdata['rv_feh'][0],3))
+        rvteff = str(int(round(jdata['rv_teff'])))
+        rvlogg = str("%.3f" % round(jdata['rv_logg'],3))
+        rvfeh = str("%.3f" % round(jdata['rv_feh'],3))
 
         starHTML = open(starHTMLpath, 'w')
         starHTML.write('<HTML>\n')
