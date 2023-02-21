@@ -2533,7 +2533,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     if objid == None: 
         allvfile = apodir + apred + '/summary/allVisit-'+apred+'-'+telescope+'.fits'
         allv1 = fits.getdata(allvfile)
-        g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == mjd))
+        g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == int(mjd)))
         if len(g) < 1: 
             print("----> makeStarHTML: no entries in allVisit for "+plate+", MJD "+mjd)
             return
