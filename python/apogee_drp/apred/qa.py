@@ -1617,7 +1617,6 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     ax.text(mtpLabelPos[imtp]+15, 1.12, tputPercentage, ha='center', color=c, fontsize=fontsize*0.75)
             except: continue
 
-
         fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.2,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
@@ -2532,29 +2531,39 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
 
     nfiber = 300
     if objid == None: 
-        # Load in the apPlate file
-        apPlate = load.apPlate(int(plate), mjd)
-        data = apPlate['a'][11].data[::-1]
-        cnfiber = str(nfiber)
+        allvfile = apodir + apred + '/summary/allVisit-'+apred+'-'+telescope+'.fits'
+        allv1 = fits.getdata(allvfile)
+        g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == mjd))
+        if len(g) < 1: 
+            print("----> makeStarHTML: no entries in allVisit for "+plate+", MJD "+mjd)
+            return
+        else:
+            allv = allv1[g]
+            nfiber = len(allv)
+            cnfiber = str(nfiber)
+            # Load in the apPlate file
+            #apPlate = load.apPlate(int(plate), mjd)
+            #data = apPlate['a'][11].data[::-1]
+            #cnfiber = str(nfiber)
     else:
         nfiber = 1
         cnfiber = '1'
 
     # Start db session for getting all visit info
-    db = apogeedb.DBSession()
+    #db = apogeedb.DBSession()
 
     # Loop over the fibers
     for j in range(nfiber):
         if objid == None:
-            jdata = data[j]
-            fiber = jdata['FIBERID']
-            objtype = jdata['OBJTYPE']
-            objid = jdata['OBJECT']
+            jdata = allv[j]
+            fiber = jdata['fiberid']
+            #objtype = jdata['OBJTYPE']
+            objid = jdata['apogee_id']
         else:
             fiber = 100
-            objtype = 'SCI'
+            #objtype = 'SCI'
 
-        if (fiber <= 0) | (objtype == 'SKY') | (objid == '2MNone') | (objid == '2M') | (objid == ''): continue
+        #if (fiber <= 0) | (objtype == 'SKY') | (objid == '2MNone') | (objid == '2M') | (objid == ''): continue
 
         print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
 
@@ -2591,41 +2600,42 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
             apStarRelPath = None
 
         # DB query to get visit info
-        vcat = db.query('visit_latest', where="apogee_id='" + objid + "' and telescope='"+ telescope + "'", fmt='table')
+        #vcat = db.query('visit_latest', where="apogee_id='" + objid + "' and telescope='"+ telescope + "'", fmt='table')
 
         # Get visit info from DB
-        cgl = str("%.5f" % round(vcat['glon'][0],5))
-        cgb = str("%.5f" % round(vcat['glat'][0],5))
-        cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
-        cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
-        cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
-        hmag = vcat['hmag'][0]
-        cjmag = str("%.3f" % round(vcat['jmag'][0], 3))
-        chmag = str("%.3f" % round(vcat['hmag'][0], 3))
-        ckmag = str("%.3f" % round(vcat['kmag'][0],3 ))
-        jkcolor = vcat['jmag'][0] - vcat['kmag'][0]
-        if (vcat['jmag'][0] < 0) | (vcat['kmag'][0] < 0): jkcolor = -9.999
+        cgl = str("%.5f" % round(jdata['glon'][0],5))
+        cgb = str("%.5f" % round(jdata['glat'][0],5))
+        cpmra = str("%.2f" % round(jdata['gaiadr2_pmra'][0],2))
+        cpmde = str("%.2f" % round(jdata['gaiadr2_pmdec'][0],2))
+        cgmag = str("%.3f" % round(jdata['gaiadr2_gmag'][0],3))
+        hmag = jdata['hmag'][0]
+        cjmag = str("%.3f" % round(jdata['jmag'][0], 3))
+        chmag = str("%.3f" % round(jdata['hmag'][0], 3))
+        ckmag = str("%.3f" % round(jdata['kmag'][0],3 ))
+        jkcolor = jdata['jmag'][0] - jdata['kmag'][0]
+        if (jdata['jmag'][0] < 0) | (jdata['kmag'][0] < 0): jkcolor = -9.999
         cjkcolor = str("%.3f" % round(jkcolor, 3))
-        cra = str("%.5f" % round(vcat['ra'][0], 5))
-        cdec = str("%.5f" % round(vcat['dec'][0], 5))
+        cra = str("%.5f" % round(jdata['ra'][0], 5))
+        cdec = str("%.5f" % round(jdata['dec'][0], 5))
         txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
         txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
         simbadlink = txt1 + txt2
 
-        nvis = len(vcat)
+        visind, = np.where(allv1['apogee_id'] == objid)
+        nvis = len(visind)
         cvrad = '----';  cvscatter = '----'
-        gd, = np.where(np.absolute(vcat['vrad']) < 400)
+        gd, = np.where(np.absolute(allv1['vrad'][visind]) < 400)
         if len(gd) > 0:
-            vels = vcat['vrad'][gd]
+            vels = allv1['vrad'][gd]
             cvrad = str("%.2f" % round(np.mean(vels),2))
             cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
 
         rvteff = '----'; rvlogg = '----'; rvfeh = '---'
-        gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
-        if len(gd) > 0:
-            rvteff = str(int(round(vcat['rv_teff'][gd][0])))
-            rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
-            rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
+        #gd, = np.where((jdata['rv_teff'] > 0) & (np.absolute(jdata['rv_teff']) < 99999))
+        #if len(gd) > 0:
+        rvteff = str(int(round(jdata['rv_teff'][0])))
+        rvlogg = str("%.3f" % round(jdata['rv_logg'][0],3))
+        rvfeh = str("%.3f" % round(jdata['rv_feh'][0],3))
 
         starHTML = open(starHTMLpath, 'w')
         starHTML.write('<HTML>\n')
@@ -2671,23 +2681,23 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starHTML.write('<TR bgcolor="'+thcolor+'">')
         starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vrad <TH>Spectrum Plot </TR>\n')
         for k in range(nvis):
-            mjd = vcat['mjd'][k]
+            mjd = allv1['mjd'][k]
             fps = True
             if mjd < 59556: fps = False
             cmjd = str(mjd)
-            dateobs = Time(vcat['jd'][k], format='jd').fits.replace('T', '<BR>')
-            cplate = vcat['plate'][k]
-            cfield = vcat['field'][k]
-            cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
-            cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
+            dateobs = Time(allv1['jd'][k], format='jd').fits.replace('T', '<BR>')
+            cplate = allv1['plate'][k]
+            cfield = allv1['field'][k]
+            cfib = str(int(round(allv1['fiberid'][k]))).zfill(3)
+            cblock = str(11-np.ceil(allv1['fiberid'][k]/30).astype(int))
             ccart = '?'
-            platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd, fps=fps)
+            platefile = load.filename('PlateSum', plate=int(allv1['plate'][k]), mjd=cmjd, fps=fps)
             if os.path.exists(platefile):
                 platetab = fits.getdata(platefile,1)
                 ccart = str(platetab['CART'][0])
             
-            csnr = str("%.1f" % round(vcat['snr'][k],1))
-            cvrad = str("%.2f" % round(vcat['vrad'][k],2))
+            csnr = str("%.1f" % round(allv1['snr'][k],1))
+            cvrad = str("%.2f" % round(allv1['vrad'][k],2))
             visplotname = prefix+'Plate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
             visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
             visplot = visplotpath + visplotname
