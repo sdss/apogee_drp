@@ -2899,37 +2899,42 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     
     # Get plan files for these MJDs
     planfiles = getplanfiles(load,mjds,logger=logger)
+    nplans = len(planfiles)
     # Only want apPlan files
-    if len(planfiles)>0:
+    if nplans>0:
         planfiles = [p for p in planfiles if os.path.basename(p).startswith(load.prefix+'Plan')]        
         #if load.instrument=='apogee-n':
         #    planfiles = [p for p in planfiles if os.path.basename(p).startswith('apPlan')]
         #else:
         #    planfiles = [p for p in planfiles if os.path.basename(p).startswith('asPlan')]
-    if len(planfiles)==0:
+    if nplans==0:
         logger.info('No plan files')
         return
-    logger.info(str(len(planfiles))+' plan file(s)')
+    logger.info(str(nplans)+' plan file(s)')
 
     # Run apqa on each plate visit
     slurmpars1 = slurmpars.copy()
-    if len(planfiles)<64:
-        slurmpars1['cpus'] = len(planfiles)
+    if nplans<64:
+        slurmpars1['cpus'] = nplans
     slurmpars1['numpy_num_threads'] = 2    
     logger.info('Slurm settings: '+str(slurmpars1))
     queue = pbsqueue(verbose=True)
     queue.create(label='apqa', **slurmpars1)
+    plates = np.empty(nplans).astype(str)
+    mjds = np.empty(nplans).astype(str)
+    fields = np.empty(nplans).astype(str)
     for i,pf in enumerate(planfiles):
         logger.info('planfile %d : %s' % (i+1,pf))
         fdir = os.path.dirname(pf)
         # apPlan-1491-59587.yaml
         base = os.path.basename(pf)
         dum = base.split('-')
-        plate = dum[1]
-        mjd = dum[2].split('.')[0]
-        logfile = fdir+'/apqa-'+plate+'-'+mjd+'_pbs.'+logtime+'.log'
+        plates[i] = dum[1]
+        mjds[i] = dum[2].split('.')[0]
+        fields[i] = os.path.dirname(os.path.dirname(fdir)).split('/')[-1]
+        logfile = fdir+'/apqa-'+plates[i]+'-'+mjds[i]+'_pbs.'+logtime+'.log'
         errfile = logfile.replace('.log','.err')
-        cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjd,observatory,apred,telescope,plate)
+        cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjds[i],observatory,apred,telescope,plates[i])
         #cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
         cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
         logger.info('Command : '+cmd)
@@ -2969,6 +2974,23 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
                              domjd=True, dofields=True)
     except:
         traceback.print_exc()
+
+    # Make apStar HTML and plots
+    # Loop over the apVisitSum files and figure out the stars that need to be run
+    #qastars = []
+    #for i in range(nplans):
+    #    visSumFile = load.filename('VisitSum',plate=int(plates[i]),mjd=int(mjds[i]),field=fields[i])
+    #    visSum = fits.getdata(visSumFile)
+    #    obj = visSum['APOGEE_ID']
+    #    ns = len(ids)
+    #    for j in range(ns):
+    #        apstarfile = load.filename('Star',fields[i],obj[j])
+    #        if os.path.exists(apstarfile): qastars.append(obj[j])
+    #qastars = np.array(qastars)
+    #nstars = len(qastars)
+    #logger.info(str(nstars)+' objects to run apStar QA on')
+
+    #if nstars > 0: 
 
     # Run monitor page
     #  always runs on all MJDs
@@ -3028,7 +3050,7 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
 
     # APRED step
     if 'apred' in steps and chkexp is not None and chkvisit is not None:
-        inde, = np.where(chexp['success']==True)
+        inde, = np.where(chkexp['success']==True)
         message += 'APRED: %d/%d exposures successfully processed<br> \n' % (len(inde),len(chkexp))
         indv, = np.where(chkvisit['success']==True)
         message += 'APRED: %d/%d visits successfully processed<br> \n' % (len(indv),len(chkvisit))
