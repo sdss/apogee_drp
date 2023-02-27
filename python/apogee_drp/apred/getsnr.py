@@ -79,7 +79,7 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
     telescope = observatory + '25m'
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
-    out = open(outdir + 'apogeeSNR-FPS.dat', 'w')
+    out = open(outdir + 'apogeeSNR-FPS_' + telescope + '.dat', 'w')
     out.write('EXPOSURE      SNR_G\n')
 
     mdir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/monitor/'
