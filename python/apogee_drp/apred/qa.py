@@ -2626,11 +2626,12 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         simbadlink = txt1 + txt2
 
         visind, = np.where(allv1['apogee_id'] == obj)
+        allvstar = allv1[visind]
         nvis = len(visind)
         cvrad = '----';  cvscatter = '----'
-        gd, = np.where(np.absolute(allv1['vrad'][visind]) < 400)
+        gd, = np.where(np.absolute(allvstar['vrad']) < 400)
         if len(gd) > 0:
-            vels = allv1['vrad'][gd]
+            vels = allvstar['vrad'][gd]
             cvrad = str("%.2f" % round(np.mean(vels),2))
             cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
 
@@ -2685,23 +2686,23 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starHTML.write('<TR bgcolor="'+thcolor+'">')
         starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vrad <TH>Spectrum Plot </TR>\n')
         for k in range(nvis):
-            mjd = allv1['mjd'][k]
+            mjd = allvstar['mjd'][k]
             fps = True
             if mjd < 59556: fps = False
             cmjd = str(mjd)
-            dateobs = Time(allv1['jd'][k], format='jd').fits.replace('T', '<BR>')
-            cplate = allv1['plate'][k]
-            cfield = allv1['field'][k]
-            cfib = str(int(round(allv1['fiberid'][k]))).zfill(3)
-            cblock = str(11-np.ceil(allv1['fiberid'][k]/30).astype(int))
+            dateobs = Time(allvstar['jd'][k], format='jd').fits.replace('T', '<BR>')
+            cplate = allvstar['plate'][k]
+            cfield = allvstar['field'][k]
+            cfib = str(int(round(allvstar['fiberid'][k]))).zfill(3)
+            cblock = str(11-np.ceil(allvstar['fiberid'][k]/30).astype(int))
             ccart = '?'
-            platefile = load.filename('PlateSum', plate=int(allv1['plate'][k]), mjd=cmjd, fps=fps)
+            platefile = load.filename('PlateSum', plate=int(allvstar['plate'][k]), mjd=cmjd, fps=fps)
             if os.path.exists(platefile):
                 platetab = fits.getdata(platefile,1)
                 ccart = str(platetab['CART'][0])
             
-            csnr = str("%.1f" % round(allv1['snr'][k],1))
-            cvrad = str("%.2f" % round(allv1['vrad'][k],2))
+            csnr = str("%.1f" % round(allvstar['snr'][k],1))
+            cvrad = str("%.2f" % round(allvstar['vrad'][k],2))
             visplotname = prefix+'Plate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
             visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
             visplot = visplotpath + visplotname
