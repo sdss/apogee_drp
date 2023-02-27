@@ -2331,7 +2331,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if len(gg) > 0:
                         photteff = teff[gg][0]
                         jk0 = jmag - kmag - 0.17*av[gg][0]
-                    if objid == '2M15190094-5634411': pdb.set_trace()
+                    #if objid == '2M15190094-5634411': pdb.set_trace()
                     apstarfile = load.filename('Star', obj=objid)
                     if os.path.exists(apstarfile):
                         apstarheader = fits.getheader(apstarfile)
