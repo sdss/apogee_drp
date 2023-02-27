@@ -2561,17 +2561,18 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         jdata = allv[j]
         fiber = jdata['fiberid']
             #objtype = jdata['OBJTYPE']
-        objid = jdata['apogee_id']
+        if objid == None: obj = jdata['apogee_id']
+        else: obj = objid
         #else:
         #    fiber = 100
             #objtype = 'SCI'
 
-        #if (fiber <= 0) | (objtype == 'SKY') | (objid == '2MNone') | (objid == '2M') | (objid == ''): continue
+        #if (fiber <= 0) | (objtype == 'SKY') | (obj == '2MNone') | (obj == '2M') | (obj == ''): continue
 
-        print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
+        print("----> makeStarHTML:   making html for " + obj + " (" + str(j+1) + "/" + cnfiber + ")")
 
         # Find which healpix this star is in
-        healpix = apload.obj2healpix(objid)
+        healpix = apload.obj2healpix(obj)
         healpixgroup = str(healpix // 1000)
         healpix = str(healpix)
 
@@ -2579,11 +2580,11 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
         starHtmlDir = starDir + 'html/'
         if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir)
-        starHTMLpath = starHtmlDir + objid + '.html'
+        starHTMLpath = starHtmlDir + obj + '.html'
 
         starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-        starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
-        apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+        starHTMLrelPath = '../' + starRelPath + 'html/' + obj + '.html'
+        apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + obj + '-*.fits')
         if len(apStarCheck) > 0:
             # Find the newest apStar file
             apStarCheck.sort()
@@ -2596,14 +2597,14 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
             # Set up plot directories and plot file name
             starPlotDir = starDir + 'plots/'
             if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
-            starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
+            starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + obj + '_spec+model.png'
             starPlotFilePath = starPlotDir + starPlotFile
             starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
         else:
             apStarRelPath = None
 
         # DB query to get visit info
-        #vcat = db.query('visit_latest', where="apogee_id='" + objid + "' and telescope='"+ telescope + "'", fmt='table')
+        #vcat = db.query('visit_latest', where="apogee_id='" + obj + "' and telescope='"+ telescope + "'", fmt='table')
 
         # Get visit info from DB
         cgl = str("%.5f" % round(jdata['glon'],5))
@@ -2624,7 +2625,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
         simbadlink = txt1 + txt2
 
-        visind, = np.where(allv1['apogee_id'] == objid)
+        visind, = np.where(allv1['apogee_id'] == obj)
         nvis = len(visind)
         cvrad = '----';  cvscatter = '----'
         gd, = np.where(np.absolute(allv1['vrad'][visind]) < 400)
@@ -2642,9 +2643,9 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
 
         starHTML = open(starHTMLpath, 'w')
         starHTML.write('<HTML>\n')
-        starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
+        starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +obj+ '</title></head>\n')
         starHTML.write('<BODY>\n')
-        starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1> <HR>\n')
+        starHTML.write('<H1>' + obj + ', ' + str(nvis) + ' visits</H1> <HR>\n')
         if apStarRelPath is not None:
             starHTML.write('<P>' + simbadlink + '<BR><A HREF=' + apStarRelPath + '>apStar File</A>\n')
         else:
