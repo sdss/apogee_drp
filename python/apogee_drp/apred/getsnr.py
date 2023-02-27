@@ -83,7 +83,7 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
     out.write('EXPOSURE      SNR_G\n')
 
     mdir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/monitor/'
-    expdata = fits.getdata(mdir + 'apogee-nSci.fits')
+    expdata = fits.getdata(mdir + load.instrument + 'Sci.fits')
     g, = np.where((expdata['MJD'] >= mjdstart) & (expdata['SN'][:,1] > 0))
     expdata = expdata[g]
     order = np.argsort(expdata['MJD'])
