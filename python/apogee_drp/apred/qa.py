@@ -2508,7 +2508,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
 ###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
-def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=None, plate=None, mjd=None, survey=None): 
+def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=None, plate=None, mjd=None, survey=None, allv1=None): 
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
     prefix = 'ap'
@@ -2531,8 +2531,9 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
 
     # Get visit info from allVisit
-    allvfile = apodir + apred + '/summary/allVisit-'+apred+'-'+telescope+'.fits'
-    allv1 = fits.getdata(allvfile)
+    if allv1 == None:
+        allvfile = apodir + apred + '/summary/allVisit-'+apred+'-'+telescope+'.fits'
+        allv1 = fits.getdata(allvfile)
     if objid == None: 
         g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == int(mjd)))
         if len(g) < 1: 
@@ -2742,11 +2743,11 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starHTML.write('<BR><BR><BR><BR>\n')
         starHTML.close()
 
-    if objid is None:
-        print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
-    else:
-        if makeplot: apStarPlots(objid=objid, load=load, apred=apred, telescope=telescope)
-        print("----> makeStarHTML: Done with " + objid)
+    #if objid is None:
+    #    print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
+    #else:
+    #    if makeplot: apStarPlots(objid=objid, load=load, apred=apred, telescope=telescope)
+    #    print("----> makeStarHTML: Done with " + objid)
 
 ###################################################################################################
 ''' APVISITPLOTS: plots of the apVisit spectra '''
