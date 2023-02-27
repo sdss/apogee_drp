@@ -2343,9 +2343,9 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                         if np.isnan(rvteff): rvteff = -9999
                         if np.isnan(rvlogg): rvlogg = -9.999
                         if np.isnan(rvfeh): rvfeh = -9.999
-                        tmp = apstarfile.split(apred + '/')
-                        apStarRelPath = '../../../../../../' + tmp[1]
-                        starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
+                    tmp = apstarfile.split(apred + '/')
+                    apStarRelPath = '../../../../../../' + tmp[1]
+                    starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
                 else:
                     objid = 'None'
                     assigned = 0
@@ -2393,8 +2393,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD>' + objid + '\n')
                 vishtml.write('<BR>' + simbadlink + '\n')
                 vishtml.write('<BR><A HREF=../' + visitfile + '>apVisit file</A>\n')
+                #if apStarRelPath is not None:
                 vishtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
                 vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
+                #else:
+                #    vishtml.write('<BR>apStar file??\n')
+                #    vishtml.write('<BR>Star Summary Page??\n')
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(hmag,3)))
                 if (jmag > 0) & (kmag > 0) & (jmag < 90) & (kmag < 90):
                     vishtml.write('<TD align ="center">' + str("%.3f" % round(jmag-kmag,3)))
