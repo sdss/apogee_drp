@@ -978,6 +978,7 @@ def create_sumfiles_mjd(apred,telescope,mjd5,logger=None):
     # maybe in summary/MJD/ or qa/MJD/ ?
     #allstarmjdfile = load.filename('allStarMJD')
     allstarfile = load.filename('allStar').replace('.fits','-'+telescope+'.fits')
+    pdb.set_trace()
     allstarmjdfile = allstarfile.replace('allStar','allStarMJD').replace('.fits','-'+str(mjd5)+'.fits')
     mjdsumdir = os.path.dirname(allstarmjdfile)+'/'+str(mjd5)
     allstarmjdfile = mjdsumdir+'/'+os.path.basename(allstarmjdfile)
