@@ -294,7 +294,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 ###################################################################################################
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
-         makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, makestarplots=False, 
+         makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True, 
          makemasterqa=True, makenightqa=True, makemonitor=True, clobber=True):
 
     start_time = time.time()
