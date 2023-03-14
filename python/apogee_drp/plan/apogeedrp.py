@@ -1041,8 +1041,7 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     else:
         allstar = vstar
     
-    allstarfile = load.filename('allStar').replace('.fits','-'+telescope+'.fits')
-    import pdb; pdb.set_trace()
+    allstarfile = load.filename('allStar')#.replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allStar file to '+allstarfile)
     logger.info(str(len(allstar))+' stars')
     if os.path.exists(os.path.dirname(allstarfile))==False:
@@ -1099,7 +1098,7 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     if allvisit.dtype['rv_components'] == np.object:
         allvisit = Table(allvisit)
         allvisit['rv_components'] = np.zeros(len(allvisit),dtype=np.dtype((np.float32,3)))
-    allvisitfile = load.filename('allVisit').replace('.fits','-'+telescope+'.fits')
+    allvisitfile = load.filename('allVisit')#.replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allVisit file to '+allvisitfile)
     logger.info(str(len(allvisit))+' visits')
     if os.path.exists(os.path.dirname(allvisitfile))==False:
