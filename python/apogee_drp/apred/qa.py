@@ -2950,7 +2950,8 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     models = doppler.cannon.models
 
     # Base directory where star-level stuff goes
-    starHTMLbase = apodir + apred + '/stars/' + telescope + '/'
+    #starHTMLbase = apodir + apred + '/stars/' + telescope + '/'
+    starHTMLbase = apodir + apred + '/' + telescope + '/'
 
     # Basic plotting parameters
     fontsize = 24;   fsz = fontsize * 0.75
@@ -3016,7 +3017,8 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
 
         # Find the associated healpix html directories and make them if they don't already exist
         starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
-        starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+        #starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+        starRelPath = '../../../../../' + telescope + '/' + healpixgroup + '/' + healpix + '/'
 
         # Make sure an apStar file exists
         apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
