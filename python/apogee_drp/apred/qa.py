@@ -2569,7 +2569,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         #    fiber = 100
             #objtype = 'SCI'
 
-        if fiber <= 0 or objtype == 'SKY': continue
+        #if fiber <= 0 or objtype == 'SKY': continue
         if obj == '2MNone' or obj == '2M' or obj == '' or obj == None or obj == 'None': continue
 
         print("----> makeStarHTML:   making html for " + obj + " (" + str(j+1) + "/" + cnfiber + ")")
