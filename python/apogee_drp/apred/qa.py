@@ -2802,8 +2802,9 @@ def apVisitPlots(load=None, plate=None, mjd=None, telescope=None):
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
             objid = jdata['OBJECT']
-            if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
             objtype = jdata['OBJTYPE']
+            if objtype != 'SKY':
+                if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
             hmag = jdata['HMAG']
             chmag = str("%.3f" % round(jdata['HMAG'], 3))
             jkcolor = jdata['JMAG'] - jdata['KMAG']
