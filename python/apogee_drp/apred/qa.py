@@ -2297,7 +2297,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             cfiber = str(fiber).zfill(3)
             cblock = str(np.ceil(fiber / 30).astype(int))
             objid = jdata['OBJECT']
-            if obj == '2MNone' or obj == '2M' or obj == '' | obj == None | obj == 'None': continue
+            if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
             objtype = jdata['OBJTYPE']
             visitplotfile = '../plots/' + prefix + 'Plate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             # Establish html table row background color and spectrum plot color
@@ -2569,8 +2569,8 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         #    fiber = 100
             #objtype = 'SCI'
 
-        if fiber <= 0 or objtype == 'SKY' or obj == '2MNone' or obj == '2M' or 
-           obj == '' | obj == None | obj == 'None': continue
+        if fiber <= 0 or objtype == 'SKY': continue
+        if obj == '2MNone' or obj == '2M' or obj == '' or obj == None or obj == 'None': continue
 
         print("----> makeStarHTML:   making html for " + obj + " (" + str(j+1) + "/" + cnfiber + ")")
 
@@ -2802,7 +2802,7 @@ def apVisitPlots(load=None, plate=None, mjd=None, telescope=None):
         if fiber > 0:
             cfiber = str(fiber).zfill(3)
             objid = jdata['OBJECT']
-            if obj == '2MNone' or obj == '2M' or obj == '' | obj == None | obj == 'None': continue
+            if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
             objtype = jdata['OBJTYPE']
             hmag = jdata['HMAG']
             chmag = str("%.3f" % round(jdata['HMAG'], 3))
