@@ -2297,7 +2297,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             cfiber = str(fiber).zfill(3)
             cblock = str(np.ceil(fiber / 30).astype(int))
             objid = jdata['OBJECT']
-            if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
             objtype = jdata['OBJTYPE']
             visitplotfile = '../plots/' + prefix + 'Plate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             # Establish html table row background color and spectrum plot color
@@ -2317,6 +2316,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 firstcarton = 'SKY'
                 starflags = 'None'
             else:
+                if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
                 assigned = 1
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 if len(vcatind) < 1: pdb.set_trace()
