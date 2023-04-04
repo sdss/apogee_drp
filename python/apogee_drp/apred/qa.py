@@ -2529,7 +2529,8 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     apodir = os.environ.get('APOGEE_REDUX') + '/'
 
     # Base directory where star-level stuff goes
-    starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
+    #starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
+    starHTMLbase = apodir + apred + '/' + telescope +'/'
 
     # Get visit info from allVisit
     if allv1 == None:
@@ -2585,7 +2586,8 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir)
         starHTMLpath = starHtmlDir + obj + '.html'
         pdb.set_trace()
-        starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+        #starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+        starRelPath = '../../../../../' + telescope + '/' + healpixgroup + '/' + healpix + '/'
         starHTMLrelPath = '../' + starRelPath + 'html/' + obj + '.html'
         apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + obj + '-*.fits')
         if len(apStarCheck) > 0:
