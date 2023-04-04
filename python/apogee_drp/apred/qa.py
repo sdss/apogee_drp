@@ -2297,6 +2297,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             cfiber = str(fiber).zfill(3)
             cblock = str(np.ceil(fiber / 30).astype(int))
             objid = jdata['OBJECT']
+            if objid == 'None' or objid == None: continue
             objtype = jdata['OBJTYPE']
             visitplotfile = '../plots/' + prefix + 'Plate-' + plate + '-' + mjd + '-' + cfiber + '.png'
             # Establish html table row background color and spectrum plot color
