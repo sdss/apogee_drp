@@ -3019,7 +3019,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
         starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
         #starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
         starRelPath = '../../../../../' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-
+        pdb.set_trace()
         # Make sure an apStar file exists
         apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
         if len(apStarCheck) < 1: 
