@@ -2586,7 +2586,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir)
         starHTMLpath = starHtmlDir + obj + '.html'
         #starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-        starRelPath = '../../../../../' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+        starRelPath = '../../../../' + telescope + '/' + healpixgroup + '/' + healpix + '/'
         starHTMLrelPath = '../' + starRelPath + 'html/' + obj + '.html'
         apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + obj + '-*.fits')
         if len(apStarCheck) > 0:
