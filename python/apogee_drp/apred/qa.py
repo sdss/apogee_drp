@@ -2718,7 +2718,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
             #visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
             visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
             visplot = visplotpath + visplotname
-            apvispath = '../../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/'
+            apvispath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/'
             apqahtml = apvispath + '/html/' + prefix + 'QA-' + cplate + '-' + cmjd + '.html'
             apvisfile = 'apVisit-' + apred + '-' + telescope + '-' + cplate + '-' + cmjd + '-' + cfib + '.fits'
             apvis = apvispath + apvisfile
