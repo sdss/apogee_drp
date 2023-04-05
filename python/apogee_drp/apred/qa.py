@@ -3011,7 +3011,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
         #fiber = 100
 
         # Only run it for valid stars
-        if objid == '2MNone' or objid == '2M' or obj == '' or objid == None or objid == 'None': continue
+        if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
 
         # Find the associated html directories; make them if they don't already exist
         apStarPath = load.filename('Star', obj=objid)
