@@ -2597,6 +2597,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
         apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + obj + '-*.fits')
+        apStarRelPath = None
         if len(apStarCheck) > 0:
             # Find the newest apStar file
             apStarCheck.sort()
