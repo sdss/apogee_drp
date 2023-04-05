@@ -2346,8 +2346,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                         if np.isnan(rvlogg): rvlogg = -9.999
                         if np.isnan(rvfeh): rvfeh = -9.999
                     tmp = apstarfile.split(apred + '/')
-                    apStarRelPath = '../../../../../../stars/' + tmp[1]
-                    starHTMLrelPath = '../../../../../../stars/' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
+                    apStarRelPath = '../../../../../../' + tmp[1]
+                    starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
                 else:
                     objid = 'None'
                     assigned = 0
@@ -3042,108 +3042,114 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
         apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
         # Read the apStar file
-        apstar = doppler.read(apStarPath)
-        apstar.normalize()
-        nvis = apstar.wave.shape[1] - 2
-        if nvis < 1: nvis = 1
-        if nvis == 1: 
-            wave = apstar.wave[:,0]
-            flux = apstar.flux
-        else: 
-            wave = apstar.wave[:, 0]
-            flux = apstar.flux[:, 0]
-        if np.nanmax(flux) < 0.1:
-            print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
-            continue
-        gd, = np.where((np.isnan(flux) == False) & (flux > 0))
-        wave = wave[gd]
-        flux = flux[gd]
-        wmin = np.min(wave); wmax = np.max(wave)
-        nwave = len(wave)
-
-        # Get model spectrum
-        openModel = open(apStarModelPath, 'rb')
-        modelVals = pickle.load(openModel)
         try:
-            sumstr, finalstr, bmodel, specmlist, gout = modelVals
-        except:
-            print("----> apStarPlots:    BAD! pickle.load returned None for " + objid)
-            return
-        pmodels = models.prepare(specmlist[0])
-        bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
-        bestmodel.normalize()
-        #swave = bestmodel.wave
-        #sflux = bestmodel.flux
-        swave = np.concatenate([bestmodel.wave[:, 0], bestmodel.wave[:,1], bestmodel.wave[:,2]])
-        sflux = np.concatenate([bestmodel.flux[:, 0], bestmodel.flux[:,1], bestmodel.flux[:,2]])
-        Worder = np.argsort(swave)
-        swave = swave[Worder]
-        sflux = sflux[Worder]
-        #f = interpolate.interp1d(swave, sflux, fill_value="extrapolate")
-        #swaveg = np.linspace(wmin, wmax, nwave)
-        #sfluxg = f(swaveg)
-        #resid = sfluxg - flux
+            apstar = doppler.read(apStarPath)
+            apstar.normalize()
 
-        rvteff = str(int(round(sumstr['teff'][0])))
-        rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
-        rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
-
-        fig=plt.figure(figsize=(28,25))
-        ax1 = plt.subplot2grid((23,1), (0,0), rowspan=5)
-        ax11 = plt.subplot2grid((23,1), (5,0), rowspan=2)
-        ax2 = plt.subplot2grid((23,1), (8,0), rowspan=5)
-        ax22 = plt.subplot2grid((23,1), (13,0), rowspan=2)
-        ax3 = plt.subplot2grid((23,1), (16,0), rowspan=5)
-        ax33 = plt.subplot2grid((23,1), (21,0), rowspan=2)
-        axes = [ax1, ax11, ax2, ax22, ax3, ax33]
-
-        ax33.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
-
-        ii = 0
-        ichip = 0
-        for ax in axes:
-            ax.set_xlim(xmin[ichip], xmax[ichip])
-            if ii % 2 == 0: ax.set_ylim(0.1, 1.3)
-            if ii % 2 == 1: ax.set_ylim(-0.3, 0.3)
-            if ii % 2 == 1: ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-            ax.tick_params(reset=True)
-            ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
-            ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-            ax.tick_params(axis='both',which='major',length=axmajlen)
-            ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
-            for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
-            if ii % 2 == 0: ax.text(-0.04, 0.50, r'$F_{\lambda}$ / $F_{\rm cont.}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
-            if ii % 2 == 1: ax.text(-0.04, 0.50, r'Resid.', transform=ax.transAxes, rotation=90, ha='right', va='center')
-            if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
-            if ii % 2 == 0: ax.axes.xaxis.set_ticklabels([])
-
-            g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
-            wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
-            gg, = np.where((swave >= wmin) & (swave <= wmax))
-            f = interpolate.interp1d(swave[gg], sflux[gg], fill_value="extrapolate")
-            swaveg = np.linspace(wmin, wmax, nwave)
-            sfluxg = f(wave[g])
             
-            if ii % 2 == 0: 
-                ax.plot(wave[g], flux[g], color='k', label='apStar')
-                ax.plot(wave[g], sfluxg, color='r', label='Cannon model', alpha=0.75)
-            else:
-                resid = sfluxg - flux[g]
-                ax.plot(wave[g], resid, color='b', alpha=0.75)
+            nvis = apstar.wave.shape[1] - 2
+            if nvis < 1: nvis = 1
+            if nvis == 1: 
+                wave = apstar.wave[:,0]
+                flux = apstar.flux
+            else: 
+                wave = apstar.wave[:, 0]
+                flux = apstar.flux[:, 0]
+            if np.nanmax(flux) < 0.1:
+                print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
+                continue
+            gd, = np.where((np.isnan(flux) == False) & (flux > 0))
+            wave = wave[gd]
+            flux = flux[gd]
+            wmin = np.min(wave); wmax = np.max(wave)
+            nwave = len(wave)
 
-            if ii % 2 == 1: ichip += 1
-            ii += 1
+            # Get model spectrum
+            openModel = open(apStarModelPath, 'rb')
+            modelVals = pickle.load(openModel)
+            #try:
+            sumstr, finalstr, bmodel, specmlist, gout = modelVals
+            #except:
+            #    print("----> apStarPlots:    BAD! pickle.load returned None for " + objid)
+            #    return
+            pmodels = models.prepare(specmlist[0])
+            bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
+            bestmodel.normalize()
+            #swave = bestmodel.wave
+            #sflux = bestmodel.flux
+            swave = np.concatenate([bestmodel.wave[:, 0], bestmodel.wave[:,1], bestmodel.wave[:,2]])
+            sflux = np.concatenate([bestmodel.flux[:, 0], bestmodel.flux[:,1], bestmodel.flux[:,2]])
+            Worder = np.argsort(swave)
+            swave = swave[Worder]
+            sflux = sflux[Worder]
+            #f = interpolate.interp1d(swave, sflux, fill_value="extrapolate")
+            #swaveg = np.linspace(wmin, wmax, nwave)
+            #sfluxg = f(swaveg)
+            #resid = sfluxg - flux
 
-        txt1 = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits          '
-        txt2 = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
-        ax1.text(0.5, 1.05, txt1 + txt2, transform=ax1.transAxes, ha='center', fontsize=fontsize*1.25, color='k')#, bbox=bboxpar)
-        #ax2.legend(loc='upper left', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
+            rvteff = str(int(round(sumstr['teff'][0])))
+            rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
+            rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
 
-        fig.subplots_adjust(left=0.06,right=0.99,bottom=0.04,top=0.96,hspace=0.01,wspace=0.0)
-        plt.savefig(starPlotFilePath)
-        plt.close('all')
+            fig=plt.figure(figsize=(28,25))
+            ax1 = plt.subplot2grid((23,1), (0,0), rowspan=5)
+            ax11 = plt.subplot2grid((23,1), (5,0), rowspan=2)
+            ax2 = plt.subplot2grid((23,1), (8,0), rowspan=5)
+            ax22 = plt.subplot2grid((23,1), (13,0), rowspan=2)
+            ax3 = plt.subplot2grid((23,1), (16,0), rowspan=5)
+            ax33 = plt.subplot2grid((23,1), (21,0), rowspan=2)
+            axes = [ax1, ax11, ax2, ax22, ax3, ax33]
+
+            ax33.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+
+            ii = 0
+            ichip = 0
+            for ax in axes:
+                ax.set_xlim(xmin[ichip], xmax[ichip])
+                if ii % 2 == 0: ax.set_ylim(0.1, 1.3)
+                if ii % 2 == 1: ax.set_ylim(-0.3, 0.3)
+                if ii % 2 == 1: ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                ax.tick_params(reset=True)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
+                if ii % 2 == 0: ax.text(-0.04, 0.50, r'$F_{\lambda}$ / $F_{\rm cont.}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                if ii % 2 == 1: ax.text(-0.04, 0.50, r'Resid.', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
+                if ii % 2 == 0: ax.axes.xaxis.set_ticklabels([])
+
+                g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
+                wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
+                gg, = np.where((swave >= wmin) & (swave <= wmax))
+                f = interpolate.interp1d(swave[gg], sflux[gg], fill_value="extrapolate")
+                swaveg = np.linspace(wmin, wmax, nwave)
+                sfluxg = f(wave[g])
+                
+                if ii % 2 == 0: 
+                    ax.plot(wave[g], flux[g], color='k', label='apStar')
+                    ax.plot(wave[g], sfluxg, color='r', label='Cannon model', alpha=0.75)
+                else:
+                    resid = sfluxg - flux[g]
+                    ax.plot(wave[g], resid, color='b', alpha=0.75)
+
+                if ii % 2 == 1: ichip += 1
+                ii += 1
+
+            txt1 = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits          '
+            txt2 = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
+            ax1.text(0.5, 1.05, txt1 + txt2, transform=ax1.transAxes, ha='center', fontsize=fontsize*1.25, color='k')#, bbox=bboxpar)
+            #ax2.legend(loc='upper left', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
+
+            fig.subplots_adjust(left=0.06,right=0.99,bottom=0.04,top=0.96,hspace=0.01,wspace=0.0)
+            plt.savefig(starPlotFilePath)
+            plt.close('all')
+        except:
+            print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
+            pass
 
 #if objid is None:
 #    print("----> apStarPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
