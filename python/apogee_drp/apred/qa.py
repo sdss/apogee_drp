@@ -2593,7 +2593,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
 
         healpixgroup = starDir.split('/')[-3]
         healpix = starDir.split('/')[-2]
-        starRelPath = '../../../../../' + telescope + '/stars/' + healpixgroup + '/' + healpix + '/'
+        starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
         starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
         #starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
