@@ -3014,11 +3014,11 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
         if objid == '2MNone' or objid == '2M' or obj == '' or objid == None or objid == 'None': continue
 
         # Find the associated html directories; make them if they don't already exist
-        apStarPath = load.filename('Star', obj=obj)
+        apStarPath = load.filename('Star', obj=objid)
         starDir = os.path.dirname(apStarPath)+'/'
         starPlotDir = starDir + 'plots/'
         if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
-        starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + obj + '_spec+model.png'
+        starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
         starPlotFilePath = starPlotDir + starPlotFile
 
         healpixgroup = starDir.split('/')[-3]
