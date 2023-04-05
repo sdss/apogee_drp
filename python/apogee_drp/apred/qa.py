@@ -2530,11 +2530,11 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
 
     # Base directory where star-level stuff goes
     #starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
-    starHTMLbase = apodir + apred + '/' + telescope +'/'
+    #starHTMLbase = apodir + apred + '/' + telescope +'/'
 
     # Get visit info from allVisit
     if allv1 == None:
-        allvfile = apodir + apred + '/summary/allVisit-'+apred+'-'+telescope+'.fits'
+        allvfile = load.filename('allVisit')
         allv1 = fits.getdata(allvfile)
     if objid == None: 
         g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == int(mjd)))
@@ -2576,18 +2576,31 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         print("----> makeStarHTML:   making html for " + obj + " (" + str(j+1) + "/" + cnfiber + ")")
 
         # Find which healpix this star is in
-        healpix = apload.obj2healpix(obj)
-        healpixgroup = str(healpix // 1000)
-        healpix = str(healpix)
+        #healpix = apload.obj2healpix(obj)
+        #healpixgroup = str(healpix // 1000)
+        #healpix = str(healpix)
 
-        # Find the associated healpix html directories and make them if they don't already exist
-        starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+        # Find the associated html directories; make them if they don't already exist
+        apStarPath = load.filename('Star', obj=obj)
+        starDir = os.path.dirname(apStarPath)+'/'
         starHtmlDir = starDir + 'html/'
+        starPlotDir = starDir + 'plots/'
         if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir)
+        if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
         starHTMLpath = starHtmlDir + obj + '.html'
+        starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + obj + '_spec+model.png'
+        starPlotFilePath = starPlotDir + starPlotFile
+
+
+        healpixgroup = starDir.split('/')[-2]
+        healpix = starDir.split('/')[-1]
+        starRelPath = '../../../../../' + telescope + '/stars/' + healpixgroup + '/' + healpix + '/'
+        starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
+
+        #starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
         #starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-        starRelPath = '../../../../' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-        starHTMLrelPath = '../' + starRelPath + 'html/' + obj + '.html'
+        #starRelPath = '../../../../' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+        #starHTMLrelPath = '../' + starRelPath + 'html/' + obj + '.html'
         apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + obj + '-*.fits')
         if len(apStarCheck) > 0:
             # Find the newest apStar file
@@ -2599,13 +2612,8 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
             apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
             # Set up plot directories and plot file name
-            starPlotDir = starDir + 'plots/'
-            if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
-            starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + obj + '_spec+model.png'
-            starPlotFilePath = starPlotDir + starPlotFile
-            starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
-        else:
-            apStarRelPath = None
+       # else:
+       #     apStarRelPath = None
 
         # DB query to get visit info
         #vcat = db.query('visit_latest', where="apogee_id='" + obj + "' and telescope='"+ telescope + "'", fmt='table')
