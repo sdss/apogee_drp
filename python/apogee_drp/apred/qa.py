@@ -2952,10 +2952,6 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     # Setup doppler cannon models
     models = doppler.cannon.models
 
-    # Base directory where star-level stuff goes
-    #starHTMLbase = apodir + apred + '/stars/' + telescope + '/'
-    #starHTMLbase = apodir + apred + '/' + telescope + '/'
-
     # Basic plotting parameters
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
@@ -3149,11 +3145,8 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
             plt.close('all')
         except:
             print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
-            pass
+            continue
 
-#if objid is None:
-#    print("----> apStarPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
-#else:
         print("----> apStarPlots: Done with " + objid)
 
 ###################################################################################################
