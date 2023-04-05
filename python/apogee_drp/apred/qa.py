@@ -2591,9 +2591,8 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + obj + '_spec+model.png'
         starPlotFilePath = starPlotDir + starPlotFile
 
-        pdb.set_trace()
-        healpixgroup = starDir.split('/')[-2]
-        healpix = starDir.split('/')[-1]
+        healpixgroup = starDir.split('/')[-3]
+        healpix = starDir.split('/')[-2]
         starRelPath = '../../../../../' + telescope + '/stars/' + healpixgroup + '/' + healpix + '/'
         starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
