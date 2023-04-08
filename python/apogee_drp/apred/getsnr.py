@@ -79,11 +79,11 @@ def doit(mjdstart=59560, observatory='apo', apred='daily'):
     telescope = observatory + '25m'
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
-    out = open(outdir + 'apogeeSNR-FPS.dat', 'w')
+    out = open(outdir + 'apogeeSNR-FPS_' + telescope + '.dat', 'w')
     out.write('EXPOSURE      SNR_G\n')
 
     mdir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/monitor/'
-    expdata = fits.getdata(mdir + 'apogee-nSci.fits')
+    expdata = fits.getdata(mdir + load.instrument + 'Sci.fits')
     g, = np.where((expdata['MJD'] >= mjdstart) & (expdata['SN'][:,1] > 0))
     expdata = expdata[g]
     order = np.argsort(expdata['MJD'])

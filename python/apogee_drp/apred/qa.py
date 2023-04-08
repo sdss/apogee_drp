@@ -294,7 +294,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
 ###################################################################################################
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
 def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplatesum=True, makeobshtml=True,
-         makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, makestarplots=False, 
+         makeobsplots=True, makevishtml=True, makestarhtml=True, makevisplots=True, makestarplots=True, 
          makemasterqa=True, makenightqa=True, makemonitor=True, clobber=True):
 
     start_time = time.time()
@@ -1617,7 +1617,6 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
                     ax.text(mtpLabelPos[imtp]+15, 1.12, tputPercentage, ha='center', color=c, fontsize=fontsize*0.75)
             except: continue
 
-
         fig.subplots_adjust(left=0.052,right=0.985,bottom=0.08,top=0.92,hspace=0.2,wspace=0.07)
         plt.savefig(plotsdir+plotfile)
         plt.close('all')
@@ -2317,6 +2316,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 firstcarton = 'SKY'
                 starflags = 'None'
             else:
+                if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
                 assigned = 1
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 if len(vcatind) < 1: pdb.set_trace()
@@ -2332,6 +2332,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     if len(gg) > 0:
                         photteff = teff[gg][0]
                         jk0 = jmag - kmag - 0.17*av[gg][0]
+                    #if objid == '2M15190094-5634411': pdb.set_trace()
                     apstarfile = load.filename('Star', obj=objid)
                     if os.path.exists(apstarfile):
                         apstarheader = fits.getheader(apstarfile)
@@ -2344,9 +2345,9 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                         if np.isnan(rvteff): rvteff = -9999
                         if np.isnan(rvlogg): rvlogg = -9.999
                         if np.isnan(rvfeh): rvfeh = -9.999
-                        tmp = apstarfile.split(apred + '/')
-                        apStarRelPath = '../../../../../../' + tmp[1]
-                        starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
+                    tmp = apstarfile.split(apred + '/')
+                    apStarRelPath = '../../../../../../' + tmp[1]
+                    starHTMLrelPath = '../../../../../../' + os.path.dirname(tmp[1]) + '/html/' + objid + '.html'
                 else:
                     objid = 'None'
                     assigned = 0
@@ -2394,12 +2395,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD>' + objid + '\n')
                 vishtml.write('<BR>' + simbadlink + '\n')
                 vishtml.write('<BR><A HREF=../' + visitfile + '>apVisit file</A>\n')
-                if apStarRelPath is not None:
-                    vishtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
-                    vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
-                else:
-                    vishtml.write('<BR>apStar file??\n')
-                    vishtml.write('<BR>Star Summary Page??\n')
+                #if apStarRelPath is not None:
+                vishtml.write('<BR><A HREF=' + apStarRelPath + '>apStar file</A>\n')
+                vishtml.write('<BR><A HREF=' + starHTMLrelPath + ' target="_blank">Star Summary Page</A>\n')
+                #else:
+                #    vishtml.write('<BR>apStar file??\n')
+                #    vishtml.write('<BR>Star Summary Page??\n')
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(hmag,3)))
                 if (jmag > 0) & (kmag > 0) & (jmag < 90) & (kmag < 90):
                     vishtml.write('<TD align ="center">' + str("%.3f" % round(jmag-kmag,3)))
@@ -2508,7 +2509,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
 ###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
-def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=None, plate=None, mjd=None, survey=None): 
+def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=None, plate=None, mjd=None, survey=None, allv1=None): 
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
     prefix = 'ap'
@@ -2528,50 +2529,75 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     apodir = os.environ.get('APOGEE_REDUX') + '/'
 
     # Base directory where star-level stuff goes
-    starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
+    #starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
+    #starHTMLbase = apodir + apred + '/' + telescope +'/'
 
-    nfiber = 300
+    # Get visit info from allVisit
+    if allv1 == None:
+        allvfile = load.filename('allVisit')
+        allv1 = fits.getdata(allvfile)
     if objid == None: 
-        # Load in the apPlate file
-        apPlate = load.apPlate(int(plate), mjd)
-        data = apPlate['a'][11].data[::-1]
-        cnfiber = str(nfiber)
+        g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == int(mjd)))
+        if len(g) < 1: 
+            print("----> makeStarHTML: no entries in allVisit for "+plate+", MJD "+mjd)
+            return
+        else:
+            allv = allv1[g]
+            nfiber = len(allv)
+            cnfiber = str(nfiber)
+            # Load in the apPlate file
+            #apPlate = load.apPlate(int(plate), mjd)
+            #data = apPlate['a'][11].data[::-1]
+            #cnfiber = str(nfiber)
     else:
+        g, = np.where(allv1['apogee_id'] == objid)
+        allv = allv1[g][0]
         nfiber = 1
         cnfiber = '1'
 
     # Start db session for getting all visit info
-    db = apogeedb.DBSession()
+    #db = apogeedb.DBSession()
 
     # Loop over the fibers
     for j in range(nfiber):
-        if objid == None:
-            jdata = data[j]
-            fiber = jdata['FIBERID']
-            objtype = jdata['OBJTYPE']
-            objid = jdata['OBJECT']
-        else:
-            fiber = 100
-            objtype = 'SCI'
+        #if objid == None:
+        jdata = allv[j]
+        fiber = jdata['fiberid']
+            #objtype = jdata['OBJTYPE']
+        if objid == None: obj = jdata['apogee_id']
+        else: obj = objid
+        #else:
+        #    fiber = 100
+            #objtype = 'SCI'
 
-        if (fiber <= 0) | (objtype == 'SKY') | (objid == '2MNone') | (objid == '2M') | (objid == ''): continue
+        #if fiber <= 0 or objtype == 'SKY': continue
+        if obj == '2MNone' or obj == '2M' or obj == '' or obj == None or obj == 'None': continue
 
-        print("----> makeStarHTML:   making html for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
+        print("----> makeStarHTML:   making html for " + obj + " (" + str(j+1) + "/" + cnfiber + ")")
 
         # Find which healpix this star is in
-        healpix = apload.obj2healpix(objid)
-        healpixgroup = str(healpix // 1000)
-        healpix = str(healpix)
+        #healpix = apload.obj2healpix(obj)
+        #healpixgroup = str(healpix // 1000)
+        #healpix = str(healpix)
 
-        # Find the associated healpix html directories and make them if they don't already exist
-        starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
+        # Find the associated html directories; make them if they don't already exist
+        apStarPath = load.filename('Star', obj=obj)
+        starDir = os.path.dirname(apStarPath)+'/'
         starHtmlDir = starDir + 'html/'
+        starPlotDir = starDir + 'plots/'
         if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir)
-        starHTMLpath = starHtmlDir + objid + '.html'
+        if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
+        starHTMLpath = starHtmlDir + obj + '.html'
+        starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + obj + '_spec+model.png'
+        starPlotFilePath = starPlotDir + starPlotFile
 
+        healpixgroup = starDir.split('/')[-3]
+        healpix = starDir.split('/')[-2]
         starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
-        starHTMLrelPath = '../' + starRelPath + 'html/' + objid + '.html'
-        apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+        starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
+
+        apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + obj + '-*.fits')
+        apStarRelPath = None
         if len(apStarCheck) > 0:
             # Find the newest apStar file
             apStarCheck.sort()
@@ -2582,56 +2608,53 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
             apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
             # Set up plot directories and plot file name
-            starPlotDir = starDir + 'plots/'
-            if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
-            starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
-            starPlotFilePath = starPlotDir + starPlotFile
-            starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
-        else:
-            apStarRelPath = None
+       # else:
+       #     apStarRelPath = None
 
         # DB query to get visit info
-        vcat = db.query('visit_latest', where="apogee_id='" + objid + "' and telescope='"+ telescope + "'", fmt='table')
+        #vcat = db.query('visit_latest', where="apogee_id='" + obj + "' and telescope='"+ telescope + "'", fmt='table')
 
         # Get visit info from DB
-        cgl = str("%.5f" % round(vcat['glon'][0],5))
-        cgb = str("%.5f" % round(vcat['glat'][0],5))
-        cpmra = str("%.2f" % round(vcat['gaiadr2_pmra'][0],2))
-        cpmde = str("%.2f" % round(vcat['gaiadr2_pmdec'][0],2))
-        cgmag = str("%.3f" % round(vcat['gaiadr2_gmag'][0],3))
-        hmag = vcat['hmag'][0]
-        cjmag = str("%.3f" % round(vcat['jmag'][0], 3))
-        chmag = str("%.3f" % round(vcat['hmag'][0], 3))
-        ckmag = str("%.3f" % round(vcat['kmag'][0],3 ))
-        jkcolor = vcat['jmag'][0] - vcat['kmag'][0]
-        if (vcat['jmag'][0] < 0) | (vcat['kmag'][0] < 0): jkcolor = -9.999
+        cgl = str("%.5f" % round(jdata['glon'],5))
+        cgb = str("%.5f" % round(jdata['glat'],5))
+        cpmra = str("%.2f" % round(jdata['gaiadr2_pmra'],2))
+        cpmde = str("%.2f" % round(jdata['gaiadr2_pmdec'],2))
+        cgmag = str("%.3f" % round(jdata['gaiadr2_gmag'],3))
+        hmag = jdata['hmag']
+        cjmag = str("%.3f" % round(jdata['jmag'], 3))
+        chmag = str("%.3f" % round(jdata['hmag'], 3))
+        ckmag = str("%.3f" % round(jdata['kmag'],3 ))
+        jkcolor = jdata['jmag'] - jdata['kmag']
+        if (jdata['jmag'] < 0) | (jdata['kmag'] < 0): jkcolor = -9.999
         cjkcolor = str("%.3f" % round(jkcolor, 3))
-        cra = str("%.5f" % round(vcat['ra'][0], 5))
-        cdec = str("%.5f" % round(vcat['dec'][0], 5))
+        cra = str("%.5f" % round(jdata['ra'], 5))
+        cdec = str("%.5f" % round(jdata['dec'], 5))
         txt1 = '<A HREF="http://simbad.u-strasbg.fr/simbad/sim-coo?Coord='+cra+'+'+cdec+'&CooFrame=FK5&CooEpoch=2000&CooEqui=2000'
         txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
         simbadlink = txt1 + txt2
 
-        nvis = len(vcat)
+        visind, = np.where(allv1['apogee_id'] == obj)
+        allvstar = allv1[visind]
+        nvis = len(visind)
         cvrad = '----';  cvscatter = '----'
-        gd, = np.where(np.absolute(vcat['vrad']) < 400)
+        gd, = np.where(np.absolute(allvstar['vrad']) < 400)
         if len(gd) > 0:
-            vels = vcat['vrad'][gd]
+            vels = allvstar['vrad'][gd]
             cvrad = str("%.2f" % round(np.mean(vels),2))
             cvscatter = str("%.2f" % round(np.max(vels) - np.min(vels),2))
 
         rvteff = '----'; rvlogg = '----'; rvfeh = '---'
-        gd, = np.where((vcat['rv_teff'] > 0) & (np.absolute(vcat['rv_teff']) < 99999))
-        if len(gd) > 0:
-            rvteff = str(int(round(vcat['rv_teff'][gd][0])))
-            rvlogg = str("%.3f" % round(vcat['rv_logg'][gd][0],3))
-            rvfeh = str("%.3f" % round(vcat['rv_feh'][gd][0],3))
+        #gd, = np.where((jdata['rv_teff'] > 0) & (np.absolute(jdata['rv_teff']) < 99999))
+        #if len(gd) > 0:
+        rvteff = str(int(round(jdata['rv_teff'])))
+        rvlogg = str("%.3f" % round(jdata['rv_logg'],3))
+        rvfeh = str("%.3f" % round(jdata['rv_feh'],3))
 
         starHTML = open(starHTMLpath, 'w')
         starHTML.write('<HTML>\n')
-        starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +objid+ '</title></head>\n')
+        starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +obj+ '</title></head>\n')
         starHTML.write('<BODY>\n')
-        starHTML.write('<H1>' + objid + ', ' + str(nvis) + ' visits</H1> <HR>\n')
+        starHTML.write('<H1>' + obj + ', ' + str(nvis) + ' visits</H1> <HR>\n')
         if apStarRelPath is not None:
             starHTML.write('<P>' + simbadlink + '<BR><A HREF=' + apStarRelPath + '>apStar File</A>\n')
         else:
@@ -2671,28 +2694,28 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starHTML.write('<TR bgcolor="'+thcolor+'">')
         starHTML.write('<TH>MJD <TH>Date-Obs <TH>Field<BR> <TH>Plate <TH>Fiber <TH>MTP <TH>Cart <TH>S/N <TH>Vrad <TH>Spectrum Plot </TR>\n')
         for k in range(nvis):
-            mjd = vcat['mjd'][k]
+            mjd = allvstar['mjd'][k]
             fps = True
             if mjd < 59556: fps = False
             cmjd = str(mjd)
-            dateobs = Time(vcat['jd'][k], format='jd').fits.replace('T', '<BR>')
-            cplate = vcat['plate'][k]
-            cfield = vcat['field'][k]
-            cfib = str(int(round(vcat['fiberid'][k]))).zfill(3)
-            cblock = str(11-np.ceil(vcat['fiberid'][k]/30).astype(int))
+            dateobs = Time(allvstar['jd'][k], format='jd').fits.replace('T', '<BR>')
+            cplate = allvstar['plate'][k]
+            cfield = allvstar['field'][k]
+            cfib = str(int(round(allvstar['fiberid'][k]))).zfill(3)
+            cblock = str(11-np.ceil(allvstar['fiberid'][k]/30).astype(int))
             ccart = '?'
-            platefile = load.filename('PlateSum', plate=int(vcat['plate'][k]), mjd=cmjd, fps=fps)
+            platefile = load.filename('PlateSum', plate=int(allvstar['plate'][k]), mjd=cmjd, fps=fps)
             if os.path.exists(platefile):
                 platetab = fits.getdata(platefile,1)
                 ccart = str(platetab['CART'][0])
             
-            csnr = str("%.1f" % round(vcat['snr'][k],1))
-            cvrad = str("%.2f" % round(vcat['vrad'][k],2))
+            csnr = str("%.1f" % round(allvstar['snr'][k],1))
+            cvrad = str("%.2f" % round(allvstar['vrad'][k],2))
             visplotname = prefix+'Plate-' + cplate + '-' + cmjd + '-' + cfib + '.png'
             visplotpath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/plots/'
             visplot = visplotpath + visplotname
             apvispath = '../../../../../visit/' + telescope + '/' + cfield + '/' + cplate + '/' + cmjd + '/'
-            apqahtml = apvispath + '/html/' + prefix + 'QA-' + cplate + '-' + cmjd + '.html'
+            apqahtml = apvispath + 'html/' + prefix + 'QA-' + cplate + '-' + cmjd + '.html'
             apvisfile = 'apVisit-' + apred + '-' + telescope + '-' + cplate + '-' + cmjd + '-' + cfib + '.fits'
             apvis = apvispath + apvisfile
 
@@ -2727,11 +2750,11 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starHTML.write('<BR><BR><BR><BR>\n')
         starHTML.close()
 
-    if objid is None:
-        print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
-    else:
-        if makeplot: apStarPlots(objid=objid, load=load, apred=apred, telescope=telescope)
-        print("----> makeStarHTML: Done with " + objid)
+    #if objid is None:
+    #    print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
+    #else:
+    #    if makeplot: apStarPlots(objid=objid, load=load, apred=apred, telescope=telescope)
+    #    print("----> makeStarHTML: Done with " + objid)
 
 ###################################################################################################
 ''' APVISITPLOTS: plots of the apVisit spectra '''
@@ -2785,6 +2808,8 @@ def apVisitPlots(load=None, plate=None, mjd=None, telescope=None):
             cfiber = str(fiber).zfill(3)
             objid = jdata['OBJECT']
             objtype = jdata['OBJTYPE']
+            if objtype != 'SKY':
+                if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
             hmag = jdata['HMAG']
             chmag = str("%.3f" % round(jdata['HMAG'], 3))
             jkcolor = jdata['JMAG'] - jdata['KMAG']
@@ -2928,9 +2953,6 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     # Setup doppler cannon models
     models = doppler.cannon.models
 
-    # Base directory where star-level stuff goes
-    starHTMLbase = apodir + apred + '/stars/' + telescope + '/'
-
     # Basic plotting parameters
     fontsize = 24;   fsz = fontsize * 0.75
     matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
@@ -2943,174 +2965,189 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     xmin = np.array([15130, 15845, 16460])
     xmax = np.array([15825, 16448, 16968])
 
-    nfib = 300
-    if objid is None: 
-        # Load in the apPlate file
-        apPlate = load.apPlate(int(plate), mjd)
-        data = apPlate['a'][11].data[::-1]
-        objtype = data['OBJTYPE']
-        nfiber = len(data)
-        cnfiber = str(nfiber)
+    # Get visit info from allVisit
+    allvfile = load.filename('allVisit')
+    allv1 = fits.getdata(allvfile)
+    if objid == None: 
+        g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == int(mjd)))
+        if len(g) < 1: 
+            print("----> makeStarHTML: no entries in allVisit for "+plate+", MJD "+mjd)
+            return
+        else:
+            allv = allv1[g]
+            nfiber = len(allv)
+            cnfiber = str(nfiber)
+            # Load in the apPlate file
+            #apPlate = load.apPlate(int(plate), mjd)
+            #data = apPlate['a'][11].data[::-1]
+            #cnfiber = str(nfiber)
     else:
-        nfib = 1
+        g, = np.where(allv1['apogee_id'] == objid)
+        allv = allv1[g][0]
+        nfiber = 1
+        cnfiber = '1'
+    #if objid is None: 
+    #    # Load in the apPlate file
+    #    apPlate = load.apPlate(int(plate), mjd)
+    #    data = apPlate['a'][11].data[::-1]
+    #    objtype = data['OBJTYPE']
+    #    nfiber = len(data)
+    #    cnfiber = str(nfiber)
+    #else:
+    #    nfib = 1
 
     # Loop over the fibers
-    for j in range(nfib):
-        if objid is None:
-            jdata = data[j]
-            fiber = jdata['FIBERID']
-            objtype = jdata['OBJTYPE']
-            objid = jdata['OBJECT']
-        else:
-            objtype = 'SCI'
-            fiber = 100
+    for j in range(nfiber):
+        #if objid is None:
+        jdata = allv[j]
+        fiber = jdata['fiberid']
+        #objtype = jdata['OBJTYPE']
+        objid = jdata['apogee_id']
+        #else:
+        #    objtype = 'SCI'
+        #fiber = 100
 
         # Only run it for valid stars
-        if (fiber > 0) & (objtype != 'SKY') & (objid != '2MNone') &  (objid != '2M') & (objid != ''):
+        if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
 
-            # Find which healpix this star is in
-            healpix = apload.obj2healpix(objid)
-            healpixgroup = str(healpix // 1000)
-            healpix = str(healpix)
+        # Find the associated html directories; make them if they don't already exist
+        apStarPath = load.filename('Star', obj=objid)
+        starDir = os.path.dirname(apStarPath)+'/'
+        starPlotDir = starDir + 'plots/'
+        if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
+        starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
+        starPlotFilePath = starPlotDir + starPlotFile
 
-            # Find the associated healpix html directories and make them if they don't already exist
-            starDir = starHTMLbase + healpixgroup + '/' + healpix + '/'
-            starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+        healpixgroup = starDir.split('/')[-3]
+        healpix = starDir.split('/')[-2]
+        starRelPath = '../../../../../stars/' + telescope + '/' + healpixgroup + '/' + healpix + '/'
+        starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
-            # Make sure an apStar file exists
-            apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
-            if len(apStarCheck) < 1: 
-                print("----> apStarPlots:    apStar file not found for " + objid)
-            else:
-                if objid is None:
-                    print("----> apStarPlots:    making plot for " + objid + " (" + str(j+1) + "/" + cnfiber + ")")
+        # Make sure an apStar file exists
+        apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+        if len(apStarCheck) < 1: 
+            print("----> apStarPlots:    apStar file not found for " + objid)
+            continue
+        print("----> apStarPlots:    making plot for " + objid)
+        # Find the newest apStar file
+        apStarCheck.sort()
+        apStarCheck = np.array(apStarCheck)
+        apStarNewest = os.path.basename(apStarCheck[-1])
+        apStarPath = starDir + apStarNewest
+        hdr = fits.getheader(apStarPath)
+        chmag = str("%.3f" % round(hdr['HMAG'], 3))
+        apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
+
+        # Read the apStar file
+        try:
+            apstar = doppler.read(apStarPath)
+            apstar.normalize()
+
+            
+            nvis = apstar.wave.shape[1] - 2
+            if nvis < 1: nvis = 1
+            if nvis == 1: 
+                wave = apstar.wave[:,0]
+                flux = apstar.flux
+            else: 
+                wave = apstar.wave[:, 0]
+                flux = apstar.flux[:, 0]
+            if np.nanmax(flux) < 0.1:
+                print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
+                continue
+            gd, = np.where((np.isnan(flux) == False) & (flux > 0))
+            wave = wave[gd]
+            flux = flux[gd]
+            wmin = np.min(wave); wmax = np.max(wave)
+            nwave = len(wave)
+
+            # Get model spectrum
+            openModel = open(apStarModelPath, 'rb')
+            modelVals = pickle.load(openModel)
+            #try:
+            sumstr, finalstr, bmodel, specmlist, gout = modelVals
+            #except:
+            #    print("----> apStarPlots:    BAD! pickle.load returned None for " + objid)
+            #    return
+            pmodels = models.prepare(specmlist[0])
+            bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
+            bestmodel.normalize()
+            #swave = bestmodel.wave
+            #sflux = bestmodel.flux
+            swave = np.concatenate([bestmodel.wave[:, 0], bestmodel.wave[:,1], bestmodel.wave[:,2]])
+            sflux = np.concatenate([bestmodel.flux[:, 0], bestmodel.flux[:,1], bestmodel.flux[:,2]])
+            Worder = np.argsort(swave)
+            swave = swave[Worder]
+            sflux = sflux[Worder]
+            #f = interpolate.interp1d(swave, sflux, fill_value="extrapolate")
+            #swaveg = np.linspace(wmin, wmax, nwave)
+            #sfluxg = f(swaveg)
+            #resid = sfluxg - flux
+
+            rvteff = str(int(round(sumstr['teff'][0])))
+            rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
+            rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
+
+            fig=plt.figure(figsize=(28,25))
+            ax1 = plt.subplot2grid((23,1), (0,0), rowspan=5)
+            ax11 = plt.subplot2grid((23,1), (5,0), rowspan=2)
+            ax2 = plt.subplot2grid((23,1), (8,0), rowspan=5)
+            ax22 = plt.subplot2grid((23,1), (13,0), rowspan=2)
+            ax3 = plt.subplot2grid((23,1), (16,0), rowspan=5)
+            ax33 = plt.subplot2grid((23,1), (21,0), rowspan=2)
+            axes = [ax1, ax11, ax2, ax22, ax3, ax33]
+
+            ax33.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
+
+            ii = 0
+            ichip = 0
+            for ax in axes:
+                ax.set_xlim(xmin[ichip], xmax[ichip])
+                if ii % 2 == 0: ax.set_ylim(0.1, 1.3)
+                if ii % 2 == 1: ax.set_ylim(-0.3, 0.3)
+                if ii % 2 == 1: ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                ax.tick_params(reset=True)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
+                if ii % 2 == 0: ax.text(-0.04, 0.50, r'$F_{\lambda}$ / $F_{\rm cont.}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                if ii % 2 == 1: ax.text(-0.04, 0.50, r'Resid.', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
+                if ii % 2 == 0: ax.axes.xaxis.set_ticklabels([])
+
+                g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
+                wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
+                gg, = np.where((swave >= wmin) & (swave <= wmax))
+                f = interpolate.interp1d(swave[gg], sflux[gg], fill_value="extrapolate")
+                swaveg = np.linspace(wmin, wmax, nwave)
+                sfluxg = f(wave[g])
+                
+                if ii % 2 == 0: 
+                    ax.plot(wave[g], flux[g], color='k', label='apStar')
+                    ax.plot(wave[g], sfluxg, color='r', label='Cannon model', alpha=0.75)
                 else:
-                    print("----> apStarPlots:    making plot for " + objid)
-                # Find the newest apStar file
-                apStarCheck.sort()
-                apStarCheck = np.array(apStarCheck)
-                apStarNewest = os.path.basename(apStarCheck[-1])
-                apStarPath = starDir + apStarNewest
-                hdr = fits.getheader(apStarPath)
-                chmag = str("%.3f" % round(hdr['HMAG'], 3))
-                apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
+                    resid = sfluxg - flux[g]
+                    ax.plot(wave[g], resid, color='b', alpha=0.75)
 
-                # Set up plot directories and plot file name
-                starPlotDir = starDir + 'plots/'
-                if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
-                starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
-                starPlotFilePath = starPlotDir + starPlotFile
-                starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
+                if ii % 2 == 1: ichip += 1
+                ii += 1
 
-                #if objid == '2M14432748+4006125': import pdb; pdb.set_trace()
+            txt1 = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits          '
+            txt2 = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
+            ax1.text(0.5, 1.05, txt1 + txt2, transform=ax1.transAxes, ha='center', fontsize=fontsize*1.25, color='k')#, bbox=bboxpar)
+            #ax2.legend(loc='upper left', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
 
-                # Read the apStar file
-                apstar = doppler.read(apStarPath)
-                apstar.normalize()
-                nvis = apstar.wave.shape[1] - 2
-                if nvis < 1: nvis = 1
-                if nvis == 1: 
-                    wave = apstar.wave[:,0]
-                    flux = apstar.flux
-                else: 
-                    wave = apstar.wave[:, 0]
-                    flux = apstar.flux[:, 0]
-                if np.nanmax(flux) < 0.1:
-                    print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
-                    continue
-                gd, = np.where((np.isnan(flux) == False) & (flux > 0))
-                wave = wave[gd]
-                flux = flux[gd]
-                wmin = np.min(wave); wmax = np.max(wave)
-                nwave = len(wave)
+            fig.subplots_adjust(left=0.06,right=0.99,bottom=0.04,top=0.96,hspace=0.01,wspace=0.0)
+            plt.savefig(starPlotFilePath)
+            plt.close('all')
+        except:
+            print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
+            continue
 
-                # Get model spectrum
-                openModel = open(apStarModelPath, 'rb')
-                modelVals = pickle.load(openModel)
-                try:
-                    sumstr, finalstr, bmodel, specmlist, gout = modelVals
-                except:
-                    print("----> apStarPlots:    BAD! pickle.load returned None for " + objid)
-                    return
-                pmodels = models.prepare(specmlist[0])
-                bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
-                bestmodel.normalize()
-                #swave = bestmodel.wave
-                #sflux = bestmodel.flux
-                swave = np.concatenate([bestmodel.wave[:, 0], bestmodel.wave[:,1], bestmodel.wave[:,2]])
-                sflux = np.concatenate([bestmodel.flux[:, 0], bestmodel.flux[:,1], bestmodel.flux[:,2]])
-                Worder = np.argsort(swave)
-                swave = swave[Worder]
-                sflux = sflux[Worder]
-                #f = interpolate.interp1d(swave, sflux, fill_value="extrapolate")
-                #swaveg = np.linspace(wmin, wmax, nwave)
-                #sfluxg = f(swaveg)
-                #resid = sfluxg - flux
-
-                rvteff = str(int(round(sumstr['teff'][0])))
-                rvlogg = str("%.3f" % round(sumstr['logg'][0],3))
-                rvfeh = str("%.3f" % round(sumstr['feh'][0],3))
-
-                fig=plt.figure(figsize=(28,25))
-                ax1 = plt.subplot2grid((23,1), (0,0), rowspan=5)
-                ax11 = plt.subplot2grid((23,1), (5,0), rowspan=2)
-                ax2 = plt.subplot2grid((23,1), (8,0), rowspan=5)
-                ax22 = plt.subplot2grid((23,1), (13,0), rowspan=2)
-                ax3 = plt.subplot2grid((23,1), (16,0), rowspan=5)
-                ax33 = plt.subplot2grid((23,1), (21,0), rowspan=2)
-                axes = [ax1, ax11, ax2, ax22, ax3, ax33]
-
-                ax33.set_xlabel(r'Rest Wavelength ($\rm \AA$)')
-
-                ii = 0
-                ichip = 0
-                for ax in axes:
-                    ax.set_xlim(xmin[ichip], xmax[ichip])
-                    if ii % 2 == 0: ax.set_ylim(0.1, 1.3)
-                    if ii % 2 == 1: ax.set_ylim(-0.3, 0.3)
-                    if ii % 2 == 1: ax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-                    ax.tick_params(reset=True)
-                    ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
-                    ax.minorticks_on()
-                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                    ax.tick_params(axis='both',which='major',length=axmajlen)
-                    ax.tick_params(axis='both',which='minor',length=axminlen)
-                    ax.tick_params(axis='both',which='both',width=axwidth)
-                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axwidth)
-                    if ii % 2 == 0: ax.text(-0.04, 0.50, r'$F_{\lambda}$ / $F_{\rm cont.}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
-                    if ii % 2 == 1: ax.text(-0.04, 0.50, r'Resid.', transform=ax.transAxes, rotation=90, ha='right', va='center')
-                    if ii % 2 == 1: ax.axhline(y=0, linestyle='dashed', linewidth=lwidth, color='k')
-                    if ii % 2 == 0: ax.axes.xaxis.set_ticklabels([])
-
-                    g, = np.where((wave >= xmin[ichip] - 20) & (wave <= xmax[ichip] + 20))
-                    wmin = np.min(wave[g]); wmax = np.max(wave[g]); nwave = len(g)
-                    gg, = np.where((swave >= wmin) & (swave <= wmax))
-                    f = interpolate.interp1d(swave[gg], sflux[gg], fill_value="extrapolate")
-                    swaveg = np.linspace(wmin, wmax, nwave)
-                    sfluxg = f(wave[g])
-                    
-                    if ii % 2 == 0: 
-                        ax.plot(wave[g], flux[g], color='k', label='apStar')
-                        ax.plot(wave[g], sfluxg, color='r', label='Cannon model', alpha=0.75)
-                    else:
-                        resid = sfluxg - flux[g]
-                        ax.plot(wave[g], resid, color='b', alpha=0.75)
-
-                    if ii % 2 == 1: ichip += 1
-                    ii += 1
-
-                txt1 = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits          '
-                txt2 = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
-                ax1.text(0.5, 1.05, txt1 + txt2, transform=ax1.transAxes, ha='center', fontsize=fontsize*1.25, color='k')#, bbox=bboxpar)
-                #ax2.legend(loc='upper left', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
-
-                fig.subplots_adjust(left=0.06,right=0.99,bottom=0.04,top=0.96,hspace=0.01,wspace=0.0)
-                plt.savefig(starPlotFilePath)
-                plt.close('all')
-
-    if objid is None:
-        print("----> apStarPlots: Done with plate " + plate + ", MJD " + mjd + ".\n")
-    else:
         print("----> apStarPlots: Done with " + objid)
 
 ###################################################################################################

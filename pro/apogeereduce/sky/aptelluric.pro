@@ -131,7 +131,7 @@ outframe = CREATE_STRUCT(outframe,'shift',frame.shift)
 fpifibers=[75,225]
 fps=0
 if long(plugmap.mjd) ge 59556 then fps=1
-if dirs.telescope eq 'lco25m' then fpifibers=[82,213]
+if dirs.telescope eq 'lco25m' then fpifibers=[87,218]
 
 species = ['CH4','CO2','H2O']
 nspecies = n_elements(species)
