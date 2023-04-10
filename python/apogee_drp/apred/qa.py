@@ -3700,7 +3700,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 color = 'b3ffb3'
             load = apload.ApLoad(apred=apred, telescope=telescope)
 
-            reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/mos/'
+            reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports//'
             dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
