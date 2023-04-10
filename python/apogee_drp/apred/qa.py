@@ -3419,7 +3419,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     pfile1 = glob.glob(os.path.dirname(platefiles[-1])+'/plots/'+load.prefix+'Flux-*.png')
     pfile2 = glob.glob(os.path.dirname(platefiles[-1])+'/plots/'+load.prefix+'Tput-*.png')
     relpath1 = '../../../../visit/'+telescope+'/'+field+'/'+plate+'/'+mjd+'/plots/'+os.path.basename(pfile1[0])
-    relpath2 = '../../../../visit/'+telescope+'/'+field+'/'+plate+'/'+mjd+'/plots/'+os.path.basename(pfile2)[0]
+    relpath2 = '../../../../visit/'+telescope+'/'+field+'/'+plate+'/'+mjd+'/plots/'+os.path.basename(pfile2[0])
     html.write('<TR><TD><A HREF='+relpath1+' target="_blank"><IMG SRC='+relpath1+' HEIGHT=300></A>\n')
     html.write('<TD><A HREF='+relpath2+' target="_blank"><IMG SRC='+relpath2+' HEIGHT=300></A>\n')
     html.write('</TABLE>\n')
