@@ -21,8 +21,9 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
     if file_test(lockfile) then file_delete,lockfile,/allow
   endelse
   
-  ; does product already exist?
-  if not file_test(file) or keyword_set(clobber) then begin
+  ;; does product already exist?
+  info = file_info(file)
+  if info.exists eq 0 or info.size eq 0 or keyword_set(clobber) then begin
     ; open .lock filea
     openw,lock,/get_lun,lockfile
     free_lun,lock

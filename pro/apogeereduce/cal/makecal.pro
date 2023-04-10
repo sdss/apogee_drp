@@ -209,6 +209,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     print,'makecal sparse: ', sparse
     if sparse gt 1 then begin
       file = apogee_filename('Sparse',num=sparse,chip='c')
+      psfdir = file_dirname(file)       
       if file_test(file) eq 1 and not keyword_set(clobber) then begin
         print,' sparse file: ',file,' already made'
         return
