@@ -4304,6 +4304,7 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
             tp = 'quartz'
             if struct['THAR'][i] == 1: tp = 'ThAr'.ljust(6)
             if struct['UNE'][i] == 1: tp = 'UNe'.ljust(6)
+            if types[i] == 'fpi': tp = 'FPI'
 
             print("----> makeCalFits: running " + tp + " exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
