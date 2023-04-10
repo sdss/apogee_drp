@@ -3195,7 +3195,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     apodir =     os.environ.get('APOGEE_REDUX') + '/'
     spectrodir = apodir + apred + '/'
-    platedir =   spectrodir+'/visit/'+telescope+'/*/*/'+mjd+'/'
+    platedir =   spectrodir+'visit/'+telescope+'/*/*/'+mjd+'/'
     caldir =     spectrodir + 'cal/'
     expdir =     spectrodir + 'exposures/' + instrument + '/'
     reddir =     expdir + mjd + '/'
@@ -3386,10 +3386,17 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                     if len(bad) >= 0: html.write(str(300 - bad) + '\n')
     html.write('</TABLE>\n')
 
+    # Get all succesfully reduced plates
+    platefiles = glob.glob(platedir + '*PlateSum*.fits')
+
+
     # Show throughput qa plots from first and final visit of the night
     html.write('<H2>Throughput plots from first visit of night: </H2>\n')
     html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Spatial <TH>Fiber Hist <TH>\n')
-    pdb.set_trace()
+    if len(platefiles) > 0:
+        platefiles.sort()
+        platefiles = np.array(platefiles)
+        pdb.set_trace()
 
 
 
@@ -3399,9 +3406,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 #        spawn,'cat '+file,wavehtml
 #        for i=1,n_elements(wavehtml)-2 do html.write(wavehtml[i]
 
-    # Get all succesfully reduced plates
-    #print,'getting successfully reduced plates...'
-    platefiles = glob.glob(platedir + '*PlateSum*.fits')
+
     # Make master plot of zeropoint and sky levels for the night
     if (len(platefiles) >= 1): 
         platefiles.sort()
