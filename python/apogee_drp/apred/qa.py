@@ -3557,6 +3557,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     th0 = '<TR bgcolor='+thcolor+'>'
     th1 = '<TH>Plate <TH>Frame <TH>Cart <TH>sec(z) <TH>HA <TH>Design HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads '
     th2 = '<TH>Dither <TH>Zero <TH>Zerorms <TH>Zeronorm <TH>Sky Continuum <TH>S/N <TH>S/N(c) <TH>Unplugged <TH>Faint\n'
+    html.write(th0 + th1 + th2)
     for i in range(nplates):
         platetab = fits.getdata(platefiles[i],1)
         plate = str(int(round(platetab['PLATE'][0])))
@@ -3566,7 +3567,6 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             cart = platetab['CART'][0]
         nreads = str(int(round(platetab['NREADS'][0])))
         n_exposures = len(platetab['IM'])
-        html.write(th0 + th1 + th2)
         for j in range(n_exposures):
             html.write('<TR>\n')
             html.write('<TD align="left">' + plate + '\n')
