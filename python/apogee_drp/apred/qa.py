@@ -209,7 +209,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                 all_ims = np.append(all_ims, fpinum)
                 all_types = np.append(all_types, 'fpi')
             pdb.set_trace()
-            x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument, clobber=clobber)
+            x = makeCalFits(load=load, ims=all_ims, types=all_types, mjd=mjd, instrument=instrument, clobber=clobber)
         print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
 
         # Run apqa on the dark  plans
@@ -4221,7 +4221,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
 ###################################################################################################
 ''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.) '''
-def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
+def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clobber=None):
 
     lineSearchRad = 40
     prefix = 'ap'
@@ -4263,6 +4263,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                        ('QRTZ',    np.int16),
                        ('UNE',     np.int16),
                        ('THAR',    np.int16),
+                       ('FPI',     np.int16),
                        ('FLUX',    np.float32,(nchips,300)),
                        ('GAUSS',   np.float32,(nlines,nchips,nfibers,4)),
                        ('WAVE',    np.float64,(nlines,nchips,nfibers)),
@@ -4298,6 +4299,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                     struct['QRTZ'][i] =    1
                     struct['THAR'][i] =    0
                     struct['UNE'][i] =     0
+            struct['FPI'][i] = 0
             struct['FIBERS'][i] =  fibers
 
             tp = 'quartz'
@@ -4307,6 +4309,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
             print("----> makeCalFits: running " + tp + " exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
             # Quartz exposures.
+            if types[i] == 'fpi': struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
             if struct['QRTZ'][i] == 1: struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
 
             # Arc lamp exposures.
