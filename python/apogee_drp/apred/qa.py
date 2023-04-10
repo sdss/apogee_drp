@@ -3391,11 +3391,15 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
 
     # Show throughput qa plots from first and final visit of the night
-    html.write('<H2>Throughput plots from first visit of night: </H2>\n')
+    html.write('<H2>Throughput plots from first science exposure: </H2>\n')
     html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Spatial <TH>Fiber Hist <TH>\n')
     if len(platefiles) > 0:
         platefiles.sort()
         platefiles = np.array(platefiles)
+        nplates = len(platefiles)
+        pfiles = np.empty(nplates).astype(str)
+        for i in range(nplates): pfiles[i] = os.path.basename(platefiles[i])
+            
         pdb.set_trace()
 
 
