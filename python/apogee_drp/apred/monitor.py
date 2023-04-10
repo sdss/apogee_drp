@@ -526,6 +526,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/dflux.png target="_blank"><IMG SRC=' + instrument + '/dflux.png WIDTH=1000></A>\n')
     html.write('<HR>\n')
 
+    html.write('<h3> <a name=dtrace></a> Dome flat trace position </h3>\n')
+    html.write('<A HREF=' + instrument + '/dtrace.png target="_blank"><IMG SRC=' + instrument + '/dtrace.png WIDTH=1000></A>\n')
+    html.write('<HR>\n')
+
     html.write('<h3> <a name=dfwhm></a> Dome flat trace FWHM </h3>\n')
     html.write('<A HREF=' + instrument + '/dfwhm.png target="_blank"><IMG SRC=' + instrument + '/dfwhm.png WIDTH=1000></A>\n')
     html.write('<HR>\n')
