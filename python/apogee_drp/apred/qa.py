@@ -194,7 +194,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     plate = sciplans[0].split('-')[1]
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd, fps=fps)
     planstr = plan.load(planfile, np=True)
-    fpinum = int(planstr['fpi'])
+    fpinum = np.array(int(planstr['fpi']))
 
     if makeqafits is True:
         # Run apqa on the cal  plans
@@ -206,8 +206,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             all_ims = planstr['APEXP']['name']
             all_types = np.full(len(all_ims), 'cal')
             if fpinum != 0:
-                all_ims = np.concatenate([all_ims, np.array(fpinum)])
-                all_types = np.concatenate([all_types, np.array('fpi')])
+                all_ims = np.concatenate([all_ims, fpinum])
+                all_types = np.concatenate([all_types, np.array(['fpi'])])
             pdb.set_trace()
             x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument, clobber=clobber)
         print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
