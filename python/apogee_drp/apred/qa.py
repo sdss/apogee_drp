@@ -3246,20 +3246,16 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     html.write('<H1>Nightly QA for MJD '+mjd+'</H1>\n')
 
     # Find the observing log file
-    reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
-    if os.path.exists(reportsDir):
-        dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
-        if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
-        if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
-        if len(reports) > 0:
-            reports.sort()
-            reportfile = reports[0]
-            reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
-            #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
-            html.write(' <a href="'+reportLink+'"> <H3>' + telescope.upper().replace('25M',' 2.5m') + ' Observing report </H3></a>\n')
-        else:
-            print('----> makeNightQA: No observing report found for ' + mjd + '!!!')
-            html.write(telescope.upper().replace('25M',' 2.5m') + ' Observing report (missing?)</H3>\n')
+    reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + load.observatory + '/reports/mos/'
+    dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
+    if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
+    if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
+    if len(reports) != 0:
+        reports.sort()
+        reportfile = reports[0]
+        reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + load.observatory + '/reports/mos/' + os.path.basename(reportfile)
+        #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
+        html.write(' <a href="'+reportLink+'"> <H3>' + telescope.upper().replace('25M',' 2.5m') + ' Observing report </H3></a>\n')
     else:
         print('----> makeNightQA: No observing report found for ' + mjd + '!!!')
         html.write(telescope.upper().replace('25M',' 2.5m') + ' Observing report (missing?)</H3>\n')
@@ -3267,7 +3263,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     # Look for missing raw frames (assuming contiguous sequence)
     html.write('<H2>Raw frames:</H2> ' + str(firstExposure) + ' to ' + str(lastExposure))
 #    html.write(' (<a href=../../../../../../'+os.path.basename(dirs.datadir)+'/'+cmjd+'/'+cmjd+'.log.html> image log</a>)\n')
-    logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + mjd + '/' + mjd + '.log.html'
+    logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + load.observatory + '/' + mjd + '/' + mjd + '.log.html'
     logFileDir = os.path.dirname(logFile)
     html.write(' (<A HREF="'+logFile+'">image log</A>)\n')
     html.write('<BR>\n')
@@ -3704,7 +3700,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 color = 'b3ffb3'
             load = apload.ApLoad(apred=apred, telescope=telescope)
 
-            reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
+            reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/mos/'
             dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
@@ -3716,7 +3712,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if len(reports) != 0:
                 reports.sort()
                 reportfile = reports[0]
-                reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
+                reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/mos/' + os.path.basename(reportfile)
                 html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
                 #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
             else:
