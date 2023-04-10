@@ -4309,52 +4309,57 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
             print("----> makeCalFits: running " + tp + " exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
             # Quartz exposures.
-            if types[i] == 'fpi': struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
-            if struct['QRTZ'][i] == 1: struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
+            if types[i] == 'fpi': 
+                struct['FPI'][i] = 1
+                struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
+                continue
+            if struct['QRTZ'][i] == 1: 
+                struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
+                continue
 
             # Arc lamp exposures.
-            if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
-                if struct['THAR'][i] == 1: line = tharline
-                if struct['THAR'][i] != 1: line = uneline
+#            if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
+            if struct['THAR'][i] == 1: line = tharline
+            if struct['THAR'][i] != 1: line = uneline
 
-                struct['LINES'][i] = line
+            struct['LINES'][i] = line
 
-                nlines = 1
-                if line.shape[1] != 1: nlines = line.shape[0]
+            nlines = 1
+            if line.shape[1] != 1: nlines = line.shape[0]
 
-                print('MEASURED_CENT  EXPECTED_CENT   DIFF')#      SUMFLUX')
-                for iline in range(nlines):
-                    for ichip in range(nchips):
-                        for ifiber in range(nfibers):
-                            fiber = fibers[ifiber]
-                            intline = int(round(line[iline,ichip]))
-                            gflux =   oneDflux[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
-                            gerror = oneDerror[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
-                            try:
-                                # Try to fit Gaussians to the lamp lines
-                                gpeaks = peakfit.peakfit(gflux, sigma=gerror)
-                                gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
-                                gpeaks = gpeaks[gd]
-                                # Find the desired peak and load struct
-                                gpeaks['pars'][:, 1] = gpeaks['pars'][:, 1] + intline - lineSearchRad
-                                pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
-                                gdline, = np.where(pixdif == np.min(pixdif))
-                                tmp = iline+ichip+ifiber
-                                diff = gpeaks['pars'][:, 1][gdline][0] - line[iline,ichip]
-                                if fiber == 150:
-                                    txt1 = str("%.2f" % round(gpeaks['pars'][:, 1][gdline][0],2)).rjust(12)
-                                    txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(15)
-                                    txt3 = str("%.2f" % round(diff,2)).rjust(10)
-                                    print(txt1 + txt2 + txt3)# + txt4)
-                            except:
-                                print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
-                                continue
+            print('MEASURED_CENT  EXPECTED_CENT   DIFF')#      SUMFLUX')
+            for iline in range(nlines):
+                for ichip in range(nchips):
+                    for ifiber in range(nfibers):
+                        fiber = fibers[ifiber]
+                        intline = int(round(line[iline,ichip]))
+                        gflux =   oneDflux[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
+                        gerror = oneDerror[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
+                        try:
+                            # Try to fit Gaussians to the lamp lines
+                            gpeaks = peakfit.peakfit(gflux, sigma=gerror)
+                            gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
+                            gpeaks = gpeaks[gd]
+                            # Find the desired peak and load struct
+                            gpeaks['pars'][:, 1] = gpeaks['pars'][:, 1] + intline - lineSearchRad
+                            pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
+                            gdline, = np.where(pixdif == np.min(pixdif))
+                            tmp = iline+ichip+ifiber
+                            diff = gpeaks['pars'][:, 1][gdline][0] - line[iline,ichip]
+                            if fiber == 150:
+                                txt1 = str("%.2f" % round(gpeaks['pars'][:, 1][gdline][0],2)).rjust(12)
+                                txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(15)
+                                txt3 = str("%.2f" % round(diff,2)).rjust(10)
+                                print(txt1 + txt2 + txt3)# + txt4)
+                        except:
+                            print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
+                            continue
 
-                            if len(gdline) > 0:
-                                struct['GAUSS'][i, iline, ichip, ifiber, :] = gpeaks['pars'][gdline, :][0]
-                                struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
-                            else:
-                                print("----> makeCalFits: ERROR!!! Desired line not found for " + tp + " exposure " + str(ims[i]))
+                        if len(gdline) > 0:
+                            struct['GAUSS'][i, iline, ichip, ifiber, :] = gpeaks['pars'][gdline, :][0]
+                            struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
+                        else:
+                            print("----> makeCalFits: ERROR!!! Desired line not found for " + tp + " exposure " + str(ims[i]))
 
 
         Table(struct).write(outfile, overwrite=True)
