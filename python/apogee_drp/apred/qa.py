@@ -208,7 +208,6 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             if fpinum != 0:
                 all_ims = np.append(all_ims, fpinum)
                 all_types = np.append(all_types, 'fpi')
-            pdb.set_trace()
             x = makeCalFits(load=load, ims=all_ims, types=all_types, mjd=mjd, instrument=instrument, clobber=clobber)
         print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
 
