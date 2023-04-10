@@ -159,6 +159,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     if observatory == 'lco': 
         instrument = 'apogee-s'
         prefix = 'as'
+    fps = True
+    if int(mjd)<59556: fps = False
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
     # Find the list of plan files
@@ -188,6 +190,12 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     darkplans = np.array(darkplans)
     ndarkplans = len(darkplans)
 
+    # Get an FPI exposure number
+    plate = sciplans[0].split('-')[1]
+    planfile = load.filename('Plan', plate=int(plate), mjd=mjd, fps=fps)
+    planstr = plan.load(planfile, np=True)
+    fpinum = int(planstr['fpi'])
+
     if makeqafits is True:
         # Run apqa on the cal  plans
         print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
@@ -196,6 +204,11 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             planstr = plan.load(planfile, np=True)
             mjd = calplans[i].split('-')[3].split('.')[0]
             all_ims = planstr['APEXP']['name']
+            all_types = np.full(len(all_ims), 'cal')
+            if fpinum != 0:
+                all_ims = np.concatenate([all_ims, np.array(fpinum)])
+                all_types = np.concatenate([all_types, np.array('fpi')])
+            pdb.set_trace()
             x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument, clobber=clobber)
         print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
 
@@ -236,13 +249,9 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         # Get the plate number and mjd
         tmp = sciplans[i].split('-')
         plate = tmp[1]
-        mjd = tmp[2].split('.')[0]
+        #mjd = tmp[2].split('.')[0]
 
         # Load the plan file
-        if int(mjd)>59556:
-            fps = True
-        else:
-            fps = False
         planfile = load.filename('Plan', plate=int(plate), mjd=mjd, fps=fps)
         planstr = plan.load(planfile, np=True)
 
