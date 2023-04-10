@@ -3401,12 +3401,12 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     # Show throughput qa plots from first and final visit of the night
     html.write('<H2>Throughput plots from first science exposure: </H2>\n')
     html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Spatial <TH>Fiber Hist <TH>\n')
-    plate1 = os.path.basename(os.path.dirname(os.path.dirname(platefiles[0])))
-    field1 = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(platefiles[0]))))
+    plate = os.path.basename(os.path.dirname(os.path.dirname(platefiles[0])))
+    field = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(platefiles[0]))))
     pfile1 = glob.glob(os.path.dirname(platefiles[0])+'/plots/'+load.prefix+'Flux-*.png')
     pfile2 = glob.glob(os.path.dirname(platefiles[0])+'/plots/'+load.prefix+'Tput-*.png')
-    relpath1 = '../../../../visit/'+telescope+'/'+field1+'/'+plate1+'/'+mjd+'/plots/'+os.path.basename(pfile1[0])
-    relpath2 = '../../../../visit/'+telescope+'/'+field2+'/'+plate2+'/'+mjd+'/plots/'+os.path.basename(pfile2[0])
+    relpath1 = '../../../../visit/'+telescope+'/'+field+'/'+plate+'/'+mjd+'/plots/'+os.path.basename(pfile1[0])
+    relpath2 = '../../../../visit/'+telescope+'/'+field+'/'+plate+'/'+mjd+'/plots/'+os.path.basename(pfile2[0])
     html.write('<TR><TD><A HREF='+relpath1+' target="_blank"><IMG SRC='+relpath1+' HEIGHT=300></A>\n')
     html.write('<TD><A HREF='+relpath2+' target="_blank"><IMG SRC='+relpath2+' HEIGHT=300></A>\n')
     html.write('</TABLE>\n')
@@ -3414,12 +3414,12 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     # Show throughput qa plots from first and final visit of the night
     html.write('<H2>Throughput plots from final science exposure: </H2>\n')
     html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Spatial <TH>Fiber Hist <TH>\n')
-    plate1 = os.path.basename(os.path.dirname(os.path.dirname(platefiles[-1])))
-    field1 = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(platefiles[-1]))))
+    plate = os.path.basename(os.path.dirname(os.path.dirname(platefiles[-1])))
+    field = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(platefiles[-1]))))
     pfile1 = glob.glob(os.path.dirname(platefiles[-1])+'/plots/'+load.prefix+'Flux-*.png')
     pfile2 = glob.glob(os.path.dirname(platefiles[-1])+'/plots/'+load.prefix+'Tput-*.png')
-    relpath1 = '../../../../visit/'+telescope+'/'+field1+'/'+plate1+'/'+mjd+'/plots/'+os.path.basename(pfile1[0])
-    relpath2 = '../../../../visit/'+telescope+'/'+field1+'/'+plate1+'/'+mjd+'/plots/'+os.path.basename(pfile2)[0]
+    relpath1 = '../../../../visit/'+telescope+'/'+field+'/'+plate+'/'+mjd+'/plots/'+os.path.basename(pfile1[0])
+    relpath2 = '../../../../visit/'+telescope+'/'+field+'/'+plate+'/'+mjd+'/plots/'+os.path.basename(pfile2)[0]
     html.write('<TR><TD><A HREF='+relpath1+' target="_blank"><IMG SRC='+relpath1+' HEIGHT=300></A>\n')
     html.write('<TD><A HREF='+relpath2+' target="_blank"><IMG SRC='+relpath2+' HEIGHT=300></A>\n')
     html.write('</TABLE>\n')
