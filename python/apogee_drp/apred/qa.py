@@ -3388,22 +3388,23 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     # Get all succesfully reduced plates
     platefiles = glob.glob(platedir + '*PlateSum*.fits')
-
+    if len(platefiles) < 1: 
+        print('----> makeNightQA: No observed plate files found for ' + mjd + '!!!')
+        return
+    platefiles = np.array(platefiles)
+    nplates = len(platefiles)
+    pfiles = np.empty(nplates).astype(str)
+    for i in range(nplates): pfiles[i] = os.path.basename(platefiles[i])
+    order = np.argsort(pfiles)
+    platefiles = platefiles[order]
 
     # Show throughput qa plots from first and final visit of the night
     html.write('<H2>Throughput plots from first science exposure: </H2>\n')
     html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Spatial <TH>Fiber Hist <TH>\n')
-    if len(platefiles) > 0:
-        platefiles.sort()
-        platefiles = np.array(platefiles)
-        nplates = len(platefiles)
-        pfiles = np.empty(nplates).astype(str)
-        for i in range(nplates): pfiles[i] = os.path.basename(platefiles[i])
-        order = np.argsort(pfiles)
-        platefiles = platefiles[order]
-        pdb.set_trace()
-
-
+    pfile1 = glob.glob(os.path.dirname(platefiles[0])+'/'+load.prefix+'Flux-*.png')
+    pfile2 = glob.glob(os.path.dirname(platefiles[0])+'/'+load.prefix+'Tput-*.png')
+    pdb.set_trace()
+    html.write('<TR><TD><A HREF=../plots/' + mjd + 'zero.png target="_blank"><IMG SRC=../plots/' + mjd + 'zero.png WIDTH=500></A>\n')
 
 #    print,'wavehtml...'
 #    wavefile = caldir + 'wave/html/wave' + mjd + '.html'
