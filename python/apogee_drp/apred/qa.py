@@ -3399,7 +3399,8 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
         nplates = len(platefiles)
         pfiles = np.empty(nplates).astype(str)
         for i in range(nplates): pfiles[i] = os.path.basename(platefiles[i])
-            
+        order = np.argsort(pfiles)
+        platefiles = platefiles[order]
         pdb.set_trace()
 
 
