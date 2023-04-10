@@ -3424,6 +3424,9 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     html.write('<TD><A HREF='+relpath2+' target="_blank"><IMG SRC='+relpath2+' HEIGHT=300></A>\n')
     html.write('</TABLE>\n')
 
+
+    html.close()
+
     return
     #pdb.set_trace()
 
