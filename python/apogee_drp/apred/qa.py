@@ -3386,6 +3386,13 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                     if len(bad) >= 0: html.write(str(300 - bad) + '\n')
     html.write('</TABLE>\n')
 
+    # Show throughput qa plots from first and final visit of the night
+    html.write('<H2>Throughput plots from first visit of night: </H2>\n')
+    html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Spatial <TH>Fiber Hist <TH>\n')
+    pdb.set_trace()
+
+
+
 #    print,'wavehtml...'
 #    wavefile = caldir + 'wave/html/wave' + mjd + '.html'
 #    if os.path.exists(wavefile):
