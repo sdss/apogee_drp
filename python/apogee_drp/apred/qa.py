@@ -3401,8 +3401,10 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     # Show throughput qa plots from first and final visit of the night
     html.write('<H2>Throughput plots from first science exposure: </H2>\n')
     html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Spatial <TH>Fiber Hist <TH>\n')
-    pfile1 = glob.glob(os.path.dirname(platefiles[0])+'/'+load.prefix+'Flux-*.png')
-    pfile2 = glob.glob(os.path.dirname(platefiles[0])+'/'+load.prefix+'Tput-*.png')
+    plate1 = os.path.basename(os.path.dirname(os.path.dirname(platefiles[0])))
+    field1 = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(platefiles[0]))))
+    pfile1 = glob.glob(os.path.dirname(platefiles[0])+'/plots/'+load.prefix+'Flux-*.png')
+    pfile2 = glob.glob(os.path.dirname(platefiles[0])+'/plots/'+load.prefix+'Tput-*.png')
     pdb.set_trace()
     html.write('<TR><TD><A HREF=../plots/' + mjd + 'zero.png target="_blank"><IMG SRC=../plots/' + mjd + 'zero.png WIDTH=500></A>\n')
 
