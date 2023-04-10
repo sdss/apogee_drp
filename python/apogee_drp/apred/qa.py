@@ -206,8 +206,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             all_ims = planstr['APEXP']['name']
             all_types = np.full(len(all_ims), 'cal')
             if fpinum != 0:
-                all_ims = np.concatenate([all_ims, fpinum])
-                all_types = np.concatenate([all_types, np.array(['fpi'])])
+                all_ims = np.append(all_ims, fpinum)
+                all_types = np.append(all_types, 'fpi')
             pdb.set_trace()
             x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument, clobber=clobber)
         print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
