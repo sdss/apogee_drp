@@ -194,7 +194,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     plate = sciplans[0].split('-')[1]
     planfile = load.filename('Plan', plate=int(plate), mjd=mjd, fps=fps)
     planstr = plan.load(planfile, np=True)
-    fpinum = np.array(int(planstr['fpi']))
+    fpinum = int(planstr['fpi'])
 
     if makeqafits is True:
         # Run apqa on the cal  plans
