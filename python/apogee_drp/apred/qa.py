@@ -3405,8 +3405,26 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     field1 = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(platefiles[0]))))
     pfile1 = glob.glob(os.path.dirname(platefiles[0])+'/plots/'+load.prefix+'Flux-*.png')
     pfile2 = glob.glob(os.path.dirname(platefiles[0])+'/plots/'+load.prefix+'Tput-*.png')
-    pdb.set_trace()
-    html.write('<TR><TD><A HREF=../plots/' + mjd + 'zero.png target="_blank"><IMG SRC=../plots/' + mjd + 'zero.png WIDTH=500></A>\n')
+    relpath1 = '../../../../visit/'+telescope+'/'+field1+'/'+plate1+'/'+mjd+'/plots/'+os.path.basename(pfile1)
+    relpath2 = '../../../../visit/'+telescope+'/'+field2+'/'+plate2+'/'+mjd+'/plots/'+os.path.basename(pfile2)
+    html.write('<TR><TD><A HREF='+relpath1' target="_blank"><IMG SRC='+relpath1+' HEIGHT=300></A>\n')
+    html.write('<TD><A HREF='+relpath2' target="_blank"><IMG SRC='+relpath2+' HEIGHT=300></A>\n')
+    html.write('</TABLE>\n')
+
+    # Show throughput qa plots from first and final visit of the night
+    html.write('<H2>Throughput plots from final science exposure: </H2>\n')
+    html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Spatial <TH>Fiber Hist <TH>\n')
+    plate1 = os.path.basename(os.path.dirname(os.path.dirname(platefiles[-1])))
+    field1 = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(platefiles[-1]))))
+    pfile1 = glob.glob(os.path.dirname(platefiles[-1])+'/plots/'+load.prefix+'Flux-*.png')
+    pfile2 = glob.glob(os.path.dirname(platefiles[-1])+'/plots/'+load.prefix+'Tput-*.png')
+    relpath1 = '../../../../visit/'+telescope+'/'+field1+'/'+plate1+'/'+mjd+'/plots/'+os.path.basename(pfile1)
+    relpath2 = '../../../../visit/'+telescope+'/'+field2+'/'+plate2+'/'+mjd+'/plots/'+os.path.basename(pfile2)
+    html.write('<TR><TD><A HREF='+relpath1' target="_blank"><IMG SRC='+relpath1+' HEIGHT=300></A>\n')
+    html.write('<TD><A HREF='+relpath2' target="_blank"><IMG SRC='+relpath2+' HEIGHT=300></A>\n')
+    html.write('</TABLE>\n')
+
+    #pdb.set_trace()
 
 #    print,'wavehtml...'
 #    wavefile = caldir + 'wave/html/wave' + mjd + '.html'
@@ -3416,183 +3434,179 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
 
     # Make master plot of zeropoint and sky levels for the night
-    if (len(platefiles) >= 1): 
-        platefiles.sort()
-        platefiles = np.array(platefiles)
-        nplates = len(platefiles)
-        for i in range(nplates):
-            platefiledir = os.path.dirname(platefiles[i])
-            platetab = fits.getdata(platefiles[i],1)
-            mjd = str(int(round(platetab['MJD'][0])))
-            #sntab, tabs=platefiles[i], outfile=platefiledir + '/sn-' + plate + '-' + mjd + '.dat'
-            #sntab, tabs=platefiles[i], outfile=platefiledir + '/altsn-' + plate + '-' + mjd + '.dat', /altsn
-            if i == 0:
-                zero = platetab['ZERO']
-                ims = platetab['IM']
-                moondist = platetab['MOONDIST']
-                skyr = platetab['SKY'][:,0]
-                skyg = platetab['SKY'][:,1]
-                skyb = platetab['SKY'][:,2]
-            else:
-                zero = np.concatenate([zero, platetab['ZERO']])
-                ims = np.concatenate([ims, platetab['IM']])
-                skyr = np.concatenate([skyr, platetab['SKY'][:,0]])
-                skyg = np.concatenate([skyg, platetab['SKY'][:,1]])
-                skyb = np.concatenate([skyb, platetab['SKY'][:,2]])
-                moondist = np.concatenate([moondist, platetab['MOONDIST']])
-
-        html.write('<H2>Zeropoints and sky levels: </H2>\n')
-        html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Zeropoints <TH>Sky level <TH>Sky level vs moon distance\n')
-
-        # Plot of zeropoint versus image number
-        plotfile = mjd + 'zero.png'
-        print("----> makeNightQA: Making "+plotfile)
-
-        fig=plt.figure(figsize=(14,8))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Zeropoint Per Pixel')
-
-        xmin = np.min(ims % 10000)-1
-        xmax = np.max(ims % 10000)+1
-        ax1.set_xlim(xmin, xmax)
-        gd, = np.where(zero > 0)
-        if len(gd)>0:
-            ymin = np.min(zero[gd])
+    for i in range(nplates):
+        platefiledir = os.path.dirname(platefiles[i])
+        platetab = fits.getdata(platefiles[i],1)
+        mjd = str(int(round(platetab['MJD'][0])))
+        #sntab, tabs=platefiles[i], outfile=platefiledir + '/sn-' + plate + '-' + mjd + '.dat'
+        #sntab, tabs=platefiles[i], outfile=platefiledir + '/altsn-' + plate + '-' + mjd + '.dat', /altsn
+        if i == 0:
+            zero = platetab['ZERO']
+            ims = platetab['IM']
+            moondist = platetab['MOONDIST']
+            skyr = platetab['SKY'][:,0]
+            skyg = platetab['SKY'][:,1]
+            skyb = platetab['SKY'][:,2]
         else:
-            ymin = 15
-        ymax = np.max(zero)
-        if ymin > 15 or np.isfinite(ymin)==False: ymin = 15
-        if ymax < 20 or np.isfinite(ymax)==False: ymax = 20
-        ax1.set_ylim(ymin, ymax)
+            zero = np.concatenate([zero, platetab['ZERO']])
+            ims = np.concatenate([ims, platetab['IM']])
+            skyr = np.concatenate([skyr, platetab['SKY'][:,0]])
+            skyg = np.concatenate([skyg, platetab['SKY'][:,1]])
+            skyb = np.concatenate([skyb, platetab['SKY'][:,2]])
+            moondist = np.concatenate([moondist, platetab['MOONDIST']])
 
-        ax1.scatter(ims % 10000, zero, marker='o', s=150, c='dodgerblue', edgecolors='k', alpha=0.8)
+    html.write('<H2>Zeropoints and sky levels: </H2>\n')
+    html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Zeropoints <TH>Sky level <TH>Sky level vs moon distance\n')
 
-        fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir + plotfile)
-        plt.close('all')
+    # Plot of zeropoint versus image number
+    plotfile = mjd + 'zero.png'
+    print("----> makeNightQA: Making "+plotfile)
 
-        html.write('<TR><TD><A HREF=../plots/' + mjd + 'zero.png target="_blank"><IMG SRC=../plots/' + mjd + 'zero.png WIDTH=500></A>\n')
+    fig=plt.figure(figsize=(14,8))
+    ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax1.minorticks_on()
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
+    ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Zeropoint Per Pixel')
 
-        # Plot of zeropoint versus image number
-        plotfile = mjd + 'sky.png'
-        print("----> makeNightQA: Making "+plotfile)
+    xmin = np.min(ims % 10000)-1
+    xmax = np.max(ims % 10000)+1
+    ax1.set_xlim(xmin, xmax)
+    gd, = np.where(zero > 0)
+    if len(gd)>0:
+        ymin = np.min(zero[gd])
+    else:
+        ymin = 15
+    ymax = np.max(zero)
+    if ymin > 15 or np.isfinite(ymin)==False: ymin = 15
+    if ymax < 20 or np.isfinite(ymax)==False: ymax = 20
+    ax1.set_ylim(ymin, ymax)
 
-        fig=plt.figure(figsize=(14,8))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Sky Continuum Per Pixel')
+    ax1.scatter(ims % 10000, zero, marker='o', s=150, c='dodgerblue', edgecolors='k', alpha=0.8)
 
-        ax1.set_xlim(xmin, xmax)
-        if ymin > 11: ymin = 11
-        if ymax < 16: ymax = 16
-        ax1.set_ylim(ymin, ymax)
+    fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
+    plt.savefig(plotsdir + plotfile)
+    plt.close('all')
 
-        ax1.scatter(ims % 10000, skyr, marker='o', s=150, c='r', edgecolors='k', alpha=0.8)
-        ax1.scatter(ims % 10000, skyg, marker='o', s=150, c='g', edgecolors='k', alpha=0.8)
-        ax1.scatter(ims % 10000, skyb, marker='o', s=150, c='b', edgecolors='k', alpha=0.8)
+    html.write('<TR><TD><A HREF=../plots/' + mjd + 'zero.png target="_blank"><IMG SRC=../plots/' + mjd + 'zero.png WIDTH=500></A>\n')
 
-        fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir + plotfile)
-        plt.close('all')
+    # Plot of zeropoint versus image number
+    plotfile = mjd + 'sky.png'
+    print("----> makeNightQA: Making "+plotfile)
 
-        html.write('<TD><A HREF=../plots/' + plotfile + ' target="_blank"><IMG SRC=../plots/' + plotfile + ' WIDTH=500></A>\n')
+    fig=plt.figure(figsize=(14,8))
+    ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax1.minorticks_on()
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
+    ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Sky Continuum Per Pixel')
 
-        # Plot of moon distance versus sky continuum
-        plotfile = mjd + 'moonsky.png'
-        print("----> makeNightQA: Making "+plotfile)
+    ax1.set_xlim(xmin, xmax)
+    if ymin > 11: ymin = 11
+    if ymax < 16: ymax = 16
+    ax1.set_ylim(ymin, ymax)
 
-        fig=plt.figure(figsize=(14,8))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Moon Distance');  ax1.set_ylabel(r'Sky Continuum Per Pixel')
+    ax1.scatter(ims % 10000, skyr, marker='o', s=150, c='r', edgecolors='k', alpha=0.8)
+    ax1.scatter(ims % 10000, skyg, marker='o', s=150, c='g', edgecolors='k', alpha=0.8)
+    ax1.scatter(ims % 10000, skyb, marker='o', s=150, c='b', edgecolors='k', alpha=0.8)
 
-        if ymin > 11: ymin = 11
-        if ymax < 16: ymax = 16
-        ax1.set_ylim(ymin, ymax)
+    fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
+    plt.savefig(plotsdir + plotfile)
+    plt.close('all')
 
-        ax1.scatter(moondist, skyr, marker='o', s=150, c='r', edgecolors='k', alpha=0.8)
-        ax1.scatter(moondist, skyg, marker='o', s=150, c='g', edgecolors='k', alpha=0.8)
-        ax1.scatter(moondist, skyb, marker='o', s=150, c='b', edgecolors='k', alpha=0.8)
+    html.write('<TD><A HREF=../plots/' + plotfile + ' target="_blank"><IMG SRC=../plots/' + plotfile + ' WIDTH=500></A>\n')
 
-        fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir + plotfile)
-        plt.close('all')
+    # Plot of moon distance versus sky continuum
+    plotfile = mjd + 'moonsky.png'
+    print("----> makeNightQA: Making "+plotfile)
 
-        html.write('<TD><A HREF=../plots/' + mjd + 'moonsky.png target="_blank"><IMG SRC=../plots/' + plotfile+' WIDTH=500></A>\n')
-        html.write('</TABLE>\n')
+    fig=plt.figure(figsize=(14,8))
+    ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax1.minorticks_on()
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
+    ax1.set_xlabel(r'Moon Distance');  ax1.set_ylabel(r'Sky Continuum Per Pixel')
 
-        html.write('<BR>Moon phase: ' + str("%.3f" % round(platetab['MOONPHASE'][0],3)) + '<BR>\n')
+    if ymin > 11: ymin = 11
+    if ymax < 16: ymax = 16
+    ax1.set_ylim(ymin, ymax)
 
-        html.write('<p><H2>Observed Plate Exposure Data:</H2>\n')
-        html.write('<p>Note: Sky continuum, S/N, and S/N(c) columns give values for blue, green, and red detectors</p>\n')
-        html.write('<TABLE BORDER=2>\n')
-        th0 = '<TR bgcolor='+thcolor+'>'
-        th1 = '<TH>Plate <TH>Frame <TH>Cart <TH>sec(z) <TH>HA <TH>Design HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads '
-        th2 = '<TH>Dither <TH>Zero <TH>Zerorms <TH>Zeronorm <TH>Sky Continuum <TH>S/N <TH>S/N(c) <TH>Unplugged <TH>Faint\n'
-        for i in range(nplates):
-            platetab = fits.getdata(platefiles[i],1)
-            plate = str(int(round(platetab['PLATE'][0])))
-            try:
-                cart = str(int(round(platetab['CART'][0])))
-            except:
-                cart = platetab['CART'][0]
-            nreads = str(int(round(platetab['NREADS'][0])))
-            n_exposures = len(platetab['IM'])
-            html.write(th0 + th1 + th2)
-            for j in range(n_exposures):
-                html.write('<TR>\n')
-                html.write('<TD align="left">' + plate + '\n')
-                html.write('<TD align="left">' + str(int(round(platetab['IM'][j]))) + '\n')
-                html.write('<TD align="center">' + cart + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['SECZ'][j],3)) + '\n')
-                html.write('<TD align="right">' + str(platetab['HA'][j]) + '\n')
-                tmp1 = str("%.1f" % round(platetab['DESIGN_HA'][j][0],1)).rjust(5)
-                tmp2 = str("%.1f" % round(platetab['DESIGN_HA'][j][1],1)).rjust(5)
-                tmp3 = str("%.1f" % round(platetab['DESIGN_HA'][j][2],1)).rjust(5)
-                html.write('<TD align="right">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['SEEING'][j],3)) + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['FWHM'][j],3)) + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['GDRMS'][j],3)) + '\n')
-                html.write('<TD align="right">' + nreads + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['DITHER'][j],3)) + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERO'][j],3)) + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERORMS'][j],3)) + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERONORM'][j],3)) + '\n')
-                tmp1 = str("%.3f" % round(platetab['SKY'][j][2],3)).rjust(6)
-                tmp2 = str("%.3f" % round(platetab['SKY'][j][1],3)).rjust(6)
-                tmp3 = str("%.3f" % round(platetab['SKY'][j][0],3)).rjust(6)
-                html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
-                tmp1 = str("%.3f" % round(platetab['SN'][j][2],3)).rjust(6)
-                tmp2 = str("%.3f" % round(platetab['SN'][j][1],3)).rjust(6)
-                tmp3 = str("%.3f" % round(platetab['SN'][j][0],3)).rjust(6)
-                html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
-                tmp1 = str("%.3f" % round(platetab['SNC'][j][2],3)).rjust(6)
-                tmp2 = str("%.3f" % round(platetab['SNC'][j][1],3)).rjust(6)
-                tmp3 = str("%.3f" % round(platetab['SNC'][j][0],3)).rjust(6)
-                html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
-                #tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
-                #zero = np.nanmedian(tmp)
-                #zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
-                #faint, = np.where((tmp - zero) < -0.5)
-                #nfaint = len(faint)
-                html.write('<TD> \n')
-                html.write('<TD> \n')
+    ax1.scatter(moondist, skyr, marker='o', s=150, c='r', edgecolors='k', alpha=0.8)
+    ax1.scatter(moondist, skyg, marker='o', s=150, c='g', edgecolors='k', alpha=0.8)
+    ax1.scatter(moondist, skyb, marker='o', s=150, c='b', edgecolors='k', alpha=0.8)
+
+    fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
+    plt.savefig(plotsdir + plotfile)
+    plt.close('all')
+
+    html.write('<TD><A HREF=../plots/' + mjd + 'moonsky.png target="_blank"><IMG SRC=../plots/' + plotfile+' WIDTH=500></A>\n')
+    html.write('</TABLE>\n')
+
+    html.write('<BR>Moon phase: ' + str("%.3f" % round(platetab['MOONPHASE'][0],3)) + '<BR>\n')
+
+    html.write('<p><H2>Observed Plate Exposure Data:</H2>\n')
+    html.write('<p>Note: Sky continuum, S/N, and S/N(c) columns give values for blue, green, and red detectors</p>\n')
+    html.write('<TABLE BORDER=2>\n')
+    th0 = '<TR bgcolor='+thcolor+'>'
+    th1 = '<TH>Plate <TH>Frame <TH>Cart <TH>sec(z) <TH>HA <TH>Design HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads '
+    th2 = '<TH>Dither <TH>Zero <TH>Zerorms <TH>Zeronorm <TH>Sky Continuum <TH>S/N <TH>S/N(c) <TH>Unplugged <TH>Faint\n'
+    for i in range(nplates):
+        platetab = fits.getdata(platefiles[i],1)
+        plate = str(int(round(platetab['PLATE'][0])))
+        try:
+            cart = str(int(round(platetab['CART'][0])))
+        except:
+            cart = platetab['CART'][0]
+        nreads = str(int(round(platetab['NREADS'][0])))
+        n_exposures = len(platetab['IM'])
+        html.write(th0 + th1 + th2)
+        for j in range(n_exposures):
+            html.write('<TR>\n')
+            html.write('<TD align="left">' + plate + '\n')
+            html.write('<TD align="left">' + str(int(round(platetab['IM'][j]))) + '\n')
+            html.write('<TD align="center">' + cart + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['SECZ'][j],3)) + '\n')
+            html.write('<TD align="right">' + str(platetab['HA'][j]) + '\n')
+            tmp1 = str("%.1f" % round(platetab['DESIGN_HA'][j][0],1)).rjust(5)
+            tmp2 = str("%.1f" % round(platetab['DESIGN_HA'][j][1],1)).rjust(5)
+            tmp3 = str("%.1f" % round(platetab['DESIGN_HA'][j][2],1)).rjust(5)
+            html.write('<TD align="right">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['SEEING'][j],3)) + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['FWHM'][j],3)) + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['GDRMS'][j],3)) + '\n')
+            html.write('<TD align="right">' + nreads + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['DITHER'][j],3)) + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERO'][j],3)) + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERORMS'][j],3)) + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERONORM'][j],3)) + '\n')
+            tmp1 = str("%.3f" % round(platetab['SKY'][j][2],3)).rjust(6)
+            tmp2 = str("%.3f" % round(platetab['SKY'][j][1],3)).rjust(6)
+            tmp3 = str("%.3f" % round(platetab['SKY'][j][0],3)).rjust(6)
+            html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
+            tmp1 = str("%.3f" % round(platetab['SN'][j][2],3)).rjust(6)
+            tmp2 = str("%.3f" % round(platetab['SN'][j][1],3)).rjust(6)
+            tmp3 = str("%.3f" % round(platetab['SN'][j][0],3)).rjust(6)
+            html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
+            tmp1 = str("%.3f" % round(platetab['SNC'][j][2],3)).rjust(6)
+            tmp2 = str("%.3f" % round(platetab['SNC'][j][1],3)).rjust(6)
+            tmp3 = str("%.3f" % round(platetab['SNC'][j][0],3)).rjust(6)
+            html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
+            #tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
+            #zero = np.nanmedian(tmp)
+            #zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
+            #faint, = np.where((tmp - zero) < -0.5)
+            #nfaint = len(faint)
+            html.write('<TD> \n')
+            html.write('<TD> \n')
 
     html.write('</TABLE>\n')
     html.write('<BR><BR>\n')
