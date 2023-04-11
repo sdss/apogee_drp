@@ -125,9 +125,11 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
     for i in range(ndirs): allmjd[i] = mjdDirs[i].split('/')[-1]
     gd, = np.where(allmjd != 'plots')
     umjd = np.unique(allmjd[gd])
-    gd, = np.where(umjd == mjdstart)
-    umjd = umjd[gd[0]:]
-    umjd = umjd[::-1]
+    try:
+        gd, = np.where(umjd == mjdstart)
+        umjd = umjd[gd[0]:]
+        umjd = umjd[::-1]
+    except: pass
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
 
