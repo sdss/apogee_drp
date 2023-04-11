@@ -1250,11 +1250,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(30,14))
-            ymax = 70000
-            if instrument == 'apogee-s': 
-                ymax = 125000
-            ymin = 0 - ymax * 0.05
-            yspan = ymax - ymin
+            #ymax = 70000
+            #if instrument == 'apogee-s': 
+            #    ymax = 125000
+            #ymin = 0 - ymax * 0.05
+            #yspan = ymax - ymin
 
             gdcal = allcal[fpi]
             caljd = gdcal['JD'] - 2.4e6
@@ -1262,6 +1262,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             ymin = -10
             ymax = 5000
+            yspan = ymax - ymin
 
             for ichip in range(nchips):
                 chip = chips[ichip]
