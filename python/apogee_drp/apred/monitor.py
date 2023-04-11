@@ -1261,7 +1261,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #pdb.set_trace()
 
             ymin = -10
-            ymax = 5000
+            ymax = 4000
             yspan = ymax - ymin
 
             for ichip in range(nchips):
