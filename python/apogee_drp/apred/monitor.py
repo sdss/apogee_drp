@@ -1259,8 +1259,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 chip = chips[ichip]
 
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
-                #ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
+                ax.set_xlim(xmin, xmax)
+                #ax.set_ylim(ymin, ymax)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
                 ax.minorticks_on()
