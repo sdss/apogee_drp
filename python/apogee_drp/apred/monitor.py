@@ -475,6 +475,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> <a href=#scisnr> S/N history</a>\n')
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
+    html.write('<li> <a href=#fpi>FPI median brightness</a>\n')
     html.write('<li> <a href=#qflux>Quartz lamp median brightness</a>\n')
     html.write('<li> <a href=#qtrace>Quartz lamp trace position</a>\n')
     html.write('<li> <a href=#qfwhm>Quartz lamp trace FWHM</a>\n')
@@ -508,6 +509,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     html.write('<h3> <a name=scisnr></a> S/N history for H=10.6-11.0 stars</h3>\n')
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=1100></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<h3> <a name=fpi></a> FPI median brightness </h3>\n')
+    html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=1000></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
