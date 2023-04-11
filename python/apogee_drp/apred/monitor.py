@@ -1260,12 +1260,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             caljd = gdcal['JD'] - 2.4e6
             #pdb.set_trace()
 
+            ymin = -10
+            ymax = 5000
+
             for ichip in range(nchips):
                 chip = chips[ichip]
 
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
                 ax.set_xlim(xmin, xmax)
-                #ax.set_ylim(ymin, ymax)
+                ax.set_ylim(ymin, ymax)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
                 ax.minorticks_on()
@@ -1289,6 +1292,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]#  / gdcal['NREAD']*10.0
+                    med = np.nanmedian(yvals)
+                    ax.set_ylim(me
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
                                label='fib ' + str(fibers[ifib]))
 
