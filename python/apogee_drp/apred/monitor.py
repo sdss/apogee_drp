@@ -1253,7 +1253,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             gdcal = allcal[fpi]
             caljd = gdcal['JD'] - 2.4e6
-            pdb.set_trace()
+            #pdb.set_trace()
 
             for ichip in range(nchips):
                 chip = chips[ichip]
