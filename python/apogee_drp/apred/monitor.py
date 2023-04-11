@@ -1277,7 +1277,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
-                ax.yaxis.set_major_locator(mpl.ticker.MultipleLocator(1000))
+                ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1000))
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
