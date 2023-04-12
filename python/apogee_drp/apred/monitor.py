@@ -1260,8 +1260,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             caljd = gdcal['JD'] - 2.4e6
             #pdb.set_trace()
 
-            ymin = -10
-            ymax = 4000
+            ymin = -100
+            ymax = 3500
+            if instrument == 'apogee-s': 
+                ymin = -60
+                ymax = 2500
             yspan = ymax - ymin
 
             for ichip in range(nchips):
@@ -1298,7 +1301,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                                label='fib ' + str(fibers[ifib]))
 
                 if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                    ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
