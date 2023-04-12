@@ -1258,6 +1258,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             gdcal = allcal[fpi]
             caljd = gdcal['JD'] - 2.4e6
+            mnjd = np.nanmin(caljd)
+            mxjd = np.nanmax(caljd)
+            jdspan = mxjd-mnjd
+            xmin0 = mnjd-jdspan*0.04
+            xmax0 = mxjd+jdspan*0.1
+            xspan0 = xmax0-xmin0
             #pdb.set_trace()
 
             #ymin = -100
@@ -1271,9 +1277,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 chip = chips[ichip]
 
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
-                #ax.set_xlim(xmin, xmax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
+                ax.set_xlim(xmin0, xmax0)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
+                #ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
@@ -1312,7 +1318,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
 
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.075,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
