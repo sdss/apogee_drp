@@ -1260,18 +1260,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             caljd = gdcal['JD'] - 2.4e6
             #pdb.set_trace()
 
-            ymin = -100
-            ymax = 3500
-            if instrument == 'apogee-s': 
-                ymin = -60
-                ymax = 2500
-            yspan = ymax - ymin
+            #ymin = -100
+            #ymax = 3500
+            #if instrument == 'apogee-s': 
+            #    ymin = -60
+            #    ymax = 2500
+            #yspan = ymax - ymin
 
             for ichip in range(nchips):
                 chip = chips[ichip]
 
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
+                #ax.set_xlim(xmin, xmax)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
                 ax.minorticks_on()
