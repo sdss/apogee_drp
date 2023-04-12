@@ -1297,6 +1297,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ymax = medflux*1.15
                 yspan = ymax-0
                 ymin = 0-yspan*0.05
+                pdb.set_trace()
                 
                 ax.set_ylim(ymin, ymax)
                 if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
