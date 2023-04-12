@@ -1278,8 +1278,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
                 ax.set_xlim(xmin0, xmax0)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(200))
-                #ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
+                ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
