@@ -125,9 +125,9 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
     for i in range(ndirs): allmjd[i] = mjdDirs[i].split('/')[-1]
     gd, = np.where(allmjd != 'plots')
     umjd = np.unique(allmjd[gd])
-    gd, = np.where(umjd == mjdstart)
-    umjd = umjd[gd[0]:]
-    umjd = umjd[::-1]
+    #gd, = np.where(umjd == mjdstart)
+    #umjd = umjd[gd[0]:]
+    #umjd = umjd[::-1]
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
 
@@ -159,6 +159,8 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     if observatory == 'lco': 
         instrument = 'apogee-s'
         prefix = 'as'
+    fps = True
+    if int(mjd)<59556: fps = False
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
     # Find the list of plan files
@@ -188,6 +190,13 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
     darkplans = np.array(darkplans)
     ndarkplans = len(darkplans)
 
+    # Get an FPI exposure number
+    plate = sciplans[0].split('-')[1]
+    planfile = load.filename('Plan', plate=int(plate), mjd=mjd, fps=fps)
+    planstr = plan.load(planfile, np=True)
+    try: fpinum = int(planstr['fpi'])
+    except: fpinum = 0
+
     if makeqafits is True:
         # Run apqa on the cal  plans
         print("Running APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
@@ -196,7 +205,11 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             planstr = plan.load(planfile, np=True)
             mjd = calplans[i].split('-')[3].split('.')[0]
             all_ims = planstr['APEXP']['name']
-            x = makeCalFits(load=load, ims=all_ims, mjd=mjd, instrument=instrument, clobber=clobber)
+            all_types = np.full(len(all_ims), 'cal')
+            if fpinum != 0:
+                all_ims = np.append(all_ims, fpinum)
+                all_types = np.append(all_types, 'fpi')
+            x = makeCalFits(load=load, ims=all_ims, types=all_types, mjd=mjd, instrument=instrument, clobber=clobber)
         print("Done with APQAMJD for " + str(ncalplans) + " cal plans from MJD " + mjd + "\n")
 
         # Run apqa on the dark  plans
@@ -236,13 +249,9 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
         # Get the plate number and mjd
         tmp = sciplans[i].split('-')
         plate = tmp[1]
-        mjd = tmp[2].split('.')[0]
+        #mjd = tmp[2].split('.')[0]
 
         # Load the plan file
-        if int(mjd)>59556:
-            fps = True
-        else:
-            fps = False
         planfile = load.filename('Plan', plate=int(plate), mjd=mjd, fps=fps)
         planstr = plan.load(planfile, np=True)
 
@@ -3195,7 +3204,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     apodir =     os.environ.get('APOGEE_REDUX') + '/'
     spectrodir = apodir + apred + '/'
-    platedir =   spectrodir+'/visit/'+telescope+'/*/*/'+mjd+'/'
+    platedir =   spectrodir+'visit/'+telescope+'/*/*/'+mjd+'/'
     caldir =     spectrodir + 'cal/'
     expdir =     spectrodir + 'exposures/' + instrument + '/'
     reddir =     expdir + mjd + '/'
@@ -3246,20 +3255,16 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     html.write('<H1>Nightly QA for MJD '+mjd+'</H1>\n')
 
     # Find the observing log file
-    reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
-    if os.path.exists(reportsDir):
-        dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
-        if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
-        if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
-        if len(reports) > 0:
-            reports.sort()
-            reportfile = reports[0]
-            reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
-            #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
-            html.write(' <a href="'+reportLink+'"> <H3>' + telescope.upper().replace('25M',' 2.5m') + ' Observing report </H3></a>\n')
-        else:
-            print('----> makeNightQA: No observing report found for ' + mjd + '!!!')
-            html.write(telescope.upper().replace('25M',' 2.5m') + ' Observing report (missing?)</H3>\n')
+    reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + load.observatory + '/reports/mos/'
+    dateobs = Time(int(mjd)-1, format='mjd').fits.split('T')[0]
+    if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
+    if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
+    if len(reports) != 0:
+        reports.sort()
+        reportfile = reports[0]
+        reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + load.observatory + '/reports/mos/' + os.path.basename(reportfile)
+        #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
+        html.write(' <a href="'+reportLink+'"> <H3>' + telescope.upper().replace('25M',' 2.5m') + ' Observing report </H3></a>\n')
     else:
         print('----> makeNightQA: No observing report found for ' + mjd + '!!!')
         html.write(telescope.upper().replace('25M',' 2.5m') + ' Observing report (missing?)</H3>\n')
@@ -3267,7 +3272,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     # Look for missing raw frames (assuming contiguous sequence)
     html.write('<H2>Raw frames:</H2> ' + str(firstExposure) + ' to ' + str(lastExposure))
 #    html.write(' (<a href=../../../../../../'+os.path.basename(dirs.datadir)+'/'+cmjd+'/'+cmjd+'.log.html> image log</a>)\n')
-    logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + mjd + '/' + mjd + '.log.html'
+    logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + load.observatory + '/' + mjd + '/' + mjd + '.log.html'
     logFileDir = os.path.dirname(logFile)
     html.write(' (<A HREF="'+logFile+'">image log</A>)\n')
     html.write('<BR>\n')
@@ -3390,193 +3395,225 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                     if len(bad) >= 0: html.write(str(300 - bad) + '\n')
     html.write('</TABLE>\n')
 
+    # Get all succesfully reduced plates
+    platefiles = glob.glob(platedir + '*PlateSum*.fits')
+    if len(platefiles) < 1: 
+        print('----> makeNightQA: No observed plate files found for ' + mjd + '!!!')
+        return
+    platefiles = np.array(platefiles)
+    nplates = len(platefiles)
+    pfiles = np.empty(nplates).astype(str)
+    for i in range(nplates): pfiles[i] = os.path.basename(platefiles[i])
+    order = np.argsort(pfiles)
+    platefiles = platefiles[order]
+
+    # Show throughput qa plots from first and final visit of the night
+    html.write('<H2>Throughput plots from first science exposure: </H2>\n')
+    html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Spatial <TH>Fiber Hist <TH>\n')
+    plate = os.path.basename(os.path.dirname(os.path.dirname(platefiles[0])))
+    field = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(platefiles[0]))))
+    pfile1 = glob.glob(os.path.dirname(platefiles[0])+'/plots/'+load.prefix+'Flux-*.png')
+    pfile2 = glob.glob(os.path.dirname(platefiles[0])+'/plots/'+load.prefix+'Tput-*.png')
+    relpath1 = '../../../../visit/'+telescope+'/'+field+'/'+plate+'/'+mjd+'/plots/'+os.path.basename(pfile1[0])
+    relpath2 = '../../../../visit/'+telescope+'/'+field+'/'+plate+'/'+mjd+'/plots/'+os.path.basename(pfile2[0])
+    html.write('<TR><TD><A HREF='+relpath1+' target="_blank"><IMG SRC='+relpath1+' HEIGHT=225></A>\n')
+    html.write('<TD><A HREF='+relpath2+' target="_blank"><IMG SRC='+relpath2+' HEIGHT=225></A>\n')
+    html.write('</TABLE>\n')
+
+    # Show throughput qa plots from first and final visit of the night
+    html.write('<H2>Throughput plots from final science exposure: </H2>\n')
+    html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Spatial <TH>Fiber Hist <TH>\n')
+    plate = os.path.basename(os.path.dirname(os.path.dirname(platefiles[-1])))
+    field = os.path.basename(os.path.dirname(os.path.dirname(os.path.dirname(platefiles[-1]))))
+    pfile1 = glob.glob(os.path.dirname(platefiles[-1])+'/plots/'+load.prefix+'Flux-*.png')
+    pfile2 = glob.glob(os.path.dirname(platefiles[-1])+'/plots/'+load.prefix+'Tput-*.png')
+    relpath1 = '../../../../visit/'+telescope+'/'+field+'/'+plate+'/'+mjd+'/plots/'+os.path.basename(pfile1[0])
+    relpath2 = '../../../../visit/'+telescope+'/'+field+'/'+plate+'/'+mjd+'/plots/'+os.path.basename(pfile2[0])
+    html.write('<TR><TD><A HREF='+relpath1+' target="_blank"><IMG SRC='+relpath1+' HEIGHT=225></A>\n')
+    html.write('<TD><A HREF='+relpath2+' target="_blank"><IMG SRC='+relpath2+' HEIGHT=225></A>\n')
+    html.write('</TABLE>\n')
+
 #    print,'wavehtml...'
 #    wavefile = caldir + 'wave/html/wave' + mjd + '.html'
 #    if os.path.exists(wavefile):
 #        spawn,'cat '+file,wavehtml
 #        for i=1,n_elements(wavehtml)-2 do html.write(wavehtml[i]
 
-    # Get all succesfully reduced plates
-    #print,'getting successfully reduced plates...'
-    platefiles = glob.glob(platedir + '*PlateSum*.fits')
+
     # Make master plot of zeropoint and sky levels for the night
-    if (len(platefiles) >= 1): 
-        platefiles.sort()
-        platefiles = np.array(platefiles)
-        nplates = len(platefiles)
-        for i in range(nplates):
-            platefiledir = os.path.dirname(platefiles[i])
-            platetab = fits.getdata(platefiles[i],1)
-            mjd = str(int(round(platetab['MJD'][0])))
-            #sntab, tabs=platefiles[i], outfile=platefiledir + '/sn-' + plate + '-' + mjd + '.dat'
-            #sntab, tabs=platefiles[i], outfile=platefiledir + '/altsn-' + plate + '-' + mjd + '.dat', /altsn
-            if i == 0:
-                zero = platetab['ZERO']
-                ims = platetab['IM']
-                moondist = platetab['MOONDIST']
-                skyr = platetab['SKY'][:,0]
-                skyg = platetab['SKY'][:,1]
-                skyb = platetab['SKY'][:,2]
-            else:
-                zero = np.concatenate([zero, platetab['ZERO']])
-                ims = np.concatenate([ims, platetab['IM']])
-                skyr = np.concatenate([skyr, platetab['SKY'][:,0]])
-                skyg = np.concatenate([skyg, platetab['SKY'][:,1]])
-                skyb = np.concatenate([skyb, platetab['SKY'][:,2]])
-                moondist = np.concatenate([moondist, platetab['MOONDIST']])
-
-        html.write('<H2>Zeropoints and sky levels: </H2>\n')
-        html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Zeropoints <TH>Sky level <TH>Sky level vs moon distance\n')
-
-        # Plot of zeropoint versus image number
-        plotfile = mjd + 'zero.png'
-        print("----> makeNightQA: Making "+plotfile)
-
-        fig=plt.figure(figsize=(14,8))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Zeropoint Per Pixel')
-
-        xmin = np.min(ims % 10000)-1
-        xmax = np.max(ims % 10000)+1
-        ax1.set_xlim(xmin, xmax)
-        gd, = np.where(zero > 0)
-        if len(gd)>0:
-            ymin = np.min(zero[gd])
+    for i in range(nplates):
+        platefiledir = os.path.dirname(platefiles[i])
+        platetab = fits.getdata(platefiles[i],1)
+        mjd = str(int(round(platetab['MJD'][0])))
+        #sntab, tabs=platefiles[i], outfile=platefiledir + '/sn-' + plate + '-' + mjd + '.dat'
+        #sntab, tabs=platefiles[i], outfile=platefiledir + '/altsn-' + plate + '-' + mjd + '.dat', /altsn
+        if i == 0:
+            zero = platetab['ZERO']
+            ims = platetab['IM']
+            moondist = platetab['MOONDIST']
+            skyr = platetab['SKY'][:,0]
+            skyg = platetab['SKY'][:,1]
+            skyb = platetab['SKY'][:,2]
         else:
-            ymin = 15
-        ymax = np.max(zero)
-        if ymin > 15 or np.isfinite(ymin)==False: ymin = 15
-        if ymax < 20 or np.isfinite(ymax)==False: ymax = 20
-        ax1.set_ylim(ymin, ymax)
+            zero = np.concatenate([zero, platetab['ZERO']])
+            ims = np.concatenate([ims, platetab['IM']])
+            skyr = np.concatenate([skyr, platetab['SKY'][:,0]])
+            skyg = np.concatenate([skyg, platetab['SKY'][:,1]])
+            skyb = np.concatenate([skyb, platetab['SKY'][:,2]])
+            moondist = np.concatenate([moondist, platetab['MOONDIST']])
 
-        ax1.scatter(ims % 10000, zero, marker='o', s=150, c='dodgerblue', edgecolors='k', alpha=0.8)
+    html.write('<H2>Zeropoints and sky levels: </H2>\n')
+    html.write('<TABLE BORDER=2><TR bgcolor='+thcolor+'><TH>Zeropoints <TH>Sky level <TH>Sky level vs moon distance\n')
 
-        fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir + plotfile)
-        plt.close('all')
+    # Plot of zeropoint versus image number
+    plotfile = mjd + 'zero.png'
+    print("----> makeNightQA: Making "+plotfile)
 
-        html.write('<TR><TD><A HREF=../plots/' + mjd + 'zero.png target="_blank"><IMG SRC=../plots/' + mjd + 'zero.png WIDTH=500></A>\n')
+    fig=plt.figure(figsize=(14,8))
+    ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax1.minorticks_on()
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
+    ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Zeropoint Per Pixel')
 
-        # Plot of zeropoint versus image number
-        plotfile = mjd + 'sky.png'
-        print("----> makeNightQA: Making "+plotfile)
+    xmin = np.min(ims % 10000)-1
+    xmax = np.max(ims % 10000)+1
+    ax1.set_xlim(xmin, xmax)
+    gd, = np.where(zero > 0)
+    if len(gd)>0:
+        ymin = np.min(zero[gd])
+    else:
+        ymin = 15
+    ymax = np.max(zero)
+    if ymin > 15 or np.isfinite(ymin)==False: ymin = 15
+    if ymax < 20 or np.isfinite(ymax)==False: ymax = 20
+    ax1.set_ylim(ymin, ymax)
 
-        fig=plt.figure(figsize=(14,8))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Sky Continuum Per Pixel')
+    ax1.scatter(ims % 10000, zero, marker='o', s=150, c='dodgerblue', edgecolors='k', alpha=0.8)
 
-        ax1.set_xlim(xmin, xmax)
-        if ymin > 11: ymin = 11
-        if ymax < 16: ymax = 16
-        ax1.set_ylim(ymin, ymax)
+    fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
+    plt.savefig(plotsdir + plotfile)
+    plt.close('all')
 
-        ax1.scatter(ims % 10000, skyr, marker='o', s=150, c='r', edgecolors='k', alpha=0.8)
-        ax1.scatter(ims % 10000, skyg, marker='o', s=150, c='g', edgecolors='k', alpha=0.8)
-        ax1.scatter(ims % 10000, skyb, marker='o', s=150, c='b', edgecolors='k', alpha=0.8)
+    html.write('<TR><TD><A HREF=../plots/' + mjd + 'zero.png target="_blank"><IMG SRC=../plots/' + mjd + 'zero.png WIDTH=500></A>\n')
 
-        fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir + plotfile)
-        plt.close('all')
+    # Plot of zeropoint versus image number
+    plotfile = mjd + 'sky.png'
+    print("----> makeNightQA: Making "+plotfile)
 
-        html.write('<TD><A HREF=../plots/' + plotfile + ' target="_blank"><IMG SRC=../plots/' + plotfile + ' WIDTH=500></A>\n')
+    fig=plt.figure(figsize=(14,8))
+    ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax1.minorticks_on()
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
+    ax1.set_xlabel(r'Image Number');  ax1.set_ylabel(r'Sky Continuum Per Pixel')
 
-        # Plot of moon distance versus sky continuum
-        plotfile = mjd + 'moonsky.png'
-        print("----> makeNightQA: Making "+plotfile)
+    ax1.set_xlim(xmin, xmax)
+    if ymin > 11: ymin = 11
+    if ymax < 16: ymax = 16
+    ax1.set_ylim(ymin, ymax)
 
-        fig=plt.figure(figsize=(14,8))
-        ax1 = plt.subplot2grid((1,1), (0,0))
-        ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
-        ax1.minorticks_on()
-        ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-        ax1.tick_params(axis='both',which='major',length=axmajlen)
-        ax1.tick_params(axis='both',which='minor',length=axminlen)
-        ax1.tick_params(axis='both',which='both',width=axwidth)
-        ax1.set_xlabel(r'Moon Distance');  ax1.set_ylabel(r'Sky Continuum Per Pixel')
+    ax1.scatter(ims % 10000, skyr, marker='o', s=150, c='r', edgecolors='k', alpha=0.8)
+    ax1.scatter(ims % 10000, skyg, marker='o', s=150, c='g', edgecolors='k', alpha=0.8)
+    ax1.scatter(ims % 10000, skyb, marker='o', s=150, c='b', edgecolors='k', alpha=0.8)
 
-        if ymin > 11: ymin = 11
-        if ymax < 16: ymax = 16
-        ax1.set_ylim(ymin, ymax)
+    fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
+    plt.savefig(plotsdir + plotfile)
+    plt.close('all')
 
-        ax1.scatter(moondist, skyr, marker='o', s=150, c='r', edgecolors='k', alpha=0.8)
-        ax1.scatter(moondist, skyg, marker='o', s=150, c='g', edgecolors='k', alpha=0.8)
-        ax1.scatter(moondist, skyb, marker='o', s=150, c='b', edgecolors='k', alpha=0.8)
+    html.write('<TD><A HREF=../plots/' + plotfile + ' target="_blank"><IMG SRC=../plots/' + plotfile + ' WIDTH=500></A>\n')
 
-        fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
-        plt.savefig(plotsdir + plotfile)
-        plt.close('all')
+    # Plot of moon distance versus sky continuum
+    plotfile = mjd + 'moonsky.png'
+    print("----> makeNightQA: Making "+plotfile)
 
-        html.write('<TD><A HREF=../plots/' + mjd + 'moonsky.png target="_blank"><IMG SRC=../plots/' + plotfile+' WIDTH=500></A>\n')
-        html.write('</TABLE>\n')
+    fig=plt.figure(figsize=(14,8))
+    ax1 = plt.subplot2grid((1,1), (0,0))
+    ax1.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax1.minorticks_on()
+    ax1.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+    ax1.tick_params(axis='both',which='major',length=axmajlen)
+    ax1.tick_params(axis='both',which='minor',length=axminlen)
+    ax1.tick_params(axis='both',which='both',width=axwidth)
+    ax1.set_xlabel(r'Moon Distance');  ax1.set_ylabel(r'Sky Continuum Per Pixel')
 
-        html.write('<BR>Moon phase: ' + str("%.3f" % round(platetab['MOONPHASE'][0],3)) + '<BR>\n')
+    if ymin > 11: ymin = 11
+    if ymax < 16: ymax = 16
+    ax1.set_ylim(ymin, ymax)
 
-        html.write('<p><H2>Observed Plate Exposure Data:</H2>\n')
-        html.write('<p>Note: Sky continuum, S/N, and S/N(c) columns give values for blue, green, and red detectors</p>\n')
-        html.write('<TABLE BORDER=2>\n')
-        th0 = '<TR bgcolor='+thcolor+'>'
-        th1 = '<TH>Plate <TH>Frame <TH>Cart <TH>sec(z) <TH>HA <TH>Design HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads '
-        th2 = '<TH>Dither <TH>Zero <TH>Zerorms <TH>Zeronorm <TH>Sky Continuum <TH>S/N <TH>S/N(c) <TH>Unplugged <TH>Faint\n'
-        for i in range(nplates):
-            platetab = fits.getdata(platefiles[i],1)
-            plate = str(int(round(platetab['PLATE'][0])))
-            try:
-                cart = str(int(round(platetab['CART'][0])))
-            except:
-                cart = platetab['CART'][0]
-            nreads = str(int(round(platetab['NREADS'][0])))
-            n_exposures = len(platetab['IM'])
-            html.write(th0 + th1 + th2)
-            for j in range(n_exposures):
-                html.write('<TR>\n')
-                html.write('<TD align="left">' + plate + '\n')
-                html.write('<TD align="left">' + str(int(round(platetab['IM'][j]))) + '\n')
-                html.write('<TD align="center">' + cart + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['SECZ'][j],3)) + '\n')
-                html.write('<TD align="right">' + str(platetab['HA'][j]) + '\n')
-                tmp1 = str("%.1f" % round(platetab['DESIGN_HA'][j][0],1)).rjust(5)
-                tmp2 = str("%.1f" % round(platetab['DESIGN_HA'][j][1],1)).rjust(5)
-                tmp3 = str("%.1f" % round(platetab['DESIGN_HA'][j][2],1)).rjust(5)
-                html.write('<TD align="right">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['SEEING'][j],3)) + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['FWHM'][j],3)) + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['GDRMS'][j],3)) + '\n')
-                html.write('<TD align="right">' + nreads + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['DITHER'][j],3)) + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERO'][j],3)) + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERORMS'][j],3)) + '\n')
-                html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERONORM'][j],3)) + '\n')
-                tmp1 = str("%.3f" % round(platetab['SKY'][j][2],3)).rjust(6)
-                tmp2 = str("%.3f" % round(platetab['SKY'][j][1],3)).rjust(6)
-                tmp3 = str("%.3f" % round(platetab['SKY'][j][0],3)).rjust(6)
-                html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
-                tmp1 = str("%.3f" % round(platetab['SN'][j][2],3)).rjust(6)
-                tmp2 = str("%.3f" % round(platetab['SN'][j][1],3)).rjust(6)
-                tmp3 = str("%.3f" % round(platetab['SN'][j][0],3)).rjust(6)
-                html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
-                tmp1 = str("%.3f" % round(platetab['SNC'][j][2],3)).rjust(6)
-                tmp2 = str("%.3f" % round(platetab['SNC'][j][1],3)).rjust(6)
-                tmp3 = str("%.3f" % round(platetab['SNC'][j][0],3)).rjust(6)
-                html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
-                #tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
-                #zero = np.nanmedian(tmp)
-                #zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
-                #faint, = np.where((tmp - zero) < -0.5)
-                #nfaint = len(faint)
-                html.write('<TD> \n')
-                html.write('<TD> \n')
+    ax1.scatter(moondist, skyr, marker='o', s=150, c='r', edgecolors='k', alpha=0.8)
+    ax1.scatter(moondist, skyg, marker='o', s=150, c='g', edgecolors='k', alpha=0.8)
+    ax1.scatter(moondist, skyb, marker='o', s=150, c='b', edgecolors='k', alpha=0.8)
+
+    fig.subplots_adjust(left=0.08,right=0.99,bottom=0.10,top=0.98,hspace=0.2,wspace=0.0)
+    plt.savefig(plotsdir + plotfile)
+    plt.close('all')
+
+    html.write('<TD><A HREF=../plots/' + mjd + 'moonsky.png target="_blank"><IMG SRC=../plots/' + plotfile+' WIDTH=500></A>\n')
+    html.write('</TABLE>\n')
+
+    html.write('<BR>Moon phase: ' + str("%.3f" % round(platetab['MOONPHASE'][0],3)) + '<BR>\n')
+
+    html.write('<p><H2>Observed Plate Exposure Data:</H2>\n')
+    html.write('<p>Note: Sky continuum, S/N, and S/N(c) columns give values for blue, green, and red detectors</p>\n')
+    html.write('<TABLE BORDER=2>\n')
+    th0 = '<TR bgcolor='+thcolor+'>'
+    th1 = '<TH>Plate <TH>Frame <TH>Cart <TH>sec(z) <TH>HA <TH>Design HA <TH>SEEING <TH>FWHM <TH>GDRMS <TH>Nreads '
+    th2 = '<TH>Dither <TH>Zero <TH>Zerorms <TH>Zeronorm <TH>Sky Continuum <TH>S/N <TH>S/N(c) <TH>Unplugged <TH>Faint\n'
+    html.write(th0 + th1 + th2)
+    for i in range(nplates):
+        platetab = fits.getdata(platefiles[i],1)
+        plate = str(int(round(platetab['PLATE'][0])))
+        try:
+            cart = str(int(round(platetab['CART'][0])))
+        except:
+            cart = platetab['CART'][0]
+        nreads = str(int(round(platetab['NREADS'][0])))
+        n_exposures = len(platetab['IM'])
+        for j in range(n_exposures):
+            html.write('<TR>\n')
+            html.write('<TD align="left">' + plate + '\n')
+            html.write('<TD align="left">' + str(int(round(platetab['IM'][j]))) + '\n')
+            html.write('<TD align="center">' + cart + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['SECZ'][j],3)) + '\n')
+            html.write('<TD align="right">' + str(platetab['HA'][j]) + '\n')
+            tmp1 = str("%.1f" % round(platetab['DESIGN_HA'][j][0],1)).rjust(5)
+            tmp2 = str("%.1f" % round(platetab['DESIGN_HA'][j][1],1)).rjust(5)
+            tmp3 = str("%.1f" % round(platetab['DESIGN_HA'][j][2],1)).rjust(5)
+            html.write('<TD align="right">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['SEEING'][j],3)) + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['FWHM'][j],3)) + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['GDRMS'][j],3)) + '\n')
+            html.write('<TD align="right">' + nreads + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['DITHER'][j],3)) + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERO'][j],3)) + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERORMS'][j],3)) + '\n')
+            html.write('<TD align="right">' + str("%.3f" % round(platetab['ZERONORM'][j],3)) + '\n')
+            tmp1 = str("%.3f" % round(platetab['SKY'][j][2],3)).rjust(6)
+            tmp2 = str("%.3f" % round(platetab['SKY'][j][1],3)).rjust(6)
+            tmp3 = str("%.3f" % round(platetab['SKY'][j][0],3)).rjust(6)
+            html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
+            tmp1 = str("%.3f" % round(platetab['SN'][j][2],3)).rjust(6)
+            tmp2 = str("%.3f" % round(platetab['SN'][j][1],3)).rjust(6)
+            tmp3 = str("%.3f" % round(platetab['SN'][j][0],3)).rjust(6)
+            html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
+            tmp1 = str("%.3f" % round(platetab['SNC'][j][2],3)).rjust(6)
+            tmp2 = str("%.3f" % round(platetab['SNC'][j][1],3)).rjust(6)
+            tmp3 = str("%.3f" % round(platetab['SNC'][j][0],3)).rjust(6)
+            html.write('<TD align="center">' + tmp1 + ', ' + tmp2 + ', ' + tmp3 + '\n')
+            #tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
+            #zero = np.nanmedian(tmp)
+            #zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
+            #faint, = np.where((tmp - zero) < -0.5)
+            #nfaint = len(faint)
+            html.write('<TD> \n')
+            html.write('<TD> \n')
 
     html.write('</TABLE>\n')
     html.write('<BR><BR>\n')
@@ -3704,7 +3741,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
                 color = 'b3ffb3'
             load = apload.ApLoad(apred=apred, telescope=telescope)
 
-            reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/'
+            reportsDir = os.environ['SAS_ROOT']+'/data/staging/' + telescope[0:3] + '/reports/mos/'
             dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
@@ -3716,7 +3753,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
             if len(reports) != 0:
                 reports.sort()
                 reportfile = reports[0]
-                reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/' + os.path.basename(reportfile)
+                reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/mos/' + os.path.basename(reportfile)
                 html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
                 #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
             else:
@@ -4184,7 +4221,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
 ###################################################################################################
 ''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.) '''
-def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
+def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clobber=None):
 
     lineSearchRad = 40
     prefix = 'ap'
@@ -4226,6 +4263,7 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                        ('QRTZ',    np.int16),
                        ('UNE',     np.int16),
                        ('THAR',    np.int16),
+                       ('FPI',     np.int16),
                        ('FLUX',    np.float32,(nchips,300)),
                        ('GAUSS',   np.float32,(nlines,nchips,nfibers,4)),
                        ('WAVE',    np.float64,(nlines,nchips,nfibers)),
@@ -4261,60 +4299,68 @@ def makeCalFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                     struct['QRTZ'][i] =    1
                     struct['THAR'][i] =    0
                     struct['UNE'][i] =     0
+            struct['FPI'][i] = 0
             struct['FIBERS'][i] =  fibers
 
             tp = 'quartz'
             if struct['THAR'][i] == 1: tp = 'ThAr'.ljust(6)
             if struct['UNE'][i] == 1: tp = 'UNe'.ljust(6)
+            if types[i] == 'fpi': tp = 'FPI'
 
             print("----> makeCalFits: running " + tp + " exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
             # Quartz exposures.
-            if struct['QRTZ'][i] == 1: struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
+            if types[i] == 'fpi': 
+                struct['FPI'][i] = 1
+                struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
+                continue
+            if struct['QRTZ'][i] == 1: 
+                struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
+                continue
 
             # Arc lamp exposures.
-            if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
-                if struct['THAR'][i] == 1: line = tharline
-                if struct['THAR'][i] != 1: line = uneline
+#            if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
+            if struct['THAR'][i] == 1: line = tharline
+            if struct['THAR'][i] != 1: line = uneline
 
-                struct['LINES'][i] = line
+            struct['LINES'][i] = line
 
-                nlines = 1
-                if line.shape[1] != 1: nlines = line.shape[0]
+            nlines = 1
+            if line.shape[1] != 1: nlines = line.shape[0]
 
-                print('MEASURED_CENT  EXPECTED_CENT   DIFF')#      SUMFLUX')
-                for iline in range(nlines):
-                    for ichip in range(nchips):
-                        for ifiber in range(nfibers):
-                            fiber = fibers[ifiber]
-                            intline = int(round(line[iline,ichip]))
-                            gflux =   oneDflux[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
-                            gerror = oneDerror[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
-                            try:
-                                # Try to fit Gaussians to the lamp lines
-                                gpeaks = peakfit.peakfit(gflux, sigma=gerror)
-                                gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
-                                gpeaks = gpeaks[gd]
-                                # Find the desired peak and load struct
-                                gpeaks['pars'][:, 1] = gpeaks['pars'][:, 1] + intline - lineSearchRad
-                                pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
-                                gdline, = np.where(pixdif == np.min(pixdif))
-                                tmp = iline+ichip+ifiber
-                                diff = gpeaks['pars'][:, 1][gdline][0] - line[iline,ichip]
-                                if fiber == 150:
-                                    txt1 = str("%.2f" % round(gpeaks['pars'][:, 1][gdline][0],2)).rjust(12)
-                                    txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(15)
-                                    txt3 = str("%.2f" % round(diff,2)).rjust(10)
-                                    print(txt1 + txt2 + txt3)# + txt4)
-                            except:
-                                print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
-                                continue
+            print('MEASURED_CENT  EXPECTED_CENT   DIFF')#      SUMFLUX')
+            for iline in range(nlines):
+                for ichip in range(nchips):
+                    for ifiber in range(nfibers):
+                        fiber = fibers[ifiber]
+                        intline = int(round(line[iline,ichip]))
+                        gflux =   oneDflux[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
+                        gerror = oneDerror[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
+                        try:
+                            # Try to fit Gaussians to the lamp lines
+                            gpeaks = peakfit.peakfit(gflux, sigma=gerror)
+                            gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
+                            gpeaks = gpeaks[gd]
+                            # Find the desired peak and load struct
+                            gpeaks['pars'][:, 1] = gpeaks['pars'][:, 1] + intline - lineSearchRad
+                            pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
+                            gdline, = np.where(pixdif == np.min(pixdif))
+                            tmp = iline+ichip+ifiber
+                            diff = gpeaks['pars'][:, 1][gdline][0] - line[iline,ichip]
+                            if fiber == 150:
+                                txt1 = str("%.2f" % round(gpeaks['pars'][:, 1][gdline][0],2)).rjust(12)
+                                txt2 = str("%.2f" % round(line[iline,ichip],2)).rjust(15)
+                                txt3 = str("%.2f" % round(diff,2)).rjust(10)
+                                print(txt1 + txt2 + txt3)# + txt4)
+                        except:
+                            print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
+                            continue
 
-                            if len(gdline) > 0:
-                                struct['GAUSS'][i, iline, ichip, ifiber, :] = gpeaks['pars'][gdline, :][0]
-                                struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
-                            else:
-                                print("----> makeCalFits: ERROR!!! Desired line not found for " + tp + " exposure " + str(ims[i]))
+                        if len(gdline) > 0:
+                            struct['GAUSS'][i, iline, ichip, ifiber, :] = gpeaks['pars'][gdline, :][0]
+                            struct['FLUX'][i, ichip, ifiber] = gpeaks['sumflux'][gdline]
+                        else:
+                            print("----> makeCalFits: ERROR!!! Desired line not found for " + tp + " exposure " + str(ims[i]))
 
 
         Table(struct).write(outfile, overwrite=True)

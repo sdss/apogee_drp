@@ -449,6 +449,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     thar, = np.where(allcal['THAR'] == 1)
     une, =  np.where(allcal['UNE'] == 1)
     qrtz, = np.where(allcal['QRTZ'] == 1)
+    fpi, = np.where(allcal['FPI'] == 1)
     dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
     qrtzexp, = np.where(allexp['IMAGETYP'] == 'QuartzFlat')
     dark, = np.where(alldark['EXPTYPE'] == 'DARK')
@@ -474,6 +475,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> <a href=#scisnr> S/N history</a>\n')
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
+    html.write('<li> <a href=#fpi>FPI median brightness</a>\n')
     html.write('<li> <a href=#qflux>Quartz lamp median brightness</a>\n')
     html.write('<li> <a href=#qtrace>Quartz lamp trace position</a>\n')
     html.write('<li> <a href=#qfwhm>Quartz lamp trace FWHM</a>\n')
@@ -509,6 +511,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=1100></A>\n')
     html.write('<HR>\n')
 
+    html.write('<h3> <a name=fpi></a> FPI median brightness </h3>\n')
+    html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=1000></A>\n')
+    html.write('<HR>\n')
+
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1000></A>\n')
     html.write('<HR>\n')
@@ -524,6 +530,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<H3> <a name=dflux></a> Dome flat median brightness</H3>\n')
     html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
     html.write('<A HREF=' + instrument + '/dflux.png target="_blank"><IMG SRC=' + instrument + '/dflux.png WIDTH=1000></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<h3> <a name=dtrace></a> Dome flat trace position </h3>\n')
+    html.write('<A HREF=' + instrument + '/dtrace.png target="_blank"><IMG SRC=' + instrument + '/dtrace.png WIDTH=1000></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=dfwhm></a> Dome flat trace FWHM </h3>\n')
@@ -1230,6 +1240,68 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
             fig.subplots_adjust(left=0.05,right=0.945,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # fpiflux.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/fpiflux.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+            #ymax = 70000
+            #if instrument == 'apogee-s': 
+            #    ymax = 125000
+            #ymin = 0 - ymax * 0.05
+            #yspan = ymax - ymin
+
+            gdcal = allcal[fpi]
+            caljd = gdcal['JD'] - 2.4e6
+            #pdb.set_trace()
+
+            ymin = -10
+            ymax = 4000
+            yspan = ymax - ymin
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1000))
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Median Flux')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=startFPS, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]#  / gdcal['NREAD']*10.0
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                               label='fib ' + str(fibers[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
@@ -2104,6 +2176,7 @@ def getQAcalStruct(data=None):
                    ('QRTZ',    np.int16),
                    ('UNE',     np.int16),
                    ('THAR',    np.int16),
+                   ('FPI',     np.int16),
                    ('FLUX',    np.float32,(nchips,300)),
                    ('GAUSS',   np.float32,(nlines,nchips,nfibers,4)),
                    ('WAVE',    np.float64,(nlines,nchips,nfibers)),
@@ -2121,6 +2194,8 @@ def getQAcalStruct(data=None):
     outstr['QRTZ'] =    data['QRTZ']
     outstr['UNE'] =     data['UNE']
     outstr['THAR'] =    data['THAR']
+    try: outstr['FPI'] =     data['FPI']
+    except: pass
     outstr['FLUX'] =    data['FLUX']
     outstr['GAUSS'] =   data['GAUSS']
     outstr['WAVE'] =    data['WAVE']
