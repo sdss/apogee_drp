@@ -1297,7 +1297,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(nplotfibs):
                     yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]#  / gdcal['NREAD']*10.0
                     medfluxfib[ifib] = np.nanmedian(yvals)
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
+                    ax.scatter(caljd, yvals, marker='o', s=4, c=colors[ifib], alpha=alf, 
                                label='fib ' + str(fibers[ifib]))
                 medflux = np.nanmean(medfluxfib)
                 ymax = medflux*1.5
@@ -1315,7 +1315,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 if ichip == 0: 
-                    ax.legend(loc='upper right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
 
             fig.subplots_adjust(left=0.075,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
