@@ -130,20 +130,20 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
     #umjd = umjd[::-1]
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
-    pdb.set_trace()
-    outtxt = open('failedQaMJDs_'+observatory+'.txt', 'w')
+    #pdb.set_trace()
+    #outtxt = open('failedQaMJDs_'+observatory+'.txt', 'w')
     for ii in range(nmjd):
         if umjd[ii][0:1] != 'a':
-            try:
-                x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
-                            makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
-                            makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
-                            makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
-                            makemonitor=makemonitor, calonly=caonly, clobber=clobber)
-            except:
-                outtxt.write(umjd[ii]+'\n')
-                continue
-    outtxt.close()
+            #try:
+            x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
+                        makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
+                        makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
+                        makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
+                        makemonitor=makemonitor, calonly=caonly, clobber=clobber)
+            #except:
+            #    outtxt.write(umjd[ii]+'\n')
+            #    continue
+    #outtxt.close()
 
 ###################################################################################################
 '''APQAMJD: Wrapper for running apqa for all plates on an mjd '''
