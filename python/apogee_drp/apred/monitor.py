@@ -490,6 +490,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> Positions\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#tpos>ThAr line position</a>\n')
+    html.write('<ul>\n')
+    html.write('<li> <a href=#upos>UNe line position</a>\n')
+    html.write('<ul>\n')
+    html.write('<li> <a href=#fpipos>FPI line position</a>\n')
     html.write('</ul>\n')
     html.write('<li> Line widths\n')
     html.write('<ul>\n')
@@ -558,8 +562,16 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=1000></A>\n')
     html.write('<HR>\n')
 
-    html.write('<H3> <a name=tpos></a>ThArNe lamp line position</H3>\n')
+    html.write('<H3> <a name=tpos></a>ThAr lamp line position</H3>\n')
     html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=1000></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<H3> <a name=tpos></a>UNe lamp line position</H3>\n')
+    html.write('<A HREF=' + instrument + '/upos.png target="_blank"><IMG SRC=' + instrument + '/upos.png WIDTH=1000></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<H3> <a name=tpos></a>FPI line position</H3>\n')
+    html.write('<A HREF=' + instrument + '/fpipos.png target="_blank"><IMG SRC=' + instrument + '/fpipos.png WIDTH=1000></A>\n')
     html.write('<HR>\n')
 
     for iline in range(2):
@@ -1950,6 +1962,118 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
+
+        ###########################################################################################
+        # upos.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/upos.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+
+            gdcal = allcal[une]
+            caljd = gdcal['JD']-2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Position (pixel)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
+                ymin = w - 40
+                ymax = w + 40
+                yspan = ymax - ymin
+                ax.set_ylim(ymin, ymax)
+
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=startFPS, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['GAUSS'][:, 1, ichip, ifib, 1] 
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # fpipos.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/fpipos.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+
+            gdcal = allcal[une]
+            caljd = gdcal['JD']-2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Position (pixel)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
+                ymin = w - 40
+                ymax = w + 40
+                yspan = ymax - ymin
+                ax.set_ylim(ymin, ymax)
+
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=startFPS, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['GAUSS'][:, 1, ichip, ifib, 1] 
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+
 
         ###########################################################################################
         # ThArNe lamp line FWHM
