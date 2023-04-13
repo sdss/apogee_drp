@@ -4323,7 +4323,7 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
             if types[i] == 'fpi': 
                 struct['FPI'][i] = 1
                 struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
-                lineSearchRad = 10
+                lineSearchRad = 5
             if struct['THAR'][i] == 1: line = tharline
             if struct['UNE'][i] == 1: line = uneline
             if struct['FPI'][i] == 1: line = fpiline
