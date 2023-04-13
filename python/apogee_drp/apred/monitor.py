@@ -467,7 +467,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     tit = instrument.upper() + ' Instrument Monitor'
     html = open(outfile, 'w')
-    html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY STYLE="background-color:grey;"></BODY>\n')
+    html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY STYLE="background-color:LightGray;"></BODY>\n')
     html.write('<H1>' + tit + '</H1>\n')
     html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
     html.write('<HR>\n')
