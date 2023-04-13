@@ -2007,7 +2007,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
-                    yvals = gdcal['GAUSS'][:, 1, ichip, ifib, 1] 
+                    yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
 
                 if ichip == 0: 
@@ -2062,7 +2062,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
-                    yvals = gdcal['GAUSS'][:, 1, ichip, ifib, 1] 
+                    yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
                     ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
 
                 if ichip == 0: 
