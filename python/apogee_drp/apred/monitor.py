@@ -1993,7 +1993,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ymin = w - 40
                 ymax = w + 40
                 yspan = ymax - ymin
-                ax.set_ylim(ymin, ymax)
+                #ax.set_ylim(ymin, ymax)
 
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=startFPS, color='teal', linewidth=2)
@@ -2026,7 +2026,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             fig = plt.figure(figsize=(30,14))
 
-            gdcal = allcal[une]
+            gdcal = allcal[fpi]
             caljd = gdcal['JD']-2.4e6
 
             for ichip in range(nchips):
@@ -2048,7 +2048,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ymin = w - 40
                 ymax = w + 40
                 yspan = ymax - ymin
-                ax.set_ylim(ymin, ymax)
+                #ax.set_ylim(ymin, ymax)
 
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=startFPS, color='teal', linewidth=2)
