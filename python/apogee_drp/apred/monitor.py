@@ -578,7 +578,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         txt = '<a name=tfwhm></a> ThArNe lamp line FWHM, line position (x pixel): '
         html.write('<H3>' + txt + tmp1 + ' ' + tmp2 + ' ' + tmp3 + '</H3>\n')
         html.write('<P> (Note: horizontal lines are the median value for each fiber.) </P>\n')
-        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + ' WIDTH=1000></A>\n')
+        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + ' WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=trace></a> Trace position, fiber 150, column 1000</H3>\n')
