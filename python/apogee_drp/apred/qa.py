@@ -4343,7 +4343,7 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
                         gerror = oneDerror[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
                         try:
                             # Try to fit Gaussians to the lamp lines
-                            gpeaks = peakfit.peakfit(gflux, sigma=gerror)
+                            gpeaks = peakfit.peakfit(gflux, sigma=gerror, pix0=line[iline,ichip])
                             gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                             gpeaks = gpeaks[gd]
                             # Find the desired peak and load struct
