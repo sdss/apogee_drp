@@ -582,20 +582,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HR>\n')
 
     html.write('<H3> <a name=trace></a> Trace position, fiber 150, column 1000</H3>\n')
-    html.write('<A HREF=' + instrument + '/trace.png target="_blank"><IMG SRC=' + instrument + '/trace.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/trace.png target="_blank"><IMG SRC=' + instrument + '/trace.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
     html.write('<P> (Note: the four colors indicate the four quadrants in each detector.) </P>\n')
     html.write('<H4> Dark Mean </h4>\n')
-    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=900></A>\n')
 
     html.write('<H4> Dark Sigma </h4>\n')
-    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=sky></a>Sky Brightness</H3>\n')
-    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=1300></A>\n')
+    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=900></A>\n')
 
     html.write('<BR><BR><BR><BR>')
     html.write('</BODY></HTML>\n')
