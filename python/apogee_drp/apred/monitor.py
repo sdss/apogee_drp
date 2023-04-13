@@ -1321,8 +1321,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 if ichip == 0: 
-                    ax.legend(loc='upper right', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.5)
+                    ax.legend(loc='lower right', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz*1, edgecolor='k', framealpha=1, borderpad=1, columnspacing=0.7)
 
             fig.subplots_adjust(left=0.075,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -1377,7 +1377,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 if ichip == 0: 
                     ax.legend(loc='upper right', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.5)
+                              fontsize=fsz*1, edgecolor='k', framealpha=1, borderpad=1, columnspacing=0.7)
 
             fig.subplots_adjust(left=0.075,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
