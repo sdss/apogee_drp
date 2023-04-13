@@ -1286,13 +1286,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
                 ax.set_xlim(xmin0, xmax0)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
-                ax.yaxis.set_major_locator(ticker.MultipleLocator(200))
+                ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axwidth)
-                ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1000))
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1380,7 +1379,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
 
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.075,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
