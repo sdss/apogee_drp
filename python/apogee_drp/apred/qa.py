@@ -133,7 +133,7 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
     outtxt = open('failedQaMJDs_'+observatory+'.txt', 'w')
     for ii in range(nmjd):
         if umjd[ii][0:1] != 'a':
-            #try:
+            try:
             x = apqaMJD(mjd=umjd[ii], observatory=observatory, apred=apred, makeplatesum=makeplatesum, 
                         makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
                         makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
