@@ -244,66 +244,65 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                 q = monitor.monitor()
 
     # Exit if calonly keyword is True
-    if calonly:
+    if calonly == True:
         print("Done with APQAMJD for MJD " + mjd + "\n")
-        return
+    else:
+        # Run apqa on the science data plans
+        print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
+        for i in range(nsciplans):
+            # Get the plate number and mjd
+            tmp = sciplans[i].split('-')
+            plate = tmp[1]
+            #mjd = tmp[2].split('.')[0]
 
-    # Run apqa on the science data plans
-    print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
-    for i in range(nsciplans):
-        # Get the plate number and mjd
-        tmp = sciplans[i].split('-')
-        plate = tmp[1]
-        #mjd = tmp[2].split('.')[0]
+            # Load the plan file
+            planfile = load.filename('Plan', plate=int(plate), mjd=mjd, fps=fps)
+            planstr = plan.load(planfile, np=True)
 
-        # Load the plan file
-        planfile = load.filename('Plan', plate=int(plate), mjd=mjd, fps=fps)
-        planstr = plan.load(planfile, np=True)
+            # Get array of object exposures and find out how many are objects.
+            flavor = planstr['APEXP']['flavor']
+            all_ims = planstr['APEXP']['name']
+            gd,= np.where(flavor == 'object')
+            n_ims = len(gd)
+            if n_ims > 0:
+                ims = all_ims[gd]
+                # Make an array indicating which exposures made it to apCframe
+                # 0 = not reduced, 1 = reduced
+                imsReduced = np.zeros(n_ims)
+                for j in range(n_ims):
+                    cframe = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[j], chips=True, fps=fps)
+                    if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[j] = 1
+                good, = np.where(imsReduced == 1)
+                if len(good) < 1:
+                    # If last plate fails, still make the nightly and master QA pages
+                    if i == nsciplans-1:
+                        # Make the nightly QA page
+                        if makenightqa is True:
+                            q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
 
-        # Get array of object exposures and find out how many are objects.
-        flavor = planstr['APEXP']['flavor']
-        all_ims = planstr['APEXP']['name']
-        gd,= np.where(flavor == 'object')
-        n_ims = len(gd)
-        if n_ims > 0:
-            ims = all_ims[gd]
-            # Make an array indicating which exposures made it to apCframe
-            # 0 = not reduced, 1 = reduced
-            imsReduced = np.zeros(n_ims)
-            for j in range(n_ims):
-                cframe = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[j], chips=True, fps=fps)
-                if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[j] = 1
-            good, = np.where(imsReduced == 1)
-            if len(good) < 1:
-                # If last plate fails, still make the nightly and master QA pages
-                if i == nsciplans-1:
-                    # Make the nightly QA page
-                    if makenightqa is True:
-                        q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
+                        # Make mjd.html and fields.html
+                        if makemasterqa is True: 
+                            q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
+                                                  mjdfilebase='mjd.html',fieldfilebase='fields.html',
+                                                  domjd=True, dofields=True)
+                        if makemonitor is True:
+                            q = monitor.monitor(instrument=instrument, apred=apred)
+                        continue
+                        #sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
 
-                    # Make mjd.html and fields.html
-                    if makemasterqa is True: 
-                        q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
-                                              mjdfilebase='mjd.html',fieldfilebase='fields.html',
-                                              domjd=True, dofields=True)
-                    if makemonitor is True:
-                        q = monitor.monitor(instrument=instrument, apred=apred)
-                    continue
-                    #sys.exit("PROBLEM!!! 1D files not found for plate " + plate + ", MJD " + mjd + "\n")
-
-        # Only run makemasterqa, makenightqa, and monitor after the last plate on this mjd
-        if i < nsciplans-1:
-            x = apqa(telescope=telescope, plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
-                     makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
-                     makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=False, 
-                     makenightqa=False, makemonitor=False, clobber=clobber)
-        else:
-            x = apqa(telescope=telescope, plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
-                     makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
-                     makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=makemasterqa, 
-                     makenightqa=makenightqa, makemonitor=makemonitor, clobber=clobber)
-        
-    print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
+            # Only run makemasterqa, makenightqa, and monitor after the last plate on this mjd
+            if i < nsciplans-1:
+                x = apqa(telescope=telescope, plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
+                         makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
+                         makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=False, 
+                         makenightqa=False, makemonitor=False, clobber=clobber)
+            else:
+                x = apqa(telescope=telescope, plate=plate, mjd=mjd, apred=apred, makeplatesum=makeplatesum, makeobshtml=makeobshtml, 
+                         makeobsplots=makeobsplots, makevishtml=makevishtml, makestarhtml=makestarhtml,
+                         makevisplots=makevisplots, makestarplots=makestarplots, makemasterqa=makemasterqa, 
+                         makenightqa=makenightqa, makemonitor=makemonitor, clobber=clobber)
+            
+        print("Done with APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
 
 ###################################################################################################
 '''APQA: Wrapper for running QA subprocedures on a plate mjd '''
