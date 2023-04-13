@@ -244,7 +244,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                 q = monitor.monitor()
 
     # Exit if calonly keyword is True
-    if calonly == True:
+    if calonly is True:
         print("Done with APQAMJD for MJD " + mjd + "\n")
     else:
         # Run apqa on the science data plans
