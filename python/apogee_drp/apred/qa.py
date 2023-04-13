@@ -4231,6 +4231,7 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
     if (os.path.exists(outfile) is False) | (clobber is True):
         print("--------------------------------------------------------------------")
         print("Running MAKECALFITS for MJD " + mjd)
+        print(outfile)
 
         # Make directory if it doesn't exist
         if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
