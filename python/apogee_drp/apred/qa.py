@@ -139,7 +139,7 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
                             makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
                             makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
                             makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
-                            makemonitor=makemonitor, clobber=clobber)
+                            makemonitor=makemonitor, calonly=caonly, clobber=clobber)
             except:
                 outtxt.write(umjd[ii]+'\n')
                 continue
