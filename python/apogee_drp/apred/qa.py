@@ -113,7 +113,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates. Runs in reverse chronological order. '''
 def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, makestarplots=False,
-            makenightqa=True, makemasterqa=True, makeqafits=True, makemonitor=True, clobber=True):
+            makenightqa=True, makemasterqa=True, makeqafits=True, makemonitor=True, calonly=False, clobber=True):
 
     # Establish telescope
     telescope = observatory + '25m'
@@ -150,7 +150,7 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, 
             makestarplots=False, makemasterqa=True, makenightqa=True, makeqafits=True, 
-            makemonitor=True, clobber=True):
+            makemonitor=True, calonly=False, clobber=True):
 
     # Establish telescope and instrument
     telescope = observatory + '25m'
@@ -242,8 +242,11 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             # Make the monitor page
             if makemonitor == True:
                 q = monitor.monitor()
-
     # Run apqa on the science data plans
+    if calonly:
+        print("Done with APQAMJD for MJD " + mjd + "\n")
+        return
+    
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
     for i in range(nsciplans):
         # Get the plate number and mjd
