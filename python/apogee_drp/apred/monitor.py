@@ -475,7 +475,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> <a href=#scisnr> S/N history</a>\n')
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
-    html.write('<li> <a href=#fpi>FPI median brightness</a>\n')
+    html.write('<li> <a href=#fpi>FPI median brightness and line positions</a>\n')
     html.write('<li> <a href=#qflux>Quartz lamp median brightness</a>\n')
     html.write('<li> <a href=#qtrace>Quartz lamp trace position</a>\n')
     html.write('<li> <a href=#qfwhm>Quartz lamp trace FWHM</a>\n')
@@ -492,8 +492,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> <a href=#tpos>ThAr line position</a>\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#upos>UNe line position</a>\n')
-    html.write('<ul>\n')
-    html.write('<li> <a href=#fpipos>FPI line position</a>\n')
     html.write('</ul>\n')
     html.write('<li> Line widths\n')
     html.write('<ul>\n')
@@ -515,8 +513,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=fpi></a> FPI median brightness </h3>\n')
-    html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=900></A>\n')
+    html.write('<h3> <a name=fpi></a> FPI median brightness and line positions</h3>\n')
+    html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=600></A>\n')
+    html.write('<A HREF=' + instrument + '/fpipos.png target="_blank"><IMG SRC=' + instrument + '/fpipos.png WIDTH=600></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
@@ -568,10 +567,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     html.write('<H3> <a name=tpos></a>UNe lamp line position</H3>\n')
     html.write('<A HREF=' + instrument + '/upos.png target="_blank"><IMG SRC=' + instrument + '/upos.png WIDTH=900></A>\n')
-    html.write('<HR>\n')
-
-    html.write('<H3> <a name=tpos></a>FPI line position</H3>\n')
-    html.write('<A HREF=' + instrument + '/fpipos.png target="_blank"><IMG SRC=' + instrument + '/fpipos.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     for iline in range(2):
