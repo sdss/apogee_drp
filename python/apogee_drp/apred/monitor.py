@@ -41,6 +41,7 @@ fontsize = 28;   fsz = fontsize * 0.75
 matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
 bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
 axwidth = 3
+axthick = 3
 axmajlen = 7
 axminlen = 3.5
 alf = 0.6
