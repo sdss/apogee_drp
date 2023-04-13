@@ -4314,16 +4314,14 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
             print("----> makeCalFits: running " + tp + " exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
             # Quartz exposures.
-            if types[i] == 'fpi': 
-                struct['FPI'][i] = 1
-                struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
-                continue
             if struct['QRTZ'][i] == 1: 
                 struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
                 continue
 
-            # Arc lamp exposures.
-#            if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
+            # Arc lamp and FPI exposures.
+            if types[i] == 'fpi': 
+                struct['FPI'][i] = 1
+                struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
             if struct['THAR'][i] == 1: line = tharline
             if struct['UNE'][i] == 1: line = uneline
             if struct['FPI'][i] == 1: line = fpiline
