@@ -4243,12 +4243,15 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
 
         tharline = np.array([[940.3,1129.4,1131.9],[1728.3,623.0,1778.4]])
         uneline =  np.array([[604.5,1214.1,1118.1],[1762.6,605.3,1895.3]])
+        fpiline =  np.array([[634.0,638.0,639.0], [1410.0,1404.4,1406.2]])
         if int(mjd) > 59420:
             tharline -= 21.832
             uneline -= 21.855
 
-        if instrument == 'apogee-s': tharline = np.array([[940.,1112.,1102.],[1727.,608.,1745.]])
-        if instrument == 'apogee-s':  uneline = np.array([[604.,1229.,1088.],[1763.,620.,1860.]])
+        if instrument == 'apogee-s':
+            tharline = np.array([[946.0,1113.0,1102.0],[1727.0,609.0,1747.0]])
+            uneline =  np.array([[614.0,1197.0,1088.0],[1762.0,592.0,1861.0]])
+            fpiline =  np.array([[635.0,637.0,637.0], [1408.0,1410.0,1409.0]])
 
         fibers = np.array([10,80,150,220,290])
         nfibers = len(fibers)
@@ -4321,7 +4324,8 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
             # Arc lamp exposures.
 #            if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
             if struct['THAR'][i] == 1: line = tharline
-            if struct['THAR'][i] != 1: line = uneline
+            if struct['UNE'][i] == 1: line = uneline
+            if struct['FPI'][i] == 1: line = fpiline
 
             struct['LINES'][i] = line
 
