@@ -4251,7 +4251,7 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
         if instrument == 'apogee-s':
             tharline = np.array([[946.0,1113.0,1102.0],[1727.0,609.0,1747.0]])
             uneline =  np.array([[614.0,1197.0,1088.0],[1762.0,592.0,1043.0]])
-            fpiline =  np.array([[635.0,637.0,637.0], [1408.0,1410.0,1409.0]])
+            fpiline =  np.array([[635.0,637.0,637.0], [1408.0,1399.0,1409.0]])
 
         fibers = np.array([10,80,150,220,290])
         nfibers = len(fibers)
