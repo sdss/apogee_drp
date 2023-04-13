@@ -37,10 +37,11 @@ from scipy.signal import medfilt2d
 ###############################################################################################
 # Set up some basic plotting parameters
 matplotlib.use('agg')
-fontsize = 24;   fsz = fontsize * 0.75
+fontsize = 28;   fsz = fontsize * 0.75
 matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
 bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
-axwidth = 1.5
+axwidth = 3
+axthick = 3
 axmajlen = 7
 axminlen = 3.5
 alf = 0.6
@@ -466,7 +467,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     tit = instrument.upper() + ' Instrument Monitor'
     html = open(outfile, 'w')
-    html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY>\n')
+    html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY STYLE="background-color:LightGray;"></BODY>\n')
     html.write('<H1>' + tit + '</H1>\n')
     html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
     html.write('<HR>\n')
@@ -475,7 +476,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> <a href=#scisnr> S/N history</a>\n')
     html.write('<li> Throughput / lamp monitors\n')
     html.write('<ul>\n')
-    html.write('<li> <a href=#fpi>FPI median brightness</a>\n')
+    html.write('<li> <a href=#fpi>FPI median brightness and line positions</a>\n')
     html.write('<li> <a href=#qflux>Quartz lamp median brightness</a>\n')
     html.write('<li> <a href=#qtrace>Quartz lamp trace position</a>\n')
     html.write('<li> <a href=#qfwhm>Quartz lamp trace FWHM</a>\n')
@@ -490,6 +491,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> Positions\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#tpos>ThAr line position</a>\n')
+    html.write('<ul>\n')
+    html.write('<li> <a href=#upos>UNe line position</a>\n')
     html.write('</ul>\n')
     html.write('<li> Line widths\n')
     html.write('<ul>\n')
@@ -504,40 +507,41 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HR>\n')
 
     html.write('<h3> <a name=sciobs></a> Science observation history </h3>\n')
-    html.write('<A HREF=' + instrument + '/sciobs.png target="_blank"><IMG SRC=' + instrument + '/sciobs.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/sciobs.png target="_blank"><IMG SRC=' + instrument + '/sciobs.png WIDTH=800></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=scisnr></a> S/N history for H=10.6-11.0 stars</h3>\n')
-    html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=1100></A>\n')
+    html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=fpi></a> FPI median brightness </h3>\n')
-    html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=1000></A>\n')
+    html.write('<h3> <a name=fpi></a> FPI median brightness and line positions</h3>\n')
+    html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=600></A>\n')
+    html.write('<A HREF=' + instrument + '/fpipos.png target="_blank"><IMG SRC=' + instrument + '/fpipos.png WIDTH=600></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
-    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qtrace></a> Quartz lamp trace position </h3>\n')
-    html.write('<A HREF=' + instrument + '/qtrace.png target="_blank"><IMG SRC=' + instrument + '/qtrace.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/qtrace.png target="_blank"><IMG SRC=' + instrument + '/qtrace.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qfwhm></a> Quartz lamp trace FWHM </h3>\n')
-    html.write('<A HREF=' + instrument + '/qfwhm.png target="_blank"><IMG SRC=' + instrument + '/qfwhm.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/qfwhm.png target="_blank"><IMG SRC=' + instrument + '/qfwhm.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=dflux></a> Dome flat median brightness</H3>\n')
     html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
-    html.write('<A HREF=' + instrument + '/dflux.png target="_blank"><IMG SRC=' + instrument + '/dflux.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/dflux.png target="_blank"><IMG SRC=' + instrument + '/dflux.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=dtrace></a> Dome flat trace position </h3>\n')
-    html.write('<A HREF=' + instrument + '/dtrace.png target="_blank"><IMG SRC=' + instrument + '/dtrace.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/dtrace.png target="_blank"><IMG SRC=' + instrument + '/dtrace.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=dfwhm></a> Dome flat trace FWHM </h3>\n')
-    html.write('<A HREF=' + instrument + '/dfwhm.png target="_blank"><IMG SRC=' + instrument + '/dfwhm.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/dfwhm.png target="_blank"><IMG SRC=' + instrument + '/dfwhm.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a href=' + instrument + '/fiber/fiber.html> Individual fiber throughputs from dome flats </A></H3>\n')
@@ -547,19 +551,23 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
-    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
-    html.write('<H3> <a name=tpos></a>ThArNe lamp line position</H3>\n')
-    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=1000></A>\n')
+    html.write('<H3> <a name=tpos></a>ThAr lamp line position</H3>\n')
+    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=900></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<H3> <a name=tpos></a>UNe lamp line position</H3>\n')
+    html.write('<A HREF=' + instrument + '/upos.png target="_blank"><IMG SRC=' + instrument + '/upos.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     for iline in range(2):
@@ -570,24 +578,24 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         txt = '<a name=tfwhm></a> ThArNe lamp line FWHM, line position (x pixel): '
         html.write('<H3>' + txt + tmp1 + ' ' + tmp2 + ' ' + tmp3 + '</H3>\n')
         html.write('<P> (Note: horizontal lines are the median value for each fiber.) </P>\n')
-        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + ' WIDTH=1000></A>\n')
+        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + ' WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=trace></a> Trace position, fiber 150, column 1000</H3>\n')
-    html.write('<A HREF=' + instrument + '/trace.png target="_blank"><IMG SRC=' + instrument + '/trace.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/trace.png target="_blank"><IMG SRC=' + instrument + '/trace.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
     html.write('<P> (Note: the four colors indicate the four quadrants in each detector.) </P>\n')
     html.write('<H4> Dark Mean </h4>\n')
-    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=900></A>\n')
 
     html.write('<H4> Dark Sigma </h4>\n')
-    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=1000></A>\n')
+    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=900></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=sky></a>Sky Brightness</H3>\n')
-    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=1300></A>\n')
+    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=900></A>\n')
 
     html.write('<BR><BR><BR><BR>')
     html.write('</BODY></HTML>\n')
@@ -865,7 +873,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 ax.set_xlabel(r'JD - 2,400,000')
                 ax.text(-0.03, 0.5, r'Median Flux / 1,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
                 ax.axvline(x=59146, color='r', linewidth=2)
@@ -913,7 +921,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 ax.set_xlabel(r'JD - 2,400,000')
                 ax.text(-0.03, 0.5, r'Flux / max(Flux)', rotation=90, ha='right', va='center', transform=ax.transAxes)
                 ax.axvline(x=59146, color='r', linewidth=2)
@@ -969,7 +978,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 ax.set_xlabel(r'JD - 2,400,000')
                 ax.text(-0.03, 0.5, r'Flux / 1,000', rotation=90, ha='right', va='center', transform=ax.transAxes)
                 ax.axvline(x=59146, color='r', linewidth=2)
@@ -1001,7 +1011,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 ax.set_xlabel(r'JD - 2,400,000')
                 ax.text(-0.03, 0.5, r'Flux / max(Flux)', rotation=90, ha='right', va='center', transform=ax.transAxes)
                 ax.axvline(x=59146, color='r', linewidth=2)
@@ -1062,7 +1073,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 ax.set_ylabel(r'Trace Center')
 
             for iyear in range(nyears):
@@ -1095,7 +1107,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.tick_params(axis='both',which='both',width=axthick)
+            for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
             ax.set_xlabel(r'JD - 2,400,000')
             ax.set_ylabel(r'$N_{\rm obs}$')
             ax.axvline(x=59146, color='teal', linewidth=2)
@@ -1180,7 +1193,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 if ichip == 1: ax.text(-0.035, 0.5, r'S/N$^{2}$ per minute ($' + magmin + r' < H < ' + magmax + r'$)', transform=ax.transAxes, rotation=90, ha='right', va='center')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1249,7 +1263,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(30,14))
+            fig = plt.figure(figsize=(20,14))
             #ymax = 70000
             #if instrument == 'apogee-s': 
             #    ymax = 125000
@@ -1258,52 +1272,126 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             gdcal = allcal[fpi]
             caljd = gdcal['JD'] - 2.4e6
+            mnjd = np.nanmin(caljd)
+            mxjd = np.nanmax(caljd)
+            jdspan = mxjd-mnjd
+            xmin0 = mnjd-jdspan*0.04
+            xmax0 = mxjd+jdspan*0.1
+            xspan0 = xmax0-xmin0
             #pdb.set_trace()
 
-            ymin = -10
-            ymax = 4000
-            yspan = ymax - ymin
+            #ymin = -100
+            #ymax = 3500
+            #if instrument == 'apogee-s': 
+            #    ymin = -60
+            #    ymax = 2500
+            #yspan = ymax - ymin
 
             for ichip in range(nchips):
                 chip = chips[ichip]
 
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.set_ylim(ymin, ymax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
+                ax.set_xlim(xmin0, xmax0)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                ax.yaxis.set_major_locator(matplotlib.ticker.MultipleLocator(1000))
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                ax.axvline(x=59146, color='teal', linewidth=2)
-                ax.axvline(x=startFPS, color='teal', linewidth=2)
-                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-                if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-                ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
-                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+                #ax.axvline(x=59146, color='teal', linewidth=2)
+                #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                #ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+
+                medfluxfib = np.zeros(nplotfibs)
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]#  / gdcal['NREAD']*10.0
+                    medfluxfib[ifib] = np.nanmedian(yvals)
+                    ax.scatter(caljd, yvals, marker='o', s=8, c=colors[ifib], alpha=alf, 
+                               label='fib ' + str(fibers[ifib]))
+                medflux = np.nanmean(medfluxfib)
+                ymax = medflux*1.5
+                yspan = ymax-0
+                ymin = 0-yspan*0.05
+                ax.set_ylim(ymin, ymax)
+                #if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                #ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.03,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='bottom', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz*1, edgecolor='k', framealpha=1, borderpad=0.6, columnspacing=0.3)
+
+            fig.subplots_adjust(left=0.075,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
+        # fpipos.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/fpipos.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(20,14))
+
+            gdcal = allcal[fpi]
+            caljd = gdcal['JD']-2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin0, xmax0)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Position (pixel)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
+                ymin = w - 40
+                ymax = w + 40
+                yspan = ymax - ymin
+                ax.set_ylim(ymin, ymax)
+
+                #ax.axvline(x=59146, color='teal', linewidth=2)
+                #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                #ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                #if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                #ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                #ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                ax.text(0.01,0.03,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='bottom', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
 
                 for ifib in range(nplotfibs):
-                    yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]#  / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='fib ' + str(fibers[ifib]))
+                    yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
+                    ax.scatter(caljd, yvals, marker='o', s=8, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
 
                 if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
+                    ax.legend(loc='lower right', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz*1, edgecolor='k', framealpha=1, borderpad=0.6, columnspacing=0.3)
 
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.075,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
+
 
         ###########################################################################################
         # dtrace.png
@@ -1333,13 +1421,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                     ax = plt.subplot2grid((nchips,1), (ichip,0))
                     ax.set_xlim(xmin, xmax)
-                    ax.set_ylim(ymin, ymax)
+                    #ax.set_ylim(ymin, ymax)
                     #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                     ax.minorticks_on()
                     ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
-                    ax.tick_params(axis='both',which='both',width=axwidth)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                     if ichip == 1: ax.set_ylabel(r'Dome Flat Trace Position Residuals (pixels)')
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1398,7 +1487,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1422,7 +1512,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
 
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.08,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
@@ -1454,13 +1544,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                     ax = plt.subplot2grid((nchips,1), (ichip,0))
                     ax.set_xlim(xmin, xmax)
-                    ax.set_ylim(ymin, ymax)
+                    #ax.set_ylim(ymin, ymax)
                     #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                     ax.minorticks_on()
                     ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
-                    ax.tick_params(axis='both',which='both',width=axwidth)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                     if ichip == 1: ax.set_ylabel(r'Quartz Lamp Trace Position Residuals (pixels)')
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1523,7 +1614,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
-                    ax.tick_params(axis='both',which='both',width=axwidth)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                     ax.set_ylabel(r'Trace Position (pix)')
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1581,7 +1673,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
-                    ax.tick_params(axis='both',which='both',width=axwidth)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                     ax.set_ylabel(r'FWHM (pixels)')
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1636,7 +1729,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Line Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1693,7 +1787,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Line Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1749,7 +1844,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1810,7 +1906,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
-                    ax.tick_params(axis='both',which='both',width=axwidth)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                     ax.set_ylabel(r'FWHM (pixels)')
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1857,7 +1954,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
-            ax.tick_params(axis='both',which='both',width=axwidth)
+            ax.tick_params(axis='both',which='both',width=axthick)
+            for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
             ax.set_xlabel(r'JD - 2,400,000')
             ax.set_ylabel(r'Zeropoint (mag.)')
             ax.axes.xaxis.set_ticklabels([])
@@ -1900,7 +1998,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 ax.set_ylabel(r'Position (pixel)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -1935,6 +2034,62 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.close('all')
 
         ###########################################################################################
+        # upos.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/upos.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(30,14))
+
+            gdcal = allcal[une]
+            caljd = gdcal['JD']-2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin, xmax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Position (pixel)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
+                ymin = w - 40
+                ymax = w + 40
+                yspan = ymax - ymin
+                ax.set_ylim(ymin, ymax)
+
+                ax.axvline(x=59146, color='teal', linewidth=2)
+                ax.axvline(x=startFPS, color='teal', linewidth=2)
+                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+        ###########################################################################################
         # ThArNe lamp line FWHM
             for iline in range(2):
                 plotfile = specdir5 + 'monitor/' + instrument + '/tfwhm' + str(iline) + '.png'
@@ -1956,7 +2111,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                         ax.tick_params(axis='both',which='major',length=axmajlen)
                         ax.tick_params(axis='both',which='minor',length=axminlen)
-                        ax.tick_params(axis='both',which='both',width=axwidth)
+                        ax.tick_params(axis='both',which='both',width=axthick)
+                        for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                         if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                         ax.set_ylabel(r'FWHM ($\rm \AA$)')
                         if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -2019,7 +2175,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 if ichip == 1: ax.set_ylabel(r'Mean (column median)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -2071,7 +2228,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 if ichip == 1: ax.set_ylabel(r'$\sigma$ (column median)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
@@ -2126,7 +2284,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 ax.text(-0.03, 0.5, 'Sky Brightness', ha='right', va='center', rotation=90, transform=ax.transAxes)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(0.1))
 

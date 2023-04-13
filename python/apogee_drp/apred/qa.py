@@ -113,7 +113,7 @@ def dostars(mjdstart=None, observatory='apo', apred='daily', dohtml=True, doplot
 '''APQAALL: Wrapper for running apqa for ***ALL*** plates. Runs in reverse chronological order. '''
 def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, makestarplots=False,
-            makenightqa=True, makemasterqa=True, makeqafits=True, makemonitor=True, clobber=True):
+            makenightqa=True, makemasterqa=True, makeqafits=True, makemonitor=True, calonly=False, clobber=True):
 
     # Establish telescope
     telescope = observatory + '25m'
@@ -125,12 +125,11 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
     for i in range(ndirs): allmjd[i] = mjdDirs[i].split('/')[-1]
     gd, = np.where(allmjd != 'plots')
     umjd = np.unique(allmjd[gd])
-    #gd, = np.where(umjd == mjdstart)
-    #umjd = umjd[gd[0]:]
-    #umjd = umjd[::-1]
+    gd, = np.where(umjd == mjdstart)
+    umjd = umjd[gd[0]:]
+    umjd = umjd[::-1]
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
-
     outtxt = open('failedQaMJDs_'+observatory+'.txt', 'w')
     for ii in range(nmjd):
         if umjd[ii][0:1] != 'a':
@@ -139,7 +138,7 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
                             makeobshtml=makeobshtml, makeobsplots=makeobsplots, makevishtml=makevishtml, 
                             makestarhtml=makestarhtml, makevisplots=makevisplots,makestarplots=makestarplots,
                             makenightqa=makenightqa, makemasterqa=makemasterqa, makeqafits=makeqafits, 
-                            makemonitor=makemonitor, clobber=clobber)
+                            makemonitor=makemonitor, calonly=calonly, clobber=clobber)
             except:
                 outtxt.write(umjd[ii]+'\n')
                 continue
@@ -150,7 +149,7 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
 def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, makeobshtml=True,
             makeobsplots=True, makevishtml=True, makestarhtml=False, makevisplots=True, 
             makestarplots=False, makemasterqa=True, makenightqa=True, makeqafits=True, 
-            makemonitor=True, clobber=True):
+            makemonitor=True, calonly=False, clobber=True):
 
     # Establish telescope and instrument
     telescope = observatory + '25m'
@@ -242,6 +241,11 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             # Make the monitor page
             if makemonitor == True:
                 q = monitor.monitor()
+
+    # Exit if calonly keyword is True
+    if calonly:
+        print("Done with APQAMJD for MJD " + mjd + "\n")
+        return
 
     # Run apqa on the science data plans
     print("Running APQAMJD for " + str(nsciplans) + " plates observed on MJD " + mjd + "\n")
@@ -4223,7 +4227,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 ''' MAKECALFITS: Make FITS file for cals (lamp brightness, line widths, etc.) '''
 def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clobber=None):
 
-    lineSearchRad = 40
     prefix = 'ap'
     if instrument == 'apogee-s': prefix = 'as'
 
@@ -4231,6 +4234,7 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
     if (os.path.exists(outfile) is False) | (clobber is True):
         print("--------------------------------------------------------------------")
         print("Running MAKECALFITS for MJD " + mjd)
+        print(outfile)
 
         # Make directory if it doesn't exist
         if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
@@ -4242,13 +4246,16 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
         nchips = len(chips)
 
         tharline = np.array([[940.3,1129.4,1131.9],[1728.3,623.0,1778.4]])
-        uneline =  np.array([[604.5,1214.1,1118.1],[1762.6,605.3,1895.3]])
+        uneline =  np.array([[604.5,1214.1,1118.1],[1762.6,605.3,548.9]])
+        fpiline =  np.array([[634.0,638.0,639.0], [1410.0,1404.4,1406.2]])
         if int(mjd) > 59420:
             tharline -= 21.832
             uneline -= 21.855
 
-        if instrument == 'apogee-s': tharline = np.array([[940.,1112.,1102.],[1727.,608.,1745.]])
-        if instrument == 'apogee-s':  uneline = np.array([[604.,1229.,1088.],[1763.,620.,1860.]])
+        if instrument == 'apogee-s':
+            tharline = np.array([[946.0,1113.0,1102.0],[1727.0,609.0,1747.0]])
+            uneline =  np.array([[614.0,1197.0,1088.0],[1762.0,592.0,1043.0]])
+            fpiline =  np.array([[635.0,637.0,637.0], [1408.0,1399.0,1409.0]])
 
         fibers = np.array([10,80,150,220,290])
         nfibers = len(fibers)
@@ -4310,18 +4317,20 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
             print("----> makeCalFits: running " + tp + " exposure " + str(ims[i]) + " (" + str(i+1) + "/" + str(n_exposures) + ")")
 
             # Quartz exposures.
-            if types[i] == 'fpi': 
-                struct['FPI'][i] = 1
-                struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
-                continue
             if struct['QRTZ'][i] == 1: 
                 struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
                 continue
 
-            # Arc lamp exposures.
-#            if (struct['THAR'][i] == 1) | (struct['UNE'][i] == 1):
+            # Arc lamp and FPI exposures.
+
+            lineSearchRad = 40
+            if types[i] == 'fpi': 
+                struct['FPI'][i] = 1
+                struct['FLUX'][i] = np.nanmedian(oneDflux, axis=1)
+                lineSearchRad = 5
             if struct['THAR'][i] == 1: line = tharline
-            if struct['THAR'][i] != 1: line = uneline
+            if struct['UNE'][i] == 1: line = uneline
+            if struct['FPI'][i] == 1: line = fpiline
 
             struct['LINES'][i] = line
 
@@ -4334,15 +4343,15 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
                         intline = int(round(line[iline,ichip]))
-                        gflux =   oneDflux[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
-                        gerror = oneDerror[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
+                        gflux =   oneDflux[ichip, :, fiber]
+                        gerror = oneDerror[ichip, :, fiber]
                         try:
                             # Try to fit Gaussians to the lamp lines
-                            gpeaks = peakfit.peakfit(gflux, sigma=gerror)
+                            gpeaks = peakfit.peakfit(gflux, sigma=gerror, pix0=line[iline,ichip])
                             gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                             gpeaks = gpeaks[gd]
                             # Find the desired peak and load struct
-                            gpeaks['pars'][:, 1] = gpeaks['pars'][:, 1] + intline - lineSearchRad
+                            #gpeaks['pars'][:, 1] = gpeaks['pars'][:, 1] + intline - lineSearchRad
                             pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
                             gdline, = np.where(pixdif == np.min(pixdif))
                             tmp = iline+ichip+ifiber
@@ -4353,7 +4362,7 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
                                 txt3 = str("%.2f" % round(diff,2)).rjust(10)
                                 print(txt1 + txt2 + txt3)# + txt4)
                         except:
-                            print("----> makeCalFits: ERROR!!! No lines found for " + tp + " exposure " + str(ims[i]))
+                            print("----> makeCalFits: ERROR!!! No lines found for " + tp + " " + str(line[iline,ichip]) + ", exposure " + str(ims[i]))
                             continue
 
                         if len(gdline) > 0:
