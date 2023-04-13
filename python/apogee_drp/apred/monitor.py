@@ -1314,7 +1314,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #ax.set_ylim(ymin, ymax)
                 #if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
                 #ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
-                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+                ax.text(0.01,0.03,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='bottom', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1366,6 +1366,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
                 #ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
                 #ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                ax.text(0.01,0.03,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='bottom', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
