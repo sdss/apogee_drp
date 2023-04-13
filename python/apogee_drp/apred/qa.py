@@ -130,7 +130,7 @@ def apqaALL(mjdstart='59146', observatory='apo', apred='daily', makeplatesum=Tru
     #umjd = umjd[::-1]
     nmjd = len(umjd)
     print("Running apqaMJD on " + str(nmjd) + " MJDs")
-
+    pdb.set_trace()
     outtxt = open('failedQaMJDs_'+observatory+'.txt', 'w')
     for ii in range(nmjd):
         if umjd[ii][0:1] != 'a':
