@@ -4242,7 +4242,7 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
         nchips = len(chips)
 
         tharline = np.array([[940.3,1129.4,1131.9],[1728.3,623.0,1778.4]])
-        uneline =  np.array([[604.5,1214.1,1118.1],[1762.6,605.3,1427.9]])
+        uneline =  np.array([[604.5,1214.1,1118.1],[1762.6,605.3,548.9]])
         fpiline =  np.array([[634.0,638.0,639.0], [1410.0,1404.4,1406.2]])
         if int(mjd) > 59420:
             tharline -= 21.832
