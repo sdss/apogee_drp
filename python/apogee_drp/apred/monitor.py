@@ -1066,10 +1066,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for ax in axes:
                 ax.set_ylim(ymin, ymax)
                 ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,width=axwidth)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
                 ax.set_ylabel(r'Trace Center')
 
             for iyear in range(nyears):
@@ -2150,10 +2149,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.set_ylim(ymin, ymax)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,width=axwidth)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
                 if ichip == 1: ax.set_ylabel(r'Mean (column median)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
