@@ -4339,16 +4339,15 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
                     for ifiber in range(nfibers):
                         fiber = fibers[ifiber]
                         intline = int(round(line[iline,ichip]))
-                        gflux =   oneDflux[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
-                        gerror = oneDerror[ichip, intline-lineSearchRad:intline+lineSearchRad, fiber]
+                        gflux =   oneDflux[ichip, :, fiber]
+                        gerror = oneDerror[ichip, :, fiber]
                         try:
                             # Try to fit Gaussians to the lamp lines
-                            pdb.set_trace()
                             gpeaks = peakfit.peakfit(gflux, sigma=gerror, pix0=line[iline,ichip])
                             gd, = np.where(np.isnan(gpeaks['pars'][:, 0]) == False)
                             gpeaks = gpeaks[gd]
                             # Find the desired peak and load struct
-                            gpeaks['pars'][:, 1] = gpeaks['pars'][:, 1] + intline - lineSearchRad
+                            #gpeaks['pars'][:, 1] = gpeaks['pars'][:, 1] + intline - lineSearchRad
                             pixdif = np.abs(gpeaks['pars'][:, 1] - line[iline, ichip])
                             gdline, = np.where(pixdif == np.min(pixdif))
                             tmp = iline+ichip+ifiber
