@@ -1285,8 +1285,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 ax = plt.subplot2grid((nchips,1), (ichip,0))
                 ax.set_xlim(xmin0, xmax0)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(100))
-                ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                #ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
                 ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
@@ -1304,7 +1304,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(nplotfibs):
                     yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]#  / gdcal['NREAD']*10.0
                     medfluxfib[ifib] = np.nanmedian(yvals)
-                    ax.scatter(caljd, yvals, marker='o', s=4, c=colors[ifib], alpha=alf, 
+                    ax.scatter(caljd, yvals, marker='o', s=8, c=colors[ifib], alpha=alf, 
                                label='fib ' + str(fibers[ifib]))
                 medflux = np.nanmean(medfluxfib)
                 ymax = medflux*1.5
@@ -1328,6 +1328,62 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig.subplots_adjust(left=0.075,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
+
+        ###########################################################################################
+        # fpipos.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/fpipos.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            fig = plt.figure(figsize=(20,14))
+
+            gdcal = allcal[fpi]
+            caljd = gdcal['JD']-2.4e6
+
+            for ichip in range(nchips):
+                chip = chips[ichip]
+
+                ax = plt.subplot2grid((nchips,1), (ichip,0))
+                ax.set_xlim(xmin0, xmax0)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axwidth)
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                ax.set_ylabel(r'Position (pixel)')
+                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
+
+                w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
+                ymin = w - 40
+                ymax = w + 40
+                yspan = ymax - ymin
+                ax.set_ylim(ymin, ymax)
+
+                #ax.axvline(x=59146, color='teal', linewidth=2)
+                #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                #ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
+                #if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
+                #ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+                #ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+
+                for ifib in range(nplotfibs):
+                    yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
+                    ax.scatter(caljd, yvals, marker='o', s=8, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
+
+                if ichip == 0: 
+                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
+
+            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
 
         ###########################################################################################
         # dtrace.png
@@ -2012,63 +2068,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
-
-        ###########################################################################################
-        # fpipos.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/fpipos.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
-            print("----> monitor: Making " + os.path.basename(plotfile))
-
-            fig = plt.figure(figsize=(30,14))
-
-            gdcal = allcal[fpi]
-            caljd = gdcal['JD']-2.4e6
-
-            for ichip in range(nchips):
-                chip = chips[ichip]
-
-                ax = plt.subplot2grid((nchips,1), (ichip,0))
-                ax.set_xlim(xmin, xmax)
-                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
-                ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
-                ax.tick_params(axis='both',which='major',length=axmajlen)
-                ax.tick_params(axis='both',which='minor',length=axminlen)
-                ax.tick_params(axis='both',which='both',width=axwidth)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Position (pixel)')
-                if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-
-                w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
-                ymin = w - 40
-                ymax = w + 40
-                yspan = ymax - ymin
-                ax.set_ylim(ymin, ymax)
-
-                ax.axvline(x=59146, color='teal', linewidth=2)
-                ax.axvline(x=startFPS, color='teal', linewidth=2)
-                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-                if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-                ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
-                ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
-
-                for iyear in range(nyears):
-                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
-
-                for ifib in range(nplotfibs):
-                    yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
-
-                if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
-
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
-            plt.close('all')
-
-
 
         ###########################################################################################
         # ThArNe lamp line FWHM
