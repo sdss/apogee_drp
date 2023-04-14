@@ -1236,7 +1236,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
                     pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
 
-                    ax.legend(loc=[0.25,0.85], ncol=2, labelspacing=0.5, handletextpad=0.5, markerscale=1, 
+                    ax.legend(loc=[0.25,0.80], ncol=2, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.7)
 
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
