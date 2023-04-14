@@ -37,7 +37,15 @@ from scipy.signal import medfilt2d
 ###############################################################################################
 # Set up some basic plotting parameters
 matplotlib.use('agg')
-fontsize = 32;   fsz = fontsize * 0.75
+fontsize = 36
+fsz = fontsize * 0.75
+fsz90 = fontsize * 0.90
+fsz85 = fontsize * 0.85
+fsz80 = fontsize * 0.80
+fsz75 = fontsize * 0.75
+fsz70 = fontsize * 0.70
+fsz65 = fontsize * 0.65
+fsz60 = fontsize * 0.60
 matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
 bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
 axwidth = 3
@@ -1104,7 +1112,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.set_ylim(ymin, ymax)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axthick)
@@ -1190,7 +1198,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.set_xlim(xmin, xmax)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axthick)
@@ -1300,7 +1308,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
                 ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axthick)
@@ -1357,7 +1365,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.set_xlim(xmin0, xmax0)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
                 ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axthick)
@@ -1429,7 +1437,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.set_ylim(ymin, ymax)
                     #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                     ax.minorticks_on()
-                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
                     ax.tick_params(axis='both',which='both',width=axthick)
@@ -1489,7 +1497,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.yaxis.set_major_locator(ticker.MultipleLocator(20000))
                 ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axthick)
@@ -1553,7 +1561,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.set_ylim(ymin, ymax)
                     #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                     ax.minorticks_on()
-                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
                     ax.tick_params(axis='both',which='both',width=axthick)
@@ -1617,7 +1625,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.set_ylim(ymin, ymax)
                     ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                     ax.minorticks_on()
-                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
                     ax.tick_params(axis='both',which='both',width=axthick)
@@ -1676,7 +1684,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.set_ylim(ymin, ymax)
                     ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                     ax.minorticks_on()
-                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
                     ax.tick_params(axis='both',which='major',length=axmajlen)
                     ax.tick_params(axis='both',which='minor',length=axminlen)
                     ax.tick_params(axis='both',which='both',width=axthick)
@@ -1733,7 +1741,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.set_ylim(ymin[ichip], ymax[ichip])
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axthick)
@@ -1791,7 +1799,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.set_ylim(ymin[ichip], ymax[ichip])
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                 ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axthick)
