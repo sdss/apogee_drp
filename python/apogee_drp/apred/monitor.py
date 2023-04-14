@@ -1371,7 +1371,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axthick)
                 for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
-                if ichip == 1: ax.set_ylabel(r'Position (pixel)', labelpad=12)
+                if ichip == 1: ax.set_ylabel(r'Position (pix)', labelpad=12)
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
                 w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
@@ -1443,7 +1443,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.tick_params(axis='both',which='both',width=axthick)
                     for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
-                    if ichip == 1: ax.set_ylabel(r'Dome Flat Trace Position Residuals (pixels)')
+                    if ichip == 1: ax.set_ylabel(r'Dome Flat Trace Position Residuals (pix)')
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                     ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
                     ax.axvline(x=59146, color='teal', linewidth=2)
