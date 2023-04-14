@@ -1495,7 +1495,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axthick)
                 for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                if ichip == 1: ax.text(-0.05, 0.5, r'Median Flux', transform=ax.transAxes, ha='right', va='center', rotation=90)
+                if ichip == 1: ax.text(-0.065, 0.5, r'Median Flux', transform=ax.transAxes, ha='right', va='center', rotation=90)
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=startFPS, color='teal', linewidth=2)
