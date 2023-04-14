@@ -1127,7 +1127,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
+                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center', fontsize=fsz80)
 
             umjd = np.unique(allsci['MJD'])
             nmjd = len(umjd)
@@ -1148,7 +1148,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
 
             ax.legend(loc='upper left', ncol=2, columnspacing=0.5, labelspacing=1.3, handletextpad=0.3, markerscale=1, 
-                      fontsize=fontsize, edgecolor='k', borderaxespad=1.3, framealpha=1)
+                      fontsize=fsz80, edgecolor='k', borderaxespad=1.3, framealpha=1)
 
             fig.subplots_adjust(left=0.045,right=0.99,bottom=0.086,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -1235,7 +1235,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
 
                     ax.legend(loc=[0.63,0.05], labelspacing=0.5, handletextpad=0.5, markerscale=1, 
-                              fontsize=fontsize, edgecolor='k', framealpha=1, borderaxespad=2, borderpad=0.3)
+                              fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=2, borderpad=0.3)
 
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
                 ylims = ax.get_ylim()
@@ -1253,7 +1253,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center')
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center', fontsize=fsz80)
 
                 ax_divider = make_axes_locatable(ax)
                 cax = ax_divider.append_axes("right", size="2%", pad="1%")
