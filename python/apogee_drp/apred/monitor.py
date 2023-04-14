@@ -570,7 +570,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<TH>pix0 = ['+tmp01+', '+tmp02+', '+tmp03+'] <TH>pix0 = ['+tmp11+', '+tmp12+', '+tmp13+']\n')
     html.write('<TR bgcolor=white>\n')
     html.write('<TD> <A HREF=' + instrument + '/tpos0.png target="_blank"><IMG SRC=' + instrument + '/tpos0.png WIDTH=700></A>\n')
-    html.write('<TD> <A HREF=' + instrument + '/tpos0.png target="_blank"><IMG SRC=' + instrument + '/tpos0.png WIDTH=700></A>\n')
+    html.write('<TD> <A HREF=' + instrument + '/tpos1.png target="_blank"><IMG SRC=' + instrument + '/tpos1.png WIDTH=700></A>\n')
     html.write('</TABLE>\n')
 
 
