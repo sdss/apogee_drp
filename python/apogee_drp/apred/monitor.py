@@ -2132,7 +2132,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                         w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 2])
                         ymin = w * 0.6
-                        ymax = w * 1.35
+                        ymax = w * 1.5
                         yspan = ymax - ymin
                         ax.set_ylim(ymin, ymax)
 
