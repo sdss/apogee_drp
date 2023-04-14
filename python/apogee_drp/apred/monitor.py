@@ -1324,8 +1324,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for ifib in range(nplotfibs):
                     yvals = gdcal['FLUX'][:, ichip, fibers[ifib]]#  / gdcal['NREAD']*10.0
                     medfluxfib[ifib] = np.nanmedian(yvals)
-                    ax.scatter(caljd, yvals, marker='o', s=8, c=colors[ifib], alpha=alf, 
-                               label='fib ' + str(fibers[ifib]))
+                    ax.scatter(caljd, yvals, marker='o', s=8, c=colors[ifib], alpha=alf, label=str(fibers[ifib]))
+                               #label='fib ' + str(fibers[ifib]))
                 medflux = np.nanmean(medfluxfib)
                 ymax = medflux*1.5
                 yspan = ymax-0
@@ -1340,7 +1340,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center', fontsize=fsz80)
 
                 if ichip == 0: 
-                    ax.legend(loc=[0.25,1.15], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                    ax.legend(loc=[-0.05,1.05], ncol=2, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
             fig.subplots_adjust(left=0.094,right=0.985,bottom=0.073,top=0.900,hspace=0.08,wspace=0.00)
@@ -1526,7 +1526,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.legend(loc=[0.25,1.15], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=10, 
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
-            fig.subplots_adjust(left=0.075,right=0.99,bottom=0.064,top=0.90,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.075,right=0.99,bottom=0.066,top=0.90,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
@@ -1572,15 +1572,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
                     ax.axvline(x=59146, color='teal', linewidth=2)
                     ax.axvline(x=startFPS, color='teal', linewidth=2)
-                    if ichip == 0: ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fontsize, color='teal', va='top', ha='right', bbox=bboxpar)
+                    if ichip == 0: ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
                     if instrument == 'apogee-n' and ichip == 0:
-                        ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fontsize, color='teal', va='top', ha='center', bbox=bboxpar)
-                    if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fontsize, color='teal', va='top', ha='left', bbox=bboxpar)
-                    ax.text(0.02,0.05,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fontsize, ha='left', va='bottom', color=chip, bbox=bboxpar)
+                        ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
+                    if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
+                    ax.text(0.02,0.05,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='bottom', color=chip, bbox=bboxpar)
 
                     for iyear in range(nyears):
                         ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                        if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+                        if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center', fontsize=fsz80)
 
                     for ifib in range(nplotfibs):
                         medcent = np.nanmedian(gcent[:, ichip, ifib])
@@ -1590,9 +1590,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                     if ichip == 0: 
                         ax.legend(loc=[0.2,0.05], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=10, 
-                                  fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
+                                  fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
-                fig.subplots_adjust(left=0.075,right=0.99,bottom=0.064,top=0.96,hspace=0.08,wspace=0.00)
+                fig.subplots_adjust(left=0.075,right=0.99,bottom=0.066,top=0.96,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
                 plt.close('all')
 
