@@ -1182,7 +1182,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymax = 30
             yspan = ymax-ymin
 
-            fig = plt.figure(figsize=(32,14))
+            fig = plt.figure(figsize=(35,19))
 
             for ichip in range(nchips):
                 chip = chips[ichip]
@@ -1226,7 +1226,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
                     pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
 
-                    ax.legend(loc='lower center', labelspacing=0.5, handletextpad=0.2, markerscale=1, 
+                    ax.legend(loc=[0.7,0.05], labelspacing=0.5, handletextpad=0.5, markerscale=1, 
                               fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.3)
 
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
@@ -1251,6 +1251,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 cb1 = colorbar(sc1, cax=cax, orientation="vertical")
                 cax.minorticks_on()
                 cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                cax.tick_params(axis='both',which='major',length=axmajlen)
+                cax.tick_params(axis='both',which='minor',length=axminlen)
+                cax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
                 if ichip == 1: ax.text(1.06, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
             fig.subplots_adjust(left=0.05,right=0.945,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
