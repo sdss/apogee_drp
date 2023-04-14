@@ -1332,8 +1332,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center')
 
                 if ichip == 0: 
-                    ax.legend(loc='lower right', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fontsize, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
+                    ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
             fig.subplots_adjust(left=0.09,right=0.985,bottom=0.07,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -1391,7 +1391,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 if ichip == 0: 
                     ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*1, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
+                              fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
             fig.subplots_adjust(left=0.09,right=0.985,bottom=0.066,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -1515,8 +1515,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                                label='fib ' + str(fibers[ifib]))
 
                 if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
+                    ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
             fig.subplots_adjust(left=0.08,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
