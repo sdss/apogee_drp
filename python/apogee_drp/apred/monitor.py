@@ -1116,8 +1116,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                             ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center', fontsize=fsz80)
 
                     for ifib in range(nplotfibs):
-                        pdb.set_trace()
-                        yvals = gdcal['GAUSS'][:, iline, ichip, ifib] / gdcal['NREAD']*10.0
+                        #pdb.set_trace()
+                        yvals = gdcal['GAUSS'][:, iline, ichip, ifib, 0] / gdcal['NREAD']*10.0
                         ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], label=str(fibers[ifib]))
 
                     if ichip == 0: 
@@ -1128,6 +1128,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.savefig(plotfile)
                 plt.close('all')
 
+        return
         ###########################################################################################
         # trace.png
         plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
