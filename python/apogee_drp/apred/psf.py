@@ -1372,26 +1372,79 @@ def getoffset(frame,traceim):
     # Find bright fibers and measure the centroid
     nfibers = traceim.shape[0]
     flux = frame['flux']
+    header = frame['header']
+    exptype = header['exptype'].lower()
+    chip = header['chip'].strip().lower()
     
-    # Loop over X locations
-    xx = [512, 1024, 1536]
-    coef = np.zeros((len(xx),2),float)
+    # Use different X positions for arclamps
+    if exptype == 'arclamp' and header['LAMPUNE']:
+        avgtype = 'sum'
+        xdict = {'a':[415,607,1490,2022], 'b':[90,594,1460], 'c':[1220,1750,2020]}
+        xx = xdict[chip]
+    elif exptype == 'arclamp' and header['LAMPTHAR']:
+        avgtype = 'sum'
+        xdict = {'a':[60,950,1840], 'b':[905,1110,1570,1870], 'c':[1240,1780,1860,2010]}
+        xx = xdict[chip]        
+    # FPI
+    elif exptype == 'arclamp' and header['LAMPUNE']==False and header['LAMPTHAR']==False:
+        avgtype = 'summedian'
+        #avgtype = 'median'
+        xx = [204, 614, 1024, 1434, 1844]            
+    # Object/dome/quartz exposures
+    else:
+        avgtype = 'median'
+        xx = [204, 614, 1024, 1434, 1844]
+        #xx = [512, 1024, 1536]                
+
+    # Loop over X column locations
+    coef = np.zeros((len(xx),2),float) + np.nan
+    ngood = np.zeros(len(xx),int)
+    sigma = np.zeros(len(xx),float)
     alloffset = np.array([],float)
+    tab = np.zeros((len(xx),300),dtype=np.dtype([('fiber',int),('x',float),('ytemp',float),('flux',float),
+                                                 ('ygauss',float),('ygausserr',float),('yoffset',float),('bright',bool)]))
+    tab['ygauss'] = np.nan
+    tab['yoffset'] = np.nan    
+    tabcount = 0
     for i,x in enumerate(xx):
+        tab['fiber'][i,:] = np.arange(300)
+        tab['x'][i,:] = x
         # Get median flux/centers
-        medflux = np.median(flux[:,x-100:x+100],axis=1)
-        medcent = np.median(traceim[:,x-100:x+100],axis=1)
+        xlo = np.maximum(x-100,0)
+        xhi = np.minimum(x+100,2048)          
+        if avgtype == 'median':
+            medflux = np.median(flux[:,xlo:xhi],axis=1)
+        if avgtype == 'mean':
+            medflux = np.mean(flux[:,xlo:xhi],axis=1)            
+        elif avgtype == 'sum':
+            medflux = np.sum(flux[:,xlo:xhi],axis=1)
+        elif avgtype == 'summedian':
+            # First sum, then median
+            binflux = dln.rebin(flux[:,xlo:xhi],binsize=(1,18),tot=True)
+            medflux = np.median(binflux,axis=1)   
+        medcent = np.median(traceim[:,xlo:xhi],axis=1)
         # Measure rough flux in each fiber
         boxflux = np.zeros(nfibers,float)
         fiberycen = np.zeros(nfibers,float)
         for j in range(nfibers):
             fiberycen[j] = medcent[j]
             boxflux[j] = np.sum(medflux[int(np.round(medcent[j]))-1:int(np.round(medcent[j]))+1])
+        tab['ytemp'][i,:] = medcent
+        tab['flux'][i,:] = boxflux
+
         # Find bright fibers
         bright, = np.where(boxflux > 1000)
-        if len(bright)<10:
-            bright = np.argsort(boxflux)[0:30]  # take brightest 30 fibers
+        if len(bright)<5:
+            bright, = np.where(boxflux > 500)
+        if len(bright)<5:
+            bright, = np.where(boxflux > 100)
+        if len(bright)<5:
+            # Not enough bright fibers to measure the offset
+            continue
+        #    bright = np.argsort(boxflux)[0:30]  # take brightest 30 fibers
         nbright = len(bright)
+        ngood[i] = nbright
+        tab['bright'][i,bright] = True
         
         # Loop over bright fibers
         y = np.arange(2048)
@@ -1407,41 +1460,65 @@ def getoffset(frame,traceim):
             ff = medflux[lo:hi+1]
             initpar = [ff[3],medcent[ind],1.0,0.0]
             try:
-                pars,perror = dln.gaussfit(yy,ff,initpar=initpar,binned=True,bounds=(-np.inf,np.inf))
+                pars,pcov = dln.gaussfit(yy,ff,initpar=initpar,binned=True,bounds=(-np.inf,np.inf))
+                perror = np.sqrt(np.diag(pcov))
                 gcent[j] = pars[1]
-                offset[j] = pars[1]-medcent[ind]  
+                offset[j] = pars[1]-medcent[ind]
+                tab['ygauss'][i,bright[j]] = gcent[j]
+                tab['ygausserr'][i,bright[j]] = perror[1]
+                tab['yoffset'][i,bright[j]] = offset[j]                
             except:
                 gcent[j] = np.nan
                 offset[j] = np.nan
 
-
         # Fit line to it
         medoff = np.nanmedian(offset)
         sigoff = dln.mad(offset[np.isfinite(offset)])
+        sigma[i] = sigoff
         gd, = np.where(np.isfinite(offset) & (np.abs(offset-medoff) < 3*sigoff))
-        coef1 = np.polyfit(ycen[gd],offset[gd],1)
-        coef[i,:] = coef1
+        if len(gd) > 5:
+            coef1 = np.polyfit(ycen[gd],offset[gd],1)
+            coef[i,:] = coef1
+        else:
+            coef[i,:] = [0.0, medoff]
         alloffset = np.hstack((alloffset,offset))
-
-
-    # Fit 2D linear model
-    xvals = np.zeros((len(xx),2048),float)
-    yvals = np.zeros((len(xx),2048),float)
-    zvals = np.zeros((len(xx),2048),float)    
-    for i,x in enumerate(xx):
-        xvals[i,:] = x
-        yvals[i,:] = np.arange(2048)
-        zvals[i,:] = np.polyval(coef[i,:],np.arange(2048))
         
-    initpar = np.zeros(4)
-    coef2,cov2 = curve_fit(func_poly2d,[xvals.ravel(),yvals.ravel()],zvals.ravel(),p0=initpar)
-    coeferr2 = np.sqrt(np.diag(cov2))
+    avgngood = np.mean(ngood)
+    if avgngood < 5:
+        print('Not enough bright fibers to measure the offset. Assuming zero offset.')
+        # c0 + c1*x + c2*x*y + c3*y 
+        coef2 = np.zeros(4,float)
+        medoff = 0.0
+        return coef2,medoff,[]
+        
+    # Fit 2D linear model
+    if len(xx) >= 3:
+        xvals = np.zeros((len(xx),2048),float)
+        yvals = np.zeros((len(xx),2048),float)
+        zvals = np.zeros((len(xx),2048),float)    
+        for i,x in enumerate(xx):
+            xvals[i,:] = x
+            yvals[i,:] = np.arange(2048)
+            zvals[i,:] = np.polyval(coef[i,:],np.arange(2048))
+        
+        initpar = np.zeros(4)
+        coef2,cov2 = curve_fit(func_poly2d,[xvals.ravel(),yvals.ravel()],zvals.ravel(),p0=initpar)
+        coeferr2 = np.sqrt(np.diag(cov2))
+
+    # Not enough X columns to fit 2-D model, use 1-D instead        
+    else:
+        # c0 + c1*x + c2*x*y + c3*y 
+        print('Not enough columns to fit 2-D model.  Using 1-D.')
+        coef2 = np.zeros(4,float)
+        coef2[0] = np.mean(coef[:,1])  # constant term
+        coef2[3] = np.mean(coef[:,0])  # linear y term
 
     medoff = np.nanmedian(alloffset)
-    print('Median offset = %.3f pixels' % medoff)
+    sigoff = np.mean(sigma)/np.sqrt(len(alloffset))
+    print('Median offset = {:.3f} +/- {:.4f} pixels'.format(medoff,sigoff))
     print('Offset coefficients = ',coef2)
 
-    return coef2,medoff
+    return coef2,medoff,tab
 
 
 def fullepsfgrid(psf,traceim,fibers,offcoef,verbose=True):
@@ -1570,7 +1647,7 @@ def extractwing(frame,modelpsffile,epsffile,tracefile):
     # Step 1) Measure the offset
     #  returns 2D linear of the offset
     #  c0 + c1*x + c2*x*y + c3*y
-    offcoef,medoff = getoffset(frame,traceim)
+    offcoef,medoff,tab = getoffset(frame,traceim)
 
     # Step 2) Generate full PSFs for this image
     # Generate the input that extract() expects
