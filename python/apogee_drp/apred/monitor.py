@@ -1952,7 +1952,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(30,8))
+            fig = plt.figure(figsize=(35,12))
             ymax = 21
             ymin = 10
             yspan = ymax - ymin
@@ -1968,21 +1968,21 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='both',width=axthick)
             for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
             ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
-            ax.set_ylabel(r'Zeropoint (mag.)')
-            ax.axes.xaxis.set_ticklabels([])
+            ax.set_ylabel(r'Zeropoint (mag.)', labelpad=12)
+            #ax.axes.xaxis.set_ticklabels([])
             ax.axvline(x=59146, color='teal', linewidth=2)
             ax.axvline(x=startFPS, color='teal', linewidth=2)
-            ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-            if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-            ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+            ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
+            if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
+            ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
 
             for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center')
+                ax.text(yearjd[iyear], ymax+yspan*0.02, cyears[iyear], ha='center', fontsize=fsz80)
 
             t = Time(allsci['DATEOBS'], format='fits')
             jd = t.jd - 2.4e6
-            ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, c='blueviolet', alpha=alf)
+            ax.scatter(jd, allsci['ZERO'], marker='o', s=markersz, c='blueviolet')
 
             fig.subplots_adjust(left=0.04,right=0.99,bottom=0.115,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
