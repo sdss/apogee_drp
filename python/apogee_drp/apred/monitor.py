@@ -1566,7 +1566,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.axvline(x=startFPS, color='teal', linewidth=2)
                     if ichip == 0: ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fontsize, color='teal', va='top', ha='right', bbox=bboxpar)
                     if instrument == 'apogee-n' and ichip == 0:
-                    ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fontsize, color='teal', va='top', ha='center', bbox=bboxpar)
+                        ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fontsize, color='teal', va='top', ha='center', bbox=bboxpar)
                     if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fontsize, color='teal', va='top', ha='left', bbox=bboxpar)
                     ax.text(0.02,0.05,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fontsize, ha='left', va='bottom', color=chip, bbox=bboxpar)
 
