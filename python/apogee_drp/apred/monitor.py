@@ -1117,7 +1117,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axthick)
             for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
-            ax.set_xlabel(r'JD - 2,400,000')
+            ax.set_xlabel(r'JD - 2,400,000', labelpad=2)
             ax.set_ylabel(r'$N_{\rm obs}$')
             ax.axvline(x=59146, color='teal', linewidth=2)
             ax.axvline(x=startFPS, color='teal', linewidth=2)
