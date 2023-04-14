@@ -2395,15 +2395,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=startFPS, color='teal', linewidth=2)
-                if ichip == 0: ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
+                if ichip == 0: ax.text(59146-xspan*0.005, ymax-yspan*0.1, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
                 if instrument == 'apogee-n' and ichip == 0:
-                    ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
-                if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
+                    ax.text(59353, ymax-yspan*0.1, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
+                if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.1, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
                 ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*1.5, cyears[iyear], ha='center', va='bottom', fontsize=fsz80)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.5, cyears[iyear], ha='center', va='bottom', fontsize=fsz80)
 
                 for ibias in range(4):
                     ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
@@ -2449,15 +2449,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=startFPS, color='teal', linewidth=2)
-                if ichip == 0: ax.text(59146-xspan*0.005, ymax-yspan*0.06, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
+                if ichip == 0: ax.text(59146-xspan*0.005, ymax-yspan*0.1, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
                 if instrument == 'apogee-n' and ichip == 0:
-                    ax.text(59353, ymax-yspan*0.06, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
-                if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.06, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
+                    ax.text(59353, ymax-yspan*0.1, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
+                if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.1, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
                 ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*1.5, cyears[iyear], ha='center', va='bottom', fontsize=fsz80)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.5, cyears[iyear], ha='center', va='bottom', fontsize=fsz80)
 
                 for ibias in range(4):
                     ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
