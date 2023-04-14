@@ -1190,7 +1190,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymax = 30
             yspan = ymax-ymin
 
-            fig = plt.figure(figsize=(37,19))
+            fig = plt.figure(figsize=(37,20))
 
             for ichip in range(nchips):
                 chip = chips[ichip]
