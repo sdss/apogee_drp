@@ -42,8 +42,8 @@ matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
 bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
 axwidth = 3
 axthick = 3
-axmajlen = 7
-axminlen = 3.5
+axmajlen = 10
+axminlen = 5
 alf = 0.6
 markersz = 1
 colors = np.array(['midnightblue', 'deepskyblue', 'mediumorchid', 'red', 'orange'])[::-1]
@@ -1094,7 +1094,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(30,12))
+            fig = plt.figure(figsize=(35,12))
             ymax = 100
             ymin = 0
             yspan = ymax - ymin
@@ -1104,7 +1104,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.set_ylim(ymin, ymax)
             ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
             ax.minorticks_on()
-            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+            ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
             ax.tick_params(axis='both',which='major',length=axmajlen)
             ax.tick_params(axis='both',which='minor',length=axminlen)
             ax.tick_params(axis='both',which='both',width=axthick)
