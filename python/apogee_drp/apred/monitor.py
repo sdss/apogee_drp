@@ -1345,7 +1345,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.5, markerscale=4, 
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.1)
 
-            fig.subplots_adjust(left=0.089,right=0.985,bottom=0.071,top=0.960,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.085,right=0.985,bottom=0.071,top=0.960,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
@@ -1403,7 +1403,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.5, markerscale=4, 
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.1)
 
-            fig.subplots_adjust(left=0.089,right=0.985,bottom=0.071,top=0.960,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.085,right=0.985,bottom=0.071,top=0.960,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
@@ -1461,7 +1461,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.5, markerscale=4, 
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.1)
 
-            fig.subplots_adjust(left=0.089,right=0.985,bottom=0.071,top=0.960,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.085,right=0.985,bottom=0.071,top=0.960,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
