@@ -478,7 +478,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY STYLE="background-color:LightGray;"></BODY>\n')
     html.write('<H1>' + tit + '</H1>\n')
     html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
-    html.write('<H4> Throughput:\n')
+    html.write('<H4> Throughput: </H4>\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#scisnr> S/N history</a>\n')
     html.write('<li> <a href=' + instrument + '/fiber/fiber_qrtz.html target="_blank">Fiber throughput from quartz lamp</a> (external page)\n')
