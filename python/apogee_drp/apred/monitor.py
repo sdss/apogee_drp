@@ -1542,7 +1542,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #gfibers = np.array([0, 49, 99, 149, 199, 249, 299])[::-1]
                 #ngplotfibs = len(gfibers)
 
-                fig = plt.figure(figsize=(35,19))
+                fig = plt.figure(figsize=(35,20))
                 ymax = 2.5
                 ymin = -2.5
                 yspan = ymax - ymin
@@ -1601,7 +1601,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             if (os.path.exists(plotfile) == False) | (clobber == True):
                 print("----> monitor: Making " + os.path.basename(plotfile))
 
-                fig = plt.figure(figsize=(35,19))
+                fig = plt.figure(figsize=(35,20))
                 ymax = 1010
                 ymin = 1038
                 yspan = ymax - ymin
@@ -1661,7 +1661,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             if (os.path.exists(plotfile) == False) | (clobber == True):
                 print("----> monitor: Making " + os.path.basename(plotfile))
 
-                fig = plt.figure(figsize=(35,19))
+                fig = plt.figure(figsize=(35,20))
                 ymax = 3.0
                 if instrument == 'apogee-s': 
                     ymax = 3.0
@@ -1719,7 +1719,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(35,19))
+            fig = plt.figure(figsize=(35,20))
             ymax = np.array([510000, 58000, 16000]) 
             if instrument == 'apogee-s': ymax = np.array([110000, 30000, 3000])
             ymin = 0 - ymax * 0.05
@@ -1777,7 +1777,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(35,19))
+            fig = plt.figure(figsize=(35,20))
             ymax = np.array([45000, 3000, 12000])
             if instrument == 'apogee-s': ymax = np.array([6000, 1500, 3000])
             ymin = 0 - ymax*0.05
@@ -1835,7 +1835,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(35,19))
+            fig = plt.figure(figsize=(35,20))
             ymax = 30000
             if instrument == 'apogee-s': ymax = 20000
             ymin = 0 - ymax*0.05
