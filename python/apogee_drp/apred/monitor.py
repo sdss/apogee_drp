@@ -1182,7 +1182,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymax = 30
             yspan = ymax-ymin
 
-            fig = plt.figure(figsize=(35,19))
+            fig = plt.figure(figsize=(37,19))
 
             for ichip in range(nchips):
                 chip = chips[ichip]
@@ -1258,7 +1258,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
                 if ichip == 1: ax.text(1.065, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-            fig.subplots_adjust(left=0.05,right=0.954,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.052,right=0.954,bottom=0.063,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
