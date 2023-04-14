@@ -1343,7 +1343,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.5, markerscale=4, 
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.1)
 
-            fig.subplots_adjust(left=0.094,right=0.985,bottom=0.073,top=0.950,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.094,right=0.985,bottom=0.073,top=0.960,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
@@ -1395,13 +1395,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
-                    ax.scatter(caljd, yvals, marker='o', s=8, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
+                    ax.scatter(caljd, yvals, marker='o', s=8, c=colors[ifib], alpha=alf, label=str(fibers[ifib]))
 
                 if ichip == 0: 
-                    ax.legend(loc=[0.25,1.15], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
+                    ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.5, markerscale=4, 
+                              fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.1)
 
-            fig.subplots_adjust(left=0.094,right=0.985,bottom=0.073,top=0.90,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.094,right=0.985,bottom=0.073,top=0.960,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
