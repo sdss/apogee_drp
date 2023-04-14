@@ -1822,19 +1822,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
                     if ichip == 1: ax.set_ylabel(r'Line Flux', labelpad=12)
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                    ax.axvline(x=59146, color='teal', linewidth=2)
-                    ax.axvline(x=startFPS, color='teal', linewidth=2)
-                    if ichip == 0: ax.text(59146-xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
-                    if instrument == 'apogee-n' and ichip == 0:
-                        ax.text(59353, ymax[ichip]-yspan[ichip]*0.04, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
-                    if ichip == 0: ax.text(startFPS+xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
-                    ax.text(0.02, 0.05, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='bottom', color=chip, bbox=bboxpar)
 
                     w = np.nanmedian(gdcal['GAUSS'][:, iline, ichip, :, 0])
                     ymin = w * 0.5
                     ymax = w * 1.5
                     yspan = ymax - ymin
                     ax.set_ylim(ymin, ymax)
+
+                    ax.axvline(x=59146, color='teal', linewidth=2)
+                    ax.axvline(x=startFPS, color='teal', linewidth=2)
+                    if ichip == 0: ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
+                    if instrument == 'apogee-n' and ichip == 0:
+                        ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
+                    if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
+                    ax.text(0.02, 0.05, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='bottom', color=chip, bbox=bboxpar)
+
+
 
                     for iyear in range(nyears):
                         ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
