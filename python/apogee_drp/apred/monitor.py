@@ -1568,7 +1568,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
                     if ichip == 1: ax.text(-0.062, 0.5, r'Quartz Trace Residuals (pix)', transform=ax.transAxes, ha='right', va='center', rotation=90)
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
-                    ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
+                    #ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
                     ax.axvline(x=59146, color='teal', linewidth=2)
                     ax.axvline(x=startFPS, color='teal', linewidth=2)
                     if ichip == 0: ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
@@ -1588,8 +1588,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                                    label='fib ' + str(fibers[ifib]))
 
                     if ichip == 0: 
-                        ax.legend(loc=[0.2,0.05], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=10, 
-                                  fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
+                        ax.legend(loc=[0.24,0.05], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.5, markerscale=12, 
+                                  fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.1)
 
                 fig.subplots_adjust(left=0.075,right=0.99,bottom=0.066,top=0.96,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
