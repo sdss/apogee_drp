@@ -1200,7 +1200,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=startFPS, color='teal', linewidth=2)
-                ax.text(0.006, 0.96, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fontsize, ha='left', va='top', color=chip, bbox=bboxpar)
+                ax.text(0.02, 0.05, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fontsize, ha='left', va='bottom', color=chip, bbox=bboxpar)
 
                 xvals = allsnrg['JD']
                 yvals = np.nanmedian(allsnrg['MEDSNBINS'][:, snbins[0]:snbins[1], 2-ichip], axis=1) / np.sqrt((allsnrg['EXPTIME'] / 60))
@@ -1503,7 +1503,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if instrument == 'apogee-n' and ichip == 0:
                     ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fontsize, color='teal', va='top', ha='center', bbox=bboxpar)
                 if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fontsize, color='teal', va='top', ha='left', bbox=bboxpar)
-                ax.text(0.01,0.96,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fontsize, ha='left', va='top', color=chip, bbox=bboxpar)
+                ax.text(0.02,0.05,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fontsize, ha='left', va='bottom', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1518,7 +1518,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
-            fig.subplots_adjust(left=0.07,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
