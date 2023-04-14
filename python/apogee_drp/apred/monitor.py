@@ -518,12 +518,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=fpi></a> FPI median brightness (1D), line positions (1D Gaussian fitting), and line FWHM (1D Gaussian fitting). The legends give fiber numbers.</h3>\n')
-    html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=500></A>\n')
-    html.write('<A HREF=' + instrument + '/fpipos.png target="_blank"><IMG SRC=' + instrument + '/fpipos.png WIDTH=500></A>\n')
-    html.write('<A HREF=' + instrument + '/fpifwhm.png target="_blank"><IMG SRC=' + instrument + '/fpifwhm.png WIDTH=500></A>\n')
-    html.write('<HR>\n')
-
     html.write('<h3> <a name=qflux></a> Quartz lamp median flux (per 10 reads; 1D). The legend gives fiber numbers. </h3>\n')
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=750></A>\n')
     html.write('<HR>\n')
