@@ -504,10 +504,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('</ul>\n')
     html.write('<HR>\n')
 
+    # S/N Plot ######################################################################################################################
     html.write('<h3> <a name=scisnr></a> S/N history for H=10.6-11.0 stars</h3>\n')
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
+    # Quartz flat Plots ######################################################################################################################
     html.write('<h3> <a name=qflux></a> Quartz lamp median flux (per 10 reads; 1D). The legend gives fiber numbers. </h3>\n')
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=750></A>\n')
     html.write('<HR>\n')
@@ -520,8 +522,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/qfwhm.png target="_blank"><IMG SRC=' + instrument + '/qfwhm.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
+    # Dome Flat Plots #################################################################################################################
     html.write('<H3> <a name=dflux></a> Dome flat median flux (1D). The legend gives fiber numbers. </H3>\n')
-    #html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
     html.write('<A HREF=' + instrument + '/dflux.png target="_blank"><IMG SRC=' + instrument + '/dflux.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
@@ -533,6 +535,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/dfwhm.png target="_blank"><IMG SRC=' + instrument + '/dfwhm.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
+    # FPI Plots ######################################################################################################################
     tmp01 = str("%.1f" % round(allcal['LINES'][fpi][0][0][0],1))
     tmp02 = str("%.1f" % round(allcal['LINES'][fpi][0][0][1],1))
     tmp03 = str("%.1f" % round(allcal['LINES'][fpi][0][0][2],1))
@@ -568,6 +571,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     html.write('<HR>\n')
 
+    # ThAr Plots ######################################################################################################################
     tmp01 = str("%.1f" % round(allcal['LINES'][thar][0][0][0],1))
     tmp02 = str("%.1f" % round(allcal['LINES'][thar][0][0][1],1))
     tmp03 = str("%.1f" % round(allcal['LINES'][thar][0][0][2],1))
@@ -603,6 +607,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     html.write('<HR>\n')
 
+    # UNe Plots ######################################################################################################################
     tmp01 = str("%.1f" % round(allcal['LINES'][une][0][0][0],1))
     tmp02 = str("%.1f" % round(allcal['LINES'][une][0][0][1],1))
     tmp03 = str("%.1f" % round(allcal['LINES'][une][0][0][2],1))
@@ -636,6 +641,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<TD> <A HREF=' + instrument + '/ufwhm1.png target="_blank"><IMG SRC=' + instrument + '/ufwhm1.png WIDTH=700></A>\n')
     html.write('</TABLE>\n')
 
+    # Other Plots ####################################################################################################################
     html.write('<h3> <a name=sciobs></a> Science observation history </h3>\n')
     html.write('<A HREF=' + instrument + '/sciobs.png target="_blank"><IMG SRC=' + instrument + '/sciobs.png WIDTH=750></A>\n')
     html.write('<HR>\n')
@@ -914,9 +920,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     if makedomeplots is True:
         ###########################################################################################
         # Individual fiber throughput plots
-
-        #gd, = np.where(allcal['QRTZ'] > 0)                                                       
-        #gdcal = allcal[gd]
 
         for i in range(300):
             gdcal = allexp[dome]
