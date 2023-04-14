@@ -1894,9 +1894,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 print("----> monitor: Making " + os.path.basename(plotfile))
 
                 fig = plt.figure(figsize=(35,20))
-                ymax = 2.5
+                ymax = 3
                 if instrument == 'apogee-s': 
-                    ymax = 2.5
+                    ymax = 3
                 ymin = 0.8
                 yspan = ymax - ymin
 
