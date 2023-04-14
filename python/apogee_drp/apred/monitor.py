@@ -1160,7 +1160,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ymin = w * 0.4
                     ymax = w * 1.6
                     yspan = ymax - ymin
-                    #ax.set_ylim(ymin, ymax)
+                    ax.set_ylim(ymin, ymax)
 
                     ax.axvline(x=59146, color='teal', linewidth=2)
                     ax.axvline(x=startFPS, color='teal', linewidth=2)
@@ -1178,7 +1178,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         #w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 1])
                         #ax.axhline(y=w, color=colors[ifib], linewidth=2, zorder=2)
                         #ax.axhline(y=w, color='k', linewidth=3, zorder=1)
-                        yvals = 2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, ifib, 1]
+                        yvals = gdcal['GAUSS'][:, iline, ichip, ifib, 1]
                         ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], label=str(fibers[ifib]), zorder=3)
 
                     if ichip == 0: 
