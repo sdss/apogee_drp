@@ -1454,7 +1454,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center', fontsize=fsz80)
 
                 for ifib in range(nplotfibs):
-                    yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 2] 
+                    yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 2] * 2.355
                     ax.scatter(caljd, yvals, marker='o', s=8, c=colors[ifib], label=str(fibers[ifib]))
 
                 if ichip == 0: 
