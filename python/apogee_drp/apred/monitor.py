@@ -37,7 +37,7 @@ from scipy.signal import medfilt2d
 ###############################################################################################
 # Set up some basic plotting parameters
 matplotlib.use('agg')
-fontsize = 28;   fsz = fontsize * 0.75
+fontsize = 30;   fsz = fontsize * 0.75
 matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
 bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
 axwidth = 3
@@ -2281,7 +2281,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.set_xlim(0, 1)
                 ax.set_ylim(ymin, ymax)
                 ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=8)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axthick)
