@@ -522,25 +522,25 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=fpi></a> FPI median brightness, line positions, and line FWHM from 1D frames (position and FWHM from Gaussian fitting)</h3>\n')
+    html.write('<h3> <a name=fpi></a> FPI median brightness, line positions, and line FWHM from 1D frames (position and FWHM from Gaussian fitting). The legends give fiber numbers.</h3>\n')
     html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=500></A>\n')
     html.write('<A HREF=' + instrument + '/fpipos.png target="_blank"><IMG SRC=' + instrument + '/fpipos.png WIDTH=500></A>\n')
     html.write('<A HREF=' + instrument + '/fpifwhm.png target="_blank"><IMG SRC=' + instrument + '/fpifwhm.png WIDTH=500></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
+    html.write('<h3> <a name=qflux></a> Quartz lamp median flux (per 10 reads) from 1D frames. The legend gives fiber numbers. </h3>\n')
     html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=qtrace></a> Quartz lamp trace position </h3>\n')
+    html.write('<h3> <a name=qtrace></a> Quartz lamp trace position from 1D frame Gaussian fitting. The legend gives fiber numbers.</h3>\n')
     html.write('<A HREF=' + instrument + '/qtrace.png target="_blank"><IMG SRC=' + instrument + '/qtrace.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=qfwhm></a> Quartz lamp trace FWHM </h3>\n')
+    html.write('<h3> <a name=qfwhm></a> Quartz lamp trace FWHM from 1D frame Gaussian fitting. The legend gives fiber numbers. </h3>\n')
     html.write('<A HREF=' + instrument + '/qfwhm.png target="_blank"><IMG SRC=' + instrument + '/qfwhm.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
-    html.write('<H3> <a name=dflux></a> Dome flat median brightness</H3>\n')
+    html.write('<H3> <a name=dflux></a> Dome flat median flux</H3>\n')
     html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
     html.write('<A HREF=' + instrument + '/dflux.png target="_blank"><IMG SRC=' + instrument + '/dflux.png WIDTH=850></A>\n')
     html.write('<HR>\n')
