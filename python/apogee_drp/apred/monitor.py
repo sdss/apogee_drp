@@ -1276,7 +1276,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(22,18))
+            fig = plt.figure(figsize=(24,20))
             #ymax = 70000
             #if instrument == 'apogee-s': 
             #    ymax = 125000
@@ -1340,10 +1340,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center', fontsize=fsz80)
 
                 if ichip == 0: 
-                    ax.legend(loc='lower right', ncol=2, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                    ax.legend(loc=[0.2,1.08], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
-            fig.subplots_adjust(left=0.094,right=0.985,bottom=0.073,top=0.955,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.094,right=0.985,bottom=0.073,top=0.915,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
@@ -1353,7 +1353,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(22,18))
+            fig = plt.figure(figsize=(24,20))
 
             gdcal = allcal[fpi]
             caljd = gdcal['JD']-2.4e6
@@ -1387,7 +1387,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
                 #ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
 
-                ax.text(0.02,0.05,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fontsize, ha='left', va='bottom', color=chip, bbox=bboxpar)
+                ax.text(0.02,0.05,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='bottom', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
