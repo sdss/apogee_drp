@@ -549,28 +549,29 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/dfwhm.png target="_blank"><IMG SRC=' + instrument + '/dfwhm.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
-    #html.write('<H3> <a href=' + instrument + '/fiber/fiber.html> Individual fiber throughputs from dome flats </A></H3>\n')
-    #html.write('<HR>\n')
-
-    #html.write('<H3> <a href=' + instrument + '/fiber/fiber_qrtz.html> Individual fiber throughputs from quartz lamp</A></H3>\n')
-    #html.write('<HR>\n')
-
+    tmp01 = str("%.1f" % round(allcal['LINES'][thar][0][0][0],1))
+    tmp02 = str("%.1f" % round(allcal['LINES'][thar][0][0][1],1))
+    tmp03 = str("%.1f" % round(allcal['LINES'][thar][0][0][2],1))
+    tmp11 = str("%.1f" % round(allcal['LINES'][thar][0][1][0],1))
+    tmp12 = str("%.1f" % round(allcal['LINES'][thar][0][1][1],1))
+    tmp13 = str("%.1f" % round(allcal['LINES'][thar][0][1][2],1))
     html.write('<H3> <a name=tharflux></a>ThAr line brightness per 10 reads (1D). The legend gives fiber numbers. </H3>\n')
     html.write('<TABLE BORDER=2 CLASS="sortable">\n')
     html.write('<TR bgcolor=white>\n')
-    tmp1 = str("%.1f" % round(allcal['LINES'][thar][0][0][0],1))
-    tmp2 = str("%.1f" % round(allcal['LINES'][thar][0][0][1],1))
-    tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][0][2],1))
-    txt1 = '<TH>pix0 = ['+tmp1+', '+tmp2+', '+tmp3+'] '
-    tmp1 = str("%.1f" % round(allcal['LINES'][thar][0][1][0],1))
-    tmp2 = str("%.1f" % round(allcal['LINES'][thar][0][1][1],1))
-    tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][1][2],1))
-    txt2 = '<TH>pix0 = ['+tmp1+', '+tmp2+', '+tmp3+']'
-    html.write(txt1 + txt2 +'\n')
+    html.write('<TH>pix0 = ['+tmp01+', '+tmp02+', '+tmp03+'] <TH>pix0 = ['+tmp11+', '+tmp12+', '+tmp13+']\n')
     html.write('<TR bgcolor=white>\n')
     html.write('<TD> <A HREF=' + instrument + '/tflux0.png target="_blank"><IMG SRC=' + instrument + '/tflux0.png WIDTH=700></A>\n')
     html.write('<TD> <A HREF=' + instrument + '/tflux1.png target="_blank"><IMG SRC=' + instrument + '/tflux1.png WIDTH=700></A>\n')
     html.write('</TABLE>\n')
+
+    html.write('<H3> <a name=tpos></a>ThAr lamp line position (1D Gaussian fitting). The legend gives fiber numbers. </H3>\n')
+    html.write('<TABLE BORDER=2 CLASS="sortable">\n')
+    html.write('<TR bgcolor=white>\n')
+    html.write('<TH>pix0 = ['+tmp01+', '+tmp02+', '+tmp03+'] <TH>pix0 = ['+tmp11+', '+tmp12+', '+tmp13+']\n')    html.write('<TR bgcolor=white>\n')
+    html.write('<TD> <A HREF=' + instrument + '/tpos0.png target="_blank"><IMG SRC=' + instrument + '/tpos0.png WIDTH=700></A>\n')
+    html.write('<TD> <A HREF=' + instrument + '/tpos0.png target="_blank"><IMG SRC=' + instrument + '/tpos0.png WIDTH=700></A>\n')
+    html.write('</TABLE>\n')
+
 
     html.write('<H3> <a name=tpos></a>ThAr lamp line position (1D Gaussian fitting). The legend gives fiber numbers. </H3>\n')
     html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=750></A>\n')
@@ -1094,7 +1095,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
                     w = np.nanmedian(gdcal['GAUSS'][:, iline, ichip, :, 0])
-                    ymin = w * 0.3
+                    ymin = w * 0.2
                     ymax = w * 1.8
                     yspan = ymax - ymin
                     ax.set_ylim(ymin, ymax)
@@ -1106,8 +1107,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
                     if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
                     ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
-
-
 
                     for iyear in range(nyears):
                         ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -2106,8 +2105,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
                     w = np.nanmedian(gdcal['GAUSS'][:, iline, ichip, :, 1])
-                    ymin = w * 0.5
-                    ymax = w * 1.5
+                    ymin = w * 0.4
+                    ymax = w * 1.6
                     yspan = ymax - ymin
                     ax.set_ylim(ymin, ymax)
 
