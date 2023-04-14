@@ -1434,7 +1434,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                     ax = plt.subplot2grid((nchips,1), (ichip,0))
                     ax.set_xlim(xmin, xmax)
-                    #ax.set_ylim(ymin, ymax)
+                    ax.set_ylim(ymin, ymax)
                     #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                     ax.minorticks_on()
                     ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
@@ -1443,7 +1443,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.tick_params(axis='both',which='both',width=axthick)
                     for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
-                    if ichip == 1: ax.set_ylabel(r'Dome Flat Trace Position Residuals (pix)', labelpad=12)
+                    if ichip == 1: ax.set_ylabel(r'Dome Flat Trace Residuals (pix)', labelpad=12)
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                     ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
                     ax.axvline(x=59146, color='teal', linewidth=2)
