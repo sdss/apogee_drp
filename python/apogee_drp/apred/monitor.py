@@ -1094,7 +1094,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(35,14))
+            fig = plt.figure(figsize=(35,15))
             ymax = 100
             ymin = 0
             yspan = ymax - ymin
@@ -1113,9 +1113,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax.set_ylabel(r'$N_{\rm obs}$')
             ax.axvline(x=59146, color='teal', linewidth=2)
             ax.axvline(x=startFPS, color='teal', linewidth=2)
-            ax.text(59146-xspan*0.005, ymax-yspan*0.02, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-            if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.02, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-            ax.text(startFPS+xspan*0.005, ymax-yspan*0.02, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+            ax.text(59146-xspan*0.005, ymax-yspan*0.02, 'plate-III+IV', fontsize=fontsize, color='teal', va='top', ha='right', bbox=bboxpar)
+            if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.02, 'plate-V', fontsize=fontsize, color='teal', va='top', ha='center', bbox=bboxpar)
+            ax.text(startFPS+xspan*0.005, ymax-yspan*0.02, 'FPS-V', fontsize=fontsize, color='teal', va='top', ha='left', bbox=bboxpar)
 
             for iyear in range(nyears):
                 ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1140,7 +1140,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
 
             ax.legend(loc='upper left', labelspacing=0.5, handletextpad=0.3, markerscale=1, 
-                      fontsize=fsz, edgecolor='k', framealpha=1)
+                      fontsize=fontsize, edgecolor='k', framealpha=1)
 
             fig.subplots_adjust(left=0.045,right=0.99,bottom=0.086,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
