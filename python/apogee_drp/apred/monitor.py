@@ -2277,7 +2277,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(35,15))
+            fig = plt.figure(figsize=(35,17))
             ymax = 11
             ymin = 16.8
             if instrument == 'apogee-s': 
