@@ -1559,7 +1559,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.tick_params(axis='both',which='both',width=axthick)
                     for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                    if ichip == 1: ax.set_ylabel(r'Quartz Trace Residuals (pix)')
+                    if ichip == 1: ax.text(-0.06, 0.5, r'Quartz Trace Residuals (pix)', transform=ax.transAxes, ha='right', va='center', rotation=90)
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                     ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
                     ax.axvline(x=59146, color='teal', linewidth=2)
@@ -1584,7 +1584,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         ax.legend(loc=[0.2,0.05], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=10, 
                                   fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
-                fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+                fig.subplots_adjust(left=0.073,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
                 plt.close('all')
 
