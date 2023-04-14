@@ -1267,7 +1267,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(20,14))
+            fig = plt.figure(figsize=(20,16))
             #ymax = 70000
             #if instrument == 'apogee-s': 
             #    ymax = 125000
@@ -1334,7 +1334,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.legend(loc='lower right', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fsz*1, edgecolor='k', framealpha=1, borderpad=0.6, columnspacing=0.3)
 
-            fig.subplots_adjust(left=0.085,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.09,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
@@ -1344,7 +1344,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(20,14))
+            fig = plt.figure(figsize=(20,16))
 
             gdcal = allcal[fpi]
             caljd = gdcal['JD']-2.4e6
@@ -1389,10 +1389,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.scatter(caljd, yvals, marker='o', s=8, c=colors[ifib], alpha=alf, label='fib ' + str(fibers[ifib]))
 
                 if ichip == 0: 
-                    ax.legend(loc='lower right', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*1, edgecolor='k', framealpha=1, borderpad=0.6, columnspacing=0.3)
+                    ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
+                              fontsize=fsz*1, edgecolor='k', framealpha=1, borderpad=1.2, columnspacing=0.3)
 
-            fig.subplots_adjust(left=0.075,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.09,right=0.985,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
