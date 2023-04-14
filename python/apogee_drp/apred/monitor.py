@@ -1629,7 +1629,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.tick_params(axis='both',which='both',width=axthick)
                     for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
-                    ax.set_ylabel(r'Trace Position (pix)')
+                    if ichip == 1: ax.set_ylabel(r'Trace Position (pix)', labelpad=12)
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                     ax.axvline(x=59146, color='teal', linewidth=2)
                     ax.axvline(x=startFPS, color='teal', linewidth=2)
@@ -1687,7 +1687,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.tick_params(axis='both',which='both',width=axthick)
                     for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
-                    if ichip == 1: ax.text(-0.062, 0.5, r'FWHM (pix)', transform=ax.transAxes, ha='right', va='center', rotation=90)
+                    if ichip == 1: ax.set_ylabel(r'FWHM (pix)', labelpad=12)
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                     ax.axvline(x=59146, color='teal', linewidth=2)
                     ax.axvline(x=startFPS, color='teal', linewidth=2)
@@ -1764,8 +1764,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                                label='fib ' + str(fibers[ifib]))
 
                 if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
+                    ax.legend(loc=[0.24,0.05], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.5, markerscale=12, 
+                              fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.1)
 
             fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -1805,25 +1805,24 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=startFPS, color='teal', linewidth=2)
-                ax.text(59146-xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-                if instrument == 'apogee-n': ax.text(59353, ymax[ichip]-yspan[ichip]*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-                ax.text(startFPS+xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
-                ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+                ax.text(59146-xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
+                if instrument == 'apogee-n': ax.text(59353, ymax[ichip]-yspan[ichip]*0.04, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
+                ax.text(startFPS+xspan*0.005, ymax[ichip]-yspan[ichip]*0.04, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
                     if ichip == 0:
                         ylims = ax.get_ylim()
-                        ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center')
+                        ax.text(yearjd[iyear], ylims[1]+((ylims[1]-ylims[0])*0.025), cyears[iyear], ha='center', fontsize=fsz80)
 
                 for ifib in range(nplotfibs):
                     yvals = flux[:, 0, ichip, ifib] / gdcal['NREAD']*10.0
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='fib ' + str(fibers[ifib]))
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, label=str(fibers[ifib]))
 
                 if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
+                    ax.legend(loc=[0.24,0.05], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.5, markerscale=12, 
+                              fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.1)
 
             fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -1858,32 +1857,32 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axthick)
                 for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
-                ax.set_ylabel(r'Median Flux', labelpad=12)
+                if ichip == 1: ax.set_ylabel(r'Median Flux', labelpad=12)
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=startFPS, color='teal', linewidth=2)
-                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-                if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-                ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
-                ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
+                if instrument == 'apogee-n' and ichip == 0:
+                    ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
+                if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.006, 0.96, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center', fontsize=fsz80)
 
                 w = np.nanmedian(gdcal['MED'][:, ichip, :])
                 ax.axhline(y=w, color='k', linewidth=3, zorder=1)
 
                 for ifib in range(nplotfibs):
                     yvals = gdcal['MED'][:, ichip, fibers[ifib]]
-                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], alpha=alf, 
-                               label='fib ' + str(fibers[ifib]), zorder=3)
+                    ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], label=str(fibers[ifib]), zorder=3)
 
                 if ichip == 0: 
-                    ax.legend(loc='lower right', labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz*0.8, edgecolor='k', framealpha=1, borderpad=0.2)
+                    ax.legend(loc=[0.24,0.05], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.5, markerscale=12, 
+                              fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.1)
 
-            fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.075,right=0.99,bottom=0.066,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
