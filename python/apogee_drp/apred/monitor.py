@@ -484,7 +484,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> <a href=' + instrument + '/fiber/fiber_qrtz.html target="_blank">Fiber throughput from quartz lamp</a> (external page)\n')
     html.write('<li> <a href=' + instrument + '/fiber/fiber.html target="_blank">Fiber throughput from dome flats</a> (external page)\n')
     html.write('</ul>\n')
-    html.write('<H4> Lamp/FPI: </H4>\n')
+    html.write('<H4> Cals: </H4>\n')
     html.write('<ul>\n')
     html.write('<li> <a href=#qflux>Quartz lamp median flux</a>\n')
     html.write('<li> <a href=#qtrace>Quartz lamp line position</a>\n')
