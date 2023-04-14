@@ -1450,8 +1450,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.axvline(x=startFPS, color='teal', linewidth=2)
 
                     w = np.nanmedian(2.0 * np.sqrt(2 * np.log(2)) * gdcal['GAUSS'][:, iline, ichip, :, 0])
-                    ymin = w * 0.5
-                    ymax = w * 1.5
+                    ymin = 0
+                    ymax = w * 2.5
                     yspan = ymax - ymin
                     ax.set_ylim(ymin, ymax)
 
@@ -1482,7 +1482,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.savefig(plotfile)
                 plt.close('all')
 
-        return
         ###########################################################################################
         # ThArNe lamp line FWHM
         for iline in range(2):
@@ -1579,8 +1578,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
                     w = np.nanmedian(gdcal['GAUSS'][:, iline, ichip, :, 0])
-                    ymin = w * 0.2
-                    ymax = w * 1.8
+                    ymin = 0
+                    ymax = w * 2.5
                     yspan = ymax - ymin
                     ax.set_ylim(ymin, ymax)
 
