@@ -555,13 +555,25 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #html.write('<H3> <a href=' + instrument + '/fiber/fiber_qrtz.html> Individual fiber throughputs from quartz lamp</A></H3>\n')
     #html.write('<HR>\n')
 
-    html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads; 1D). The legend gives fiber numbers. </H3>\n')
-    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=750></A>\n')
-    html.write('<HR>\n')
+    html.write('<H3> <a name=tharflux></a>ThAr line brightness per 10 reads (1D). The legend gives fiber numbers. </H3>\n')
+    html.write('<TABLE BORDER=2 CLASS="sortable">\n')
+    html.write('<TR bgcolor=white>\n')
+    tmp1 = str("%.1f" % round(allcal['LINES'][thar][0][0][0],1))
+    tmp2 = str("%.1f" % round(allcal['LINES'][thar][0][0][1],1))
+    tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][0][2],1))
+    txt1 = '<TH>pix0 = ['+tmp1+', '+tmp2+', '+tmp3+'] '
+    tmp1 = str("%.1f" % round(allcal['LINES'][thar][0][1][0],1))
+    tmp2 = str("%.1f" % round(allcal['LINES'][thar][0][1][1],1))
+    tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][1][2],1))
+    txt2 = '<TH>pix0 = ['+tmp1+', '+tmp2+', '+tmp3+']'
+    html.write(txt1 + txt2 +'\n')
+    html.write('<TR bgcolor=white>\n')
+    html.write('<TD> <A HREF=' + instrument + '/tpos1.png target="_blank"><IMG SRC=' + instrument + '/tpos1.png WIDTH=700></A>\n')
+    html.write('<TD> <A HREF=' + instrument + '/tpos2.png target="_blank"><IMG SRC=' + instrument + '/tpos2.png WIDTH=700></A>\n')
+    html.write('</TABLE>\n')
 
     html.write('<H3> <a name=tpos></a>ThAr lamp line position (1D Gaussian fitting). The legend gives fiber numbers. </H3>\n')
     html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=750></A>\n')
-    html.write('<HR>\n')
 
     for iline in range(2):
         plotfile='tfwhm' + str(iline) + '.png'
