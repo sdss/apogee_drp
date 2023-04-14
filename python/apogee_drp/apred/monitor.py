@@ -568,8 +568,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     txt2 = '<TH>pix0 = ['+tmp1+', '+tmp2+', '+tmp3+']'
     html.write(txt1 + txt2 +'\n')
     html.write('<TR bgcolor=white>\n')
-    html.write('<TD> <A HREF=' + instrument + '/tpos1.png target="_blank"><IMG SRC=' + instrument + '/tpos1.png WIDTH=700></A>\n')
-    html.write('<TD> <A HREF=' + instrument + '/tpos2.png target="_blank"><IMG SRC=' + instrument + '/tpos2.png WIDTH=700></A>\n')
+    html.write('<TD> <A HREF=' + instrument + '/tflux1.png target="_blank"><IMG SRC=' + instrument + '/tflux1.png WIDTH=700></A>\n')
+    html.write('<TD> <A HREF=' + instrument + '/tflux2.png target="_blank"><IMG SRC=' + instrument + '/tflux2.png WIDTH=700></A>\n')
     html.write('</TABLE>\n')
 
     html.write('<H3> <a name=tpos></a>ThAr lamp line position (1D Gaussian fitting). The legend gives fiber numbers. </H3>\n')
