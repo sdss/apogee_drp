@@ -523,8 +523,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HR>\n')
 
     html.write('<h3> <a name=fpi></a> FPI median brightness and line positions</h3>\n')
-    html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=560></A>\n')
-    html.write('<A HREF=' + instrument + '/fpipos.png target="_blank"><IMG SRC=' + instrument + '/fpipos.png WIDTH=560></A>\n')
+    html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=600></A>\n')
+    html.write('<A HREF=' + instrument + '/fpipos.png target="_blank"><IMG SRC=' + instrument + '/fpipos.png WIDTH=600></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
