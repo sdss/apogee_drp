@@ -1236,8 +1236,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
                     pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
 
-                    ax.legend(loc=[0.63,0.05], labelspacing=0.5, handletextpad=0.5, markerscale=1, 
-                              fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=2, borderpad=0.3)
+                    ax.legend(loc='upper center', ncol=2, labelspacing=0.5, handletextpad=0.5, markerscale=1, 
+                              fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=1.2, borderpad=0.7)
 
                 sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=scolors, cmap='copper')#, c=colors[ifib], alpha=alf)#, label='Fiber ' + str(fibers[ifib]))
                 ylims = ax.get_ylim()
@@ -1268,7 +1268,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
                 if ichip == 1: ax.text(1.065, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-            fig.subplots_adjust(left=0.052,right=0.954,bottom=0.066,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.052,right=0.951,bottom=0.066,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
