@@ -515,42 +515,42 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HR>\n')
 
     html.write('<h3> <a name=sciobs></a> Science observation history </h3>\n')
-    html.write('<A HREF=' + instrument + '/sciobs.png target="_blank"><IMG SRC=' + instrument + '/sciobs.png WIDTH=800></A>\n')
+    html.write('<A HREF=' + instrument + '/sciobs.png target="_blank"><IMG SRC=' + instrument + '/sciobs.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=scisnr></a> S/N history for H=10.6-11.0 stars</h3>\n')
-    html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=800></A>\n')
+    html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=fpi></a> FPI median brightness, line positions, and line FWHM</h3>\n')
-    html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=600></A>\n')
-    html.write('<A HREF=' + instrument + '/fpipos.png target="_blank"><IMG SRC=' + instrument + '/fpipos.png WIDTH=600></A>\n')
-    html.write('<A HREF=' + instrument + '/fpifwhm.png target="_blank"><IMG SRC=' + instrument + '/fpifwhm.png WIDTH=600></A>\n')
+    html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=500></A>\n')
+    html.write('<A HREF=' + instrument + '/fpipos.png target="_blank"><IMG SRC=' + instrument + '/fpipos.png WIDTH=500></A>\n')
+    html.write('<A HREF=' + instrument + '/fpifwhm.png target="_blank"><IMG SRC=' + instrument + '/fpifwhm.png WIDTH=500></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qflux></a> Quartz lamp median brightness (per 10 reads) in extracted frame </h3>\n')
-    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qtrace></a> Quartz lamp trace position </h3>\n')
-    html.write('<A HREF=' + instrument + '/qtrace.png target="_blank"><IMG SRC=' + instrument + '/qtrace.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/qtrace.png target="_blank"><IMG SRC=' + instrument + '/qtrace.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=qfwhm></a> Quartz lamp trace FWHM </h3>\n')
-    html.write('<A HREF=' + instrument + '/qfwhm.png target="_blank"><IMG SRC=' + instrument + '/qfwhm.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/qfwhm.png target="_blank"><IMG SRC=' + instrument + '/qfwhm.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=dflux></a> Dome flat median brightness</H3>\n')
     html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
-    html.write('<A HREF=' + instrument + '/dflux.png target="_blank"><IMG SRC=' + instrument + '/dflux.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/dflux.png target="_blank"><IMG SRC=' + instrument + '/dflux.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=dtrace></a> Dome flat trace position </h3>\n')
-    html.write('<A HREF=' + instrument + '/dtrace.png target="_blank"><IMG SRC=' + instrument + '/dtrace.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/dtrace.png target="_blank"><IMG SRC=' + instrument + '/dtrace.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=dfwhm></a> Dome flat trace FWHM </h3>\n')
-    html.write('<A HREF=' + instrument + '/dfwhm.png target="_blank"><IMG SRC=' + instrument + '/dfwhm.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/dfwhm.png target="_blank"><IMG SRC=' + instrument + '/dfwhm.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a href=' + instrument + '/fiber/fiber.html> Individual fiber throughputs from dome flats </A></H3>\n')
@@ -560,23 +560,23 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
-    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tpos></a>ThAr lamp line position</H3>\n')
-    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=tpos></a>UNe lamp line position</H3>\n')
-    html.write('<A HREF=' + instrument + '/upos.png target="_blank"><IMG SRC=' + instrument + '/upos.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/upos.png target="_blank"><IMG SRC=' + instrument + '/upos.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     for iline in range(2):
@@ -587,24 +587,24 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         txt = '<a name=tfwhm></a> ThArNe lamp line FWHM, line position (x pixel): '
         html.write('<H3>' + txt + tmp1 + ' ' + tmp2 + ' ' + tmp3 + '</H3>\n')
         html.write('<P> (Note: horizontal lines are the median value for each fiber.) </P>\n')
-        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + ' WIDTH=900></A>\n')
+        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + ' WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=trace></a>Empirical PSF Trace position, fiber 150, column 1000</H3>\n')
-    html.write('<A HREF=' + instrument + '/trace.png target="_blank"><IMG SRC=' + instrument + '/trace.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/trace.png target="_blank"><IMG SRC=' + instrument + '/trace.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
     html.write('<P> (Note: the four colors indicate the four quadrants in each detector.) </P>\n')
     html.write('<H4> Dark Mean </h4>\n')
-    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=850></A>\n')
 
     html.write('<H4> Dark Sigma </h4>\n')
-    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=850></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=sky></a>Sky Brightness</H3>\n')
-    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=850></A>\n')
 
     html.write('<BR><BR><BR><BR>')
     html.write('</BODY></HTML>\n')
