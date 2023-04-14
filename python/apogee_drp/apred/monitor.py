@@ -511,7 +511,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HR>\n')
 
     html.write('<h3> <a name=scisnr></a> S/N history for H=10.6-11.0 stars</h3>\n')
-    html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=900></A>\n')
+    html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=800></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=fpi></a> FPI median brightness and line positions</h3>\n')
