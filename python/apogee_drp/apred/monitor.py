@@ -1160,7 +1160,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ymin = w * 0.4
                     ymax = w * 1.6
                     yspan = ymax - ymin
-                    ax.set_ylim(ymin, ymax)
+                    #ax.set_ylim(ymin, ymax)
 
                     ax.axvline(x=59146, color='teal', linewidth=2)
                     ax.axvline(x=startFPS, color='teal', linewidth=2)
