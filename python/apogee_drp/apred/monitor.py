@@ -1702,8 +1702,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                                    label='fib ' + str(fibers[ifib]))
 
                     if ichip == 0: 
-                        ax.legend(loc=[0.2,0.05], labelspacing=0.5, handletextpad=-0.1, markerscale=10, 
-                                  fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.2)
+                        ax.legend(loc=[0.2,0.05], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=10, 
+                                  fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
                 fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
