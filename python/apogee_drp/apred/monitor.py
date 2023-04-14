@@ -1137,7 +1137,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax = plt.subplot2grid((nchips,1), (ichip,0))
                     ax.set_xlim(xmin0, xmax0)
                     ax.xaxis.set_major_locator(ticker.MultipleLocator(50))
-                    ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
+                    #ax.yaxis.set_major_locator(ticker.MultipleLocator(500))
                     ax.minorticks_on()
                     ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
                     ax.tick_params(axis='both',which='major',length=axmajlen)
@@ -1149,8 +1149,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
                     w = np.nanmedian(gdcal['GAUSS'][:, iline, ichip, :, 0])
-                    ymin = w * 0.5
-                    ymax = w * 1.5
+                    ymin = w * 0.2
+                    ymax = w * 1.8
                     yspan = ymax - ymin
                     ax.set_ylim(ymin, ymax)
 
@@ -1201,7 +1201,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip == 1: ax.set_ylabel(r'Position (pix)', labelpad=12)
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-                    w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
+                    w = np.nanmedian(gdcal['GAUSS'][:, iline, ichip, :, 1])
                     ymin = w - 40
                     ymax = w + 40
                     yspan = ymax - ymin
@@ -1221,7 +1221,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center', fontsize=fsz80)
 
                     for ifib in range(nplotfibs):
-                        yvals = gdcal['GAUSS'][:, 0, ichip, ifib, 1] 
+                        yvals = gdcal['GAUSS'][:, iline, ichip, ifib, 1] 
                         ax.scatter(caljd, yvals, marker='o', s=8, c=colors[ifib], label=str(fibers[ifib]))
 
                     if ichip == 0: 
