@@ -1566,7 +1566,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.tick_params(axis='both',which='both',width=axthick)
                     for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
-                    if ichip == 1: ax.text(-0.062, 0.5, r'Quartz Trace Residuals (pix)', transform=ax.transAxes, ha='right', va='center', rotation=90)
+                    if ichip == 1: ax.set_ylabel(r'Quartz Trace Residuals (pix)', labelpad=12)
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                     #ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
                     ax.axvline(x=59146, color='teal', linewidth=2)
