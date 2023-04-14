@@ -1094,8 +1094,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
                     w = np.nanmedian(gdcal['GAUSS'][:, iline, ichip, :, 0])
-                    ymin = w * 0.5
-                    ymax = w * 1.5
+                    ymin = w * 0.3
+                    ymax = w * 1.8
                     yspan = ymax - ymin
                     ax.set_ylim(ymin, ymax)
 
@@ -1105,7 +1105,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     if instrument == 'apogee-n' and ichip == 0:
                         ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
                     if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
-                    ax.text(0.02, 0.05, chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='bottom', color=chip, bbox=bboxpar)
+                    ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
 
 
@@ -1121,7 +1121,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         ax.scatter(caljd, yvals, marker='o', s=markersz, c=colors[ifib], label=str(fibers[ifib]))
 
                     if ichip == 0: 
-                        ax.legend(loc=[0.24,0.05], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.5, markerscale=12, 
+                        ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.5, markerscale=12, 
                                   fontsize=fsz80, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.1)
 
                 fig.subplots_adjust(left=0.075,right=0.99,bottom=0.066,top=0.96,hspace=0.08,wspace=0.00)
