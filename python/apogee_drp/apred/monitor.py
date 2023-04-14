@@ -1245,7 +1245,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center')
 
                 ax_divider = make_axes_locatable(ax)
                 cax = ax_divider.append_axes("right", size="2%", pad="1%")
@@ -1329,13 +1329,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center')
 
                 if ichip == 0: 
                     ax.legend(loc='lower right', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
                               fontsize=fontsize, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
-            fig.subplots_adjust(left=0.09,right=0.985,bottom=0.066,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.09,right=0.985,bottom=0.07,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
@@ -1495,14 +1495,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axthick)
                 for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Median Flux')
+                if ichip == 1: ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=startFPS, color='teal', linewidth=2)
-                ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-                if instrument == 'apogee-n': ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-                ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
-                ax.text(0.01,0.96,chip.capitalize() + '\n' + 'Chip', transform=ax.transAxes, fontsize=fsz, ha='left', va='top', color=chip, bbox=bboxpar)
+                if ichip == 0: ax.text(59146-xspan*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fontsize, color='teal', va='top', ha='right', bbox=bboxpar)
+                if instrument == 'apogee-n' and ichip == 0:
+                    ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fontsize, color='teal', va='top', ha='center', bbox=bboxpar)
+                if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fontsize, color='teal', va='top', ha='left', bbox=bboxpar)
+                ax.text(0.01,0.96,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fontsize, ha='left', va='top', color=chip, bbox=bboxpar)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
