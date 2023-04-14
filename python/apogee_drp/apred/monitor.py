@@ -37,7 +37,7 @@ from scipy.signal import medfilt2d
 ###############################################################################################
 # Set up some basic plotting parameters
 matplotlib.use('agg')
-fontsize = 30;   fsz = fontsize * 0.75
+fontsize = 32;   fsz = fontsize * 0.75
 matplotlib.rcParams.update({'font.size':fontsize, 'font.family':'serif'})
 bboxpar = dict(facecolor='white', edgecolor='none', alpha=1.0)
 axwidth = 3
