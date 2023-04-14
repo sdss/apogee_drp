@@ -1291,7 +1291,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.savefig(plotfile)
                 plt.close('all')
 
-        return
         ###########################################################################################
         # UNe lamp line position
         for iline in range(2):
@@ -1483,6 +1482,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.savefig(plotfile)
                 plt.close('all')
 
+        return
         ###########################################################################################
         # ThArNe lamp line FWHM
         for iline in range(2):
