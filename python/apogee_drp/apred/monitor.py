@@ -498,7 +498,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<li> <a href=#tharflux>ThAr median flux</a>\n')
     html.write('<li> <a href=#tpos>ThAr line position</a>\n')
     html.write('<li> <a href=#tfwhm>ThAr line FWHM</a>\n')
-    html.write('<li> <a href=#uneflux>UNe median flux</a>\n')
+    html.write('<li> <a href=#uflux>UNe median flux</a>\n')
     html.write('<li> <a href=#upos>UNe line position</a>\n')
     html.write('<li> <a href=#ufwhm>UNe line FWHM</a>\n')
     html.write('</ul>\n')
@@ -518,35 +518,35 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=fpi></a> FPI median brightness, line positions, and line FWHM from 1D frames (position and FWHM from Gaussian fitting). The legends give fiber numbers.</h3>\n')
+    html.write('<h3> <a name=fpi></a> FPI median brightness (1D), line positions (1D Gaussian fit), and line FWHM (1D Gaussian fit). The legends give fiber numbers.</h3>\n')
     html.write('<A HREF=' + instrument + '/fpiflux.png target="_blank"><IMG SRC=' + instrument + '/fpiflux.png WIDTH=500></A>\n')
     html.write('<A HREF=' + instrument + '/fpipos.png target="_blank"><IMG SRC=' + instrument + '/fpipos.png WIDTH=500></A>\n')
     html.write('<A HREF=' + instrument + '/fpifwhm.png target="_blank"><IMG SRC=' + instrument + '/fpifwhm.png WIDTH=500></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=qflux></a> Quartz lamp median flux (per 10 reads) from 1D frames. The legend gives fiber numbers. </h3>\n')
-    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=850></A>\n')
+    html.write('<h3> <a name=qflux></a> Quartz lamp median flux (per 10 reads; 1D). The legend gives fiber numbers. </h3>\n')
+    html.write('<A HREF=' + instrument + '/qflux.png target="_blank"><IMG SRC=' + instrument + '/qflux.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=qtrace></a> Quartz lamp trace position from 2D frame Gaussian fitting. The legend gives fiber numbers.</h3>\n')
-    html.write('<A HREF=' + instrument + '/qtrace.png target="_blank"><IMG SRC=' + instrument + '/qtrace.png WIDTH=850></A>\n')
+    html.write('<h3> <a name=qtrace></a> Quartz lamp trace position (2D Gaussian fitting). The legend gives fiber numbers.</h3>\n')
+    html.write('<A HREF=' + instrument + '/qtrace.png target="_blank"><IMG SRC=' + instrument + '/qtrace.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=qfwhm></a> Quartz lamp trace FWHM from 2D frame Gaussian fitting. The legend gives fiber numbers. </h3>\n')
-    html.write('<A HREF=' + instrument + '/qfwhm.png target="_blank"><IMG SRC=' + instrument + '/qfwhm.png WIDTH=850></A>\n')
+    html.write('<h3> <a name=qfwhm></a> Quartz lamp trace FWHM (2D Gaussian fitting). The legend gives fiber numbers. </h3>\n')
+    html.write('<A HREF=' + instrument + '/qfwhm.png target="_blank"><IMG SRC=' + instrument + '/qfwhm.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
-    html.write('<H3> <a name=dflux></a> Dome flat median flux from 1D frames. The legend gives fiber numbers. </H3>\n')
+    html.write('<H3> <a name=dflux></a> Dome flat median flux (1D). The legend gives fiber numbers. </H3>\n')
     #html.write('<P> (Note: horizontal lines are the medians across all fibers) </P>\n')
-    html.write('<A HREF=' + instrument + '/dflux.png target="_blank"><IMG SRC=' + instrument + '/dflux.png WIDTH=850></A>\n')
+    html.write('<A HREF=' + instrument + '/dflux.png target="_blank"><IMG SRC=' + instrument + '/dflux.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=dtrace></a> Dome flat trace position from 2D frame Gaussian fitting. The legend gives fiber numbers. </h3>\n')
-    html.write('<A HREF=' + instrument + '/dtrace.png target="_blank"><IMG SRC=' + instrument + '/dtrace.png WIDTH=850></A>\n')
+    html.write('<h3> <a name=dtrace></a> Dome flat trace position (2D Gaussian fitting). The legend gives fiber numbers. </h3>\n')
+    html.write('<A HREF=' + instrument + '/dtrace.png target="_blank"><IMG SRC=' + instrument + '/dtrace.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
-    html.write('<h3> <a name=dfwhm></a> Dome flat trace FWHM from 2D frame Gaussian fitting. The legend gives fiber numbers. </h3>\n')
-    html.write('<A HREF=' + instrument + '/dfwhm.png target="_blank"><IMG SRC=' + instrument + '/dfwhm.png WIDTH=850></A>\n')
+    html.write('<h3> <a name=dfwhm></a> Dome flat trace FWHM (2D Gaussian fitting). The legend gives fiber numbers. </h3>\n')
+    html.write('<A HREF=' + instrument + '/dfwhm.png target="_blank"><IMG SRC=' + instrument + '/dfwhm.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
     #html.write('<H3> <a href=' + instrument + '/fiber/fiber.html> Individual fiber throughputs from dome flats </A></H3>\n')
@@ -555,24 +555,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #html.write('<H3> <a href=' + instrument + '/fiber/fiber_qrtz.html> Individual fiber throughputs from quartz lamp</A></H3>\n')
     #html.write('<HR>\n')
 
-    html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=850></A>\n')
+    html.write('<H3> <a name=tharflux></a>ThAr line brightness (per 10 reads; 1D). The legend gives fiber numbers. </H3>\n')
+    html.write('<A HREF=' + instrument + '/tharflux.png target="_blank"><IMG SRC=' + instrument + '/tharflux.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
-    html.write('<H3> <a name=uneflux></a>UNe line brightness (per 10 reads) in extracted frame </H3>\n')
-    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=850></A>\n')
-    html.write('<HR>\n')
-
-    html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
-    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=850></A>\n')
-    html.write('<HR>\n')
-
-    html.write('<H3> <a name=tpos></a>ThAr lamp line position</H3>\n')
-    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=850></A>\n')
-    html.write('<HR>\n')
-
-    html.write('<H3> <a name=tpos></a>UNe lamp line position</H3>\n')
-    html.write('<A HREF=' + instrument + '/upos.png target="_blank"><IMG SRC=' + instrument + '/upos.png WIDTH=850></A>\n')
+    html.write('<H3> <a name=tpos></a>ThAr lamp line position (1D Gaussian fitting). The legend gives fiber numbers. </H3>\n')
+    html.write('<A HREF=' + instrument + '/tpos.png target="_blank"><IMG SRC=' + instrument + '/tpos.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
     for iline in range(2):
@@ -580,10 +568,22 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         tmp1 = str("%.1f" % round(allcal['LINES'][thar][0][iline][0],1))
         tmp2 = str("%.1f" % round(allcal['LINES'][thar][0][iline][1],1))
         tmp3 = str("%.1f" % round(allcal['LINES'][thar][0][iline][2],1))
-        txt = '<a name=tfwhm></a> ThArNe lamp line FWHM, line position (x pixel): '
+        txt = '<a name=tfwhm></a> ThArNe lamp line FWHM (1D Gaussian fitting): '
         html.write('<H3>' + txt + tmp1 + ' ' + tmp2 + ' ' + tmp3 + '</H3>\n')
         #html.write('<P> (Note: horizontal lines are the median value for each fiber.) </P>\n')
-        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + ' WIDTH=850></A>\n')
+        html.write('<A HREF=' + instrument + '/' + plotfile + ' target="_blank"><img src=' + instrument + '/' + plotfile + ' WIDTH=750></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<H3> <a name=uflux></a>UNe line brightness (per 10 reads) in extracted frame. The legend gives fiber numbers. </H3>\n')
+    html.write('<A HREF=' + instrument + '/uneflux.png target="_blank"><IMG SRC=' + instrument + '/uneflux.png WIDTH=750></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<H3> <a name=upos></a>UNe lamp line position (1D Gaussian fitting). The legend gives fiber numbers. </H3>\n')
+    html.write('<A HREF=' + instrument + '/upos.png target="_blank"><IMG SRC=' + instrument + '/upos.png WIDTH=750></A>\n')
+    html.write('<HR>\n')
+
+    html.write('<H3> <a name=ufwhm></a>UNe lamp line FWHM (1D Gaussian fitting). The legend gives fiber numbers. </H3>\n')
+    html.write('<A HREF=' + instrument + '/ufwhm.png target="_blank"><IMG SRC=' + instrument + '/ufwhm.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
     html.write('<h3> <a name=sciobs></a> Science observation history </h3>\n')
@@ -591,20 +591,24 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HR>\n')
 
     html.write('<H3> <a name=trace></a>Empirical PSF Trace position, fiber 150, column 1000</H3>\n')
-    html.write('<A HREF=' + instrument + '/trace.png target="_blank"><IMG SRC=' + instrument + '/trace.png WIDTH=850></A>\n')
+    html.write('<A HREF=' + instrument + '/trace.png target="_blank"><IMG SRC=' + instrument + '/trace.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=detectors></a>Detectors</H3>\n')
     html.write('<P> (Note: the four colors indicate the four quadrants in each detector.) </P>\n')
     html.write('<H4> Dark Mean </h4>\n')
-    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=850></A>\n')
+    html.write('<A HREF=' + instrument + '/biasmean.png target="_blank"><IMG SRC=' + instrument + '/biasmean.png WIDTH=750></A>\n')
 
     html.write('<H4> Dark Sigma </h4>\n')
-    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=850></A>\n')
+    html.write('<A HREF=' + instrument + '/biassig.png target="_blank"><IMG SRC=' + instrument + '/biassig.png WIDTH=750></A>\n')
     html.write('<HR>\n')
 
     html.write('<H3> <a name=sky></a>Sky Brightness</H3>\n')
-    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=850></A>\n')
+    html.write('<A HREF=' + instrument + '/moonsky.png target="_blank"><IMG SRC=' + instrument + '/moonsky.png WIDTH=750></A>\n')
+
+    html.write('<H3> <a name=zero></a>Science frame zero point</H3>\n')
+    html.write('<A HREF=' + instrument + '/zero.png target="_blank"><IMG SRC=' + instrument + '/zero.png WIDTH=750></A>\n')
+    html.write('<HR>\n')
 
     html.write('<BR><BR><BR><BR>')
     html.write('</BODY></HTML>\n')
