@@ -1078,7 +1078,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             for ax in axes:
                 ax.set_ylim(ymin, ymax)
                 ax.minorticks_on()
-                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True)
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,labelpad=10,labelsize=fsz80)
                 ax.tick_params(axis='both',which='major',length=axmajlen)
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axthick)
@@ -1092,7 +1092,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax1.scatter(caljd, allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet')
             ax2.scatter(allepsf['LN2LEVEL'][g], allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet')
 
-            fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
+            fig.subplots_adjust(left=0.075,right=0.995,bottom=0.07,top=0.96,hspace=0.2,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
