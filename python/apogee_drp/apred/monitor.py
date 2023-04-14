@@ -1478,7 +1478,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(35,19))
+            fig = plt.figure(figsize=(35,20))
             ymax = 70000
             if instrument == 'apogee-s': 
                 ymax = 125000
@@ -1503,7 +1503,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axthick)
                 for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                if ichip == 1: ax.text(-0.062, 0.5, r'Median Flux', transform=ax.transAxes, ha='right', va='center', rotation=90)
+                if ichip == 1: ax.set_ylabel(r'Median Flux', labelpad=12)
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=startFPS, color='teal', linewidth=2)
@@ -1523,10 +1523,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                                label='fib ' + str(fibers[ifib]))
 
                 if ichip == 0: 
-                    ax.legend(loc=[0.2,0.05], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=10, 
+                    ax.legend(loc=[0.25,1.15], ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=10, 
                               fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
-            fig.subplots_adjust(left=0.075,right=0.99,bottom=0.064,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.075,right=0.99,bottom=0.064,top=0.90,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
