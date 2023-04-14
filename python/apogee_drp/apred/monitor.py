@@ -1305,7 +1305,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axthick)
                 for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                if ichip == 1L ax.set_ylabel(r'Median Flux')
+                if ichip == 1: ax.set_ylabel(r'Median Flux')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 #ax.axvline(x=59146, color='teal', linewidth=2)
                 #ax.axvline(x=startFPS, color='teal', linewidth=2)
@@ -1362,7 +1362,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axthick)
                 for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                ax.set_ylabel(r'Position (pixel)')
+                if ichip == 1: ax.set_ylabel(r'Position (pixel)')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
                 w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 1])
