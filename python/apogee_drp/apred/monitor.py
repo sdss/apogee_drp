@@ -1210,7 +1210,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='teal', linewidth=2)
                 ax.axvline(x=startFPS, color='teal', linewidth=2)
-                ax.text(0.02, 0.05, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='bottom', color=chip, bbox=bboxpar)
+                ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                 xvals = allsnrg['JD']
                 yvals = np.nanmedian(allsnrg['MEDSNBINS'][:, snbins[0]:snbins[1], 2-ichip], axis=1) / np.sqrt((allsnrg['EXPTIME'] / 60))
