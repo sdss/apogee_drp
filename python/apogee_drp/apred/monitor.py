@@ -1434,7 +1434,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if ichip == 1: ax.set_ylabel(r'FWHM (pix)', labelpad=12)
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
 
-                w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 4])*2.355
+                w = np.nanmedian(gdcal['GAUSS'][:, 0, ichip, :, 3])*2.355
                 ymin = w - 40
                 ymax = w + 40
                 yspan = ymax - ymin
