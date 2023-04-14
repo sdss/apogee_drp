@@ -1516,7 +1516,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 if ichip == 0: 
                     ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
+                              fontsize=fontsize, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
             fig.subplots_adjust(left=0.07,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
@@ -1536,8 +1536,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #ngplotfibs = len(gfibers)
 
                 fig = plt.figure(figsize=(35,19))
-                ymax = 1.0
-                ymin = -1.0
+                ymax = 2.5
+                ymin = -2.5
                 yspan = ymax - ymin
                 dtrace = fits.getdata(specdir5 + 'monitor/' + instrument + 'QuartzFlatTrace-all.fits')
                 gd, = np.where((dtrace['MJD'] > 50000) & (dtrace['GAUSS_NPEAKS'][:,1] > 295))
@@ -1550,7 +1550,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                     ax = plt.subplot2grid((nchips,1), (ichip,0))
                     ax.set_xlim(xmin, xmax)
-                    #ax.set_ylim(ymin, ymax)
+                    ax.set_ylim(ymin, ymax)
                     #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                     ax.minorticks_on()
                     ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10)
@@ -1559,7 +1559,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.tick_params(axis='both',which='both',width=axthick)
                     for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
-                    if ichip == 1: ax.set_ylabel(r'Quartz Lamp Trace Position Residuals (pixels)')
+                    if ichip == 1: ax.set_ylabel(r'Quartz Trace Residuals (pix)')
                     if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                     ax.axhline(y=0, color='k', linestyle='dashed', alpha=alf)
                     ax.axvline(x=59146, color='teal', linewidth=2)
@@ -1569,7 +1569,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         ax.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fontsize, color='teal', va='top', ha='center', bbox=bboxpar)
                     if ichip == 0: ax.text(startFPS+xspan*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fontsize, color='teal', va='top', ha='left', bbox=bboxpar)
                     ax.text(0.02,0.05,chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fontsize, ha='left', va='bottom', color=chip, bbox=bboxpar)
-
 
                     for iyear in range(nyears):
                         ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
@@ -1583,9 +1582,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 if ichip == 0: 
                     ax.legend(loc='lower center', ncol=nplotfibs, labelspacing=0.5, handletextpad=-0.1, markerscale=4, 
-                              fontsize=fsz, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
+                              fontsize=fontsize, edgecolor='k', framealpha=1, borderpad=0.7, borderaxespad=1, columnspacing=0.3)
 
-                fig.subplots_adjust(left=0.05,right=0.995,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
+                fig.subplots_adjust(left=0.05,right=0.99,bottom=0.06,top=0.96,hspace=0.08,wspace=0.00)
                 plt.savefig(plotfile)
                 plt.close('all')
 
