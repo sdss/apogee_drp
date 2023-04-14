@@ -1203,7 +1203,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='minor',length=axminlen)
                 ax.tick_params(axis='both',which='both',width=axthick)
                 for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
-                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000')
+                if ichip == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
                 if ichip == 1: ax.text(-0.035, 0.5, r'S/N$^{2}$ per minute ($' + magmin + r' < H < ' + magmax + r'$)', transform=ax.transAxes, rotation=90, ha='right', va='center')
                 if ichip < nchips-1: ax.axes.xaxis.set_ticklabels([])
                 ax.axvline(x=59146, color='teal', linewidth=2)
@@ -1266,7 +1266,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
                 if ichip == 1: ax.text(1.065, 0.5, r'Moon Phase',ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-            fig.subplots_adjust(left=0.052,right=0.954,bottom=0.063,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.052,right=0.954,bottom=0.066,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
             plt.close('all')
 
