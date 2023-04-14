@@ -2409,7 +2409,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.35, cyears[iyear], ha='center', va='bottom', fontsize=fsz80)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.5, cyears[iyear], ha='center', va='bottom', fontsize=fsz80)
 
                 for ibias in range(4):
                     ax.semilogy(caljd, gdcal['MEAN'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
@@ -2463,7 +2463,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.3, cyears[iyear], ha='center', va='bottom', fontsize=fsz80)
+                    if ichip == 0: ax.text(yearjd[iyear], ymax+yspan*0.5, cyears[iyear], ha='center', va='bottom', fontsize=fsz80)
 
                 for ibias in range(4):
                     ax.semilogy(caljd, gdcal['SIG'][:, ibias, ichip], marker='o', ms=3, alpha=alf, 
