@@ -1140,7 +1140,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             #ax.scatter(umjd, nvis, marker='o', s=markersz, c='teal', alpha=alf, label='visits')
 
             ax.legend(loc='upper left', ncol=2, columnspacing=0.5, labelspacing=1.3, handletextpad=0.3, markerscale=1, 
-                      fontsize=fontsize, edgecolor='k', borderaxespad=2, framealpha=1)
+                      fontsize=fontsize, edgecolor='k', borderaxespad=1.3, framealpha=1)
 
             fig.subplots_adjust(left=0.045,right=0.99,bottom=0.082,top=0.94,hspace=0.08,wspace=0.00)
             plt.savefig(plotfile)
