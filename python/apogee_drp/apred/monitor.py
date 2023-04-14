@@ -1046,7 +1046,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         if (os.path.exists(plotfile) == False) | (clobber == True):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
-            fig = plt.figure(figsize=(30,12))
+            fig = plt.figure(figsize=(35,17))
 
             g, = np.where(allepsf['CENT'] > 0)
             ymax = np.nanmax(allepsf['CENT'][g]) + 0.5
@@ -1072,9 +1072,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ax2.set_xlabel(r'LN2 Level')
             ax1.axvline(x=59146, color='teal', linewidth=2)
             ax1.axvline(x=startFPS, color='teal', linewidth=2)
-            ax1.text(59146-xspan1*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz, color='teal', va='top', ha='right', bbox=bboxpar)
-            if instrument == 'apogee-n': ax1.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz, color='teal', va='top', ha='center', bbox=bboxpar)
-            ax1.text(startFPS+xspan1*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz, color='teal', va='top', ha='left', bbox=bboxpar)
+            ax1.text(59146-xspan1*0.005, ymax-yspan*0.04, 'plate-III+IV', fontsize=fsz80, color='teal', va='top', ha='right', bbox=bboxpar)
+            if instrument == 'apogee-n': ax1.text(59353, ymax-yspan*0.04, 'plate-V', fontsize=fsz80, color='teal', va='top', ha='center', bbox=bboxpar)
+            ax1.text(startFPS+xspan1*0.005, ymax-yspan*0.04, 'FPS-V', fontsize=fsz80, color='teal', va='top', ha='left', bbox=bboxpar)
             for ax in axes:
                 ax.set_ylim(ymin, ymax)
                 ax.minorticks_on()
@@ -1087,10 +1087,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             for iyear in range(nyears):
                 ax1.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
-                ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center')
+                ax1.text(yearjd[iyear], ymax+yspan*0.025, cyears[iyear], ha='center', fontsize=fsz80)
 
-            ax1.scatter(caljd, allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
-            ax2.scatter(allepsf['LN2LEVEL'][g], allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet', alpha=alf)
+            ax1.scatter(caljd, allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet')
+            ax2.scatter(allepsf['LN2LEVEL'][g], allepsf['CENT'][g], marker='o', s=markersz*4, c='blueviolet')
 
             fig.subplots_adjust(left=0.06,right=0.995,bottom=0.07,top=0.96,hspace=0.17,wspace=0.00)
             plt.savefig(plotfile)
