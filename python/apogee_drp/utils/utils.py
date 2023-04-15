@@ -35,3 +35,19 @@ def localdir():
         return None
     else:
         return local+'/'
+
+def smooth(y, box_pts,boundary='wrap'):
+    """ Boxcar smooth a 1-D or 2-D array."""
+    if y.ndim==1:
+        kernel = np.ones(box_pts)/box_pts
+        y_smooth = np.convolve(y, kernel, mode='same')
+    else:
+        if np.array(box_pts).ndim == 0:
+	   kernel = np.ones([box_pts,box_pts])/box_pts**2
+        elif np.array(box_pts).ndim == 1:
+	   kernel = np.ones([box_pts[0],box_pts[0]])/box_pts[0]**2	   
+	else:
+	   kernel = np.ones(box_pts)/(box_pts[0]*box_pts[1])
+        from scipy.signal import convolve2d
+        y_smooth = convolve2d(y,kernel,mode='same',boundary=boundary)
+    return y_smooth

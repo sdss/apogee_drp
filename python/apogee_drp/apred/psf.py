@@ -11,9 +11,10 @@ from scipy.interpolate import interp1d
 from scipy.signal import argrelextrema
 from scipy.optimize import curve_fit
 import statsmodels.api as sm
-from apogee_drp.utils import peakfit, mmm, apload
+from ..utils import peakfit, mmm, apload, utils
 from numba import njit
 import copy
+
 
 WARNMASK = -16640
 BADMASK = 16639
@@ -1342,15 +1343,171 @@ def func_poly2d(inp,*args):
     else:
         raise Exception('Only 0, 3, and 4 parameters supported')
     return a
+
+def measuretrace(frame,traceim,xcen,nbin,avgtype='median',nrepeat=12,fibers=None,fitmethod='gaussian'):
+    """
+    Measure trace position given the data and method.
+
+    Parameters
+    ----------
+    frame : dict
+       Dictionary with information a single detector 2D APOGEE image.  Must contain 'flux', 'err'
+       and 'mask'.
+    traceim : numpy array
+       The 2D image containing the Y trace values from a reference image (with shape [300,2048]).
+    xcen : int
+       Central column to find trace positions for.
+    nbin : int
+       Number of columns to average (using avgtype method) +/-nbin from xcen.  Therefore,
+       2*xbin+1 columns will be combined/averaged.
+    avgtype : str, optional
+       Column averaging method to use.  Default is "median".
+    nrepeat : int, optional
+       Number of repeats to use for avgtype='rollmedian'.  Only used for FPI images.  Default is 12.
+    fibers : list, optional
+       List of fibers to extract.  Default is to extract all "bright" ones.
+    fitmethod : str, optional
+       Method to determine the central Y value.  Options are 'gaussian' or 'empirical'.
+       Default is 'gaussian'.
+
+    Returns
+    -------
+    tab : table
+       Table of values for all the traces.
+
+    Example
+    -------
+
+    tab = measuretrace(frame,traceim,1024,100,avgtype='median')
+
+    """
+
+    flux = frame['flux']
+    fluxerr = frame['err']
+    ntraces = traceim.shape[0]
     
-def getoffset(frame,traceim):
+    tab = np.zeros(ntraces,dtype=np.dtype([('fiber',int),('x',float),('ytemp',float),('flux',float),('snr',float),
+                                           ('ycent',float),('ycenterr',float),('yoffset',float),('bright',bool)]))
+    tab['ycent'] = np.nan
+    tab['yoffset'] = np.nan    
+    tab['x'] = xcen
+    tab['fiber'] = np.arange(300)
+    
+    # Get the average/median/sum profile flux
+    xlo = np.maximum(xcen-nbin,0)
+    xhi = np.minimum(xcen+nbin,2048)
+    nxpix = xhi-xlo
+    if avgtype == 'median':
+        profileflux = np.nanmedian(flux[:,xlo:xhi],axis=1)
+        # use standard error, more robust against large uncertainties in some pixels
+        profilefluxerr = np.nanmedian(fluxerr[:,xlo:xhi],axis=1)/np.sqrt(nxpix)
+    if avgtype == 'mean':
+        profileflux = np.nanmean(flux[:,xlo:xhi],axis=1)
+        profilefluxerr = np.nanmedian(fluxerr[:,xlo:xhi],axis=1)/np.sqrt(nxpix)
+    elif avgtype == 'sum':
+        profileflux = np.nansum(flux[:,xlo:xhi],axis=1)
+        profilefluxerr = np.nanmedian(fluxerr[:,xlo:xhi],axis=1)*np.sqrt(nxpix)
+    elif avgtype == 'summedian':
+        # First sum, then median
+        binflux = dln.rebin(flux[:,xlo:xhi],binsize=(1,18),tot=True)
+        nbinflux = binflux.shape[1]        
+        binfluxerr = dln.rebin(flux[:,xlo:xhi],binsize=(1,18),med=True)*np.sqrt(18)
+        profileflux = np.nanmedian(binflux,axis=1)
+        profilefluxerr = np.nanmedian(binfluxerr[:,xlo:xhi],axis=1)/np.sqrt(nbinflux)
+    elif avgtype == 'smoothmedian':
+        # First "smooth" in X, then take the median
+        smflux = utils.smooth(flux,[1,2*nrepeat+1])
+        smfluxerr = np.sqrt(utils.smooth(fluxerr**2,[2*nrepeat+1]))
+        profileflux = np.nanmedian(smflux[:,xlo:xhi],axis=1)
+        profilefluxerr = np.nanmedian(smfluxerr[:,xlo:xhi],axis=1)/np.sqrt(nxpix)        
+    elif avgtype == 'rollmedian':        
+        # First "smooth" by repeating the peaks multiple times shifted
+        # (basically boxcar smoothing), then taking the median
+        smflux = np.zeros(flux.shape,float)
+        smfluxerr = np.zeros(flux.shape,float)        
+        for k in np.arange(-nrepeat//2,nrepeat//2):
+            smflux += np.roll(flux,k,axis=1)
+            smfluxerr += np.roll(fluxerr,k,axis=1)**2  # add in quadrature
+        smfluxerr = np.sqrt(smfluxerr)
+        profileflux = np.nanmedian(smflux[:,xlo:xhi],axis=1)
+        profilefluxerr = np.nanmedian(smfluxerr[:,xlo:xhi],axis=1)/np.sqrt(nxpix)
+
+    # Get template trace center
+    ytempcent = np.nanmedian(traceim[:,xlo:xhi],axis=1)
+    tab['ytemp'] = ytempcent
+    
+    # Measure rough flux in each fiber and S/N
+    boxflux = np.zeros(ntraces,float)
+    fiberycen = np.zeros(ntraces,float)
+    for j in range(ntraces):
+        ylo = np.maximum(int(np.round(ytempcent[j]))-2,0)
+        yhi = np.minimum(int(np.round(ytempcent[j]))+3,2048)
+        totflux = np.sum(profileflux[ylo:yhi])
+        totfluxerr = np.sqrt(np.sum(profilefluxerr[ylo:yhi]**2))
+        tab['flux'][j] = totflux
+        tab['snr'][j] = totflux/totfluxerr
+
+    # Find bright fibers to measure
+    if fibers is None:
+        fibers, = np.where((tab['flux'] > 1000) | (tab['snr'] > 100))
+        if len(fibers)<5:
+            fibers, = np.where((tab['flux'] > 500) | (tab['snr'] > 50))
+        if len(fibers)<5:
+            fibers, = np.where((tab['flux'] > 100) | (tab['snr'] > 10))
+        if len(fibers)<5:
+            fibers = np.argsort(tab['flux'])[0:30]  # take brightest 30 fibers
+    nfibers = len(fibers)
+    tab['bright'][fibers] = True
+    
+    # Loop over fibers to measure
+    y = np.arange(2048)
+    gcent = np.zeros(nfibers,float)
+    offset = np.zeros(nfibers,float)
+    for j in range(nfibers):
+        ind = fibers[j]
+        ytemp = ytempcent[ind]
+        if fitmethod == 'gaussian':
+            # Fit Gaussian
+            lo = int(np.floor(ytemp-3))
+            hi = int(np.ceil(ytemp+3))
+            yy = np.arange(hi-lo+1)+lo
+            ff = profileflux[lo:hi+1]
+            initpar = [ff[3],ytemp,1.0,0.0]
+            try:
+                pars,pcov = dln.gaussfit(yy,ff,initpar=initpar,binned=True,bounds=(-np.inf,np.inf))
+                perror = np.sqrt(np.diag(pcov))
+                ycent = pars[1]
+                ycenterr = perror[1]
+            except:
+                ycent = np.nan
+                ycenterr = np.nan                    
+        # Empirical centroids
+        else:
+            # apmkpsf_epsf.pro used this centroiding method
+            #  to create the apEPSF reference values
+            lo = np.maximum(int(np.round(ytemp)-2),0)
+            hi = np.minimum(int(np.round(ytemp)+3),2048)
+            yy = np.arange(hi-lo)+lo
+            ff = np.maximum(profileflux[lo:hi],0)
+            fferr = np.maximum(np.sqrt(ff),1)
+            ycent = np.sum(yy*ff)/np.sum(ff)
+            ycenterr = np.sqrt(np.sum((yy*fferr)**2))/np.sum(ff)
+        tab['ycent'][ind] = ycent
+        tab['ycenterr'][ind] = ycenterr        
+
+    return tab
+
+
+def getoffset(frame,traceframe,traceim):
     """
     Measure the spatial offset of an object exposure and the PSF model/traces.
 
     Parameters
     ----------
     frame : dict
-       The 2D input structure with flux, err, mask and header.
+       The 2D input dictionary with flux, err, mask and header.
+    traceframe : dict
+       The 2D input dictionary of the trace quartzflat image with flux, err, mask and header.
     traceim : numpy array
        APOGEE trace information (Y-position) from a trace file [Nfibers, 2048].
 
@@ -1365,9 +1522,12 @@ def getoffset(frame,traceim):
     Example
     -------
 
-    offcoef,medoff = getoffset(frame,traceim)
+    offcoef,medoff = getoffset(frame,traceframe,traceim)
 
     """
+
+    fitmethod = 'centroid'
+    #fitmethod = 'gaussian'
     
     # Find bright fibers and measure the centroid
     nfibers = traceim.shape[0]
@@ -1375,115 +1535,88 @@ def getoffset(frame,traceim):
     header = frame['header']
     exptype = header['exptype'].lower()
     chip = header['chip'].strip().lower()
-    
+
+    # The IDL apmkpsf_epsf.pro that creates the apEPSF trace image
+    # applies a scattered light correction  (scat_remove.pro)
+    # We need to do that here as well to get consistent trace results
+    #bot = np.median(flux[5:10+1,100:1947+1])
+    #top = np.median(flux[2038:2042+1,100:1947+1])
+    #scatlevel = (bot+top)/2.
+    ##print,'scatlevel: ',scatlevel
+    #flux -= scatlevel
+
+    nrepeat = 0
     # Use different X positions for arclamps
     if exptype == 'arclamp' and header['LAMPUNE']:
         avgtype = 'sum'
         xdict = {'a':[415,607,1490,2022], 'b':[90,594,1460], 'c':[1220,1750,2020]}
+        nxbin = 20
         xx = xdict[chip]
+    # THARNE
     elif exptype == 'arclamp' and header['LAMPTHAR']:
-        avgtype = 'sum'
-        xdict = {'a':[60,950,1840], 'b':[905,1110,1570,1870], 'c':[1240,1780,1860,2010]}
+        #avgtype = 'sum'
+        #avgtype = 'rollmedian'
+        avgtype = 'smoothmedian'
+        nrepeat = 15        
+        #xdict = {'a':[60,950,1840], 'b':[905,1110,1570,1870], 'c':[1240,1780,1860,2010]}
+        xdict = {'a':[950], 'b':[905,1110,1570,1870], 'c':[1240,1780,1860,2010]}        
+        nxbin = 15
         xx = xdict[chip]        
     # FPI
     elif exptype == 'arclamp' and header['LAMPUNE']==False and header['LAMPTHAR']==False:
-        avgtype = 'summedian'
-        #avgtype = 'median'
-        xx = [204, 614, 1024, 1434, 1844]            
+        avgtype = 'rollmedian'
+        nrepeat = {'a':16,'b':12,'c':10}[chip]
+        nxbin = 100
+        xx = [512, 1024, 1536] 
     # Object/dome/quartz exposures
     else:
         avgtype = 'median'
-        xx = [204, 614, 1024, 1434, 1844]
-        #xx = [512, 1024, 1536]                
+        nxbin = 100
+        #xx = [204, 614, 1024, 1434, 1844]
+        xx = [512, 1024, 1536]                
 
     # Loop over X column locations
+    ntraces = traceim.shape[0]
     coef = np.zeros((len(xx),2),float) + np.nan
     ngood = np.zeros(len(xx),int)
     sigma = np.zeros(len(xx),float)
     alloffset = np.array([],float)
-    tab = np.zeros((len(xx),300),dtype=np.dtype([('fiber',int),('x',float),('ytemp',float),('flux',float),
-                                                 ('ygauss',float),('ygausserr',float),('yoffset',float),('bright',bool)]))
-    tab['ygauss'] = np.nan
+    tab = np.zeros((len(xx),ntraces),dtype=np.dtype([('fiber',int),('x',float),('ytemp',float),('flux',float),('snr',float),
+                                                     ('ycent',float),('ycenterr',float),('yoffset',float),('bright',bool)]))
+    tab['ycent'] = np.nan
     tab['yoffset'] = np.nan    
     tabcount = 0
     for i,x in enumerate(xx):
-        tab['fiber'][i,:] = np.arange(300)
-        tab['x'][i,:] = x
-        # Get median flux/centers
-        xlo = np.maximum(x-100,0)
-        xhi = np.minimum(x+100,2048)          
-        if avgtype == 'median':
-            medflux = np.median(flux[:,xlo:xhi],axis=1)
-        if avgtype == 'mean':
-            medflux = np.mean(flux[:,xlo:xhi],axis=1)            
-        elif avgtype == 'sum':
-            medflux = np.sum(flux[:,xlo:xhi],axis=1)
-        elif avgtype == 'summedian':
-            # First sum, then median
-            binflux = dln.rebin(flux[:,xlo:xhi],binsize=(1,18),tot=True)
-            medflux = np.median(binflux,axis=1)   
-        medcent = np.median(traceim[:,xlo:xhi],axis=1)
-        # Measure rough flux in each fiber
-        boxflux = np.zeros(nfibers,float)
-        fiberycen = np.zeros(nfibers,float)
-        for j in range(nfibers):
-            fiberycen[j] = medcent[j]
-            boxflux[j] = np.sum(medflux[int(np.round(medcent[j]))-1:int(np.round(medcent[j]))+1])
-        tab['ytemp'][i,:] = medcent
-        tab['flux'][i,:] = boxflux
 
-        # Find bright fibers
-        bright, = np.where(boxflux > 1000)
-        if len(bright)<5:
-            bright, = np.where(boxflux > 500)
-        if len(bright)<5:
-            bright, = np.where(boxflux > 100)
-        if len(bright)<5:
-            # Not enough bright fibers to measure the offset
-            continue
-        #    bright = np.argsort(boxflux)[0:30]  # take brightest 30 fibers
-        nbright = len(bright)
-        ngood[i] = nbright
-        tab['bright'][i,bright] = True
-        
-        # Loop over bright fibers
-        y = np.arange(2048)
-        gcent = np.zeros(nbright,float)
-        offset = np.zeros(nbright,float)
-        ycen = fiberycen[bright]
-        for j in range(nbright):
-            ind = bright[j]
-            # Fit Gaussian
-            lo = int(np.floor(medcent[ind]-3))
-            hi = int(np.ceil(medcent[ind]+3))
-            yy = np.arange(hi-lo+1)+lo
-            ff = medflux[lo:hi+1]
-            initpar = [ff[3],medcent[ind],1.0,0.0]
-            try:
-                pars,pcov = dln.gaussfit(yy,ff,initpar=initpar,binned=True,bounds=(-np.inf,np.inf))
-                perror = np.sqrt(np.diag(pcov))
-                gcent[j] = pars[1]
-                offset[j] = pars[1]-medcent[ind]
-                tab['ygauss'][i,bright[j]] = gcent[j]
-                tab['ygausserr'][i,bright[j]] = perror[1]
-                tab['yoffset'][i,bright[j]] = offset[j]                
-            except:
-                gcent[j] = np.nan
-                offset[j] = np.nan
+        # Measure trace values from this exposure
+        tab1 = measuretrace(frame,traceim,x,nxbin,avgtype=avgtype,nrepeat=nrepeat,
+                            fibers=None,fitmethod=fitmethod)
+        gdfiber, = np.where(tab1['bright']==True)
+        ngood[i] = len(gdfiber)
+        fibers = tab1['fiber'][gdfiber]
+        # Measure trace values from quartzflat
+        reftab1 = measuretrace(traceframe,traceim,x,nxbin,avgtype=avgtype,nrepeat=nrepeat,
+                               fibers=fibers,fitmethod=fitmethod)
+        # Measure the offsets
+        tab1['yoffset'][gdfiber] = tab1['ycent'][gdfiber] - reftab1['ycent'][gdfiber]
+        tab[i,:] = tab1
+        yoffset = tab1['yoffset'][gdfiber]
+        ycen = tab1['ycent'][gdfiber]
 
         # Fit line to it
-        medoff = np.nanmedian(offset)
-        sigoff = dln.mad(offset[np.isfinite(offset)])
+        medoff = np.nanmedian(yoffset)
+        sigoff = np.maximum(dln.mad(yoffset[np.isfinite(yoffset)]),0.02)
         sigma[i] = sigoff
-        gd, = np.where(np.isfinite(offset) & (np.abs(offset-medoff) < 3*sigoff))
+        gd, = np.where(np.isfinite(yoffset) & (np.abs(yoffset-medoff) < 3*sigoff))
         if len(gd) > 5:
-            coef1 = np.polyfit(ycen[gd],offset[gd],1)
+            coef1 = np.polyfit(ycen[gd],yoffset[gd],1)
             coef[i,:] = coef1
         else:
             coef[i,:] = [0.0, medoff]
-        alloffset = np.hstack((alloffset,offset))
+        alloffset = np.hstack((alloffset,yoffset))
         
     avgngood = np.mean(ngood)
+    print('Average bright fibers = {:.1f}'.format(avgngood))
     if avgngood < 5:
         print('Not enough bright fibers to measure the offset. Assuming zero offset.')
         # c0 + c1*x + c2*x*y + c3*y 
@@ -1635,7 +1768,13 @@ def extractwing(frame,modelpsffile,epsffile,tracefile):
     # Load the trace imformation
     traceim = fits.getdata(tracefile,0)  # [Nfibers,2048]
     nfibers,npix = traceim.shape
-
+    # Load the 2D image for the trace quartzflat
+    traceid = os.path.basename(tracefile)
+    chip = traceid.split('-')[1]
+    traceid = int(traceid.split('-')[2][0:8])  # asETrace-a-44840002.fits
+    traceframefile = load.filename('2D',num=traceid,chips=True).replace('2D','2D-'+chip)
+    traceframe = loadframe(traceframefile)
+    
     # Load the EPSF fiber information
     # Need this to get the missing fiber numbers
     hdu = fits.open(epsffile)
@@ -1647,7 +1786,7 @@ def extractwing(frame,modelpsffile,epsffile,tracefile):
     # Step 1) Measure the offset
     #  returns 2D linear of the offset
     #  c0 + c1*x + c2*x*y + c3*y
-    offcoef,medoff,tab = getoffset(frame,traceim)
+    offcoef,medoff,tab = getoffset(frame,traceframe,traceim)
 
     # Step 2) Generate full PSFs for this image
     # Generate the input that extract() expects
