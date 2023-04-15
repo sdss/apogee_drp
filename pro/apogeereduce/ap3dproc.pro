@@ -2051,7 +2051,7 @@ print,'no_checksum: ', no_checksum
   if n_elements(gainim) eq 0 then begin
     print,'NO gain image.  Using GAIN=1'
     gainim = fltarr(2048,2048)+1.0
-  end
+  endif
   
   
   ; Fowler Sampling
@@ -2387,6 +2387,9 @@ print,'no_checksum: ', no_checksum
   if n_elements(pmodelim) gt 0 and n_elements(ppar) gt 0 then begin
     sxaddhist,leadstr+'Persistence correction: '+strjoin(strtrim(string(ppar,format='(G7.3)'),2),' '),head
   endif
+  ;; Gain and read noise
+  sxaddpar,'gain',gainim,' gain in e/ADU'
+  sxaddpar,'rdnoise',sample_noise,'read noise from UTR sampling (ADU)'  
   
   ; Fix EXPTIME if necessary
   if sxpar(head,'NFRAMES') ne nreads then begin
