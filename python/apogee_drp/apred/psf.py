@@ -1346,7 +1346,7 @@ def func_poly2d(inp,*args):
 
 def measuretrace(frame,traceim,xcen,nbin,avgtype='median',nrepeat=12,fibers=None,fitmethod='gaussian'):
     """
-    Measure trace position given the data and method.
+    Measure trace position given the data and method.  Called by getoffset().
 
     Parameters
     ----------
@@ -1416,8 +1416,8 @@ def measuretrace(frame,traceim,xcen,nbin,avgtype='median',nrepeat=12,fibers=None
         profilefluxerr = np.nanmedian(binfluxerr[:,xlo:xhi],axis=1)/np.sqrt(nbinflux)
     elif avgtype == 'smoothmedian':
         # First "smooth" in X, then take the median
-        smflux = utils.smooth(flux,[1,2*nrepeat+1])
-        smfluxerr = np.sqrt(utils.smooth(fluxerr**2,[2*nrepeat+1]))
+        smflux = utils.smooth(flux,[1,nrepeat])        
+        smfluxerr = np.sqrt(utils.smooth(fluxerr**2,[1,2*nrepeat+1]))
         profileflux = np.nanmedian(smflux[:,xlo:xhi],axis=1)
         profilefluxerr = np.nanmedian(smfluxerr[:,xlo:xhi],axis=1)/np.sqrt(nxpix)        
     elif avgtype == 'rollmedian':        
@@ -1453,7 +1453,9 @@ def measuretrace(frame,traceim,xcen,nbin,avgtype='median',nrepeat=12,fibers=None
         if len(fibers)<5:
             fibers, = np.where((tab['flux'] > 500) | (tab['snr'] > 50))
         if len(fibers)<5:
-            fibers, = np.where((tab['flux'] > 100) | (tab['snr'] > 10))
+            fibers, = np.where((tab['flux'] > 100) | (tab['snr'] > 25))
+        if len(fibers)<5:
+            fibers, = np.where((tab['flux'] > 50) | (tab['snr'] > 10))
         if len(fibers)<5:
             fibers = np.argsort(tab['flux'])[0:30]  # take brightest 30 fibers
     nfibers = len(fibers)
@@ -1528,6 +1530,7 @@ def getoffset(frame,traceframe,traceim):
 
     fitmethod = 'centroid'
     #fitmethod = 'gaussian'
+    # empirical centroid is faster and gives similar precision
     
     # Find bright fibers and measure the centroid
     nfibers = traceim.shape[0]
@@ -1536,43 +1539,55 @@ def getoffset(frame,traceframe,traceim):
     exptype = header['exptype'].lower()
     chip = header['chip'].strip().lower()
 
-    # The IDL apmkpsf_epsf.pro that creates the apEPSF trace image
-    # applies a scattered light correction  (scat_remove.pro)
-    # We need to do that here as well to get consistent trace results
-    #bot = np.median(flux[5:10+1,100:1947+1])
-    #top = np.median(flux[2038:2042+1,100:1947+1])
-    #scatlevel = (bot+top)/2.
-    ##print,'scatlevel: ',scatlevel
-    #flux -= scatlevel
-
     nrepeat = 0
     # Use different X positions for arclamps
     if exptype == 'arclamp' and header['LAMPUNE']:
-        avgtype = 'sum'
-        xdict = {'a':[415,607,1490,2022], 'b':[90,594,1460], 'c':[1220,1750,2020]}
-        nxbin = 20
+        avgtype = 'smoothmedian'
+        nrepeat = 15
+        #xdict = {'a':[416,613,1486,2022], 'b':[86,592,1457], 'c':[1221,1745,2008]}
+        xdict = {'a':[416,613,1486], 'b':[86,592,1457], 'c':[1221,2008]}
+        nxbin = 15
         xx = xdict[chip]
     # THARNE
     elif exptype == 'arclamp' and header['LAMPTHAR']:
-        #avgtype = 'sum'
-        #avgtype = 'rollmedian'
         avgtype = 'smoothmedian'
         nrepeat = 15        
-        #xdict = {'a':[60,950,1840], 'b':[905,1110,1570,1870], 'c':[1240,1780,1860,2010]}
-        xdict = {'a':[950], 'b':[905,1110,1570,1870], 'c':[1240,1780,1860,2010]}        
+        #xdict = {'a':[56,946,1728,1843], 'b':[910,1112,1570,1872], 'c':[1240,1780,1861,2008]}
+        xdict = {'a':[946,1728], 'b':[910,1112,1872], 'c':[1234,1745]}
         nxbin = 15
         xx = xdict[chip]        
     # FPI
     elif exptype == 'arclamp' and header['LAMPUNE']==False and header['LAMPTHAR']==False:
-        avgtype = 'rollmedian'
+        avgtype = 'smoothmedian'
         nrepeat = {'a':16,'b':12,'c':10}[chip]
-        nxbin = 100
+        nxbin = 25
         xx = [512, 1024, 1536] 
     # Object/dome/quartz exposures
+    elif exptype == 'object' or exptype == 'skyflat':
+        # Get flux values
+        tab0 = measuretrace(frame,traceim,1024,50,avgtype='median',
+                            fibers=np.arange(300),fitmethod=fitmethod)
+        # Check the fluxes
+        gd, = np.where(tab0['snr'] > 50)
+        # Essentially no continuume flux, use sky lines
+        if len(gd) < 20:
+            avgtype = 'smoothmedian'
+            nrepeat = 15        
+            #xdict = {'a':[249,531,1096,1727,1928], 'b':[166,431,728,874,1107,1445,1642],
+            #         'c':[321,471,736,1159,1270,1457,1590,1728,1885]}
+            xdict = {'a':[531,1096,1727,1928], 'b':[728,874,1107,1445,1642],
+                     'c':[471,736,1159,1270,1457,1590,1728]}
+            nxbin = 15
+            xx = xdict[chip]        
+        # Regular object exposure with lots of continuum flux in fibers
+        else:
+            avgtype = 'median'
+            nxbin = 100
+            xx = [512, 1024, 1536]
+    # Dome/quartz exposures        
     else:
         avgtype = 'median'
         nxbin = 100
-        #xx = [204, 614, 1024, 1434, 1844]
         xx = [512, 1024, 1536]                
 
     # Loop over X column locations

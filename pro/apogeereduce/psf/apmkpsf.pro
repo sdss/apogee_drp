@@ -101,8 +101,8 @@ FOR i=0,nflatframe-1 do begin
     psfdir = apogee_filename('PSF',chip=chiptag[j],num=flatframeid,/dir)
     tracedir = apogee_filename('ETrace',num=flatframeid,chip=chiptag[j],/dir)
     sflatframeid = string(flatframeid,format='(i08)')
-    allfiles = psfdir+['apPSF-'+chiptag[j]+'-'+sflatframeid,'apEPSF-'+chiptag[j]+'-'+sflatframeid]+'.fits'
-    allfiles = [allfiles,tracedir+'apETrace-'+chiptag[j]+'-'+sflatframeid+'.fits']
+    allfiles = psfdir+[dirs.prefix+'PSF-'+chiptag[j]+'-'+sflatframeid,dirs.prefix+'EPSF-'+chiptag[j]+'-'+sflatframeid]+'.fits'
+    allfiles = [allfiles,tracedir+dirs.prefix+'ETrace-'+chiptag[j]+'-'+sflatframeid+'.fits']
     if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
       print,outfile,' already exists and CLOBBER=0'
       goto,BOMB1
