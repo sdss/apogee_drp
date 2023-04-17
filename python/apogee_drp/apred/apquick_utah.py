@@ -83,13 +83,14 @@ def utah(telescope='apo25m', apred='daily'):
         edata = edata0[iexp]
         framenum = edata['IM']
         rawfilepath = load.filename('R', num=framenum, chips='b').replace('R-','R-b-')
-        if os.path.exists(rawfilepath) is False:
+        if os.path.exists(rawfilepath) == False:
             print(rawfilepath+' not found!')
             continue
         rawfile = os.path.basename(rawfilepath)
         rawfilefits = rawfile.replace('.apz','.fits')
         mjd = os.path.basename(os.path.dirname(rawfile))
         infile = cwd+rawfilefits
+        pdb.set_trace()
         # Unzip the file
         if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=cwd)
         hdulist = fits.open(rawfilefits)
