@@ -654,8 +654,9 @@ def snrcat(spec,plugmap):
             fibermap = plugmap['PLUGMAPOBJ']   # SDSS plates
             fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['holeType'].astype(str)=='OBJECT') & (fibermap['spectrographId']==2) )            
             fiberindex = 300-fibermap[fibs]['fiberId']
+            pdb.set_trace()
             cat['hmag'][fiberindex] = fibermap[fibs]['mag'][:,1]
-            cat['objtype'][fiberindex] = fibermap[fibs]['objType']
+            cat['objtype'][fiberindex] = str(fibermap[fibs]['objType'])
             cat['apogee_id'][fiberindex] = fibermap[fibs]['tmass_style']            
         else:
             fibermap = plugmap['FIBERMAP']     # SDSS-V FPS
@@ -935,6 +936,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
         subspec = spec
     # Create the S/N catalog
     cat = snrcat(subspec,plugmap)
+    pdb.set_trace()
     print('Mean S/N = %5.2f' % np.mean(cat['snr']))
     if exptype != 'OBJECT':
         cat['apogee_id'] = 'N/A'
