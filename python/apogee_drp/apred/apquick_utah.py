@@ -275,7 +275,7 @@ def loadframes(filename,framenum,nfowler=2,chip=2,lastread=None):
 
 
 # Perform Fowler sampling
-def fowler(bframes,eframes):
+def fowler(bframes,eframes=None):
     """Collapses exposure to 2D using Fowler/CDS sampling.
 
     This function performs Fowler/CDS sampling given a list of
