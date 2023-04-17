@@ -656,6 +656,7 @@ def snrcat(spec,plugmap):
             fiberindex = 300-fibermap[fibs]['fiberId']
             cat['hmag'][fiberindex] = fibermap[fibs]['mag'][:,1]
             cat['objtype'][fiberindex] = fibermap[fibs]['objType'].astype(str)
+            pdb.set_trace()
             cat['apogee_id'][fiberindex] = fibermap[fibs]['tmass_style']            
         else:
             fibermap = plugmap['FIBERMAP']     # SDSS-V FPS
