@@ -907,6 +907,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
     except:
         plugfile = plugdir4+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-'+str(head['MAPID']).zfill(2)+'.par'
 
+    pdb.set_trace()
     # Load plugmap/fibermap file
     if plugfile is not None:
         if os.path.exists(plugfile) is False:
