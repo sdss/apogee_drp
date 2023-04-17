@@ -280,22 +280,22 @@ def loadframes(filename,framenum,nfowler=2,chip=2,lastread=None):
         #imfile = files[i+1]
         num = readnum[i+1]
         pdb.set_trace()
-        im,head = fits.getdata(filename,i+1,header=True)
+        im,head = fits.getdata(filename,num,header=True)
         im = refcorr(im)  # apply reference correction   
         if chip is not None:
             im = im[:,(chip-1)*2048:chip*2048]
-        frame = Frame(imfile,head,im,framenum,num)
+        frame = Frame(filename,head,im,framenum,num)
         bframes.append(frame)
     # Load the ending set of frames
     eframes= []
     for i in range(nfowler_use):
         #imfile = files[nfiles-nfowler_use+i]
         num = readnum[nfiles-nfowler_use+i]
-        im,head = fits.getdata(imfile,nfiles-nfowler_use+i-1,header=True)
+        im,head = fits.getdata(imfile,num,header=True)
         im = refcorr(im)  # apply reference correction   
         if chip is not None:
             im = im[:,(chip-1)*2048:chip*2048]
-        frame = Frame(imfile,head,im,framenum,readnum[i])
+        frame = Frame(filename,head,im,framenum,readnum[i])
         eframes.append(frame)
     # Return the lists
     return bframes,eframes,nfiles
