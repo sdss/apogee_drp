@@ -279,7 +279,6 @@ def loadframes(filename,framenum,nfowler=2,chip=2,lastread=None):
     for i in range(nfowler_use):
         #imfile = files[i+1]
         num = readnum[i+1]
-        pdb.set_trace()
         im,head = fits.getdata(filename,num,header=True)
         im = refcorr(im)  # apply reference correction   
         if chip is not None:
