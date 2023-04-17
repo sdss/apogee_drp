@@ -694,10 +694,12 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             modelpsfid = os.path.basename(modelpsffile)
             modelpsffile1 = load.filename('PSFModel',num=modelpsfid,chips=True).replace('PSFModel-','PSFModel-'+chiptag[i]+'-')
             head['HISTORY'] = 'Model PSF file: '+modelpsffile1
-            tracefile = load.filename('ETrace',num=psfframeid,chips=True).replace('ETrace-','ETrace-'+chiptag[i]+'-')
+            tracefile = load.filename('ETrace',num=int(psfframeid),chips=True).replace('ETrace-','ETrace-'+chiptag[i]+'-')
             chstr['header'] = head
             epsffile1 = epsffiles[i]
-            outstr,back,ymodel = psf.extractwing(chstr,modelpsffile1,epsffile1,tracefile)
+            trace2dfile = load.filename('2D',num=int(psfframeid),chips=True).replace('2D','2D-'+chiptag[i])
+            # Created the 2D EPSF 
+            outstr,back,ymodel = psf.extractwing(chstr,modelpsffile1,epsffile1,tracefile,trace2dfile)
             head = outstr['header']
  
         t2 = time.time()

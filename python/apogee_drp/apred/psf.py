@@ -1733,7 +1733,7 @@ def fullepsfgrid(psf,traceim,fibers,offcoef,verbose=True):
     return epsf
         
 
-def extractwing(frame,modelpsffile,epsffile,tracefile):
+def extractwing(frame,modelpsffile,epsffile,tracefile,trace2dfile):
     """
     Extract taking wings into account.
 
@@ -1747,6 +1747,8 @@ def extractwing(frame,modelpsffile,epsffile,tracefile):
        Name of the EPSF filename.
     tracefile : str
        Name of the trace filename.
+    trace2dfile : str
+       Name of the ap2D file used to generate the traces.
 
     Returns
     -------
@@ -1760,7 +1762,7 @@ def extractwing(frame,modelpsffile,epsffile,tracefile):
     Example
     -------
 
-    outstr,back,model = extractwing(frame,modelpsffile,epsffile,tracefile)
+    outstr,back,model = extractwing(frame,modelpsffile,epsffile,tracefile,trace2dfile)
 
     """
 
@@ -1786,9 +1788,7 @@ def extractwing(frame,modelpsffile,epsffile,tracefile):
     # Load the 2D image for the trace quartzflat
     traceid = os.path.basename(tracefile)
     chip = traceid.split('-')[1]
-    traceid = int(traceid.split('-')[2][0:8])  # asETrace-a-44840002.fits
-    traceframefile = load.filename('2D',num=traceid,chips=True).replace('2D','2D-'+chip)
-    traceframe = loadframe(traceframefile)
+    traceframe = loadframe(trace2dfile)
     
     # Load the EPSF fiber information
     # Need this to get the missing fiber numbers
