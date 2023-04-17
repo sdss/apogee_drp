@@ -418,6 +418,7 @@ def noisemodel(im,nreads,noise,gain):
     # Start the variance array
     varim = im.copy()*0
     # Sample/read noise
+    pdb.set_trace()
     varim += sample_noise**2 
 
     #Now convert to ELECTRONS
