@@ -654,9 +654,9 @@ def snrcat(spec,plugmap):
             fibermap = plugmap['PLUGMAPOBJ']   # SDSS plates
             fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['holeType'].astype(str)=='OBJECT') & (fibermap['spectrographId']==2) )            
             fiberindex = 300-fibermap[fibs]['fiberId']
+            pdb.set_trace()
             cat['hmag'][fiberindex] = fibermap[fibs]['mag'][:,1]
             cat['objtype'][fiberindex] = fibermap[fibs]['objType'].astype(str)
-            #pdb.set_trace()
             #cat['apogee_id'][fiberindex] = fibermap[fibs]['tmass_style']            
         else:
             fibermap = plugmap['FIBERMAP']     # SDSS-V FPS
