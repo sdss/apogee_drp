@@ -814,11 +814,10 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
     rawdir = os.path.dirname(filename)+'/'
     framenum = int(os.path.basename(filename).split('-')[2].split('.')[0])
     bframes,eframes,nreads = loadframes(filename,framenum,nfowler=nfowler,lastread=lastread)
-    #if bframes is None:
-    #    print('Cannot run quicklook')
-    #    return None,None,None,None
+    if bframes is None:
+        print('Cannot run quicklook')
+        return None,None,None,None
     head = fits.getheader(filename)#eframes[0].head.copy()   # header of first read
-    pdb.set_trace()
 
     # plugmap/configuration directory
     #plugmapfile = load.filename('confSummary', configid=int(iplate[i]))
@@ -873,10 +872,11 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
         xlo = np.maximum(midcol-half_ncol,0)
         xhi = np.minimum(xlo+ncol-1,2047)
     spec = boxextract(frame,tracestr,xlo=xlo,xhi=xhi)
+    pdb.set_trace()
     # Load the plugmap file
     plugmap = None
     # Try to get fiber mapping ID from the first read header
-    configid = head.get('configid')
+    configid = head['configid']
     if configid is not None and str(configid) != '':
         configgrp = '{:0>4d}XX'.format(int(configid) // 100)
         plugfile = plugdir+'/'+configgrp+'/confSummary-'+str(configid)+'.par'
