@@ -869,6 +869,7 @@ def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',las
     bpmfiles = list(np.sort(bpmfiles))
     print('Using '+bpmfiles[-1])
     bpm = fits.getdata(bpmfiles[-1],0)
+    pdb.set_trace()
     frame = bpmfix(frame,bpm)
     # Load the trace information
     psffiles = np.sort(glob(psfdir+'/'+load.prefix+'PSF-b-*.fits'))
