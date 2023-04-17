@@ -79,7 +79,7 @@ def utah(telescope='apo25m', apred='daily'):
     nexp = len(edata)
 
     # Loop over exposures
-    for iexp in range(nexp):
+    for iexp in range(2):
         edata = edata0[iexp]
         rawfilepath = load.filename('R', num=edata['IM'], chips='b').replace('R-','R-b-')
         if os.path.exists(rawfilepath) is False:
