@@ -804,7 +804,7 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
         #plugdir = '/data/apogee/plugmaps/'
 
     nframes = np.int(head['NFRAMES'])
-    exptype = head.get('EXPTYPE')
+    exptype = head['EXPTYPE']
     if exptype is None: exptype=''
     # Do Fowler/CDS collapse
     im = fowler(filename)#bframes,eframes)
