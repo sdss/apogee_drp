@@ -2388,7 +2388,7 @@ print,'no_checksum: ', no_checksum
     sxaddhist,leadstr+'Persistence correction: '+strjoin(strtrim(string(ppar,format='(G7.3)'),2),' '),head
   endif
   ;; Gain and read noise
-  fxaddpar,head,'gain',gainim,' gain in e/ADU'
+  fxaddpar,head,'gain',gainim[0],' gain in e/ADU'
   fxaddpar,head,'rdnoise',sample_noise,'read noise from UTR sampling (ADU)'  
   
   ; Fix EXPTIME if necessary
