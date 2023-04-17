@@ -94,7 +94,7 @@ def utah(telescope='apo25m', apred='daily'):
         # Unzip the file
         if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=cwd)
         hdulist = fits.open(rawfilefits)
-        nreads = len(d)-1
+        nreads = len(hdulist)-1
         for iread in range(nreads):
             d = fits.getdata(rawfilefits,iread+1)
             dname = rawfilefits.replace('R-','Raw-').replace('.fits','-'+str(iread+1).zfill(3)+'.fits')
