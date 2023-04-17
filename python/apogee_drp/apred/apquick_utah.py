@@ -934,7 +934,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
     else:
         subspec = spec
     # Create the S/N catalog
-    pdb.set_trace()
     cat = snrcat(subspec,plugmap)
     print('Mean S/N = %5.2f' % np.mean(cat['snr']))
     if exptype != 'OBJECT':
