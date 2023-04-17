@@ -291,8 +291,9 @@ def loadframes(filename,hdulist,framenum,load=None,nfowler=2,chip=2,lastread=Non
         im = hdulist[i+1].data
         #im = fits.getdata(imfile)#,header=True)
         im = refcorr(im)  # apply reference correction   
-        #if chip is not None:
-        #    im = im[:,(chip-1)*2048:chip*2048]
+        if chip is not None:
+            im = im[:,:2048]
+            #im = im[:,(chip-1)*2048:chip*2048]
         frame = Frame(imfile,head,im,framenum,num)
         bframes.append(frame)
     # Load the ending set of frames
@@ -303,8 +304,9 @@ def loadframes(filename,hdulist,framenum,load=None,nfowler=2,chip=2,lastread=Non
         im = hdulist[nfiles-nfowler_use+i].data
         #im,head = fits.getdata(imfile,header=True)
         im = refcorr(im)  # apply reference correction   
-        #if chip is not None:
-        #    im = im[:,(chip-1)*2048:chip*2048]
+        if chip is not None:
+            im = im[:,:2048]
+            #im = im[:,(chip-1)*2048:chip*2048]
         frame = Frame(imfile,head,im,framenum,num)
         eframes.append(frame)
     # Return the lists
@@ -469,7 +471,6 @@ def bpmfix(frame,bpm):
         new = np.median(nei,axis=1)
         frame.im[ind1,ind2] = new
 
-    pdb.set_trace()
     frame.err[bad] = 1e30
     frame.head['HISTORY'] = str(nbpm)+' bad pixels masked out'
 
