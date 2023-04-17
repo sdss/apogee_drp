@@ -250,8 +250,8 @@ def loadframes(filename,framenum,nfowler=2,chip=2,lastread=None):
     # Load the begging set of frames
     #  skip the first one, bad
     bframes = []
-    #for i in range(nfowler_use):
-    imfile = files[i+1]
+    for i in range(nfowler_use):
+        imfile = files[i+1]
         num = readnum[i+1]
         im,head = fits.getdata(imfile,header=True)
         im = refcorr(im)  # apply reference correction   
