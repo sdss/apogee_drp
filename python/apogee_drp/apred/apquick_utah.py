@@ -90,6 +90,7 @@ def utah(telescope='apo25m', apred='daily'):
         rawfile = os.path.basename(rawfilepath)
         rawfilefits = rawfile.replace('.apz','.fits')
         mjd = os.path.basename(os.path.dirname(rawfile))
+        print(mjd)
         infile = cwd+rawfilefits
         #pdb.set_trace()
         # Unzip the file
@@ -101,7 +102,7 @@ def utah(telescope='apo25m', apred='daily'):
         #    dname = rawfilefits.replace('R-','Raw-').replace('.fits','-'+str(iread+1).zfill(3)+'.fits')
         #    print(dname)
         #    Table(d).write(dname,overwrite=True)
-        output = runquick(infile, hdulist, framenum=framenum, mjd=mjd, load=load)
+        output = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load)
 
         pdb.set_trace()
 
@@ -776,7 +777,7 @@ def snrhmag(cat,nreads,nframes,hfid=11.0):
 
 
 # Run everything
-def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,plugfile=None,ncol=51):
+def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,plugfile=None,ncol=51):
     """This runs all of the main steps of the quick reduction.
     
     Parameters
