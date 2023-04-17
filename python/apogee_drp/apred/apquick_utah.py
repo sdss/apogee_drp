@@ -75,7 +75,7 @@ def utah(telescope='apo25m', apred='daily'):
     cwd = os.getcwd()
 
     # Get exposure numbers from summary file
-    edata0 = fits.getdata(apodir+'monitor/'+load.observatory+'Sci.fits')
+    edata0 = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
     nexp = len(edata)
 
     # Loop over exposures
