@@ -892,8 +892,8 @@ def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',las
     # Load the plugmap file
     plugmap = None
     # Try to get fiber mapping ID from the first read header
-    configid = head['configid']
     pdb.set_trace()
+    configid = head['configid']
     if configid is not None and str(configid) != '':
         configgrp = '{:0>4d}XX'.format(int(configid) // 100)
         plugfile = plugdir+'/'+configgrp+'/confSummary-'+str(configid)+'.par'
