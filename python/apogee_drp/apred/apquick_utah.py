@@ -914,7 +914,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
             plugmap = None
         else:
             print('Loading '+plugfile)
-            plugmap = yanny.yanny(plugfile) #,np=True)
+            plugmap = yanny.yanny(plugfile,np=True)
 
     # Add some important configuration values to the header
     if plugmap is not None:
