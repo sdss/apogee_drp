@@ -331,7 +331,6 @@ def fowler(bframes,eframes=None):
     #exptype = fits.getheader(bframes)['exptype']
     #if exptype != 'INTERNALFLAT' and exptype != 'DARK':
     for i in range(4):
-        pdb.set_trace()
         med1 = np.median(im[0:10,i*512:(i+1)*512])
         med2 = np.median(im[-10:,i*512:(i+1)*512])
         im[:,i*512:(i+1)*512] -= (np.arange(2048).astype(float)*(med2-med1)/2047+med1).reshape(-1,1)
