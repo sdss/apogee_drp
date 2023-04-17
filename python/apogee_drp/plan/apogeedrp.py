@@ -1255,10 +1255,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         cwd = os.path.abspath(os.curdir)
         for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','sparse','fiber','modelpsf','fpi']:
             for obs in ['apogee-n','apogee-s']:
-                if obs=='apogee-n':
-                    prefix = 'ap'
-                else:
-                    prefix = 'as'
                 srcdir = apogee_redux+linkvers+'/cal/'+obs+'/'+d
                 destdir = apogee_redux+apred+'/cal/'+obs+'/'+d
                 if d=='sparse' or d=='modelpsf' or d=='fiber':
@@ -1267,15 +1263,15 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 logger.info('Creating symlinks for '+d+' '+obs)
                 os.chdir(destdir)
                 if d=='modelpsf':
-                    subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSFModel-*.fits .'],shell=True)
+                    subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'PSFModel-*.fits .'],shell=True)
                 elif d=='sparse':
-                    subprocess.run(['ln -s '+srcdir+'/'+prefix+'Sparse*.fits .'],shell=True)
+                    subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'Sparse*.fits .'],shell=True)
                     # Need to link apEPSF files as well
-                    sfiles = glob(srcdir+'/'+prefix+'Sparse*.fits')
+                    sfiles = glob(srcdir+'/'+load.prefix+'Sparse*.fits')
                     if len(sfiles)>0:
                         snum = [os.path.basename(s)[9:-5] for s in sfiles]
                         for num in snum:
-                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+num+'.fits .'],shell=True)
+                            subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'EPSF-?-'+num+'.fits .'],shell=True)
                 elif d=='darkcorr' or d=='flatcorr':
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
                     subprocess.run(['ln -s '+srcdir+'/*.tab .'],shell=True)
@@ -1292,12 +1288,12 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     caldict = mkcal.readcal(caldir+obs+'.par')
                     fiberdict = caldict['fiber']
                     for f in fiberdict['name']:
-                        subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+f+'.fits .'],shell=True)
-                        subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSF-?-'+f+'.fits .'],shell=True)
+                        subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'EPSF-?-'+f+'.fits .'],shell=True)
+                        subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'PSF-?-'+f+'.fits .'],shell=True)
                         tsrcdir = apogee_redux+linkvers+'/cal/'+obs+'/trace'
                         tdestdir = apogee_redux+apred+'/cal/'+obs+'/trace'
                         os.chdir(tdestdir)
-                        subprocess.run(['ln -s '+tsrcdir+'/'+prefix+'ETrace-?-'+f+'.fits .'],shell=True)
+                        subprocess.run(['ln -s '+tsrcdir+'/'+load.prefix+'ETrace-?-'+f+'.fits .'],shell=True)
                         os.chdir(destdir)
                 else:
                     subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
@@ -2262,29 +2258,29 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=mjd1))                
                     if ctype=='psf':    # psfs
                         cmd1 += ' --psf '+str(num1)
-                        logfile1 = calplandir+'/apPSF-'+str(num1)+'_pbs.'+logtime+'.log'
+                        logfile1 = calplandir+'/'+load.prefix+'PSF-'+str(num1)+'_pbs.'+logtime+'.log'
                     elif ctype=='flux':   # flux
                         cmd1 += ' --flux '+str(num1)
                         #if fps: cmd1 += ' --librarypsf'
-                        logfile1 = calplandir+'/apFlux-'+str(num1)+'_pbs.'+logtime+'.log'
+                        logfile1 = calplandir+'/'+load.prefix+'Flux-'+str(num1)+'_pbs.'+logtime+'.log'
                     elif ctype=='arcs':  # arcs
                         cmd1 += ' --wave '+str(num1)
                         #if fps: cmd1 += ' --librarypsf'
-                        logfile1 = calplandir+'/apWave-'+str(num1)+'_pbs.'+logtime+'.log' 
+                        logfile1 = calplandir+'/'+load.prefix+'Wave-'+str(num1)+'_pbs.'+logtime+'.log' 
                     elif ctype=='dailywave':  # dailywave
                         cmd1 += ' --dailywave '+str(num1)
                         #if fps: cmd1 += ' --librarypsf'
-                        logfile1 = calplandir+'/apDailyWave-'+str(num1)+'_pbs.'+logtime+'.log' 
+                        logfile1 = calplandir+'/'+load.prefix+'DailyWave-'+str(num1)+'_pbs.'+logtime+'.log' 
                     elif ctype=='fpi':  # fpi
                         cmd1 += ' --fpi '+str(num1)
                         #if fps: cmd1 += ' --librarypsf'
-                        logfile1 = calplandir+'/apFPI-'+str(num1)+'_pbs.'+logtime+'.log'
+                        logfile1 = calplandir+'/'+load.prefix+'FPI-'+str(num1)+'_pbs.'+logtime+'.log'
                         if os.path.exists(os.path.dirname(logfile1))==False:
                             os.makedirs(os.path.dirname(logfile1))
                     elif ctype=='telluric':  # dailywave
                         cmd1 += ' --telluric '+str(num1)
                         #if fps: cmd1 += ' --librarypsf'
-                        logfile1 = calplandir+'/apTelluric-'+str(num1)+'_pbs.'+logtime+'.log' 
+                        logfile1 = calplandir+'/'+load.prefix+'Telluric-'+str(num1)+'_pbs.'+logtime+'.log' 
                     logfiles.append(logfile1)
                     logger.info('Calibration file %d : %s %s' % (j+1,ctype,str(num1)))
                     logger.info('Command : '+cmd1)
