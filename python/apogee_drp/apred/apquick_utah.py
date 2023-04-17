@@ -89,7 +89,7 @@ def utah(telescope='apo25m', apred='daily'):
             continue
         rawfile = os.path.basename(rawfilepath)
         rawfilefits = rawfile.replace('.apz','.fits')
-        mjd = os.path.basename(os.path.dirname(rawfile))
+        mjd = os.path.basename(os.path.dirname(rawfilepath))
         print(mjd)
         infile = cwd+rawfilefits
         #pdb.set_trace()
