@@ -915,10 +915,11 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
         else:
             print('Loading '+plugfile)
             plugmap = yanny.yanny(plugfile) #,np=True)
-    pdb.set_trace()
+
     # Add some important configuration values to the header
     if plugmap is not None:
-        frame.head['CONFIGID'] = plugmap.get('configuration_id')
+        try: frame.head['CONFIGID'] = plugmap.get('configuration_id')
+        except: frame.head['CONFIGID'] = ''
         frame.head['DESIGNID'] = plugmap.get('design_id')
         frame.head['FIELDID'] = plugmap.get('field_id')
         frame.head['CONFIGFL'] = plugfile
