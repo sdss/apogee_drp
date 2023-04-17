@@ -860,7 +860,6 @@ def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',las
     gain = np.median(gainim)
     # Generate the noise image
     err = noisemodel(im,nreads,rdnoise,gain)
-    pdb.set_trace()
     frame = Frame("",head,im,framenum,0)
     frame.err = err
     # Add some important values to the header
