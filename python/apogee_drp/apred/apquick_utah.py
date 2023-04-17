@@ -56,7 +56,7 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 #if observatory == "APO":
 #    prefix = 'ap'
 #else:
-    prefix = 'as'
+    #prefix = 'as'
     # Fix plugmap_dir for lco
     # plugmap_dir: /home/sdss5/software/sdsscore/main/apo/summary_files/
     #config['apogee_mountain']['plugmap_dir'] = config['apogee_mountain']['plugmap_dir'].replace('apo','lco')
