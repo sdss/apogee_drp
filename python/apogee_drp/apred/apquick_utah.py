@@ -781,12 +781,7 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
     psfdir = caldir+'psf/'
     detdir = caldir+'detector/'
     bpmdir = caldir+'bpm/'
-    # plugmap/configuration directory
-    if config['apogee_mountain'].get('plugmap_dir') is not None:
-        plugdir = config['apogee_mountain'].get('plugmap_dir')
-    else:
-        plugdir = os.environ['SDSSCORE_DIR']+observatory.lower()+'/summary_files/'
-        #plugdir = '/data/apogee/plugmaps/'
+
     # Load the reads
     nfowler = 2
     rawdir = os.path.dirname(filename)+'/'
@@ -796,6 +791,17 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
         print('Cannot run quicklook')
         return None,None,None,None
     head = eframes[0].head.copy()   # header of first read
+    pdb.set_trace()
+
+
+    # plugmap/configuration directory
+    plugmapfile = load.filename('confSummary', configid=int(iplate[i]))
+    if config['apogee_mountain'].get('plugmap_dir') is not None:
+        plugdir = config['apogee_mountain'].get('plugmap_dir')
+    else:
+        plugdir = os.environ['SDSSCORE_DIR']+observatory.lower()+'/summary_files/'
+        #plugdir = '/data/apogee/plugmaps/'
+
     nframes = np.int(head['NFRAMES'])
     exptype = head.get('EXPTYPE')
     if exptype is None: exptype=''
@@ -805,7 +811,6 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
     detfiles = glob(detdir+'/'+prefix+'Detector-b-????????.fits')
     detfiles = np.sort(detfiles)
     print('Using '+detfiles[-1])
-    pdb.set_trace()
     rdnoiseim = fits.getdata(detfiles[-1],1)
     rdnoise = np.median(rdnoiseim)
     gainim = fits.getdata(detfiles[-1],2)
