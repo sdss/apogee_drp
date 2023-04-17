@@ -469,6 +469,7 @@ def bpmfix(frame,bpm):
         new = np.median(nei,axis=1)
         frame.im[ind1,ind2] = new
 
+    pdb.set_trace()
     frame.err[bad] = 1e30
     frame.head['HISTORY'] = str(nbpm)+' bad pixels masked out'
 
