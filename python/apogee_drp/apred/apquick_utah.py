@@ -241,7 +241,7 @@ def loadframes(filename,framenum,nfowler=2,chip=2,lastread=None):
     # Sort the files
     #files = np.sort(files)
     # Get the read numbers
-    readnum = np.arange(0,nframes)
+    readnum = np.arange(0,nfiles)
     #readnum = np.zeros(nfiles,dtype=int)
     #for i in range(nfiles):
     #    base = os.path.basename(files[i])
