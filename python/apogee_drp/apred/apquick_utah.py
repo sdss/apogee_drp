@@ -328,7 +328,7 @@ def fowler(bframes,eframes=None):
     ## first and last 10 rows
     ## Do a linear ramp for each quadrant
     im = fits.getdata(bframes)
-    exptype = fits.getheader(im)['exptype']
+    #exptype = fits.getheader(bframes)['exptype']
     #if exptype != 'INTERNALFLAT' and exptype != 'DARK':
     for i in range(4):
         med1 = np.median(im[0:10,i*512:(i+1)*512])
