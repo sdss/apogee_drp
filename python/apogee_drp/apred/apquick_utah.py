@@ -574,19 +574,16 @@ def skysub(spec,plugmap):
 
     """
 
-    pdb.set_trace()
     # Find the object and sky fibers
     if 'PLUGMAPOBJ' in plugmap.keys():
         fibermap = plugmap['PLUGMAPOBJ']
         objtype = np.char.array(fibermap['objType'].astype(str)).upper()
         sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['holeType'].astype(str)=='OBJECT') & 
-                           (fibermap['spectrographId']==2) & (fibermap['objType']=='SKY'))
-        pdb.set_trace()
+                           (fibermap['spectrographId']==2) & (objtype=='SKY'))
     else:
         fibermap = plugmap['FIBERMAP']
         # get objtype from the targeting information in sdssv_apogee_target0
-        try: category = np.char.array(fibermap['category'].astype(str)).upper()
-        except: category = np.char.array(fibermap['objType'].astype(str)).upper()
+        category = np.char.array(fibermap['category'].astype(str)).upper()
         sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
 
