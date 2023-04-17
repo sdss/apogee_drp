@@ -809,7 +809,8 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
     # Do Fowler/CDS collapse
     #im = fowler(filename)#bframes,eframes)
     im = fits.getdata(filename)
-    nreads = head['NREADS']
+    try: nreads = head['NREADS']
+    except: nreads = head['NFRAMES']
     # Get rdnoise/gain from apDetector file
     detfiles = glob(detdir+'/'+load.prefix+'Detector-b-????????.fits')
     detfiles = np.sort(detfiles)
