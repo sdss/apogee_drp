@@ -810,7 +810,7 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
     #im = fowler(filename)#bframes,eframes)
     im = fits.getdata(filename)
     # Get rdnoise/gain from apDetector file
-    detfiles = glob(detdir+'/'+prefix+'Detector-b-????????.fits')
+    detfiles = glob(detdir+'/'+load.prefix+'Detector-b-????????.fits')
     detfiles = np.sort(detfiles)
     print('Using '+detfiles[-1])
     rdnoiseim = fits.getdata(detfiles[-1],1)
@@ -824,13 +824,13 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
     # Add some important values to the header
     frame.head['FRAMENUM'] = framenum
     # Use bad pixel mask
-    bpmfiles = glob(bpmdir+'/'+prefix+'BPM-b-????????.fits')
+    bpmfiles = glob(bpmdir+'/'+load.prefix+'BPM-b-????????.fits')
     bpmfiles = list(np.sort(bpmfiles))
     print('Using '+bpmfiles[-1])
     bpm = fits.getdata(bpmfiles[-1],0)
     frame = bpmfix(frame,bpm)
     # Load the trace information
-    psffiles = np.sort(glob(psfdir+'/'+prefix+'PSF-b-*.fits'))
+    psffiles = np.sort(glob(psfdir+'/'+load.prefix+'PSF-b-*.fits'))
     #psffiles = np.sort(glob(psfdir+'/apPSF-b-????????.fits'))
     print('Using '+psffiles[-1])
     tracestr = Table.read(psffiles[-1],1)
