@@ -45,7 +45,7 @@ import subprocess
 # In the future, use yanny tools from pyDL
 #from pydl.pydlutils.yanny import (is_yanny, read_table_yanny,
 #                                  write_table_yanny)
-from pydl.pydlutils import yanny
+#from pydl.pydlutils import yanny
 
 
 # Ignore these warnings, it's a bug
