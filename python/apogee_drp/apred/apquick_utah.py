@@ -583,7 +583,7 @@ def skysub(spec,plugmap):
     else:
         fibermap = plugmap['FIBERMAP']
         # get objtype from the targeting information in sdssv_apogee_target0
-        category = fibermap['OBJTYPE']#np.char.array(fibermap['category'].astype(str)).upper()
+        category = fibermap['objType']#np.char.array(fibermap['category'].astype(str)).upper()
         sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
 
