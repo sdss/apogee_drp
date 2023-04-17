@@ -36,9 +36,9 @@ from scipy.ndimage import median_filter,generic_filter
 from apogee_drp.utils import apzip,plan,apload,yanny,plugmap,platedata,bitmask,info
 #from apogee_drp.utils import yanny, apload
 #from sdss_access.path import path
-from . import config  # get loaded config values 
-from . import __version__
-from . import bitmask as bmask
+#from . import config  # get loaded config values 
+#from . import __version__
+#from . import bitmask as bmask
 #from . import yanny
 import subprocess
 
@@ -52,14 +52,14 @@ from pydl.pydlutils import yanny
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
-observatory = os.getenv("OBSERVATORY")
-if observatory == "APO":
-    prefix = 'ap'
-else:
+#observatory = os.getenv("OBSERVATORY")
+#if observatory == "APO":
+#    prefix = 'ap'
+#else:
     prefix = 'as'
     # Fix plugmap_dir for lco
     # plugmap_dir: /home/sdss5/software/sdsscore/main/apo/summary_files/
-    config['apogee_mountain']['plugmap_dir'] = config['apogee_mountain']['plugmap_dir'].replace('apo','lco')
+    #config['apogee_mountain']['plugmap_dir'] = config['apogee_mountain']['plugmap_dir'].replace('apo','lco')
 
 """
 Wrappper for running apquick on data stored at Utah
@@ -949,7 +949,7 @@ def writeresults(outfile, frame, sframe, cat, coefstr, compress=False):
 
     # HDU0: header only
     head = frame.head
-    head.add_history('apogee_mountain version: '+str(__version__))
+    #head.add_history('apogee_mountain version: '+str(__version__))
     head.add_history("APQUICK results for "+str(head['FRAMENUM']))
     head.add_history("HDU0: Header only")
     head.add_history("HDU1: coefstr, S/N for fiducial Hmag")
