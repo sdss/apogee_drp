@@ -290,7 +290,7 @@ def loadframes(filename,framenum,nfowler=2,chip=2,lastread=None):
     for i in range(nfowler_use):
         #imfile = files[nfiles-nfowler_use+i]
         num = readnum[nfiles-nfowler_use+i]
-        im,head = fits.getdata(imfile,num,header=True)
+        im,head = fits.getdata(filename,num,header=True)
         im = refcorr(im)  # apply reference correction   
         if chip is not None:
             im = im[:,(chip-1)*2048:chip*2048]
