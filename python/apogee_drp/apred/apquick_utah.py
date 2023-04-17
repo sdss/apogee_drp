@@ -190,7 +190,7 @@ def refcorr(image):
     return image
 
 # Load the frames
-def loadframes(rawdir,framenum,nfowler=2,chip=2,lastread=None):
+def loadframes(filename,framenum,nfowler=2,chip=2,lastread=None):
     """Loads apRaw reads at beginning and end of an exposure.
 
     This function loads apRaw reads for an exposure at the beginning
@@ -198,8 +198,8 @@ def loadframes(rawdir,framenum,nfowler=2,chip=2,lastread=None):
     
     Parameters
     ----------
-    rawdir : str
-           Directory for the apRaw files.
+    filename : str
+           Full path to the apRaw file.
     framenum : str
           The 8 digit APOGEE frame number.
     nfowler : int
@@ -232,25 +232,26 @@ def loadframes(rawdir,framenum,nfowler=2,chip=2,lastread=None):
 
     # What nfowler are we using
     # Use nfowler=1 for DOMEFLAT
-    head1 = fits.getheader(files[0],0)
+    nfiles = 1
+    head1 = fits.getheader(filename,0)
     exptype = head1.get('exptype')
     if exptype=='DOMEFLAT':
         print('Using nfowler=1 for DOMEFLAT')
         nfowler = 1
     nfowler_use = nfowler
     # Raise an error if we don't have enough reads for nfowler
-    if nfiles<3:
-        raise Exception("Not enough reads ("+str(nfiles)+")")
-    if nfiles<(2*nfowler+1):
-        nfowler_use = np.int(np.floor((nfiles-1)/2.))
-        print("Not enough reads ("+str(nfiles)+") for Nfowler="+str(nfowler)+".  Using "+str(nfowler_use)+" instead")
+    #if nfiles<3:
+    #    raise Exception("Not enough reads ("+str(nfiles)+")")
+    #if nfiles<(2*nfowler+1):
+    #    nfowler_use = np.int(np.floor((nfiles-1)/2.))
+    #    print("Not enough reads ("+str(nfiles)+") for Nfowler="+str(nfowler)+".  Using "+str(nfowler_use)+" instead")
     #if nfiles<nfowler:
     #    raise Exception("Not enough reads ("+str(nfiles)+") for Nfowler="+str(nfowler))
     # Load the begging set of frames
     #  skip the first one, bad
     bframes = []
-    for i in range(nfowler_use):
-        imfile = files[i+1]
+    #for i in range(nfowler_use):
+    imfile = files[i+1]
         num = readnum[i+1]
         im,head = fits.getdata(imfile,header=True)
         im = refcorr(im)  # apply reference correction   
@@ -302,36 +303,37 @@ def fowler(bframes,eframes):
 
     """
 
-    # Beginning sample
-    nbeg = len(bframes)
-    nx,ny = bframes[0].im.shape
-    if (nbeg==1):
-        im_beg = np.array(bframes[0].im.copy(),dtype=float)
-    else:
-        im_beg = np.array(bframes[0].im.copy(),dtype=float)*0
-        for i in range(nbeg): im_beg += np.array(bframes[i].im.copy(),dtype=float)
-        im_beg /= np.float(nbeg)
-    # End sample
-    nend = len(eframes)
-    if (nend==1):
-        im_end = np.array(eframes[0].im.copy(),dtype=float)
-    else:
-        im_end = np.array(eframes[0].im.copy(),dtype=float)*0
-        for i in range(nend): im_end += np.array(eframes[i].im.copy(),dtype=float)
-        im_end /= np.float(nend)
-    # The middle read will be used twice for 3 reads
-    # Subtract beginning from end
-    im = im_end - im_beg
+    ## Beginning sample
+    #nbeg = len(bframes)
+    #nx,ny = bframes[0].im.shape
+    #if (nbeg==1):
+    #    im_beg = np.array(bframes[0].im.copy(),dtype=float)
+    #else:
+    #    im_beg = np.array(bframes[0].im.copy(),dtype=float)*0
+    #    for i in range(nbeg): im_beg += np.array(bframes[i].im.copy(),dtype=float)
+    #    im_beg /= np.float(nbeg)
+    ## End sample
+    #nend = len(eframes)
+    #if (nend==1):
+    #    im_end = np.array(eframes[0].im.copy(),dtype=float)
+    #else:
+    #    im_end = np.array(eframes[0].im.copy(),dtype=float)*0
+    #    for i in range(nend): im_end += np.array(eframes[i].im.copy(),dtype=float)
+    #    im_end /= np.float(nend)
+    ## The middle read will be used twice for 3 reads
+    ## Subtract beginning from end
+    #im = im_end - im_beg
 
-    # Fix the background level by using the upper and lower edges
-    # first and last 10 rows
-    # Do a linear ramp for each quadrant
-    exptype = eframes[0].head['exptype']
-    if exptype != 'INTERNALFLAT' and exptype != 'DARK':
-        for i in range(4):
-            med1 = np.median(im[0:10,i*512:(i+1)*512])
-            med2 = np.median(im[-10:,i*512:(i+1)*512])
-            im[:,i*512:(i+1)*512] -= (np.arange(2048).astype(float)*(med2-med1)/2047+med1).reshape(-1,1)
+    ## Fix the background level by using the upper and lower edges
+    ## first and last 10 rows
+    ## Do a linear ramp for each quadrant
+    im = fits.getdata(bframes)
+    exptype = bframes.head['exptype']
+    #if exptype != 'INTERNALFLAT' and exptype != 'DARK':
+    for i in range(4):
+        med1 = np.median(im[0:10,i*512:(i+1)*512])
+        med2 = np.median(im[-10:,i*512:(i+1)*512])
+        im[:,i*512:(i+1)*512] -= (np.arange(2048).astype(float)*(med2-med1)/2047+med1).reshape(-1,1)
 
     return im
 
@@ -785,29 +787,27 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
     # Load the reads
     nfowler = 2
     rawdir = os.path.dirname(filename)+'/'
-    pdb.set_trace()
-    framenum = int(os.path.basename(filename).split('-')[2])
-    bframes,eframes,nreads = loadframes(rawdir,framenum,nfowler=nfowler,lastread=lastread)
-    if bframes is None:
-        print('Cannot run quicklook')
-        return None,None,None,None
-    head = eframes[0].head.copy()   # header of first read
-    pdb.set_trace()
-
+    framenum = int(os.path.basename(filename).split('-')[2].split('.')[0])
+    #bframes,eframes,nreads = loadframes(filename,framenum,nfowler=nfowler,lastread=lastread)
+    #if bframes is None:
+    #    print('Cannot run quicklook')
+    #    return None,None,None,None
+    head = fits.getheader(filename)#eframes[0].head.copy()   # header of first read
+    #pdb.set_trace()
 
     # plugmap/configuration directory
-    plugmapfile = load.filename('confSummary', configid=int(iplate[i]))
-    if config['apogee_mountain'].get('plugmap_dir') is not None:
-        plugdir = config['apogee_mountain'].get('plugmap_dir')
-    else:
-        plugdir = os.environ['SDSSCORE_DIR']+observatory.lower()+'/summary_files/'
+    #plugmapfile = load.filename('confSummary', configid=int(iplate[i]))
+    #if config['apogee_mountain'].get('plugmap_dir') is not None:
+    #    plugdir = config['apogee_mountain'].get('plugmap_dir')
+    #else:
+    #    plugdir = os.environ['SDSSCORE_DIR']+observatory.lower()+'/summary_files/'
         #plugdir = '/data/apogee/plugmaps/'
 
     nframes = np.int(head['NFRAMES'])
     exptype = head.get('EXPTYPE')
     if exptype is None: exptype=''
     # Do Fowler/CDS collapse
-    im = fowler(bframes,eframes)
+    im = fowler(filename)#bframes,eframes)
     # Get rdnoise/gain from apDetector file
     detfiles = glob(detdir+'/'+prefix+'Detector-b-????????.fits')
     detfiles = np.sort(detfiles)
