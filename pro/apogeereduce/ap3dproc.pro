@@ -2389,7 +2389,7 @@ print,'no_checksum: ', no_checksum
   endif
   ;; Gain and read noise
   fxaddpar,head,'gain',gainim[0],' gain in e/ADU'
-  fxaddpar,head,'rdnoise',sample_noise,'read noise from UTR sampling (ADU)'  
+  fxaddpar,head,'rdnoise',median(sample_noise),' median read noise from UTR sampling (ADU)'  
   
   ; Fix EXPTIME if necessary
   if sxpar(head,'NFRAMES') ne nreads then begin
