@@ -825,6 +825,7 @@ def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',las
     detdir = caldir+'detector/'
     bpmdir = caldir+'bpm/'
     rawdir = os.path.dirname(filename)+'/'
+    plugdir4 = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/'+load.observatory+'/'+mjd+'/'
 
     # Load the reads
     nfowler = 2
@@ -892,16 +893,19 @@ def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',las
     # Load the plugmap file
     plugmap = None
     # Try to get fiber mapping ID from the first read header
-    pdb.set_trace()
-    configid = head['configid']
-    if configid is not None and str(configid) != '':
-        configgrp = '{:0>4d}XX'.format(int(configid) // 100)
-        plugfile = plugdir+'/'+configgrp+'/confSummary-'+str(configid)+'.par'
-        print('Using configid from first read header: '+str(configid))
-    else:
-        print('No configID in header.')
-        if plugfile is not None:
-            print('Using input plugfile '+str(plugfile))
+    try:
+        configid = head['configid']
+        if configid is not None and str(configid) != '':
+            configgrp = '{:0>4d}XX'.format(int(configid) // 100)
+            plugfile = plugdir+'/'+configgrp+'/confSummary-'+str(configid)+'.par'
+            print('Using configid from first read header: '+str(configid))
+        else:
+            print('No configID in header.')
+            if plugfile is not None:
+                print('Using input plugfile '+str(plugfile))
+    except:
+        plugfile = plugdir4+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-'+str(head['MAPID']).zfill(2)+'.par'
+
     # Load plugmap/fibermap file
     if plugfile is not None:
         if os.path.exists(plugfile) is False:
@@ -910,6 +914,7 @@ def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',las
         else:
             print('Loading '+plugfile)
             plugmap = yanny.yanny(plugfile) #,np=True)
+    pdb.set_trace()
     # Add some important configuration values to the header
     if plugmap is not None:
         frame.head['CONFIGID'] = plugmap.get('configuration_id')
