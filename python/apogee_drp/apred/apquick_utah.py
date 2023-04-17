@@ -96,12 +96,12 @@ def utah(telescope='apo25m', apred='daily'):
         if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=cwd)
         hdulist = fits.open(rawfilefits)
         nreads = len(hdulist)-1
-        for iread in range(nreads):
-            d = hdulist[iread+1].data
-            dname = rawfilefits.replace('R-','Raw-').replace('.fits','-'+str(iread+1).zfill(3)+'.fits')
-            print(dname)
-            Table(d).write(dname,overwrite=True)
-        output = runquick(infile,framenum=framenum,mjd=mjd, load=load)
+        #for iread in range(nreads):
+        #    d = hdulist[iread+1].data
+        #    dname = rawfilefits.replace('R-','Raw-').replace('.fits','-'+str(iread+1).zfill(3)+'.fits')
+        #    print(dname)
+        #    Table(d).write(dname,overwrite=True)
+        output = runquick(filename, hdulist, framenum=framenum, mjd=mjd, load=load)
 
         pdb.set_trace()
 
@@ -200,7 +200,7 @@ def refcorr(image):
     return image
 
 # Load the frames
-def loadframes(rawdir,framenum,load=None,nfowler=2,chip=2,lastread=None):
+def loadframes(filename,hdulist,framenum,load=None,nfowler=2,chip=2,lastread=None):
     """Loads apRaw reads at beginning and end of an exposure.
 
     This function loads apRaw reads for an exposure at the beginning
@@ -241,19 +241,20 @@ def loadframes(rawdir,framenum,load=None,nfowler=2,chip=2,lastread=None):
     """
 
     # Get the file list
-    files = glob(rawdir+load.prefix+"Raw-"+str(framenum)+"-???.fits")
-    nfiles = len(files)
+    #files = glob(rawdir+load.prefix+"Raw-"+str(framenum)+"-???.fits")
+    nfiles = len(hdulist)-1
     if nfiles==0:
         print("No files for "+str(framenum))
         return None,None,None
     # Sort the files
-    files = np.sort(files)
+    #files = np.sort(files)
     # Get the read numbers
-    readnum = np.zeros(nfiles,dtype=int)
-    for i in range(nfiles):
-        base = os.path.basename(files[i])
-        # apRaw-28190009-059.fits
-        readnum[i] = np.int(base[15:18])
+    readnum = np.arange(0,nfiles)
+    #readnum = np.zeros(nfiles,dtype=int)
+    #for i in range(nfiles):
+    #    base = os.path.basename(files[i])
+    #    # apRaw-28190009-059.fits
+    #    readnum[i] = np.int(base[15:18])
     # If readnum input then only use reads up to that number
     if lastread is not None:
         gdf, = np.where(readnum <= int(lastread))
@@ -266,7 +267,8 @@ def loadframes(rawdir,framenum,load=None,nfowler=2,chip=2,lastread=None):
         nfiles = ngdf
     # What nfowler are we using
     # Use nfowler=1 for DOMEFLAT
-    head = fits.getheader(files[0].replace('Raw','R').replace('-001.fits','.fits'))
+    #head = fits.getheader(files[0].replace('Raw','R').replace('-001.fits','.fits'))
+    head = fits.getheader(filename)
     #exptype = head1.get('exptype')
     #if exptype=='DOMEFLAT':
     #    print('Using nfowler=1 for DOMEFLAT')
@@ -284,9 +286,10 @@ def loadframes(rawdir,framenum,load=None,nfowler=2,chip=2,lastread=None):
     #  skip the first one, bad
     bframes = []
     for i in range(nfowler_use):
-        imfile = files[i+1]
+        imfile = filename#files[i+1]
         num = readnum[i+1]
-        im = fits.getdata(imfile)#,header=True)
+        im = hdulist[i+1].data
+        #im = fits.getdata(imfile)#,header=True)
         im = refcorr(im)  # apply reference correction   
         #if chip is not None:
         #    im = im[:,(chip-1)*2048:chip*2048]
@@ -295,9 +298,10 @@ def loadframes(rawdir,framenum,load=None,nfowler=2,chip=2,lastread=None):
     # Load the ending set of frames
     eframes= []
     for i in range(nfowler_use):
-        imfile = files[nfiles-nfowler_use+i]
+        imfile = filename#files[nfiles-nfowler_use+i]
         num = readnum[nfiles-nfowler_use+i]
-        im,head = fits.getdata(imfile,header=True)
+        im = hdulist[nfiles-nfowler_use+i].data
+        #im,head = fits.getdata(imfile,header=True)
         im = refcorr(im)  # apply reference correction   
         #if chip is not None:
         #    im = im[:,(chip-1)*2048:chip*2048]
@@ -771,7 +775,7 @@ def snrhmag(cat,nreads,nframes,hfid=11.0):
 
 
 # Run everything
-def runquick(filename,framenum=None,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,plugfile=None,ncol=51):
+def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,plugfile=None,ncol=51):
     """This runs all of the main steps of the quick reduction.
     
     Parameters
@@ -823,9 +827,9 @@ def runquick(filename,framenum=None,mjd=None,load=None,apred='daily',lastread=No
 
     # Load the reads
     nfowler = 2
-    rawdir = os.path.dirname(filename)+'/'
-    framenum = int(os.path.basename(filename).split('-')[2].split('.')[0])
-    bframes,eframes,nreads = loadframes(rawdir,framenum,load=load,nfowler=nfowler,lastread=lastread)
+    #rawdir = os.path.dirname(filename)+'/'
+    #framenum = int(os.path.basename(filename).split('-')[2].split('.')[0])
+    bframes,eframes,nreads = loadframes(filename,hdulist,framenum,load=load,nfowler=nfowler,lastread=lastread)
     if bframes is None:
         print('Cannot run quicklook')
         return None,None,None,None
