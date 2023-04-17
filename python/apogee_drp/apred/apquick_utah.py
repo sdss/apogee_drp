@@ -51,7 +51,7 @@ from pydl.pydlutils import yanny
 # Ignore these warnings, it's a bug
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
-warnings.filterwarnings('ignore', category=AstropyVerifyWarning)
+warnings.filterwarnings('ignore', category=UserWarning, append=True)
 
 #observatory = os.getenv("OBSERVATORY")
 #if observatory == "APO":
