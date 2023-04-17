@@ -97,7 +97,7 @@ def utah(telescope='apo25m', apred='daily'):
         hdulist = fits.open(rawfilefits)
         nreads = len(hdulist)-1
         for iread in range(nreads):
-            d = fits.getdata(rawfilefits,iread+1)
+            d = hdulist[iread+1].data
             dname = rawfilefits.replace('R-','Raw-').replace('.fits','-'+str(iread+1).zfill(3)+'.fits')
             print(dname)
             Table(d).write(dname,overwrite=True)
