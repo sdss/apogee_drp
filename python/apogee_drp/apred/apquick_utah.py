@@ -72,7 +72,7 @@ def utah(telescope='apo25m', apred='daily'):
     outdir = apodir+'quickred/'+telescope+'/'
     
     # Raw data will be extracted temporarily to current working directory (then removed)
-    cwd = os.getcwd()
+    cwd = os.getcwd()+'/'
 
     # Get exposure numbers from summary file
     edata0 = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
