@@ -574,6 +574,7 @@ def skysub(spec,plugmap):
 
     """
 
+    pdb.set_trace()
     # Find the object and sky fibers
     if 'PLUGMAPOBJ' in plugmap.keys():
         fibermap = plugmap['PLUGMAPOBJ']
