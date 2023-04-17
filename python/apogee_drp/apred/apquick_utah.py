@@ -587,7 +587,6 @@ def skysub(spec,plugmap):
         sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
 
-    pdb.set_trace()
     # We have sky fibers
     if len(sfibs)>0:
         skyindex = 300-fibermap[sfibs]['fiberId']
@@ -935,7 +934,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
     else:
         subspec = spec
     # Create the S/N catalog
-    pdb.set_trace()
     cat = snrcat(subspec,plugmap)
     print('Mean S/N = %5.2f' % np.mean(cat['snr']))
     if exptype != 'OBJECT':
