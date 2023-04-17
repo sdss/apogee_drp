@@ -101,7 +101,7 @@ def utah(telescope='apo25m', apred='daily'):
         #    dname = rawfilefits.replace('R-','Raw-').replace('.fits','-'+str(iread+1).zfill(3)+'.fits')
         #    print(dname)
         #    Table(d).write(dname,overwrite=True)
-        output = runquick(filename, hdulist, framenum=framenum, mjd=mjd, load=load)
+        output = runquick(infile, hdulist, framenum=framenum, mjd=mjd, load=load)
 
         pdb.set_trace()
 
