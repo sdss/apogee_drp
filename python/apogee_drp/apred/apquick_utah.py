@@ -198,8 +198,8 @@ def loadframes(filename,framenum,nfowler=2,chip=2,lastread=None):
     
     Parameters
     ----------
-    filename : str
-           Full path to the apRaw file.
+    rawdir : str
+           Directory for the apRaw files.
     framenum : str
           The 8 digit APOGEE frame number.
     nfowler : int
@@ -230,30 +230,57 @@ def loadframes(filename,framenum,nfowler=2,chip=2,lastread=None):
 
     """
 
+    # Get the file list
+    hdulist = fits.open(filename)
+    nfiles = len(hdulist)-1
+    #files = glob(rawdir+"/"+prefix+"Raw-"+str(framenum)+"-???.fits")
+    #nfiles = len(files)
+    if nfiles==0:
+        print("No files for "+str(framenum))
+        return None,None,None
+    # Sort the files
+    #files = np.sort(files)
+    # Get the read numbers
+    readnum = np.arange(0,nframes)
+    #readnum = np.zeros(nfiles,dtype=int)
+    #for i in range(nfiles):
+    #    base = os.path.basename(files[i])
+    #    # apRaw-28190009-059.fits
+    #    readnum[i] = np.int(base[15:18])
+    # If readnum input then only use reads up to that number
+    #if lastread is not None:
+    #    gdf, = np.where(readnum <= int(lastread))
+    #    ngdf = len(gdf)
+    #    if ngdf < 2:
+    #        raise Exception("Not enough reads")
+    #    # Only keep the files that we want to use
+    #    files = files[gdf]
+    #    readnum = readnum[gdf]
+    #   nfiles = ngdf
     # What nfowler are we using
     # Use nfowler=1 for DOMEFLAT
-    nfiles = 1
     head1 = fits.getheader(filename,0)
-    exptype = head1.get('exptype')
-    if exptype=='DOMEFLAT':
-        print('Using nfowler=1 for DOMEFLAT')
-        nfowler = 1
+    exptype = head1['EXPTYPE']
+    #if exptype=='DOMEFLAT':
+    #    print('Using nfowler=1 for DOMEFLAT')
+    #    nfowler = 1
     nfowler_use = nfowler
     # Raise an error if we don't have enough reads for nfowler
-    #if nfiles<3:
-    #    raise Exception("Not enough reads ("+str(nfiles)+")")
-    #if nfiles<(2*nfowler+1):
-    #    nfowler_use = np.int(np.floor((nfiles-1)/2.))
-    #    print("Not enough reads ("+str(nfiles)+") for Nfowler="+str(nfowler)+".  Using "+str(nfowler_use)+" instead")
+    if nfiles<3:
+        raise Exception("Not enough reads ("+str(nfiles)+")")
+    if nfiles<(2*nfowler+1):
+        nfowler_use = np.int(np.floor((nfiles-1)/2.))
+        print("Not enough reads ("+str(nfiles)+") for Nfowler="+str(nfowler)+".  Using "+str(nfowler_use)+" instead")
     #if nfiles<nfowler:
     #    raise Exception("Not enough reads ("+str(nfiles)+") for Nfowler="+str(nfowler))
     # Load the begging set of frames
     #  skip the first one, bad
     bframes = []
     for i in range(nfowler_use):
-        imfile = files[i+1]
+        #imfile = files[i+1]
         num = readnum[i+1]
-        im,head = fits.getdata(imfile,header=True)
+        pdb.set_trace()
+        im,head = fits.getdata(filename,i+1,header=True)
         im = refcorr(im)  # apply reference correction   
         if chip is not None:
             im = im[:,(chip-1)*2048:chip*2048]
@@ -262,20 +289,20 @@ def loadframes(filename,framenum,nfowler=2,chip=2,lastread=None):
     # Load the ending set of frames
     eframes= []
     for i in range(nfowler_use):
-        imfile = files[nfiles-nfowler_use+i]
+        #imfile = files[nfiles-nfowler_use+i]
         num = readnum[nfiles-nfowler_use+i]
-        im,head = fits.getdata(imfile,header=True)
+        im,head = fits.getdata(imfile,nfiles-nfowler_use+i-1,header=True)
         im = refcorr(im)  # apply reference correction   
         if chip is not None:
             im = im[:,(chip-1)*2048:chip*2048]
-        frame = Frame(imfile,head,im,framenum,num)
+        frame = Frame(imfile,head,im,framenum,readnum[i])
         eframes.append(frame)
     # Return the lists
     return bframes,eframes,nfiles
 
 
 # Perform Fowler sampling
-def fowler(bframes,eframes=None):
+def fowler(bframes,eframes):
     """Collapses exposure to 2D using Fowler/CDS sampling.
 
     This function performs Fowler/CDS sampling given a list of
@@ -303,37 +330,36 @@ def fowler(bframes,eframes=None):
 
     """
 
-    ## Beginning sample
-    #nbeg = len(bframes)
-    #nx,ny = bframes[0].im.shape
-    #if (nbeg==1):
-    #    im_beg = np.array(bframes[0].im.copy(),dtype=float)
-    #else:
-    #    im_beg = np.array(bframes[0].im.copy(),dtype=float)*0
-    #    for i in range(nbeg): im_beg += np.array(bframes[i].im.copy(),dtype=float)
-    #    im_beg /= np.float(nbeg)
-    ## End sample
-    #nend = len(eframes)
-    #if (nend==1):
-    #    im_end = np.array(eframes[0].im.copy(),dtype=float)
-    #else:
-    #    im_end = np.array(eframes[0].im.copy(),dtype=float)*0
-    #    for i in range(nend): im_end += np.array(eframes[i].im.copy(),dtype=float)
-    #    im_end /= np.float(nend)
-    ## The middle read will be used twice for 3 reads
-    ## Subtract beginning from end
-    #im = im_end - im_beg
+    # Beginning sample
+    nbeg = len(bframes)
+    nx,ny = bframes[0].im.shape
+    if (nbeg==1):
+        im_beg = np.array(bframes[0].im.copy(),dtype=float)
+    else:
+        im_beg = np.array(bframes[0].im.copy(),dtype=float)*0
+        for i in range(nbeg): im_beg += np.array(bframes[i].im.copy(),dtype=float)
+        im_beg /= np.float(nbeg)
+    # End sample
+    nend = len(eframes)
+    if (nend==1):
+        im_end = np.array(eframes[0].im.copy(),dtype=float)
+    else:
+        im_end = np.array(eframes[0].im.copy(),dtype=float)*0
+        for i in range(nend): im_end += np.array(eframes[i].im.copy(),dtype=float)
+        im_end /= np.float(nend)
+    # The middle read will be used twice for 3 reads
+    # Subtract beginning from end
+    im = im_end - im_beg
 
-    ## Fix the background level by using the upper and lower edges
-    ## first and last 10 rows
-    ## Do a linear ramp for each quadrant
-    im = fits.getdata(bframes)
-    #exptype = fits.getheader(bframes)['exptype']
-    #if exptype != 'INTERNALFLAT' and exptype != 'DARK':
-    for i in range(4):
-        med1 = np.median(im[0:10,i*512:(i+1)*512])
-        med2 = np.median(im[-10:,i*512:(i+1)*512])
-        im[:,i*512:(i+1)*512] -= (np.arange(2048).astype(float)*(med2-med1)/2047+med1).reshape(-1,1)
+    # Fix the background level by using the upper and lower edges
+    # first and last 10 rows
+    # Do a linear ramp for each quadrant
+    exptype = eframes[0].head['exptype']
+    if exptype != 'INTERNALFLAT' and exptype != 'DARK':
+        for i in range(4):
+            med1 = np.median(im[0:10,i*512:(i+1)*512])
+            med2 = np.median(im[-10:,i*512:(i+1)*512])
+            im[:,i*512:(i+1)*512] -= (np.arange(2048).astype(float)*(med2-med1)/2047+med1).reshape(-1,1)
 
     return im
 
@@ -788,12 +814,12 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
     nfowler = 2
     rawdir = os.path.dirname(filename)+'/'
     framenum = int(os.path.basename(filename).split('-')[2].split('.')[0])
-    #bframes,eframes,nreads = loadframes(filename,framenum,nfowler=nfowler,lastread=lastread)
+    bframes,eframes,nreads = loadframes(filename,framenum,nfowler=nfowler,lastread=lastread)
     #if bframes is None:
     #    print('Cannot run quicklook')
     #    return None,None,None,None
     head = fits.getheader(filename)#eframes[0].head.copy()   # header of first read
-    #pdb.set_trace()
+    pdb.set_trace()
 
     # plugmap/configuration directory
     #plugmapfile = load.filename('confSummary', configid=int(iplate[i]))
