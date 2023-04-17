@@ -846,8 +846,8 @@ def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',las
     exptype = head['EXPTYPE']
     if exptype is None: exptype=''
     # Do Fowler/CDS collapse
-    #im = fowler(filename)#bframes,eframes)
-    im = fits.getdata(filename)
+    im = fowler(bframes,eframes)
+    #im = fits.getdata(filename)
     try: nreads = head['NREADS']
     except: nreads = head['NFRAMES']
     # Get rdnoise/gain from apDetector file
@@ -859,8 +859,8 @@ def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',las
     gainim = fits.getdata(detfiles[-1],2)
     gain = np.median(gainim)
     # Generate the noise image
-    pdb.set_trace()
     err = noisemodel(im,nreads,rdnoise,gain)
+    pdb.set_trace()
     frame = Frame("",head,im,framenum,0)
     frame.err = err
     # Add some important values to the header
