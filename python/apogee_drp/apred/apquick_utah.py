@@ -785,6 +785,7 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
     # Load the reads
     nfowler = 2
     rawdir = os.path.dirname(filename)+'/'
+    pdb.set_trace()
     framenum = int(os.path.basename(filename).split('-')[2])
     bframes,eframes,nreads = loadframes(rawdir,framenum,nfowler=nfowler,lastread=lastread)
     if bframes is None:
