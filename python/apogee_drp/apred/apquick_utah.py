@@ -776,7 +776,7 @@ def runquick(filename,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,p
 
     print('Running APQUICK on '+os.path.basename(filename)+' MJD='+mjd+' all reads ')
 
-    redux_dir = os.environ.get('APOGEE_REDUX')+'/'load.apred+'/'
+    redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
     caldir = redux_dir+'cal/'+load.instrument+'/'
     psfdir = caldir+'psf/'
     detdir = caldir+'detector/'
