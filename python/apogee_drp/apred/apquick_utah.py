@@ -871,7 +871,6 @@ def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',las
     bpmfiles = list(np.sort(bpmfiles))
     print('Using '+bpmfiles[-1])
     bpm = fits.getdata(bpmfiles[-1],0)
-    pdb.set_trace()
     frame = bpmfix(frame,bpm)
     # Load the trace information
     psffiles = np.sort(glob(psfdir+'/'+load.prefix+'PSF-b-*.fits'))
@@ -890,11 +889,11 @@ def runquick(filename,hdulist,framenum=None,mjd=None,load=None,apred='daily',las
         xlo = np.maximum(midcol-half_ncol,0)
         xhi = np.minimum(xlo+ncol-1,2047)
     spec = boxextract(frame,tracestr,xlo=xlo,xhi=xhi)
-    pdb.set_trace()
     # Load the plugmap file
     plugmap = None
     # Try to get fiber mapping ID from the first read header
     configid = head['configid']
+    pdb.set_trace()
     if configid is not None and str(configid) != '':
         configgrp = '{:0>4d}XX'.format(int(configid) // 100)
         plugfile = plugdir+'/'+configgrp+'/confSummary-'+str(configid)+'.par'
