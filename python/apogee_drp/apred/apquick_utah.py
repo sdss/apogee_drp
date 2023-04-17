@@ -51,6 +51,7 @@ from pydl.pydlutils import yanny
 # Ignore these warnings, it's a bug
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
+warnings.filterwarnings('ignore', category=VerifyWarning, append=True)
 
 #observatory = os.getenv("OBSERVATORY")
 #if observatory == "APO":
@@ -79,7 +80,7 @@ def utah(telescope='apo25m', apred='daily'):
     nexp = len(edata0)
 
     # Loop over exposures
-    for iexp in range(2):
+    for iexp in range(1):
         edata = edata0[iexp]
         framenum = edata['IM']
         rawfilepath = load.filename('R', num=framenum, chips='b').replace('R-','R-b-')
@@ -90,7 +91,7 @@ def utah(telescope='apo25m', apred='daily'):
         rawfilefits = rawfile.replace('.apz','.fits')
         mjd = os.path.basename(os.path.dirname(rawfile))
         infile = cwd+rawfilefits
-        pdb.set_trace()
+        #pdb.set_trace()
         # Unzip the file
         if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=cwd)
         hdulist = fits.open(rawfilefits)
