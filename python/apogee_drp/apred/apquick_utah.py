@@ -954,7 +954,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         plugmap2 = plugmap1#,np=True)
         fibermap1 = plugmap1['FIBERMAP']
         g, = np.where((fibermap1['fiberType']=='APOGEE') & (fibermap1['assigned']==1) & (fibermap1['on_target']==1) & (fibermap1['valid']==1) & 
-                      (fibermap1['spectrographID']==2) & (fibermap['fiberId']>=0))
+                      (fibermap1['spectrographId']==2) & (fibermap['fiberId']>=0))
         fibermap1 = fibermap1[g]
         fibermap2 = fibermap1
     else: 
