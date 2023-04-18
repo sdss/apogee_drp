@@ -96,7 +96,7 @@ def getPsfList(load=None, update=False):
     data = ascii.read(pfile)
     return np.array(data['col2'])
 
-def utah(telescope='apo25m', apred='daily', updatePSF=False, startnum=78570):
+def utah(telescope='apo25m', apred='daily', updatePSF=False, startnum=78520):
     # Set up directory paths
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
