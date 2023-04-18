@@ -886,6 +886,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
                 print('Using input plugfile '+str(plugfile))
         plugfile1 = plugfile
         plugfile2 = plugfile
+        planfile = load.filename('Plan', num=framenum, plate=head['plateid'], mjd=mjd)
     else:
         redux_dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
         caldir = redux_dir+'cal/'
@@ -895,6 +896,10 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         plstr = str(head['PLATEID']).zfill(6)
         plugfile1 = plugdir+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-01.par'
         plugfile2 = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
+        planfile = load.filename('Plan', num=framenum, plate=head['plateid'], mjd=mjd)
+        tmp = planfile.split('/')
+        planfile = redux_dir+'visit/'+load.telescope+'/'+tmp[-4]+'/'+tmp[-3]+'/'+tmp[-2]+'/'+tmp[-1]
+        pdb.set_trace()
     psfdir = caldir+'psf/'
     detdir = caldir+'detector/'
     bpmdir = caldir+'bpm/'
@@ -987,7 +992,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     #psffiles = np.sort(glob(psfdir+'/'+load.prefix+'PSF-b-*.fits'))
     #psffiles = np.sort(glob(psfdir+'/apPSF-b-????????.fits'))
     print('Using '+psffile)
-    tracestr = Table.read(psffile,1)
+    tracestr = fits.getdata(psffile)
     pdb.set_trace()
     frame.head['PSFFILE'] = psffile
     frame.head['DETFILE'] = detfile
