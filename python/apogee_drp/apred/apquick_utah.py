@@ -951,7 +951,8 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     tracestr = fits.getdata(psffile)
     plugmap1 = yanny.yanny(plugfile1,np=True)
     plugmap2 = yanny.yanny(plugfile2,np=True)
-
+    if fps: fibermap1 = plugmap1['FIBERMAP']
+    else: fibermap1 = plugmap1['PLUGMAPOBJ']
 
     pdb.set_trace()
     # Load the reads
