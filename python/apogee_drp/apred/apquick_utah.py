@@ -918,6 +918,8 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         detfile = load.filename('Detector', num=plans['detid:'], chips=True).replace('Detector-','Detector-b-')
         bpmfile = load.filename('BPM', num=plans['bpmid:'], chips=True).replace('BPM-','BPM-b-')
         if load.telescope == 'lco25m': psffile = load.filename('PSF', num=plans['psfid:'], chips=True).replace('PSF-','PSF-b-')
+    redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
+    caldir = redux_dir+'cal/'+load.instrument+'/'
     if load.telescope == 'lco25m': psffile = caldir+'psf/apPSF-b-36680072.fits'
     if load.telescope == 'apo25m': psffile = caldir+'psf/apPSF-b-39540016_300fibers.fits'
 
