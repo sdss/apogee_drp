@@ -140,7 +140,7 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
         tasks['cmd'][i] = cmd
         tasks['outfile'][i] = outfile
         tasks['errfile'][i] = errfile
-        tasks['dir'][i] = os.environ.get('APOGEE_LOCALDIR')+'/'
+        tasks['dir'][i] = os.environ.get('APOGEE_REDUX')+'/'
         #tasks['dir'][i] = errfile
 
     key,jobid = slrm.submit(tasks,label='apq',verbose=True,logger=None,**slurmpars)
@@ -161,9 +161,9 @@ def utah(framenum,telescope='lco25m',apred='daily'):
     rawfile = os.path.basename(rawfilepath)
     rawfilefits = rawfile.replace('.apz','.fits')
     mjd = os.path.basename(os.path.dirname(rawfilepath))
-    infile = os.environ.get('APOGEE_LOCALDIR')+'/'+rawfilefits
+    infile = os.environ.get('APOGEE_REDUX')+'/'+rawfilefits
     # Unzip the file
-    if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=os.environ.get('APOGEE_LOCALDIR')+'/')
+    if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=os.environ.get('APOGEE_REDUX')+'/')
     hdulist = fits.open(rawfilefits)
     nreads = len(hdulist)-1
     try:
