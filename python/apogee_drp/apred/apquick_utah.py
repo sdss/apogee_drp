@@ -829,6 +829,10 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
 
     """
 
+    fps = False
+    if load.telescope == 'apo25m' and mjd >= 59146: fps = True
+    if load.telescope == 'lco25m' and mjd >= 59809: fps = True
+
     print('Running APQUICK on '+os.path.basename(filename)+' MJD='+mjd+' all reads ')
 
     redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
@@ -839,6 +843,9 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
     rawdir = os.path.dirname(filename)+'/'
     plugdir4 = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/'+load.observatory+'/'+mjd+'/'
     phsdir4 = '/uufs/chpc.utah.edu/common/home/sdss/software/svn.sdss.org/data/sdss/platelist/trunk/plates/'
+
+    pdb.set_trace()
+
 
     # Load the reads
     nfowler = 2
