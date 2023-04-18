@@ -634,11 +634,11 @@ def snrcat(spec,plugmap):
     """
 
     # Load the plugging data
-    if plugmap is not None:
-        if 'PLUGMAPOBJ' in plugmap.keys():
-            fibermap = plugmap['PLUGMAPOBJ']   # SDSS plates
-            fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['holeType'].astype(str)=='OBJECT') & (fibermap['spectrographId']==2) )
-            nfibers = len(
+    #if plugmap is not None:
+        #if 'PLUGMAPOBJ' in plugmap.keys():
+            #fibermap = plugmap['PLUGMAPOBJ']   # SDSS plates
+            #fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['holeType'].astype(str)=='OBJECT') & (fibermap['spectrographId']==2) )
+            #nfibers = len(
 
 
     nfibers,npix = spec.flux.shape
