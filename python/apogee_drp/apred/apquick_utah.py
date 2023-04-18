@@ -96,7 +96,7 @@ def getPsfList(load=None, update=False):
     data = ascii.read(pfile)
     return np.array(data['col2'])
 
-def utah(telescope='apo25m', apred='daily', updatePSF=False):
+def utah(telescope='apo25m', apred='daily', updatePSF=False, startnum=78570):
     # Set up directory paths
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
@@ -113,7 +113,7 @@ def utah(telescope='apo25m', apred='daily', updatePSF=False):
     #psfnums = getPsfList(load=load, update=updatePSF)
 
     # Loop over exposures
-    for iexp in range(78570,78571):
+    for iexp in range(startnum,startnum+1):
         edata = edata0[iexp]
         framenum = edata['IM']
         rawfilepath = load.filename('R', num=framenum, chips='b').replace('R-','R-b-')
@@ -896,9 +896,9 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
             pdb.set_trace()
         plans = yanny.yanny(planfile,np=True)
         pdb.set_trace()
-        detfile = load.filename('Detector', num=plans['detid'], chips=True).replace('Detector-','Detector-b-')
-        bpmfile = load.filename('BPM', num=plans['bpmid'], chips=True).replace('BPM-','BPM-b-')
-        psffile = load.filename('PSF', num=plans['psfid'], chips=True).replace('PSF-','PSF-b-')
+        detfile = load.filename('Detector', num=plans['detid:'], chips=True).replace('Detector-','Detector-b-')
+        bpmfile = load.filename('BPM', num=plans['bpmid:'], chips=True).replace('BPM-','BPM-b-')
+        psffile = load.filename('PSF', num=plans['psfid:'], chips=True).replace('PSF-','PSF-b-')
     else:
         redux_dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
         caldir = redux_dir+'cal/'
