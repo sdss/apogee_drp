@@ -910,7 +910,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
             print(planfile+' NOT FOUND. Stopping.')
             pdb.set_trace()
         plans = yanny.yanny(planfile,np=True)
-        plugid = plans['plugmap']
+        plugid = plans['plugmap'].replace("'",'')
         pludmjd = plugid.split('-')[1]
         plugfile1 = plugdir+pludmjd+'/''plPlugMapM-'+plugid+'.par'
         plfolder = '{:0>4d}XX'.format(int(head['PLATEID']) // 100)
