@@ -958,6 +958,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
                       (np.array(fibermap1['on_target'])==1) &
                       (np.array(fibermap1['valid'])==1) & (fibermap1['spectrographId']==2) &
                       (np.array(fibermap1['fiberId'])>=0))
+        pdb.set_trace()
         fibermap1 = fibermap1[g]
         fibermap2 = fibermap1
     else: 
