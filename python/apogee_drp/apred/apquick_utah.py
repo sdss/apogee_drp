@@ -154,7 +154,7 @@ def utah(framenum,telescope='lco25m',apred='daily'):
     rawfilepath = load.filename('R', num=framenum, chips='b').replace('R-','R-b-')
     if os.path.exists(rawfilepath) == False:
         print(rawfilepath+' not found!')
-        continue
+        return
     rawfile = os.path.basename(rawfilepath)
     rawfilefits = rawfile.replace('.apz','.fits')
     mjd = os.path.basename(os.path.dirname(rawfilepath))
