@@ -582,7 +582,7 @@ def boxextract(frame,tracestr,fibers=None,xlo=0,xhi=None):
 
 
 # Calculate mean sky spectrum
-def skysub(spec,plugmap1=None,plugmap2=None,fps=False):
+def skysub(spec,plugmap=None,fps=False):
     """This subtracts the median sky spectrum from all of the fiber spectra.
     
     Parameters
@@ -609,19 +609,19 @@ def skysub(spec,plugmap1=None,plugmap2=None,fps=False):
 
     # Find the object and sky fibers
     if fps:
-        fibermap = plugmap1['FIBERMAP']
-        # get objtype from the targeting information in sdssv_apogee_target0
+        fibermap = plugmap['FIBERMAP']
         category = np.char.array(fibermap['category'].astype(str)).upper()
         sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
         sfibid = fibermap['fiberId'][sfibs]
     else:
-        fibermap1 = plugmap1['PLUGMAPOBJ']
-        fibermap2 = plugmap2['STRUCT1']
-        pdb.set_trace()
-        objtype = np.char.array(fibermap['targettype'].astype(str)).upper()
-        sfibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['assigned']==1) & (objtype=='SKY'))
-        sfibid = fibermap['fiberid'][sfibs]
+        fibermap = plugmap['PLUGMAPOBJ']
+        #fibermap2 = plugmap2['STRUCT1']
+        holetype = np.char.array(fibermap['holeType'].astype(str)).upper()
+        objtype = np.char.array(fibermap['objType'].astype(str)).upper()
+        sfibs, = np.where( (fibermap['fiberId']>=0) & (holetype=='OBJECT') & (fibermap['spectrographId']==2) & (objtype=='SKY'))
+        #sfibs2, = np.where( (fibermap2['fiberid']>=0) & (fibermap2['assigned']==1) & (objtype2=='SKY'))
+        #sfibid2 = fibermap2['fiberid'][sfibs2]
 
     # We have sky fibers
     if len(sfibs)>0:
@@ -683,63 +683,38 @@ def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
     bad = (err <= 0.0)
     err[bad] = 1.0
     cat['snr'] = cat['flux']/err
- 
-    pdb.set_trace()             
+            
     # Load the plugging data
-    if plugmap is not None:
-        #if 'STRUCT1' in plugmap.keys():
-        #    fibermap = plugmap['STRUCT1']   # SDSS plates
-        #    fibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['holetype'].astype(str)=='APOGEE') & (fibermap['assigned']==1) )     
-        #    fiberindex = 300-fibermap[fibs]['fiberid']
-        #    cat['hmag'][fiberindex] = fibermap[fibs]['tmass_h']
-        #    cat['objtype'][fiberindex] = fibermap[fibs]['targettype'].astype(str)
-        #    cat['apogee_id'][fiberindex] = fibermap[fibs]['targetids']
-        #    skyind = np.where(cat['objtype'] == 'SKY')
-        #    if np.sum(skyind)>0:
-        #        cat['objtype'][fiberindex[skyind]] = 'SKY'
-        #    tellind = np.where(cat['objtype'] == 'STANDARD')
-        #    if np.sum(skyind)>0:
-        #        cat['objtype'][fiberindex[skyind]] = 'HOT_STD'
-        #    cat['ra'][fiberindex] = fibermap[fibs]['ra']
-        #    cat['dec'][fiberindex] = fibermap[fibs]['dec']
-        #    cat['fiberid'][fiberindex] = fibermap[fibs]['fiberid']
+    if fps:
+        plugmap = plugmap1
+        fibermap = plugmap['FIBERMAP']     # SDSS-V FPS
+        fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) )            
+        fiberindex = 300-fibermap[fibs]['fiberId']
+        cat['hmag'][fiberindex] = fibermap[fibs]['h_mag']
+        cat['catalogid'][fiberindex] = fibermap[fibs]['catalogid']
+        cat['objtype'][fiberindex] = 'OBJECT'   # default
+        category = np.char.array(fibermap['category'].astype(str)).upper()
+        skyind = (category[fibs]=='SKY') | (category[fibs]=='SKY_APOGEE') | (category[fibs]=='SKY_BOSS')
+        #skyind = bmask.is_bit_set(fibermap['sdssv_apogee_target0'][fibs],0)==1    # SKY
+        if np.sum(skyind)>0:
+            cat['objtype'][fiberindex[skyind]] = 'SKY'
+        tellind = (category[fibs]=='HOT_STD') | (category[fibs]=='STANDARD_APOGEE') 
+        #tellind = bmask.is_bit_set(fibermap['sdssv_apogee_target0'][fibs],1)==1   # HOT_STD/telluric
+        if np.sum(tellind)>0:
+            cat['objtype'][fiberindex[tellind]] = 'HOT_STD'
+        cat['ra'][fiberindex] = fibermap[fibs]['ra']
+        cat['dec'][fiberindex] = fibermap[fibs]['dec']
+        cat['fiberid'][fiberindex] = fibermap[fibs]['fiberId']
+    else:
+        fibermap1 = plugmap1['PLUGMAPOBJ']     # SDSS-III-IV
+        fibermap2 = plugmap2['STRUCT1']
+        holetype1 = np.char.array(fibermap1['holeType'].astype(str)).upper()
+        objtype1 = np.char.array(fibermap1['objType'].astype(str)).upper()
+        fibs1, = np.where((fibermap1['fiberId']>=0) & (holetype1=='OBJECT') & (fibermap1['spectrographId']==2)))
+        fibs2, = np.where((fibermap2['fiberid']>=0) & (fibermap2['assigned']==1))
+        pdb.set_trace()
 
-        if 'PLUGMAPOBJ' in plugmap.keys():
-            fibermap = plugmap['PLUGMAPOBJ']   # SDSS plates
-            fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['holeType'].astype(str)=='OBJECT') & (fibermap['spectrographId']==2) )
-            pdb.set_trace()
-            fiberindex = 300-fibermap[fibs]['fiberid']
-            cat['hmag'][fiberindex] = fibermap[fibs]['tmass_h']
-            cat['objtype'][fiberindex] = fibermap[fibs]['targettype'].astype(str)
-            cat['apogee_id'][fiberindex] = fibermap[fibs]['targetids']
-            skyind = np.where(cat['objtype'] == 'SKY')
-            if np.sum(skyind)>0:
-                cat['objtype'][fiberindex[skyind]] = 'SKY'
-            tellind = np.where(cat['objtype'] == 'STANDARD')
-            if np.sum(skyind)>0:
-                cat['objtype'][fiberindex[skyind]] = 'HOT_STD'
-            cat['ra'][fiberindex] = fibermap[fibs]['ra']
-            cat['dec'][fiberindex] = fibermap[fibs]['dec']
-            cat['fiberid'][fiberindex] = fibermap[fibs]['fiberid']
-        else:
-            fibermap = plugmap['FIBERMAP']     # SDSS-V FPS
-            fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) )            
-            fiberindex = 300-fibermap[fibs]['fiberId']
-            cat['hmag'][fiberindex] = fibermap[fibs]['h_mag']
-            cat['catalogid'][fiberindex] = fibermap[fibs]['catalogid']
-            cat['objtype'][fiberindex] = 'OBJECT'   # default
-            category = np.char.array(fibermap['category'].astype(str)).upper()
-            skyind = (category[fibs]=='SKY') | (category[fibs]=='SKY_APOGEE') | (category[fibs]=='SKY_BOSS')
-            #skyind = bmask.is_bit_set(fibermap['sdssv_apogee_target0'][fibs],0)==1    # SKY
-            if np.sum(skyind)>0:
-                cat['objtype'][fiberindex[skyind]] = 'SKY'
-            tellind = (category[fibs]=='HOT_STD') | (category[fibs]=='STANDARD_APOGEE') 
-            #tellind = bmask.is_bit_set(fibermap['sdssv_apogee_target0'][fibs],1)==1   # HOT_STD/telluric
-            if np.sum(tellind)>0:
-                cat['objtype'][fiberindex[tellind]] = 'HOT_STD'
-            cat['ra'][fiberindex] = fibermap[fibs]['ra']
-            cat['dec'][fiberindex] = fibermap[fibs]['dec']
-            cat['fiberid'][fiberindex] = fibermap[fibs]['fiberId']
+
     cat = Table(cat)
     return cat
 
@@ -1040,12 +1015,12 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         frame.head['CONFIGFL'] = ''
     # Subtract the sky
     if exptype == 'OBJECT' and plugmap1 is not None:
-        subspec = skysub(spec,plugmap1=plugmap1,plugmap2=plugmap2,fps=fps)
+        subspec = skysub(spec,plugmap=plugmap1,fps=fps)
     else:
         subspec = spec
     # Create the S/N catalog
 
-    #pdb.set_trace()
+    pdb.set_trace()
     cat = snrcat(subspec,plugmap1=plugmap1,plugmap2=plugmap2,fps=fps)
     print('Mean S/N = %5.2f' % np.mean(cat['snr']))
     if exptype != 'OBJECT':
