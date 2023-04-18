@@ -882,7 +882,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         configid = head['configid']
         if configid is not None and str(configid) != '':
             configgrp = '{:0>4d}XX'.format(int(configid) // 100)
-            plugfile = plugdir+'/'+configgrp+'/confSummary-'+str(configid)+'.par'
+            plugfile = plugdir+configgrp+'/confSummary-'+str(configid)+'.par'
             print('Using configid from first read header: '+str(configid))
         else:
             print('No configID in header.')
@@ -895,19 +895,14 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
             print(planfile+' NOT FOUND. Stopping.')
             pdb.set_trace()
         plans = yanny.yanny(planfile,np=True)
-        pdb.set_trace()
         detfile = load.filename('Detector', num=plans['detid:'], chips=True).replace('Detector-','Detector-b-')
         bpmfile = load.filename('BPM', num=plans['bpmid:'], chips=True).replace('BPM-','BPM-b-')
         psffile = load.filename('PSF', num=plans['psfid:'], chips=True).replace('PSF-','PSF-b-')
     else:
         redux_dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
         caldir = redux_dir+'cal/'
-        plugdir = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/'+load.observatory+'/'+mjd+'/'
+        plugdir = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/'+load.observatory+'/'
         phsdir = '/uufs/chpc.utah.edu/common/home/sdss/software/svn.sdss.org/data/sdss/platelist/trunk/plates/'
-        plfolder = '{:0>4d}XX'.format(int(head['PLATEID']) // 100)
-        plstr = str(plateid).zfill(6)
-        plugfile1 = plugdir+'plPlugMapM-'+str(plateid)+'-'+mjd+'-01.par'
-        plugfile2 = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
         planfile = load.filename('Plan', num=framenum, plate=plateid, mjd=mjd).replace('.yaml','.par')
         tmp = planfile.split('/')
         planfile = redux_dir+'visit/'+load.telescope+'/'+tmp[-4]+'/'+tmp[-3]+'/'+tmp[-2]+'/'+tmp[-1]
@@ -915,6 +910,12 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
             print(planfile+' NOT FOUND. Stopping.')
             pdb.set_trace()
         plans = yanny.yanny(planfile,np=True)
+        plugid = plans['plugmap']
+        pludmjd = plugid.split('-')[1]
+        plugfile1 = plugdir+pludmjd+'/''plPlugMapM-'+plugid+'.par'
+        plfolder = '{:0>4d}XX'.format(int(head['PLATEID']) // 100)
+        plstr = str(plateid).zfill(6)
+        plugfile2 = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
         detfile = caldir+'detector/'+load.prefix+'Detector-b-'+str(plans['detid']).zfill(8)+'.fits'
         bpmfile = caldir+'bpm/'+load.prefix+'BPM-b-'+str(plans['bpmid']).zfill(8)+'.fits'
         psffile = caldir+'psf/'+load.prefix+'PSF-b-'+str(plans['psfid']).zfill(8)+'.fits'
