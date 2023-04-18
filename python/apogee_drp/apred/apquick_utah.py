@@ -613,7 +613,6 @@ def skysub(spec,plugmap=None,fps=False):
         category = np.char.array(fibermap['category'].astype(str)).upper()
         sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
-        sfibid = fibermap['fiberId'][sfibs]
     else:
         fibermap = plugmap['PLUGMAPOBJ']
         #fibermap2 = plugmap2['STRUCT1']
@@ -622,6 +621,7 @@ def skysub(spec,plugmap=None,fps=False):
         sfibs, = np.where( (fibermap['fiberId']>=0) & (holetype=='OBJECT') & (fibermap['spectrographId']==2) & (objtype=='SKY'))
         #sfibs2, = np.where( (fibermap2['fiberid']>=0) & (fibermap2['assigned']==1) & (objtype2=='SKY'))
         #sfibid2 = fibermap2['fiberid'][sfibs2]
+    sfibid = fibermap['fiberId'][sfibs]
 
     # We have sky fibers
     if len(sfibs)>0:
