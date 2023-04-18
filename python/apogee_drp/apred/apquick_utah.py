@@ -611,14 +611,14 @@ def skysub(spec,plugmap=None,fps=False):
     if fps:
         fibermap = plugmap['FIBERMAP']
         category = np.char.array(fibermap['category']).astype(str).upper()
-        sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
+        sfibs, = np.where( (np.array(fibermap['fiberId'])>=0) & (np.array(fibermap['spectrographId'])==2) &
                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
     else:
         fibermap = plugmap['PLUGMAPOBJ']
         #fibermap2 = plugmap2['STRUCT1']
         holetype = np.char.array(fibermap['holeType']).astype(str).upper()
         objtype = np.char.array(fibermap['objType']).astype(str).upper()
-        sfibs, = np.where((fibermap['fiberId']>=0) & (holetype=='OBJECT') & (fibermap['spectrographId']==2) & (objtype=='SKY'))
+        sfibs, = np.where((np.array(fibermap['fiberId'])>=0) & (holetype=='OBJECT') & (np.array(fibermap['spectrographId'])==2) & (objtype=='SKY'))
         #sfibs2, = np.where( (fibermap2['fiberid']>=0) & (fibermap2['assigned']==1) & (objtype2=='SKY'))
         #sfibid2 = fibermap2['fiberid'][sfibs2]
     sfibid = fibermap['fiberId'][sfibs]
