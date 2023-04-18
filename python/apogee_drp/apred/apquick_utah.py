@@ -649,17 +649,17 @@ def snrcat(spec,plugmap):
     err[bad] = 1.0
     cat['snr'] = cat['flux']/err
 
-    pdb.set_trace()
     # Load the plugging data
     if plugmap is not None:
-        if 'PLUGMAPOBJ' in plugmap.keys():
-            fibermap = plugmap['PLUGMAPOBJ']   # SDSS plates
-            fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['holeType'].astype(str)=='OBJECT') & (fibermap['spectrographId']==2) )            
-            fiberindex = 300-fibermap[fibs]['fiberId']
+        if 'STRUCT1' in plugmap.keys():
+            fibermap = plugmap['STRUCT1']   # SDSS plates
+            fibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['holetype'].astype(str)=='APOGEE') & (fibermap['assigned']==1) )            
+            fiberindex = 300-fibermap[fibs]['fiberid']
             pdb.set_trace()
             cat['hmag'][fiberindex] = fibermap[fibs]['mag'][:,1]
-            cat['objtype'][fiberindex] = fibermap[fibs]['objType'].astype(str)
-            #cat['apogee_id'][fiberindex] = fibermap[fibs]['tmass_style']            
+            cat['objtype'][fiberindex] = fibermap[fibs]['targettype'].astype(str)
+            cat['apogee_id'][fiberindex] = fibermap[fibs]['targetids']     
+            pdb.set_trace()       
         else:
             fibermap = plugmap['FIBERMAP']     # SDSS-V FPS
             fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) )            
