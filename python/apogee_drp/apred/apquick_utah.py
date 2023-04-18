@@ -618,7 +618,7 @@ def skysub(spec,plugmap=None,fps=False):
         #fibermap2 = plugmap2['STRUCT1']
         holetype = np.char.array(fibermap['holeType'].astype(str)).upper()
         objtype = np.char.array(fibermap['objType'].astype(str)).upper()
-        sfibs, = np.where( (fibermap['fiberId']>=0) & (holetype=='OBJECT') & (fibermap['spectrographId']==2) & (objtype=='SKY'))
+        sfibs, = np.where((fibermap['fiberId']>=0) & (holetype=='OBJECT') & (fibermap['spectrographId']==2) & (objtype=='SKY'))
         #sfibs2, = np.where( (fibermap2['fiberid']>=0) & (fibermap2['assigned']==1) & (objtype2=='SKY'))
         #sfibid2 = fibermap2['fiberid'][sfibs2]
     sfibid = fibermap['fiberId'][sfibs]
@@ -976,11 +976,11 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     frame = bpmfix(frame,bpm)
 
     # Load the trace information
-    #gd, = np.where(psfnums - int(framenum) > 0)
-    #gd1, = np.where(psfnums[gd] - int(framenum) == np.min(psfnums[gd] - int(framenum)))
-    #psffile = psfdir+load.prefix+'PSF-b-'+str(psfnums[gd][gd1][0]).zfill(8)+'.fits'
-    gd, = np.where(np.abs(int(framenum)-psfnums) == np.nanmin(np.abs(int(framenum)-psfnums)))
-    psffile = psfdir+load.prefix+'PSF-b-'+str(psfnums[gd][0]).zfill(8)+'.fits'
+    gd, = np.where(psfnums - int(framenum) > 0)
+    gd1, = np.where(psfnums[gd] - int(framenum) == np.min(psfnums[gd] - int(framenum)))
+    psffile = psfdir+load.prefix+'PSF-b-'+str(psfnums[gd][gd1][0]).zfill(8)+'.fits'
+    #gd, = np.where(np.abs(int(framenum)-psfnums) == np.nanmin(np.abs(int(framenum)-psfnums)))
+    #psffile = psfdir+load.prefix+'PSF-b-'+str(psfnums[gd][0]).zfill(8)+'.fits'
     if os.path.exists(psffile) == False:
         print(psffile+' NOT FOUND. Stopping.')
         pdb.set_trace()
@@ -1020,8 +1020,8 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         subspec = skysub(spec,plugmap=plugmap1,fps=fps)
     else:
         subspec = spec
-    # Create the S/N catalog
 
+    # Create the S/N catalog
     pdb.set_trace()
     cat = snrcat(subspec,plugmap1=plugmap1,plugmap2=plugmap2,fps=fps)
     print('Mean S/N = %5.2f' % np.mean(cat['snr']))
