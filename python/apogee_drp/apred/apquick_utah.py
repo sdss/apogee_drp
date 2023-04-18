@@ -80,7 +80,7 @@ def utah(telescope='apo25m', apred='daily'):
     nexp = len(edata0)
 
     # Loop over exposures
-    for iexp in range(1):
+    for iexp in range(3,5):
         edata = edata0[iexp]
         framenum = edata['IM']
         rawfilepath = load.filename('R', num=framenum, chips='b').replace('R-','R-b-')
@@ -633,14 +633,6 @@ def snrcat(spec,plugmap):
 
     """
 
-    # Load the plugging data
-    #if plugmap is not None:
-        #if 'PLUGMAPOBJ' in plugmap.keys():
-            #fibermap = plugmap['PLUGMAPOBJ']   # SDSS plates
-            #fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['holeType'].astype(str)=='OBJECT') & (fibermap['spectrographId']==2) )
-            #nfibers = len(
-
-
     nfibers,npix = spec.flux.shape
     dtype = np.dtype([('apogee_id',np.str,30),('catalogid',np.int),('ra',np.float64),('dec',np.float64),('hmag',np.float),
                       ('objtype',np.str,30),('fiberid',np.int),('fiberindex',np.int),('flux',np.float),('err',np.float),
@@ -656,6 +648,7 @@ def snrcat(spec,plugmap):
     err[bad] = 1.0
     cat['snr'] = cat['flux']/err
 
+    pdb.set_trace()
     # Load the plugging data
     if plugmap is not None:
         if 'PLUGMAPOBJ' in plugmap.keys():
@@ -919,9 +912,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
         plfolder = '{:0>4d}XX'.format(int(plateid) // 100)
         plstr = str(head['PLATEID']).zfill(6)
         plugfile = phsdir4+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
-        #plugfile = plugdir4+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-'+str(head['MAPID']).zfill(2)+'.par'
 
-    pdb.set_trace()
     # Load plugmap/fibermap file
     if plugfile is not None:
         if os.path.exists(plugfile) is False:
