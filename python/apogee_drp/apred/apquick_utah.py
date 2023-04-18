@@ -79,9 +79,8 @@ def getPsfList(load=None, update=False):
 
     if update:
         data = ascii.read(datadir+load.observatory+'PSFplate.dat')
-        pdb.set_trace()
-        numPlate = np.array(data['COL1'])
-        expPlate = np.char.zfill(np.array(data['COL2']).astype(str),8)
+        numPlate = np.array(data['col1'])
+        expPlate = np.char.zfill(np.array(data['col2']).astype(str),8)
         redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
         pdir = redux_dir+'cal/'+load.instrument+'/psf/'
         pfiles = glob.glob(pdir+load.prefix+'PSF-b-*fits')
