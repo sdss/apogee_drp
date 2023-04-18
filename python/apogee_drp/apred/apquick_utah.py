@@ -941,10 +941,11 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     if fps:
         detfiles = glob(detdir+'/'+load.prefix+'Detector-b-????????.fits')
         detfiles = np.sort(detfiles)
-        print('Using '+detfiles[-1])
-        rdnoiseim = fits.getdata(detfiles[-1],1)
+        detfile = detfiles[-1]
+        print('Using '+detfile)
+        rdnoiseim = fits.getdata(detfile,1)
         rdnoise = np.median(rdnoiseim)
-        gainim = fits.getdata(detfiles[-1],2)
+        gainim = fits.getdata(detfile,2)
         gain = np.median(gainim)
     else:
         detfile = detPlateN
@@ -957,6 +958,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     err = noisemodel(im,nreads,rdnoise,gain)
     frame = Frame("",head,im,framenum,0)
     frame.err = err
+
     # Add some important values to the header
     frame.head['FRAMENUM'] = framenum
 
@@ -964,8 +966,9 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     if fps:
         bpmfiles = glob(bpmdir+'/'+load.prefix+'BPM-b-????????.fits')
         bpmfiles = list(np.sort(bpmfiles))
-        print('Using '+bpmfiles[-1])
-        bpm = fits.getdata(bpmfiles[-1],0)
+        bpmfile = bpmfiles[-1]
+        print('Using '+bpmfile)
+        bpm = fits.getdata(bpmfile,0)
     else:
         bpmfile = bpmPlateN
         if load.observatory == 'lco': bpmfile = bpmPlateS
@@ -975,14 +978,17 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     # Load the trace information
     gd, = np.where(np.abs(int(framenum)-psfnums) == np.nanmin(np.abs(int(framenum)-psfnums)))
     psffile = psfdir+load.prefix+'PSF-b-'+str(psfnums[gd][0]).zfill(8)+'.fits'
-    pdb.set_trace()
-    psffiles = np.sort(glob(psfdir+'/'+load.prefix+'PSF-b-*.fits'))
+    if os.path.exists(psffile) == False:
+        print(psffile+' NOT FOUND. Stopping.')
+        pdb.set_trace()
+    #psffiles = np.sort(glob(psfdir+'/'+load.prefix+'PSF-b-*.fits'))
     #psffiles = np.sort(glob(psfdir+'/apPSF-b-????????.fits'))
-    print('Using '+psffiles[-1])
-    tracestr = Table.read(psffiles[-1],1)
+    print('Using '+psffile)
+    tracestr = Table.read(psffile,1)
+    frame.head['PSFFILE'] = psffile
+    frame.head['DETFILE'] = detfile
+    frame.head['BPMFILE'] = bpmfile
     # Boxcar extract the fibers
-    frame.head['DETFILE'] = detfiles[-1]
-    frame.head['PSFFILE'] = psffiles[-1]
     midcol = 1024
     if ncol==2048:
         xlo = 0
@@ -991,7 +997,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         half_ncol = ncol//2
         xlo = np.maximum(midcol-half_ncol,0)
         xhi = np.minimum(xlo+ncol-1,2047)
-    pdb.set_trace()
+    #pdb.set_trace()
     spec = boxextract(frame,tracestr,xlo=xlo,xhi=xhi)
 
     # Add some important configuration values to the header
