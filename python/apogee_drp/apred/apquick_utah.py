@@ -66,10 +66,10 @@ warnings.filterwarnings('ignore', category=UserWarning, append=True)
 Wrappper for running apquick on data stored at Utah
 """
 
-detNumPlateN = 13390003
-detNumPlateS = 22810006
-bpmNumPlateN = 33770001
-bpmNumPlateS = 35800002
+detPlateN = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/detector/apDetector-b-13390003.fits'
+detPlateS = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/detector/asDetector-b-22810006.fits'
+bpmPlateN = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/psf/apBPM-b-33770001.fits'
+bpmPlateS = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/psf/asBPM-b-35800002.fits'
 
 def getPsfList(load=None, update=False):
     # Find the psf list directory
@@ -78,7 +78,7 @@ def getPsfList(load=None, update=False):
     pfile = datadir+load.observatory+'PSFall.dat'
 
     if update:
-        pfilesPlate = ascii.read(datadir+load.observatory+'PSFplate.dat')
+        d = ascii.read(datadir+load.observatory+'PSFplate.dat')
         numPlate = np.array(d['COL1'])
         expPlate = np.char.zfill(np.array(d['COL2']).astype(str),8)
         redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
@@ -110,7 +110,7 @@ def utah(telescope='apo25m', apred='daily', updatePSF=False):
     nexp = len(edata0)
 
     # Get PSF exposure numbers from getPsfList subroutine
-    expPSF = getPsfList(load=load, update=updatePSF)
+    psfnums = getPsfList(load=load, update=updatePSF)
 
     pdb.set_trace()
     # Loop over exposures
@@ -136,7 +136,7 @@ def utah(telescope='apo25m', apred='daily', updatePSF=False):
         #    dname = rawfilefits.replace('R-','Raw-').replace('.fits','-'+str(iread+1).zfill(3)+'.fits')
         #    print(dname)
         #    Table(d).write(dname,overwrite=True)
-        output = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load)
+        output = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load, psfnums=psfnums)
 
         pdb.set_trace()
 
@@ -822,7 +822,7 @@ apPlateSum-5815-56396.fits
 
 
 # Run everything
-def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily',lastread=None,hfid=11.0,plugfile=None,ncol=51):
+def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None,apred='daily',lastread=None,hfid=11.0,plugfile=None,ncol=51):
     """This runs all of the main steps of the quick reduction.
     
     Parameters
