@@ -615,7 +615,7 @@ def skysub(spec,plugmap1=None,plugmap2=None,fps=False):
         sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
         sfibid = fibermap['fiberId'][sfibs]
-    else
+    else:
         fibermap1 = plugmap1['PLUGMAPOBJ']
         fibermap2 = plugmap2['STRUCT1']
         pdb.set_trace()
