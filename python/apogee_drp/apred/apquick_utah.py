@@ -953,20 +953,25 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         plugmap1 = yanny.yanny(plugfile1)#,np=True)
         plugmap2 = plugmap1#,np=True)
         fibermap1 = plugmap1['FIBERMAP']
+        fibermap2 = fibermap1
         g, = np.where((np.array(fibermap1['fiberType'])=='APOGEE') &
                       (np.array(fibermap1['assigned'])==1) &
                       (np.array(fibermap1['on_target'])==1) &
                       (np.array(fibermap1['valid'])==1) &
                       (np.array(fibermap1['spectrographId'])==2) &
                       (np.array(fibermap1['fiberId'])>=0))
-        pdb.set_trace()
-        fibermap1 = fibermap1[g]
-        fibermap2 = fibermap1
+        fiberid = np.array(fibermap1['fiberId'])[g]
     else: 
         plugmap1 = yanny.yanny(plugfile1,np=True)
         plugmap2 = yanny.yanny(plugfile2,np=True)
         fibermap1 = plugmap1['PLUGMAPOBJ']
-        fibermap2 = plugmap2['STRUCT1']
+        fibermap2 = plugmap2['STRUCT1']        
+        holetype = np.char.array(fibermap1['holeType'].astype(str)).upper()
+        objtype = np.char.array(fibermap1['objType'].astype(str)).upper()
+        g, = np.where((np.array(fibermap1['fiberId'])>=0) &
+                      (holetype=='OBJECT') &
+                      (np.array(fibermap['spectrographId'])==2))
+        fiberid = np.array(fibermap1['fiberId'])[g]
 
     pdb.set_trace()
     # Load the reads
