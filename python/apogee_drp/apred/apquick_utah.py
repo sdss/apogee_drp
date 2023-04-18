@@ -633,6 +633,14 @@ def snrcat(spec,plugmap):
 
     """
 
+    # Load the plugging data
+    if plugmap is not None:
+        if 'PLUGMAPOBJ' in plugmap.keys():
+            fibermap = plugmap['PLUGMAPOBJ']   # SDSS plates
+            fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['holeType'].astype(str)=='OBJECT') & (fibermap['spectrographId']==2) )
+            nfibers = len(
+
+
     nfibers,npix = spec.flux.shape
     dtype = np.dtype([('apogee_id',np.str,30),('catalogid',np.int),('ra',np.float64),('dec',np.float64),('hmag',np.float),
                       ('objtype',np.str,30),('fiberid',np.int),('fiberindex',np.int),('flux',np.float),('err',np.float),
@@ -828,6 +836,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
     bpmdir = caldir+'bpm/'
     rawdir = os.path.dirname(filename)+'/'
     plugdir4 = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/'+load.observatory+'/'+mjd+'/'
+    phsdir4 = '/uufs/chpc.utah.edu/common/home/sdss/software/svn.sdss.org/data/sdss/platelist/trunk/plates/'
 
     # Load the reads
     nfowler = 2
@@ -849,6 +858,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
 
     nframes = np.int(head['NFRAMES'])
     exptype = head['EXPTYPE']
+    plateid = str(head['PLATEID'])
     if exptype is None: exptype=''
     # Do Fowler/CDS collapse
     im = fowler(bframes,eframes)
@@ -906,8 +916,11 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
             if plugfile is not None:
                 print('Using input plugfile '+str(plugfile))
     except:
-        plugfile = plugdir4+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-'+str(head['MAPID']).zfill(2)+'.par'
+        plfolder = '{:0>4d}XX'.format(int(plateid) // 100)
+        plugfile = phsdir4+plfolder+'/plateHolesSorted-'+str(head['PLATEID']).zfill(6)+'.par'
+        #plugfile = plugdir4+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-'+str(head['MAPID']).zfill(2)+'.par'
 
+    pdb.set_trace()
     # Load plugmap/fibermap file
     if plugfile is not None:
         if os.path.exists(plugfile) is False:
