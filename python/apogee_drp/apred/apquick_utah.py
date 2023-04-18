@@ -136,7 +136,7 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
         cmd = 'python -c "from apogee_drp.apred import apquick_utah; apquick_utah.utah('+exp+',telescope='
         cmd += "'"+telescope+"',apred='"+apred+"')"
         cmd += '"'
-        utah(edata0['NUM'][iexp],telscope=telescope,apred=apred)
+        #utah(edata0['NUM'][iexp],telscope=telescope,apred=apred)
         pdb.set_t
         tasks['cmd'][i] = cmd
         tasks['outfile'][i] = outfile
