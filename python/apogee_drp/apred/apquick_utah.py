@@ -954,7 +954,11 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         plugmap2 = plugmap1#,np=True)
         fibermap1 = plugmap1['FIBERMAP']
         pdb.set_trace()
-        g, = np.where((fibermap1['fiberType']=='APOGEE') & (fibermap1['assigned']==1) & (fibermap1['on_target']==1) & (fibermap1['valid']==1) & (fibermap1['spectrographId']==2) & (fibermap1['fiberId']>=0))
+        g, = np.where((np.array(fibermap1['fiberType'])=='APOGEE') &
+                      (np.array(fibermap1['assigned'])==1) &
+                      (np.array(fibermap1['on_target'])==1) &
+                      (np.array(fibermap1['valid'])==1) & (fibermap1['spectrographId']==2) &
+                      (np.array(fibermap1['fiberId'])>=0))
         fibermap1 = fibermap1[g]
         fibermap2 = fibermap1
     else: 
