@@ -149,6 +149,8 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
     slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
 
 def utah(framenum,telescope='lco25m',apred='daily'):
+    # Raw data will be extracted temporarily to current working directory (then removed)
+    cwd = os.getcwd()+'/'
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
     outdir = apodir+'quickred/'+telescope+'/'
