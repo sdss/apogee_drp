@@ -953,7 +953,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         plugmap1 = yanny.yanny(plugfile1)#,np=True)
         plugmap2 = plugmap1#,np=True)
         fibermap1 = plugmap1['FIBERMAP']
-        pdb.set_trace()
         g, = np.where((np.array(fibermap1['fiberType'])=='APOGEE') &
                       (np.array(fibermap1['assigned'])==1) &
                       (np.array(fibermap1['on_target'])==1) &
@@ -967,6 +966,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         fibermap1 = plugmap1['PLUGMAPOBJ']
         fibermap2 = plugmap2['STRUCT1']
 
+    pdb.set_trace()
     # Load the reads
     nfowler = 2
     bframes,eframes,nreads = loadframes(filename,hdulist,framenum,load=load,nfowler=nfowler,lastread=lastread)
