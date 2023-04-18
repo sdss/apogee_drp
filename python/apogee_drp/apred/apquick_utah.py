@@ -108,7 +108,7 @@ def utah(telescope='apo25m', apred='daily', updatePSF=False):
     # Get science exposure numbers from summary file
     edata0 = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
     nexp = len(edata0)
-
+    print(str(nexp)+' exposures to run\n')
     # Get PSF exposure numbers from getPsfList subroutine
     #psfnums = getPsfList(load=load, update=updatePSF)
 
