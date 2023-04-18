@@ -967,7 +967,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         fibermap1 = plugmap1['PLUGMAPOBJ']
         fibermap2 = plugmap2['STRUCT1']
 
-    pdb.set_trace()
     # Load the reads
     nfowler = 2
     bframes,eframes,nreads = loadframes(filename,hdulist,framenum,load=load,nfowler=nfowler,lastread=lastread)
