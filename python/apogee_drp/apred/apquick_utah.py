@@ -709,9 +709,9 @@ def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
         fibermap1 = plugmap1['PLUGMAPOBJ']     # SDSS-III-IV
         fibermap2 = plugmap2['STRUCT1']
         holetype1 = np.char.array(fibermap1['holeType']).astype(str).upper()
-        objtype1 = np.char.array(fibermap1['objType']).astype(str)).upper()
-        holetype2 = np.char.array(fibermap2['holetype']).astype(str)).upper()
-        objtype2 = np.char.array(fibermap2['targettype']).astype(str)).upper()
+        objtype1 = np.char.array(fibermap1['objType']).astype(str).upper()
+        holetype2 = np.char.array(fibermap2['holetype']).astype(str).upper()
+        objtype2 = np.char.array(fibermap2['targettype']).astype(str).upper()
         fibs1, = np.where((fibermap1['fiberId']>=0) & (holetype1=='OBJECT') & (fibermap1['spectrographId']==2))
         fibs2, = np.where((fibermap2['fiberid']>=0) & (fibermap2['assigned']==1) & (holetype2=='APOGEE') & (objtype2!='NA'))
 
