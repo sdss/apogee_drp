@@ -874,8 +874,28 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     # Setup directories and load the plugmap (FPS) or plateHolesSorted (plate) 
     plugmap = None
     rawdir = os.path.dirname(filename)+'/'
-    if load.telescope == 'apo25m': psffile = caldir+'psf/apPSF-b-39540016_300fibers.fits'
-    if fps:
+    if fps == False:
+        redux_dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
+        caldir = redux_dir+'cal/'
+        plugdir = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/'+load.observatory+'/'
+        phsdir = '/uufs/chpc.utah.edu/common/home/sdss/software/svn.sdss.org/data/sdss/platelist/trunk/plates/'
+        planfile = load.filename('Plan', num=framenum, plate=plateid, mjd=mjd).replace('.yaml','.par')
+        tmp = planfile.split('/')
+        planfile = redux_dir+'visit/'+load.telescope+'/'+tmp[-4]+'/'+tmp[-3]+'/'+tmp[-2]+'/'+tmp[-1]
+        if os.path.exists(planfile) == False:
+            print(planfile+' NOT FOUND. Stopping.')
+            pdb.set_trace()
+        plans = yanny.yanny(planfile,np=True)
+        plugid = plans['plugmap'].replace("'",'')
+        pludmjd = plugid.split('-')[1]
+        plugfile1 = plugdir+pludmjd+'/''plPlugMapM-'+plugid+'.par'
+        plfolder = '{:0>4d}XX'.format(int(head['PLATEID']) // 100)
+        plstr = str(plateid).zfill(6)
+        plugfile2 = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
+        detfile = caldir+'detector/'+load.prefix+'Detector-b-'+str(plans['detid']).zfill(8)+'.fits'
+        bpmfile = caldir+'bpm/'+load.prefix+'BPM-b-'+str(plans['bpmid']).zfill(8)+'.fits'
+        if load.telescope == 'lco25m': psffile = caldir+'psf/'+load.prefix+'PSF-b-'+str(plans['psfid']).zfill(8)+'.fits'
+    else:
         redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
         caldir = redux_dir+'cal/'+load.instrument+'/'
         plugdir = os.environ['SDSSCORE_DIR']+'/'+load.observatory.lower()+'/summary_files/'
@@ -898,27 +918,8 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         detfile = load.filename('Detector', num=plans['detid:'], chips=True).replace('Detector-','Detector-b-')
         bpmfile = load.filename('BPM', num=plans['bpmid:'], chips=True).replace('BPM-','BPM-b-')
         if load.telescope == 'lco25m': psffile = load.filename('PSF', num=plans['psfid:'], chips=True).replace('PSF-','PSF-b-')
-    else:
-        redux_dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
-        caldir = redux_dir+'cal/'
-        plugdir = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/'+load.observatory+'/'
-        phsdir = '/uufs/chpc.utah.edu/common/home/sdss/software/svn.sdss.org/data/sdss/platelist/trunk/plates/'
-        planfile = load.filename('Plan', num=framenum, plate=plateid, mjd=mjd).replace('.yaml','.par')
-        tmp = planfile.split('/')
-        planfile = redux_dir+'visit/'+load.telescope+'/'+tmp[-4]+'/'+tmp[-3]+'/'+tmp[-2]+'/'+tmp[-1]
-        if os.path.exists(planfile) == False:
-            print(planfile+' NOT FOUND. Stopping.')
-            pdb.set_trace()
-        plans = yanny.yanny(planfile,np=True)
-        plugid = plans['plugmap'].replace("'",'')
-        pludmjd = plugid.split('-')[1]
-        plugfile1 = plugdir+pludmjd+'/''plPlugMapM-'+plugid+'.par'
-        plfolder = '{:0>4d}XX'.format(int(head['PLATEID']) // 100)
-        plstr = str(plateid).zfill(6)
-        plugfile2 = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
-        detfile = caldir+'detector/'+load.prefix+'Detector-b-'+str(plans['detid']).zfill(8)+'.fits'
-        bpmfile = caldir+'bpm/'+load.prefix+'BPM-b-'+str(plans['bpmid']).zfill(8)+'.fits'
-        if load.telescope == 'lco25m': psffile = caldir+'psf/'+load.prefix+'PSF-b-'+str(plans['psfid']).zfill(8)+'.fits'
+    if load.telescope == 'lco25m': psffile = caldir+'psf/apPSF-b-36680072.fits'
+    if load.telescope == 'apo25m': psffile = caldir+'psf/apPSF-b-39540016_300fibers.fits'
 
     if os.path.exists(plugfile1) == False:
         print(plugfile1+' NOT FOUND. Stopping.')
