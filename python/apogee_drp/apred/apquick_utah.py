@@ -79,6 +79,7 @@ def getPsfList(load=None, update=False):
 
     if update:
         d = ascii.read(datadir+load.observatory+'PSFplate.dat')
+        pdb.set_trace()
         numPlate = np.array(d['COL1'])
         expPlate = np.char.zfill(np.array(d['COL2']).astype(str),8)
         redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
