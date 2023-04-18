@@ -890,7 +890,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
                 print('Using input plugfile '+str(plugfile))
         plugfile1 = plugfile
         plugfile2 = plugfile
-        planfile = load.filename('Plan', num=framenum, plate=plateid, mjd=mjd)
+        planfile = load.filename('Plan', num=framenum, plate=configid, mjd=mjd)
         if os.path.exists(planfile) == False:
             print(planfile+' NOT FOUND. Stopping.')
             pdb.set_trace()
