@@ -830,8 +830,8 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
     """
 
     fps = False
-    if load.telescope == 'apo25m' and mjd >= 59146: fps = True
-    if load.telescope == 'lco25m' and mjd >= 59809: fps = True
+    if load.telescope == 'apo25m' and int(mjd) >= 59146: fps = True
+    if load.telescope == 'lco25m' and int(mjd) >= 59809: fps = True
 
     print('Running APQUICK on '+os.path.basename(filename)+' MJD='+mjd+' all reads ')
 
