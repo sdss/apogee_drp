@@ -579,16 +579,18 @@ def skysub(spec,plugmap):
         fibermap = plugmap['STRUCT1']
         objtype = np.char.array(fibermap['targettype'].astype(str)).upper()
         sfibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['assigned']==1) & (objtype=='SKY'))
+        sfibid = fibermap['fiberid'][sfibs]
     else:
         fibermap = plugmap['FIBERMAP']
         # get objtype from the targeting information in sdssv_apogee_target0
         category = np.char.array(fibermap['category'].astype(str)).upper()
         sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
+        sfibid = fibermap['fiberId'][sfibs]
 
     # We have sky fibers
     if len(sfibs)>0:
-        skyindex = 300-fibermap[sfibs]['fiberId']
+        skyindex = 300-sfibid
         # Calculate the median sky spectrum
         skyspec = np.median(spec.flux[skyindex,:],axis=0)
         # Median smooth to keep the sky lines (observers use these to check dither position)
