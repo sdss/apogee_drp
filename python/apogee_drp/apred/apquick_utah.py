@@ -122,10 +122,10 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
     # Get PSF exposure numbers from getPsfList subroutine
     #psfnums = getPsfList(load=load, update=updatePSF)
 
-    tasks = np.zeros(nexp,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+    tasks = np.zeros(10,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
     tasks = Table(tasks)
     # Loop over exposures
-    for i in range(0,100):
+    for i in range(10):
         exp = str(edata0['IM'][i])
         rawfilepath = load.filename('R', num=int(exp), chips='b').replace('R-','R-b-')
         mjd = os.path.basename(os.path.dirname(rawfilepath))
@@ -143,7 +143,6 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
         tasks['errfile'][i] = errfile
         #tasks['dir'][i] = errfile
 
-    pdb.set_trace()
     key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=logger,**slurmpars1)
     logger.info('PBS key is '+key)
     slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
