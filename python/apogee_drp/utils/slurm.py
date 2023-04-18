@@ -153,7 +153,6 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
     username = getpwuid(getuid())[0]
     slurmdir = SLURMDIR+username+'/slurm/'
     jobdir = slurmdir+label+'/'+key+'/'
-    if os.path.exists(jobdir) == False: os.makedirs(jobdir)
 
     # Get number of tasks
     ntasks = dln.readlines(jobdir+label+'.ntasks')
