@@ -953,7 +953,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     plugmap1 = yanny.yanny(plugfile1,np=True)
     plugmap2 = yanny.yanny(plugfile2,np=True)
 
-    pdb.set_trace()
     # Load the reads
     nfowler = 2
     bframes,eframes,nreads = loadframes(filename,hdulist,framenum,load=load,nfowler=nfowler,lastread=lastread)
