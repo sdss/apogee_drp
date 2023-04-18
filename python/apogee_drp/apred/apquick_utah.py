@@ -681,13 +681,13 @@ def snrcat(spec,plugmap):
     bad = (err <= 0.0)
     err[bad] = 1.0
     cat['snr'] = cat['flux']/err
-
+ 
+    pdb.set_trace()             
     # Load the plugging data
     if plugmap is not None:
         if 'STRUCT1' in plugmap.keys():
             fibermap = plugmap['STRUCT1']   # SDSS plates
-            fibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['holetype'].astype(str)=='APOGEE') & (fibermap['assigned']==1) )      
-            pdb.set_trace()             
+            fibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['holetype'].astype(str)=='APOGEE') & (fibermap['assigned']==1) )     
             fiberindex = 300-fibermap[fibs]['fiberid']
             cat['hmag'][fiberindex] = fibermap[fibs]['tmass_h']
             cat['objtype'][fiberindex] = fibermap[fibs]['targettype'].astype(str)
@@ -896,6 +896,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         plfolder = '{:0>4d}XX'.format(int(head['PLATEID']) // 100)
         plstr = str(head['PLATEID']).zfill(6)
         plugfile = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
+        plugfile = plugdir+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-01.par'
     psfdir = caldir+'psf/'
     detdir = caldir+'detector/'
     bpmdir = caldir+'bpm/'
@@ -1020,7 +1021,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     else:
         subspec = spec
     # Create the S/N catalog
-    pdb.set_trace()
+    #pdb.set_trace()
     cat = snrcat(subspec,plugmap)
     print('Mean S/N = %5.2f' % np.mean(cat['snr']))
     if exptype != 'OBJECT':
