@@ -891,6 +891,10 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         plugfile1 = plugfile
         plugfile2 = plugfile
         planfile = load.filename('Plan', num=framenum, plate=plateid, mjd=mjd)
+        if os.path.exists(planfile) == False:
+            print(planfile+' NOT FOUND. Stopping.')
+            pdb.set_trace()
+        plans = yanny.yanny(planfile,np=True)
         detfile = load.filename('Detector', num=plans['detid'], chips=True).replace('Detector-','Detector-b-')
         bpmfile = load.filename('BPM', num=plans['bpmid'], chips=True).replace('BPM-','BPM-b-')
         psffile = load.filename('PSF', num=plans['psfid'], chips=True).replace('PSF-','PSF-b-')
@@ -906,6 +910,10 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         planfile = load.filename('Plan', num=framenum, plate=plateid, mjd=mjd).replace('.yaml','.par')
         tmp = planfile.split('/')
         planfile = redux_dir+'visit/'+load.telescope+'/'+tmp[-4]+'/'+tmp[-3]+'/'+tmp[-2]+'/'+tmp[-1]
+        if os.path.exists(planfile) == False:
+            print(planfile+' NOT FOUND. Stopping.')
+            pdb.set_trace()
+        plans = yanny.yanny(planfile,np=True)
         detfile = caldir+'detector/'+load.prefix+'Detector-b-'+str(plans['detid']).zfill(8)+'.fits'
         bpmfile = caldir+'bpm/'+load.prefix+'BPM-b-'+str(plans['bpmid']).zfill(8)+'.fits'
         psffile = caldir+'psf/'+load.prefix+'PSF-b-'+str(plans['psfid']).zfill(8)+'.fits'
@@ -915,9 +923,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         pdb.set_trace()
     if os.path.exists(plugfile2) == False:
         print(plugfile2+' NOT FOUND. Stopping.')
-        pdb.set_trace()
-    if os.path.exists(planfile) == False:
-        print(planfile+' NOT FOUND. Stopping.')
         pdb.set_trace()
     if os.path.exists(detfile) == False:
         print(detfile+' NOT FOUND. Stopping.')
@@ -943,7 +948,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     gain = np.median(gainim)
     bpm = fits.getdata(bpmfile,0)
     tracestr = fits.getdata(psffile)
-    plans = yanny.yanny(planfile,np=True)
     plugmap1 = yanny.yanny(plugfile1,np=True)
     plugmap2 = yanny.yanny(plugfile2,np=True)
 
