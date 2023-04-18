@@ -110,7 +110,7 @@ def utah(telescope='apo25m', apred='daily', updatePSF=False):
     nexp = len(edata0)
 
     # Get PSF exposure numbers from getPsfList subroutine
-    psfnums = getPsfList(load=load, update=updatePSF)
+    #psfnums = getPsfList(load=load, update=updatePSF)
 
     # Loop over exposures
     for iexp in range(500,501):
@@ -135,7 +135,7 @@ def utah(telescope='apo25m', apred='daily', updatePSF=False):
         #    dname = rawfilefits.replace('R-','Raw-').replace('.fits','-'+str(iread+1).zfill(3)+'.fits')
         #    print(dname)
         #    Table(d).write(dname,overwrite=True)
-        output = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load, psfnums=psfnums)
+        output = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load)#, psfnums=psfnums)
 
         pdb.set_trace()
 
@@ -858,7 +858,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
 
     """
 
-
     print('Running APQUICK on '+os.path.basename(filename)+' MJD='+mjd+' all reads ')
 
     fps = False
@@ -966,25 +965,25 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
 
     # Add some important values to the header
     frame.head['FRAMENUM'] = framenum
+    frame.head['PSFFILE'] = psffile
+    frame.head['DETFILE'] = detfile
+    frame.head['BPMFILE'] = bpmfile
 
     # Fix bad pixels
     frame = bpmfix(frame,bpm)
 
     # Load the trace information
-    gd, = np.where(psfnums - int(framenum) > 0)
-    gd1, = np.where(psfnums[gd] - int(framenum) == np.min(psfnums[gd] - int(framenum)))
-    psffile = psfdir+load.prefix+'PSF-b-'+str(psfnums[gd][gd1][0]).zfill(8)+'.fits'
+    #gd, = np.where(psfnums - int(framenum) > 0)
+    #gd1, = np.where(psfnums[gd] - int(framenum) == np.min(psfnums[gd] - int(framenum)))
+    #psffile = psfdir+load.prefix+'PSF-b-'+str(psfnums[gd][gd1][0]).zfill(8)+'.fits'
     #gd, = np.where(np.abs(int(framenum)-psfnums) == np.nanmin(np.abs(int(framenum)-psfnums)))
     #psffile = psfdir+load.prefix+'PSF-b-'+str(psfnums[gd][0]).zfill(8)+'.fits'
-    if os.path.exists(psffile) == False:
-        print(psffile+' NOT FOUND. Stopping.')
-        pdb.set_trace()
+    #if os.path.exists(psffile) == False:
+    #    print(psffile+' NOT FOUND. Stopping.')
+    #    pdb.set_trace()
     #psffiles = np.sort(glob(psfdir+'/'+load.prefix+'PSF-b-*.fits'))
     #psffiles = np.sort(glob(psfdir+'/apPSF-b-????????.fits'))
     pdb.set_trace()
-    frame.head['PSFFILE'] = psffile
-    frame.head['DETFILE'] = detfile
-    frame.head['BPMFILE'] = bpmfile
     # Boxcar extract the fibers
     midcol = 1024
     if ncol==2048:
