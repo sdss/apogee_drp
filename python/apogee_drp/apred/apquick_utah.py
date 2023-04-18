@@ -685,9 +685,27 @@ def snrcat(spec,plugmap):
     pdb.set_trace()             
     # Load the plugging data
     if plugmap is not None:
-        if 'STRUCT1' in plugmap.keys():
-            fibermap = plugmap['STRUCT1']   # SDSS plates
-            fibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['holetype'].astype(str)=='APOGEE') & (fibermap['assigned']==1) )     
+        #if 'STRUCT1' in plugmap.keys():
+        #    fibermap = plugmap['STRUCT1']   # SDSS plates
+        #    fibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['holetype'].astype(str)=='APOGEE') & (fibermap['assigned']==1) )     
+        #    fiberindex = 300-fibermap[fibs]['fiberid']
+        #    cat['hmag'][fiberindex] = fibermap[fibs]['tmass_h']
+        #    cat['objtype'][fiberindex] = fibermap[fibs]['targettype'].astype(str)
+        #    cat['apogee_id'][fiberindex] = fibermap[fibs]['targetids']
+        #    skyind = np.where(cat['objtype'] == 'SKY')
+        #    if np.sum(skyind)>0:
+        #        cat['objtype'][fiberindex[skyind]] = 'SKY'
+        #    tellind = np.where(cat['objtype'] == 'STANDARD')
+        #    if np.sum(skyind)>0:
+        #        cat['objtype'][fiberindex[skyind]] = 'HOT_STD'
+        #    cat['ra'][fiberindex] = fibermap[fibs]['ra']
+        #    cat['dec'][fiberindex] = fibermap[fibs]['dec']
+        #    cat['fiberid'][fiberindex] = fibermap[fibs]['fiberid']
+
+        if 'PLUGMAPOBJ' in plugmap.keys():
+            fibermap = plugmap['PLUGMAPOBJ']   # SDSS plates
+            fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['holeType'].astype(str)=='OBJECT') & (fibermap['spectrographId']==2) )
+            pdb.set_trace()
             fiberindex = 300-fibermap[fibs]['fiberid']
             cat['hmag'][fiberindex] = fibermap[fibs]['tmass_h']
             cat['objtype'][fiberindex] = fibermap[fibs]['targettype'].astype(str)
