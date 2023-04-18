@@ -127,7 +127,7 @@ def runutah(telescope='apo25m', apred='daily',nodes=2, updatePSF=False, startnum
     # Loop over exposures
     for iexp in range(0,100):
         exp = str(edata0['NUM'][iexp])
-        rawfilepath = load.filename('R', num=exp, chips='b').replace('R-','R-b-')
+        rawfilepath = load.filename('R', num=int(exp), chips='b').replace('R-','R-b-')
         mjd = os.path.basename(os.path.dirname(rawfilepath))
         outdir = apodir+'quickred/'+telescope+'/'+mjd+'/'
         if os.path.exists(outdir) == False: os.path.makedirs(outdir)
