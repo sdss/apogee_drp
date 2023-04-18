@@ -656,9 +656,18 @@ def snrcat(spec,plugmap):
             fibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['holetype'].astype(str)=='APOGEE') & (fibermap['assigned']==1) )            
             fiberindex = 300-fibermap[fibs]['fiberid']
             pdb.set_trace()
-            cat['hmag'][fiberindex] = fibermap[fibs]['mag'][:,1]
+            cat['hmag'][fiberindex] = fibermap[fibs]['tmass_h']
             cat['objtype'][fiberindex] = fibermap[fibs]['targettype'].astype(str)
-            cat['apogee_id'][fiberindex] = fibermap[fibs]['targetids']     
+            cat['apogee_id'][fiberindex] = fibermap[fibs]['targetids']
+            skyind = np.where(cat['objtype'] == 'SKY')
+            if np.sum(skyind)>0:
+                cat['objtype'][fiberindex[skyind]] = 'SKY'
+            tellind = np.where(cat['objtype'] == 'STANDARD')
+            if np.sum(skyind)>0:
+                cat['objtype'][fiberindex[skyind]] = 'HOT_STD'
+            cat['ra'][fiberindex] = fibermap[fibs]['ra']
+            cat['dec'][fiberindex] = fibermap[fibs]['dec']
+            cat['fiberid'][fiberindex] = fibermap[fibs]['fiberid']
             pdb.set_trace()       
         else:
             fibermap = plugmap['FIBERMAP']     # SDSS-V FPS
@@ -676,9 +685,9 @@ def snrcat(spec,plugmap):
             #tellind = bmask.is_bit_set(fibermap['sdssv_apogee_target0'][fibs],1)==1   # HOT_STD/telluric
             if np.sum(tellind)>0:
                 cat['objtype'][fiberindex[tellind]] = 'HOT_STD'
-        cat['ra'][fiberindex] = fibermap[fibs]['ra']
-        cat['dec'][fiberindex] = fibermap[fibs]['dec']
-        cat['fiberid'][fiberindex] = fibermap[fibs]['fiberId']
+            cat['ra'][fiberindex] = fibermap[fibs]['ra']
+            cat['dec'][fiberindex] = fibermap[fibs]['dec']
+            cat['fiberid'][fiberindex] = fibermap[fibs]['fiberId']
     cat = Table(cat)
     return cat
 
