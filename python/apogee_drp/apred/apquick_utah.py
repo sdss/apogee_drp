@@ -586,7 +586,6 @@ def skysub(spec,plugmap):
         sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
 
-    pdb.set_trace()
     # We have sky fibers
     if len(sfibs)>0:
         skyindex = 300-fibermap[sfibs]['fiberId']
