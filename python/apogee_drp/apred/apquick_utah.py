@@ -137,7 +137,6 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
         cmd += "'"+telescope+"',apred='"+apred+"')"
         cmd += '"'
         #utah(edata0['NUM'][iexp],telscope=telescope,apred=apred)
-        pdb.set_t
         tasks['cmd'][i] = cmd
         tasks['outfile'][i] = outfile
         tasks['errfile'][i] = errfile
