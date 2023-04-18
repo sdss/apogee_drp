@@ -917,7 +917,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         planfile = redux_dir+'visit/'+load.telescope+'/'+tmp[-4]+'/'+tmp[-3]+'/'+tmp[-2]+'/'+tmp[-1]
         if os.path.exists(planfile) == False:
             print(planfile+' NOT FOUND. Stopping.')
-            pdb.set_trace()
+            return
         plans = yanny.yanny(planfile,np=True)
         plugid = plans['plugmap'].replace("'",'')
         pludmjd = plugid.split('-')[1]
@@ -959,19 +959,19 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
 
     if os.path.exists(plugfile1) == False:
         print(plugfile1+' NOT FOUND. Stopping.')
-        pdb.set_trace()
+        return
     if os.path.exists(plugfile2) == False:
         print(plugfile2+' NOT FOUND. Stopping.')
-        pdb.set_trace()
+        return
     if os.path.exists(detfile) == False:
         print(detfile+' NOT FOUND. Stopping.')
-        pdb.set_trace()
+        return
     if os.path.exists(bpmfile) == False: 
         print(bpmfile+' NOT FOUND. Stopping.')
-        pdb.set_trace()
+        return
     if os.path.exists(psffile) == False: 
         print(psffile+' NOT FOUND. Stopping.')
-        pdb.set_trace()
+        return
 
     print('Using '+plugfile1)
     print('      '+plugfile2)
