@@ -973,7 +973,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
                       (np.array(fibermap1['spectrographId'])==2))
         fiberid = np.array(fibermap1['fiberId'])[g]
 
-    pdb.set_trace()
     # Load the reads
     nfowler = 2
     bframes,eframes,nreads = loadframes(filename,hdulist,framenum,load=load,nfowler=nfowler,lastread=lastread)
@@ -1020,7 +1019,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         xlo = np.maximum(midcol-half_ncol,0)
         xhi = np.minimum(xlo+ncol-1,2047)
     #pdb.set_trace()
-    spec = boxextract(frame,tracestr,xlo=xlo,xhi=xhi)
+    spec = boxextract(frame,tracestr,xlo=xlo,xhi=xhi,fibers=fiberid)
 
     # Add some important configuration values to the header
     if plugmap is not None:
