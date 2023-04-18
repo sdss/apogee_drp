@@ -949,10 +949,16 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     gain = np.median(gainim)
     bpm = fits.getdata(bpmfile,0)
     tracestr = fits.getdata(psffile)
-    plugmap1 = yanny.yanny(plugfile1,np=True)
-    plugmap2 = yanny.yanny(plugfile2,np=True)
-    if fps: fibermap1 = plugmap1['FIBERMAP']
-    else: fibermap1 = plugmap1['PLUGMAPOBJ']
+    if fps:
+        plugmap1 = yanny.yanny(plugfile1)#,np=True)
+        plugmap2 = plugmap1#,np=True)
+        fibermap1 = plugmap1['FIBERMAP']
+        fibermap2 = fibermap1
+    else: 
+        plugmap1 = yanny.yanny(plugfile1,np=True)
+        plugmap2 = yanny.yanny(plugfile2,np=True)
+        fibermap1 = plugmap1['PLUGMAPOBJ']
+        fibermap2 = plugmap2['STRUCT1']
 
     pdb.set_trace()
     # Load the reads
