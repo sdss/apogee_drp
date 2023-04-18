@@ -135,9 +135,14 @@ def utah(telescope='apo25m', apred='daily', updatePSF=False, startnum=78520):
         #    dname = rawfilefits.replace('R-','Raw-').replace('.fits','-'+str(iread+1).zfill(3)+'.fits')
         #    print(dname)
         #    Table(d).write(dname,overwrite=True)
-        output = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load)#, psfnums=psfnums)
+        frame, subspec, cat, coefstr = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load)
 
-        pdb.set_trace()
+        outfile = outdir+'apQ-'+str(framenum).zfill(8)+'.fits'
+        print('writing '+outfile)
+        writeresults(outfile, frame, subspec, cat, coefstr, compress=False):
+
+        os.remove(infile)
+
 
 
 def nanmedfilt(x,size,mode='reflect'):
@@ -623,7 +628,6 @@ def skysub(spec,plugmap=None,fps=False):
         #sfibid2 = fibermap2['fiberid'][sfibs2]
     sfibid = np.array(fibermap['fiberId'])[sfibs]
 
-    pdb.set_trace()
     # We have sky fibers
     if len(sfibs)>0:
         skyindex = 300-sfibid
