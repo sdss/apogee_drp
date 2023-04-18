@@ -623,7 +623,6 @@ def skysub(spec,plugmap=None,fps=False):
         #sfibid2 = fibermap2['fiberid'][sfibs2]
     sfibid = fibermap['fiberId'][sfibs]
 
-    pdb.set_trace()
     # We have sky fibers
     if len(sfibs)>0:
         skyindex = 300-sfibid
