@@ -918,7 +918,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
     except:
         plfolder = '{:0>4d}XX'.format(int(plateid) // 100)
         plstr = str(head['PLATEID']).zfill(6)
-        plugfile = phsdir4+plfolder+'/'+plstr+'/'+plateHolesSorted-'+plstr+'.par'
+        plugfile = phsdir4+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
         #plugfile = plugdir4+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-'+str(head['MAPID']).zfill(2)+'.par'
 
     pdb.set_trace()
