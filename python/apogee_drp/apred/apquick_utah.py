@@ -142,6 +142,7 @@ def runutah(telescope='apo25m', apred='daily',nodes=2, updatePSF=False, startnum
         tasks['errfile'][i] = errfile
         #tasks['dir'][i] = errfile
 
+    pdb.set_trace()
     key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=logger,**slurmpars1)
     logger.info('PBS key is '+key)
     slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
