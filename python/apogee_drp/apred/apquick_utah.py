@@ -131,7 +131,7 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
         mjd = os.path.basename(os.path.dirname(rawfilepath))
         outdir = apodir+'quickred/'+telescope+'/'+mjd+'/'
         if os.path.exists(outdir) == False: os.makedirs(outdir)
-        outfile = 'apQ-'+str(exp).zfill(8)+'.log'
+        outfile = outdir+'apQ-'+str(exp).zfill(8)+'.log'
         errfile = outfile.replace('.log','.err')
         cmd = 'python -c "from apogee_drp.apred import apquick_utah; apquick_utah.utah('+exp+',telescope='
         cmd += "'"+telescope+"',apred='"+apred+"')"
