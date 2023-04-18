@@ -896,7 +896,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         plstr = str(head['PLATEID']).zfill(6)
         plugfile1 = plugdir+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-01.par'
         plugfile2 = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
-        planfile = load.filename('Plan', num=framenum, plate=head['plateid'], mjd=mjd)
+        planfile = load.filename('Plan', num=framenum, plate=head['plateid'], mjd=mjd).replace('.yaml','.par')
         tmp = planfile.split('/')
         planfile = redux_dir+'visit/'+load.telescope+'/'+tmp[-4]+'/'+tmp[-3]+'/'+tmp[-2]+'/'+tmp[-1]
         pdb.set_trace()
