@@ -954,6 +954,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     gain = np.median(gainim)
     bpm = fits.getdata(bpmfile,0)
     tracestr = fits.getdata(psffile)
+    pdb.set_trace()
     if fps:
         plugmap1 = yanny.yanny(plugfile1)#,np=True)
         plugmap2 = plugmap1#,np=True)
