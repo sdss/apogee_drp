@@ -153,9 +153,10 @@ def utah(framenum,telescope='lco25m',apred='daily'):
     cwd = os.getcwd()+'/'
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
-    outdir = apodir+'quickred/'+telescope+'/'
-    outfile = outdir+'apQ-'+str(framenum).zfill(8)+'.fits'
     rawfilepath = load.filename('R', num=framenum, chips='b').replace('R-','R-b-')
+    mjd = os.path.basename(os.path.dirname(rawfilepath))
+    outdir = apodir+'quickred/'+telescope+'/'+mjd+'/'
+    outfile = outdir+'apQ-'+str(framenum).zfill(8)+'.fits'
     if os.path.exists(rawfilepath) == False:
         print(rawfilepath+' not found!')
         return
