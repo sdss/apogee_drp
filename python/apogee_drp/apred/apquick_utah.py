@@ -105,7 +105,7 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
     ppn = 64
     walltime = '336:00:00'
     # Only set cpus if you want to use less than 64 cpus
-    slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn,
+    slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared, #'ppn':ppn,
                  'walltime':walltime, 'notification':False}
 
     # Set up directory paths
