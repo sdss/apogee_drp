@@ -66,7 +66,37 @@ warnings.filterwarnings('ignore', category=UserWarning, append=True)
 Wrappper for running apquick on data stored at Utah
 """
 
-def utah(telescope='apo25m', apred='daily'):
+detNumPlateN = 13390003
+detNumPlateS = 22810006
+bpmNumPlateN = 33770001
+bpmNumPlateS = 35800002
+
+def getPsfList(load=None, update=False):
+    # Find the psf list directory
+    codedir = os.path.dirname(os.path.abspath(__file__))
+    datadir = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/psflists/'
+    pfile = datadir+load.observatory+'PSFall.dat'
+
+    if update:
+        pfilesPlate = ascii.read(datadir+load.observatory+'PSFplate.dat')
+        numPlate = np.array(d['COL1'])
+        expPlate = np.char.zfill(np.array(d['COL2']).astype(str),8)
+        redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
+        pdir = redux_dir+'cal/'+load.instrument+'/psf/'
+        pfiles = glob.glob(pdir+load.prefix+'PSF-b-*fits')
+        pfiles.sort()
+        pfiles = np.array(pfiles)
+        npfiles = len(pfiles)
+        expFPS = np.empty(npfiles).astype(str)
+        for i in range(npfiles): exp[i]=os.path.basename(f[i]).split('-')[2].split('.')[0]
+        expAll = np.concatenate([expPlate,expFPS])
+        numAll = np.char.zfill(np.arange(len(expAll)).astype(str),8)
+        ascii.write([numAll,expAll], pfile, format='no_header', overwrite=True)
+
+    ascii.read(pfile)
+    return np.array(d['col2'])
+
+def utah(telescope='apo25m', apred='daily', updatePSF=False):
     # Set up directory paths
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
@@ -75,10 +105,14 @@ def utah(telescope='apo25m', apred='daily'):
     # Raw data will be extracted temporarily to current working directory (then removed)
     cwd = os.getcwd()+'/'
 
-    # Get exposure numbers from summary file
+    # Get science exposure numbers from summary file
     edata0 = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
     nexp = len(edata0)
 
+    # Get PSF exposure numbers from getPsfList subroutine
+    expPSF = getPsfList(load=load, update=updatePSF)
+
+    pdb.set_trace()
     # Loop over exposures
     for iexp in range(500,501):
         edata = edata0[iexp]
@@ -829,20 +863,53 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
 
     """
 
+
+    print('Running APQUICK on '+os.path.basename(filename)+' MJD='+mjd+' all reads ')
+
     fps = False
     if load.telescope == 'apo25m' and int(mjd) >= 59146: fps = True
     if load.telescope == 'lco25m' and int(mjd) >= 59809: fps = True
 
-    print('Running APQUICK on '+os.path.basename(filename)+' MJD='+mjd+' all reads ')
+    head = fits.getheader(filename)#eframes[0].head.copy()   # header of first read
 
-    redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
-    caldir = redux_dir+'cal/'+load.instrument+'/'
+
+    # Setup directories and load the plugmap (FPS) or plateHolesSorted (plate) 
+    plugmap = None
+    rawdir = os.path.dirname(filename)+'/'
+    if fps:
+        redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
+        caldir = redux_dir+'cal/'+load.instrument+'/'
+        plugdir = os.environ['SDSSCORE_DIR']+'/'+load.observatory.lower()+'/summary_files/'
+        configid = head['configid']
+        if configid is not None and str(configid) != '':
+            configgrp = '{:0>4d}XX'.format(int(configid) // 100)
+            plugfile = plugdir+'/'+configgrp+'/confSummary-'+str(configid)+'.par'
+            print('Using configid from first read header: '+str(configid))
+        else:
+            print('No configID in header.')
+            if plugfile is not None:
+                print('Using input plugfile '+str(plugfile))
+    else:
+        redux_dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
+        caldir = redux_dir+'cal/'
+        plugdir = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/'+load.observatory+'/'+mjd+'/'
+        phsdir = '/uufs/chpc.utah.edu/common/home/sdss/software/svn.sdss.org/data/sdss/platelist/trunk/plates/'
+        plfolder = '{:0>4d}XX'.format(int(plateid) // 100)
+        plstr = str(head['PLATEID']).zfill(6)
+        plugfile = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
     psfdir = caldir+'psf/'
     detdir = caldir+'detector/'
     bpmdir = caldir+'bpm/'
-    rawdir = os.path.dirname(filename)+'/'
-    plugdir4 = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/'+load.observatory+'/'+mjd+'/'
-    phsdir4 = '/uufs/chpc.utah.edu/common/home/sdss/software/svn.sdss.org/data/sdss/platelist/trunk/plates/'
+
+    # Load plugmap/fibermap file
+    if plugfile is not None:
+        if os.path.exists(plugfile) is False:
+            print(plugfile+' NOT FOUND')
+            plugmap = None
+            pdb.set_trace()
+        else:
+            print('Loading '+plugfile)
+            plugmap = yanny.yanny(plugfile,np=True)
 
     pdb.set_trace()
 
@@ -855,7 +922,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
     if bframes is None:
         print('Cannot run quicklook')
         return None,None,None,None
-    head = fits.getheader(filename)#eframes[0].head.copy()   # header of first read
 
     # plugmap/configuration directory
     #plugmapfile = load.filename('confSummary', configid=int(iplate[i]))
@@ -912,32 +978,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,apred='daily
         xhi = np.minimum(xlo+ncol-1,2047)
     pdb.set_trace()
     spec = boxextract(frame,tracestr,xlo=xlo,xhi=xhi)
-    # Load the plugmap file
-    plugmap = None
-    # Try to get fiber mapping ID from the first read header
-    try:
-        configid = head['configid']
-        if configid is not None and str(configid) != '':
-            configgrp = '{:0>4d}XX'.format(int(configid) // 100)
-            plugfile = plugdir+'/'+configgrp+'/confSummary-'+str(configid)+'.par'
-            print('Using configid from first read header: '+str(configid))
-        else:
-            print('No configID in header.')
-            if plugfile is not None:
-                print('Using input plugfile '+str(plugfile))
-    except:
-        plfolder = '{:0>4d}XX'.format(int(plateid) // 100)
-        plstr = str(head['PLATEID']).zfill(6)
-        plugfile = phsdir4+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
-
-    # Load plugmap/fibermap file
-    if plugfile is not None:
-        if os.path.exists(plugfile) is False:
-            print(plugfile+' NOT FOUND')
-            plugmap = None
-        else:
-            print('Loading '+plugfile)
-            plugmap = yanny.yanny(plugfile,np=True)
 
     # Add some important configuration values to the header
     if plugmap is not None:
