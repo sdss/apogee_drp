@@ -621,7 +621,7 @@ def skysub(spec,plugmap=None,fps=False):
         sfibs, = np.where((np.array(fibermap['fiberId'])>=0) & (holetype=='OBJECT') & (np.array(fibermap['spectrographId'])==2) & (objtype=='SKY'))
         #sfibs2, = np.where( (fibermap2['fiberid']>=0) & (fibermap2['assigned']==1) & (objtype2=='SKY'))
         #sfibid2 = fibermap2['fiberid'][sfibs2]
-    sfibid = fibermap['fiberId'][sfibs]
+    sfibid = np.array(fibermap['fiberId'])[sfibs]
 
     # We have sky fibers
     if len(sfibs)>0:
