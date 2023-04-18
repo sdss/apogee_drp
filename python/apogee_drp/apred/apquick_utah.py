@@ -113,7 +113,7 @@ def utah(telescope='apo25m', apred='daily', updatePSF=False):
     #psfnums = getPsfList(load=load, update=updatePSF)
 
     # Loop over exposures
-    for iexp in range(500,501):
+    for iexp in range(78570,78571):
         edata = edata0[iexp]
         framenum = edata['IM']
         rawfilepath = load.filename('R', num=framenum, chips='b').replace('R-','R-b-')
