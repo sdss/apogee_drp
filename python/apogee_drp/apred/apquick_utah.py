@@ -866,7 +866,12 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     if load.telescope == 'lco25m' and int(mjd) >= 59809: fps = True
 
     head = fits.getheader(filename)#eframes[0].head.copy()   # header of first read
-
+    nframes = np.int(head['NFRAMES'])
+    exptype = head['EXPTYPE']
+    plateid = head['PLATEID']
+    if exptype is None: exptype=''
+    try: nreads = head['NREADS']
+    except: nreads = head['NFRAMES']
 
     # Setup directories and load the plugmap (FPS) or plateHolesSorted (plate) 
     plugmap = None
@@ -886,79 +891,74 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
                 print('Using input plugfile '+str(plugfile))
         plugfile1 = plugfile
         plugfile2 = plugfile
-        planfile = load.filename('Plan', num=framenum, plate=head['plateid'], mjd=mjd)
+        planfile = load.filename('Plan', num=framenum, plate=plateid, mjd=mjd)
+        detfile = load.filename('Detector', num=plans['detid'], chips=True).replace('Detector-','Detector-b-')
+        bpmfile = load.filename('BPM', num=plans['bpmid'], chips=True).replace('BPM-','BPM-b-')
+        psffile = load.filename('PSF', num=plans['psfid'], chips=True).replace('PSF-','PSF-b-')
     else:
         redux_dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
         caldir = redux_dir+'cal/'
         plugdir = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/'+load.observatory+'/'+mjd+'/'
         phsdir = '/uufs/chpc.utah.edu/common/home/sdss/software/svn.sdss.org/data/sdss/platelist/trunk/plates/'
         plfolder = '{:0>4d}XX'.format(int(head['PLATEID']) // 100)
-        plstr = str(head['PLATEID']).zfill(6)
-        plugfile1 = plugdir+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-01.par'
+        plstr = str(plateid).zfill(6)
+        plugfile1 = plugdir+'plPlugMapM-'+str(plateid)+'-'+mjd+'-01.par'
         plugfile2 = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
-        planfile = load.filename('Plan', num=framenum, plate=head['plateid'], mjd=mjd).replace('.yaml','.par')
+        planfile = load.filename('Plan', num=framenum, plate=plateid, mjd=mjd).replace('.yaml','.par')
         tmp = planfile.split('/')
         planfile = redux_dir+'visit/'+load.telescope+'/'+tmp[-4]+'/'+tmp[-3]+'/'+tmp[-2]+'/'+tmp[-1]
+        detfile = caldir+'detector/'+load.prefix+'Detector-b-'+str(plans['detid']).zfill(8)+'.fits'
+        bpmfile = caldir+'bpm/'+load.prefix+'BPM-b-'+str(plans['bpmid']).zfill(8)+'.fits'
+        psffile = caldir+'psf/'+load.prefix+'PSF-b-'+str(plans['psfid']).zfill(8)+'.fits'
+
+    if os.path.exists(plugfile1) == False:
+        print(plugfile1+' NOT FOUND. Stopping.')
         pdb.set_trace()
-    psfdir = caldir+'psf/'
-    detdir = caldir+'detector/'
-    bpmdir = caldir+'bpm/'
+    if os.path.exists(plugfile2) == False:
+        print(plugfile2+' NOT FOUND. Stopping.')
+        pdb.set_trace()
+    if os.path.exists(planfile) == False:
+        print(planfile+' NOT FOUND. Stopping.')
+        pdb.set_trace()
+    if os.path.exists(detfile) == False:
+        print(detfile+' NOT FOUND. Stopping.')
+        pdb.set_trace()
+    if os.path.exists(bpmfile) == False: 
+        print(bpmfile+' NOT FOUND. Stopping.')
+        pdb.set_trace()
+    if os.path.exists(psffile) == False: 
+        print(psffile+' NOT FOUND. Stopping.')
+        pdb.set_trace()
 
-    # Load plugmap/fibermap file
-    if plugfile1 is not None:
-        if os.path.exists(plugfile1) is False:
-            print(plugfil1e+' NOT FOUND')
-            plugmap1 = None
-            pdb.set_trace()
-        else:
-            print('Loading '+plugfile1)
-            plugmap1 = yanny.yanny(plugfile1,np=True)
-            plugmap2 = yanny.yanny(plugfile2,np=True)
+    print('Using '+plugfile1)
+    print('      '+plugfile2)
+    print('      '+planfile)
+    print('      '+detfile)
+    print('      '+bpmfile)
+    print('      '+psffile)
 
+    # Load files
+    rdnoiseim = fits.getdata(detfile,1)
+    rdnoise = np.median(rdnoiseim)
+    gainim = fits.getdata(detfile,2)
+    gain = np.median(gainim)
+    bpm = fits.getdata(bpmfile,0)
+    tracestr = fits.getdata(psffile)
+    plans = yanny.yanny(planfile,np=True)
+    plugmap1 = yanny.yanny(plugfile1,np=True)
+    plugmap2 = yanny.yanny(plugfile2,np=True)
+
+    pdb.set_trace()
     # Load the reads
     nfowler = 2
-    #rawdir = os.path.dirname(filename)+'/'
-    #framenum = int(os.path.basename(filename).split('-')[2].split('.')[0])
     bframes,eframes,nreads = loadframes(filename,hdulist,framenum,load=load,nfowler=nfowler,lastread=lastread)
     if bframes is None:
         print('Cannot run quicklook')
         return None,None,None,None
 
-    # plugmap/configuration directory
-    #plugmapfile = load.filename('confSummary', configid=int(iplate[i]))
-    #if config['apogee_mountain'].get('plugmap_dir') is not None:
-    #    plugdir = config['apogee_mountain'].get('plugmap_dir')
-    #else:
-    #    plugdir = os.environ['SDSSCORE_DIR']+observatory.lower()+'/summary_files/'
-        #plugdir = '/data/apogee/plugmaps/'
-
-    nframes = np.int(head['NFRAMES'])
-    exptype = head['EXPTYPE']
-    plateid = str(head['PLATEID'])
-    if exptype is None: exptype=''
-    try: nreads = head['NREADS']
-    except: nreads = head['NFRAMES']
-
     # Do Fowler/CDS collapse
     im = fowler(bframes,eframes)
 
-    # Get rdnoise/gain from apDetector file
-    if fps:
-        detfiles = glob(detdir+'/'+load.prefix+'Detector-b-????????.fits')
-        detfiles = np.sort(detfiles)
-        detfile = detfiles[-1]
-        print('Using '+detfile)
-        rdnoiseim = fits.getdata(detfile,1)
-        rdnoise = np.median(rdnoiseim)
-        gainim = fits.getdata(detfile,2)
-        gain = np.median(gainim)
-    else:
-        detfile = detPlateN
-        if load.observatory == 'lco': detfile = detPlateS
-        rdnoiseim = fits.getdata(detfile,1)
-        rdnoise = np.median(rdnoiseim)
-        gainim = fits.getdata(detfile,2)
-        gain = np.median(gainim)
     # Generate the noise image
     err = noisemodel(im,nreads,rdnoise,gain)
     frame = Frame("",head,im,framenum,0)
@@ -967,17 +967,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     # Add some important values to the header
     frame.head['FRAMENUM'] = framenum
 
-    # Use bad pixel mask
-    if fps:
-        bpmfiles = glob(bpmdir+'/'+load.prefix+'BPM-b-????????.fits')
-        bpmfiles = list(np.sort(bpmfiles))
-        bpmfile = bpmfiles[-1]
-        print('Using '+bpmfile)
-        bpm = fits.getdata(bpmfile,0)
-    else:
-        bpmfile = bpmPlateN
-        if load.observatory == 'lco': bpmfile = bpmPlateS
-        bpm = fits.getdata(bpmfile,0)
+    # Fix bad pixels
     frame = bpmfix(frame,bpm)
 
     # Load the trace information
@@ -991,8 +981,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         pdb.set_trace()
     #psffiles = np.sort(glob(psfdir+'/'+load.prefix+'PSF-b-*.fits'))
     #psffiles = np.sort(glob(psfdir+'/apPSF-b-????????.fits'))
-    print('Using '+psffile)
-    tracestr = fits.getdata(psffile)
     pdb.set_trace()
     frame.head['PSFFILE'] = psffile
     frame.head['DETFILE'] = detfile
