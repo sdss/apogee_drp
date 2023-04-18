@@ -988,6 +988,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     #psffiles = np.sort(glob(psfdir+'/apPSF-b-????????.fits'))
     print('Using '+psffile)
     tracestr = Table.read(psffile,1)
+    pdb.set_trace()
     frame.head['PSFFILE'] = psffile
     frame.head['DETFILE'] = detfile
     frame.head['BPMFILE'] = bpmfile
