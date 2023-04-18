@@ -140,6 +140,7 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
         tasks['cmd'][i] = cmd
         tasks['outfile'][i] = outfile
         tasks['errfile'][i] = errfile
+        tasks['dir'][i] = os.environ.get('APOGEE_LOCALDIR')+'/'
         #tasks['dir'][i] = errfile
 
     key,jobid = slrm.submit(tasks,label='apq',verbose=True,logger=None,**slurmpars)
