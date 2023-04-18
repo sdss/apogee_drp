@@ -653,7 +653,8 @@ def snrcat(spec,plugmap):
     if plugmap is not None:
         if 'STRUCT1' in plugmap.keys():
             fibermap = plugmap['STRUCT1']   # SDSS plates
-            fibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['holetype'].astype(str)=='APOGEE') & (fibermap['assigned']==1) )            
+            fibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['holetype'].astype(str)=='APOGEE') & (fibermap['assigned']==1) )      
+            pdb.set_trace()             
             fiberindex = 300-fibermap[fibs]['fiberid']
             cat['hmag'][fiberindex] = fibermap[fibs]['tmass_h']
             cat['objtype'][fiberindex] = fibermap[fibs]['targettype'].astype(str)
@@ -667,7 +668,6 @@ def snrcat(spec,plugmap):
             cat['ra'][fiberindex] = fibermap[fibs]['ra']
             cat['dec'][fiberindex] = fibermap[fibs]['dec']
             cat['fiberid'][fiberindex] = fibermap[fibs]['fiberid']
-            pdb.set_trace()       
         else:
             fibermap = plugmap['FIBERMAP']     # SDSS-V FPS
             fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) )            
