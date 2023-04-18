@@ -582,7 +582,7 @@ def boxextract(frame,tracestr,fibers=None,xlo=0,xhi=None):
 
 
 # Calculate mean sky spectrum
-def skysub(spec,plugmap):
+def skysub(spec,plugmap1=None,plugmap2=None,fps=False):
     """This subtracts the median sky spectrum from all of the fiber spectra.
     
     Parameters
@@ -608,18 +608,20 @@ def skysub(spec,plugmap):
     """
 
     # Find the object and sky fibers
-    if 'STRUCT1' in plugmap.keys():
-        fibermap = plugmap['STRUCT1']
-        objtype = np.char.array(fibermap['targettype'].astype(str)).upper()
-        sfibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['assigned']==1) & (objtype=='SKY'))
-        sfibid = fibermap['fiberid'][sfibs]
-    else:
-        fibermap = plugmap['FIBERMAP']
+    if fps:
+        fibermap = plugmap1['FIBERMAP']
         # get objtype from the targeting information in sdssv_apogee_target0
         category = np.char.array(fibermap['category'].astype(str)).upper()
         sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
         sfibid = fibermap['fiberId'][sfibs]
+    else
+        fibermap1 = plugmap1['PLUGMAPOBJ']
+        fibermap2 = plugmap2['STRUCT1']
+        pdb.set_trace()
+        objtype = np.char.array(fibermap['targettype'].astype(str)).upper()
+        sfibs, = np.where( (fibermap['fiberid']>=0) & (fibermap['assigned']==1) & (objtype=='SKY'))
+        sfibid = fibermap['fiberid'][sfibs]
 
     # We have sky fibers
     if len(sfibs)>0:
@@ -641,7 +643,7 @@ def skysub(spec,plugmap):
 
 
 # Calculate median S/N per fiber
-def snrcat(spec,plugmap):
+def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
     """This function calculates the S/N for each fiber.
     
     Parameters
@@ -907,6 +909,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
             if plugfile is not None:
                 print('Using input plugfile '+str(plugfile))
         plugfile1 = plugfile
+        plugfile2 = plugfile
     else:
         redux_dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
         caldir = redux_dir+'cal/'
@@ -914,21 +917,22 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         phsdir = '/uufs/chpc.utah.edu/common/home/sdss/software/svn.sdss.org/data/sdss/platelist/trunk/plates/'
         plfolder = '{:0>4d}XX'.format(int(head['PLATEID']) // 100)
         plstr = str(head['PLATEID']).zfill(6)
-        plugfile = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
         plugfile1 = plugdir+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-01.par'
+        plugfile2 = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
     psfdir = caldir+'psf/'
     detdir = caldir+'detector/'
     bpmdir = caldir+'bpm/'
 
     # Load plugmap/fibermap file
-    if plugfile is not None:
-        if os.path.exists(plugfile) is False:
-            print(plugfile+' NOT FOUND')
-            plugmap = None
+    if plugfile1 is not None:
+        if os.path.exists(plugfile1) is False:
+            print(plugfil1e+' NOT FOUND')
+            plugmap1 = None
             pdb.set_trace()
         else:
-            print('Loading '+plugfile)
-            plugmap = yanny.yanny(plugfile,np=True)
+            print('Loading '+plugfile1)
+            plugmap1 = yanny.yanny(plugfile1,np=True)
+            plugmap2 = yanny.yanny(plugfile2,np=True)
 
     # Load the reads
     nfowler = 2
@@ -1035,15 +1039,14 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         frame.head['FIELDID'] = ''
         frame.head['CONFIGFL'] = ''
     # Subtract the sky
-    if exptype == 'OBJECT' and plugmap is not None:
-        subspec = skysub(spec,plugmap)
+    if exptype == 'OBJECT' and plugmap1 is not None:
+        subspec = skysub(spec,plugmap1=plugmap1,plugmap2=plugmap2,fps=fps)
     else:
         subspec = spec
     # Create the S/N catalog
-    plugmap = yanny.yanny(plugfile1,np=True)
 
     #pdb.set_trace()
-    cat = snrcat(subspec,plugmap)
+    cat = snrcat(subspec,plugmap1=plugmap1,plugmap2=plugmap2,fps=fps)
     print('Mean S/N = %5.2f' % np.mean(cat['snr']))
     if exptype != 'OBJECT':
         cat['apogee_id'] = 'N/A'
