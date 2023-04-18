@@ -91,7 +91,6 @@ def getPsfList(load=None, update=False):
         for i in range(npfiles): expFPS[i]=os.path.basename(pfiles[i]).split('-')[2].split('.')[0]
         expAll = np.concatenate([expPlate,expFPS])
         numAll = np.char.zfill(np.arange(len(expAll)).astype(str),8)
-        pdb.set_trace()
         ascii.write([numAll,expAll], pfile, format='no_header', overwrite=True)
 
     data = ascii.read(pfile)
@@ -936,32 +935,51 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     exptype = head['EXPTYPE']
     plateid = str(head['PLATEID'])
     if exptype is None: exptype=''
-    # Do Fowler/CDS collapse
-    im = fowler(bframes,eframes)
-    #im = fits.getdata(filename)
     try: nreads = head['NREADS']
     except: nreads = head['NFRAMES']
+
+    # Do Fowler/CDS collapse
+    im = fowler(bframes,eframes)
+
     # Get rdnoise/gain from apDetector file
-    detfiles = glob(detdir+'/'+load.prefix+'Detector-b-????????.fits')
-    detfiles = np.sort(detfiles)
-    print('Using '+detfiles[-1])
-    rdnoiseim = fits.getdata(detfiles[-1],1)
-    rdnoise = np.median(rdnoiseim)
-    gainim = fits.getdata(detfiles[-1],2)
-    gain = np.median(gainim)
+    if fps:
+        detfiles = glob(detdir+'/'+load.prefix+'Detector-b-????????.fits')
+        detfiles = np.sort(detfiles)
+        print('Using '+detfiles[-1])
+        rdnoiseim = fits.getdata(detfiles[-1],1)
+        rdnoise = np.median(rdnoiseim)
+        gainim = fits.getdata(detfiles[-1],2)
+        gain = np.median(gainim)
+    else:
+        detfile = detPlateN
+        if load.observatory == 'lco': detfile = detPlateS
+        rdnoiseim = fits.getdata(detfile,1)
+        rdnoise = np.median(rdnoiseim)
+        gainim = fits.getdata(detfile,2)
+        gain = np.median(gainim)
     # Generate the noise image
     err = noisemodel(im,nreads,rdnoise,gain)
     frame = Frame("",head,im,framenum,0)
     frame.err = err
     # Add some important values to the header
     frame.head['FRAMENUM'] = framenum
+
     # Use bad pixel mask
-    bpmfiles = glob(bpmdir+'/'+load.prefix+'BPM-b-????????.fits')
-    bpmfiles = list(np.sort(bpmfiles))
-    print('Using '+bpmfiles[-1])
-    bpm = fits.getdata(bpmfiles[-1],0)
+    if fps:
+        bpmfiles = glob(bpmdir+'/'+load.prefix+'BPM-b-????????.fits')
+        bpmfiles = list(np.sort(bpmfiles))
+        print('Using '+bpmfiles[-1])
+        bpm = fits.getdata(bpmfiles[-1],0)
+    else:
+        bpmfile = bpmPlateN
+        if load.observatory == 'lco': bpmfile = bpmPlateS
+        bpm = fits.getdata(bpmfile,0)
     frame = bpmfix(frame,bpm)
+
     # Load the trace information
+    gd, = np.where(np.abs(int(framenum)-psfnums) == np.nanmin(np.abs(int(framenum)-psfnums)))
+    psffile = psfdir+load.prefix+'PSF-b-'+str(psfnums[gd][0]).zfill(8)+'.fits'
+    pdb.set_trace()
     psffiles = np.sort(glob(psfdir+'/'+load.prefix+'PSF-b-*.fits'))
     #psffiles = np.sort(glob(psfdir+'/apPSF-b-????????.fits'))
     print('Using '+psffiles[-1])
