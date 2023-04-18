@@ -139,7 +139,7 @@ def utah(telescope='apo25m', apred='daily', updatePSF=False, startnum=78520):
 
         outfile = outdir+'apQ-'+str(framenum).zfill(8)+'.fits'
         print('writing '+outfile)
-        writeresults(outfile, frame, subspec, cat, coefstr, compress=False):
+        writeresults(outfile, frame, subspec, cat, coefstr, compress=False)
 
         os.remove(infile)
 
