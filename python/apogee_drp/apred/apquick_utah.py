@@ -895,6 +895,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
             print(planfile+' NOT FOUND. Stopping.')
             pdb.set_trace()
         plans = yanny.yanny(planfile,np=True)
+        pdb.set_trace()
         detfile = load.filename('Detector', num=plans['detid'], chips=True).replace('Detector-','Detector-b-')
         bpmfile = load.filename('BPM', num=plans['bpmid'], chips=True).replace('BPM-','BPM-b-')
         psffile = load.filename('PSF', num=plans['psfid'], chips=True).replace('PSF-','PSF-b-')
