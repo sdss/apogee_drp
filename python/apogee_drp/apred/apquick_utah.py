@@ -83,7 +83,7 @@ def getPsfList(load=None, update=False):
         expPlate = np.char.zfill(np.array(data['col2']).astype(str),8)
         redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
         pdir = redux_dir+'cal/'+load.instrument+'/psf/'
-        pfiles = glob.glob(pdir+load.prefix+'PSF-b-*fits')
+        pfiles = glob(pdir+load.prefix+'PSF-b-*fits')
         pfiles.sort()
         pfiles = np.array(pfiles)
         npfiles = len(pfiles)
@@ -91,6 +91,7 @@ def getPsfList(load=None, update=False):
         for i in range(npfiles): exp[i]=os.path.basename(f[i]).split('-')[2].split('.')[0]
         expAll = np.concatenate([expPlate,expFPS])
         numAll = np.char.zfill(np.arange(len(expAll)).astype(str),8)
+        pdb.set_trace()
         ascii.write([numAll,expAll], pfile, format='no_header', overwrite=True)
 
     data = ascii.read(pfile)
