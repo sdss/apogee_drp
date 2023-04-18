@@ -610,14 +610,14 @@ def skysub(spec,plugmap=None,fps=False):
     # Find the object and sky fibers
     if fps:
         fibermap = plugmap['FIBERMAP']
-        category = np.char.array(fibermap['category'].astype(str)).upper()
+        category = np.char.array(fibermap['category']).astype(str).upper()
         sfibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) &
                            ((category=='SKY') | (category=='SKY_APOGEE') | (category=='SKY_BOSS')))
     else:
         fibermap = plugmap['PLUGMAPOBJ']
         #fibermap2 = plugmap2['STRUCT1']
-        holetype = np.char.array(fibermap['holeType'].astype(str)).upper()
-        objtype = np.char.array(fibermap['objType'].astype(str)).upper()
+        holetype = np.char.array(fibermap['holeType']).astype(str).upper()
+        objtype = np.char.array(fibermap['objType']).astype(str).upper()
         sfibs, = np.where((fibermap['fiberId']>=0) & (holetype=='OBJECT') & (fibermap['spectrographId']==2) & (objtype=='SKY'))
         #sfibs2, = np.where( (fibermap2['fiberid']>=0) & (fibermap2['assigned']==1) & (objtype2=='SKY'))
         #sfibid2 = fibermap2['fiberid'][sfibs2]
@@ -693,7 +693,7 @@ def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
         cat['hmag'][fiberindex] = fibermap[fibs]['h_mag']
         cat['catalogid'][fiberindex] = fibermap[fibs]['catalogid']
         cat['objtype'][fiberindex] = 'OBJECT'   # default
-        category = np.char.array(fibermap['category'].astype(str)).upper()
+        category = np.char.array(fibermap['category']).astype(str).upper()
         skyind = (category[fibs]=='SKY') | (category[fibs]=='SKY_APOGEE') | (category[fibs]=='SKY_BOSS')
         #skyind = bmask.is_bit_set(fibermap['sdssv_apogee_target0'][fibs],0)==1    # SKY
         if np.sum(skyind)>0:
@@ -708,10 +708,10 @@ def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
     else:
         fibermap1 = plugmap1['PLUGMAPOBJ']     # SDSS-III-IV
         fibermap2 = plugmap2['STRUCT1']
-        holetype1 = np.char.array(fibermap1['holeType'].astype(str)).upper()
-        objtype1 = np.char.array(fibermap1['objType'].astype(str)).upper()
-        holetype2 = np.char.array(fibermap2['holetype'].astype(str)).upper()
-        objtype2 = np.char.array(fibermap2['targettype'].astype(str)).upper()
+        holetype1 = np.char.array(fibermap1['holeType']).astype(str).upper()
+        objtype1 = np.char.array(fibermap1['objType']).astype(str)).upper()
+        holetype2 = np.char.array(fibermap2['holetype']).astype(str)).upper()
+        objtype2 = np.char.array(fibermap2['targettype']).astype(str)).upper()
         fibs1, = np.where((fibermap1['fiberId']>=0) & (holetype1=='OBJECT') & (fibermap1['spectrographId']==2))
         fibs2, = np.where((fibermap2['fiberid']>=0) & (fibermap2['assigned']==1) & (holetype2=='APOGEE') & (objtype2!='NA'))
 
@@ -1022,7 +1022,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         half_ncol = ncol//2
         xlo = np.maximum(midcol-half_ncol,0)
         xhi = np.minimum(xlo+ncol-1,2047)
-    pdb.set_trace()
     spec = boxextract(frame,tracestr,xlo=xlo,xhi=xhi,fibers=300-fiberid)
 
     # Add some important configuration values to the header
