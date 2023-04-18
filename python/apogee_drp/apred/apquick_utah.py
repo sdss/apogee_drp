@@ -29,18 +29,20 @@ import os
 import pdb
 import numpy as np
 import warnings
+import subprocess
 from astropy.io import fits,ascii
 from astropy.table import Table, Column
 from glob import glob
 from scipy.ndimage import median_filter,generic_filter
-from apogee_drp.utils import apzip,plan,apload,yanny,plugmap,platedata,bitmask,info
+from apogee_drp.utils import apzip,plan,apload,yanny,plugmap,platedata,bitmask,info,slurm as slrm
+import slurm
+from slurm import queue as pbsqueue
 #from apogee_drp.utils import yanny, apload
 #from sdss_access.path import path
 #from . import config  # get loaded config values 
 #from . import __version__
 #from . import bitmask as bmask
 #from . import yanny
-import subprocess
 
 # In the future, use yanny tools from pyDL
 #from pydl.pydlutils.yanny import (is_yanny, read_table_yanny,
@@ -96,11 +98,19 @@ def getPsfList(load=None, update=False):
     data = ascii.read(pfile)
     return np.array(data['col2'])
 
-def utah(telescope='apo25m', apred='daily', updatePSF=False, startnum=78520):
+def runutah(telescope='apo25m', apred='daily',nodes=2, updatePSF=False, startnum=78520):
+    # Slurm settings
+    alloc = 'sdss-np'
+    shared = True
+    ppn = 64
+    walltime = '336:00:00'
+    # Only set cpus if you want to use less than 64 cpus
+    slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn,
+                 'walltime':walltime, 'notification':False}
+
     # Set up directory paths
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
-    outdir = apodir+'quickred/'+telescope+'/'
     
     # Raw data will be extracted temporarily to current working directory (then removed)
     cwd = os.getcwd()+'/'
@@ -112,38 +122,53 @@ def utah(telescope='apo25m', apred='daily', updatePSF=False, startnum=78520):
     # Get PSF exposure numbers from getPsfList subroutine
     #psfnums = getPsfList(load=load, update=updatePSF)
 
+    tasks = np.zeros(nexp,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+    tasks = Table(tasks)
     # Loop over exposures
-    for iexp in range(startnum,startnum+1):
-        edata = edata0[iexp]
-        framenum = edata['IM']
-        rawfilepath = load.filename('R', num=framenum, chips='b').replace('R-','R-b-')
-        if os.path.exists(rawfilepath) == False:
-            print(rawfilepath+' not found!')
-            continue
-        rawfile = os.path.basename(rawfilepath)
-        rawfilefits = rawfile.replace('.apz','.fits')
+    for iexp in range(0,100):
+        exp = str(edata0['NUM'][iexp])
+        rawfilepath = load.filename('R', num=exp, chips='b').replace('R-','R-b-')
         mjd = os.path.basename(os.path.dirname(rawfilepath))
-        print(mjd)
-        infile = cwd+rawfilefits
-        #pdb.set_trace()
-        # Unzip the file
-        if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=cwd)
-        hdulist = fits.open(rawfilefits)
-        nreads = len(hdulist)-1
-        #for iread in range(nreads):
-        #    d = hdulist[iread+1].data
-        #    dname = rawfilefits.replace('R-','Raw-').replace('.fits','-'+str(iread+1).zfill(3)+'.fits')
-        #    print(dname)
-        #    Table(d).write(dname,overwrite=True)
-        frame, subspec, cat, coefstr = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load)
+        outdir = apodir+'quickred/'+telescope+'/'+mjd+'/'
+        if os.path.exists(outdir) == False: os.path.makedirs(outdir)
+        outfile = outdir+'apQ-'+str(exp).zfill(8)+'.fits'
+        errfile = outfile.replace('.fits','_err.log')
+        cmd = 'python -c "from apogee_drp.apred import apquick_utah; apquick_utah.runutah('+exp+',telescope='
+        cmd += "'"+telescope+"',apred='"+apred+"')"
+        cmd += '"'
+        #utah(edata0['NUM'][iexp],telscope=telescope,apred=apred)
+        tasks['cmd'][i] = cmd
+        tasks['outfile'][i] = outfile
+        tasks['errfile'][i] = errfile
+        #tasks['dir'][i] = errfile
 
-        outfile = outdir+'apQ-'+str(framenum).zfill(8)+'.fits'
+    key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=logger,**slurmpars1)
+    logger.info('PBS key is '+key)
+    slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
+
+def utah(framenum,telescope='lco25m',apred='daily'):
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    outdir = apodir+'quickred/'+telescope+'/'
+    outfile = outdir+'apQ-'+str(framenum).zfill(8)+'.fits'
+    rawfilepath = load.filename('R', num=framenum, chips='b').replace('R-','R-b-')
+    if os.path.exists(rawfilepath) == False:
+        print(rawfilepath+' not found!')
+        continue
+    rawfile = os.path.basename(rawfilepath)
+    rawfilefits = rawfile.replace('.apz','.fits')
+    mjd = os.path.basename(os.path.dirname(rawfilepath))
+    infile = cwd+rawfilefits
+    # Unzip the file
+    if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=cwd)
+    hdulist = fits.open(rawfilefits)
+    nreads = len(hdulist)-1
+    try:
+        frame, subspec, cat, coefstr = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load)
         print('writing '+outfile)
         writeresults(outfile, frame, subspec, cat, coefstr, compress=False)
+    except: pass
 
-        os.remove(infile)
-
-
+    os.remove(infile)
 
 def nanmedfilt(x,size,mode='reflect'):
     return generic_filter(x, np.nanmedian, size=size)
