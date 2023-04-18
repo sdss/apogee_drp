@@ -29,7 +29,7 @@ import os
 import pdb
 import numpy as np
 import warnings
-from astropy.io import fits
+from astropy.io import fits,ascii
 from astropy.table import Table, Column
 from glob import glob
 from scipy.ndimage import median_filter,generic_filter
