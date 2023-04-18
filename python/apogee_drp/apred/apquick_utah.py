@@ -142,8 +142,8 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
         tasks['errfile'][i] = errfile
         #tasks['dir'][i] = errfile
 
-    key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=logger,**slurmpars1)
-    slrm.queue_wait('apq',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
+    key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=None,**slurmpars1)
+    slrm.queue_wait('apq',key,jobid,sleeptime=60,verbose=True,logger=None) # wait for jobs to complete  
 
 def utah(framenum,telescope='lco25m',apred='daily'):
     # Raw data will be extracted temporarily to current working directory (then removed)
