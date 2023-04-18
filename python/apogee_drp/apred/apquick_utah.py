@@ -689,8 +689,7 @@ def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
         plugmap = plugmap1
         fibermap = plugmap['FIBERMAP']     # SDSS-V FPS
         fibs, = np.where( (fibermap['fiberId']>=0) & (fibermap['spectrographId']==2) )            
-        fiberindex = 300-fibermap[fibs]['fiberId']
-        pdb.set_trace()
+        fiberindex = 300-fibermap['fiberId'][fibs]
         cat['hmag'][fiberindex] = fibermap[fibs]['h_mag']
         cat['catalogid'][fiberindex] = fibermap[fibs]['catalogid']
         cat['objtype'][fiberindex] = 'OBJECT'   # default
@@ -953,6 +952,8 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     plugmap1 = yanny.yanny(plugfile1,np=True)
     plugmap2 = yanny.yanny(plugfile2,np=True)
 
+
+    pdb.set_trace()
     # Load the reads
     nfowler = 2
     bframes,eframes,nreads = loadframes(filename,hdulist,framenum,load=load,nfowler=nfowler,lastread=lastread)
