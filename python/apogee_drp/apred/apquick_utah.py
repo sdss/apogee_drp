@@ -874,6 +874,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     # Setup directories and load the plugmap (FPS) or plateHolesSorted (plate) 
     plugmap = None
     rawdir = os.path.dirname(filename)+'/'
+    if load.telescope == 'apo25m': psffile = caldir+'psf/apPSF-b-39540016_300fibers.fits'
     if fps:
         redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
         caldir = redux_dir+'cal/'+load.instrument+'/'
@@ -896,8 +897,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         plans = yanny.yanny(planfile,np=True)
         detfile = load.filename('Detector', num=plans['detid:'], chips=True).replace('Detector-','Detector-b-')
         bpmfile = load.filename('BPM', num=plans['bpmid:'], chips=True).replace('BPM-','BPM-b-')
-        psffile = load.filename('PSF', num=plans['psfid:'], chips=True).replace('PSF-','PSF-b-')
-        if load.telescope == 'apo25m': psffile = caldir+'psf/apPSF-b-39540016_300fibers.fits'
+        if load.telescope == 'lco25m': psffile = load.filename('PSF', num=plans['psfid:'], chips=True).replace('PSF-','PSF-b-')
     else:
         redux_dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
         caldir = redux_dir+'cal/'
@@ -918,8 +918,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         plugfile2 = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
         detfile = caldir+'detector/'+load.prefix+'Detector-b-'+str(plans['detid']).zfill(8)+'.fits'
         bpmfile = caldir+'bpm/'+load.prefix+'BPM-b-'+str(plans['bpmid']).zfill(8)+'.fits'
-        psffile = caldir+'psf/'+load.prefix+'PSF-b-'+str(plans['psfid']).zfill(8)+'.fits'
-        if load.telescope == 'apo25m': psffile = caldir+'psf/apPSF-b-39540016_300fibers.fits'
+        if load.telescope == 'lco25m': psffile = caldir+'psf/'+load.prefix+'PSF-b-'+str(plans['psfid']).zfill(8)+'.fits'
 
     if os.path.exists(plugfile1) == False:
         print(plugfile1+' NOT FOUND. Stopping.')
