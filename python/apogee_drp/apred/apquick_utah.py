@@ -988,7 +988,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     #    pdb.set_trace()
     #psffiles = np.sort(glob(psfdir+'/'+load.prefix+'PSF-b-*.fits'))
     #psffiles = np.sort(glob(psfdir+'/apPSF-b-????????.fits'))
-    pdb.set_trace()
+
     # Boxcar extract the fibers
     midcol = 1024
     if ncol==2048:
