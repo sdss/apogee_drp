@@ -897,6 +897,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         detfile = load.filename('Detector', num=plans['detid:'], chips=True).replace('Detector-','Detector-b-')
         bpmfile = load.filename('BPM', num=plans['bpmid:'], chips=True).replace('BPM-','BPM-b-')
         psffile = load.filename('PSF', num=plans['psfid:'], chips=True).replace('PSF-','PSF-b-')
+        if load.telescope == 'apo25m': psffile = caldir+'psf/apPSF-b-39540016_300fibers.fits'
     else:
         redux_dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
         caldir = redux_dir+'cal/'
