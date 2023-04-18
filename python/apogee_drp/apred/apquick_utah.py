@@ -80,7 +80,7 @@ def utah(telescope='apo25m', apred='daily'):
     nexp = len(edata0)
 
     # Loop over exposures
-    for iexp in range(3,5):
+    for iexp in range(500,501):
         edata = edata0[iexp]
         framenum = edata['IM']
         rawfilepath = load.filename('R', num=framenum, chips='b').replace('R-','R-b-')
@@ -694,7 +694,7 @@ def snrcat(spec,plugmap):
 # Linear fit to log(S/N) vs. H
 def snrhmag(cat,nreads,nframes,hfid=11.0):
     """Returns the S/N for the fiducial H magnitude.
-
+apPlateSum-5815-56396.fits
     This fits a line to log(S/N) vs. Hmag for the stars and
     predicts what the S/N should be at the end of the exposure.
     
