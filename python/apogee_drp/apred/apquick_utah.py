@@ -970,7 +970,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         objtype = np.char.array(fibermap1['objType'].astype(str)).upper()
         g, = np.where((np.array(fibermap1['fiberId'])>=0) &
                       (holetype=='OBJECT') &
-                      (np.array(fibermap['spectrographId'])==2))
+                      (np.array(fibermap1['spectrographId'])==2))
         fiberid = np.array(fibermap1['fiberId'])[g]
 
     pdb.set_trace()
