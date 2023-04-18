@@ -98,7 +98,7 @@ def getPsfList(load=None, update=False):
     data = ascii.read(pfile)
     return np.array(data['col2'])
 
-def runutah(telescope='apo25m', apred='daily',nodes=2, updatePSF=False, startnum=78520):
+def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum=78520):
     # Slurm settings
     alloc = 'sdss-np'
     shared = True
@@ -133,10 +133,11 @@ def runutah(telescope='apo25m', apred='daily',nodes=2, updatePSF=False, startnum
         if os.path.exists(outdir) == False: os.makedirs(outdir)
         outfile = outdir+'apQ-'+str(exp).zfill(8)+'.fits'
         errfile = outfile.replace('.fits','_err.log')
-        cmd = 'python -c "from apogee_drp.apred import apquick_utah; apquick_utah.runutah('+exp+',telescope='
+        cmd = 'python -c "from apogee_drp.apred import apquick_utah; apquick_utah.utah('+exp+',telescope='
         cmd += "'"+telescope+"',apred='"+apred+"')"
         cmd += '"'
-        #utah(edata0['NUM'][iexp],telscope=telescope,apred=apred)
+        utah(edata0['NUM'][iexp],telscope=telescope,apred=apred)
+        pdb.set_t
         tasks['cmd'][i] = cmd
         tasks['outfile'][i] = outfile
         tasks['errfile'][i] = errfile
@@ -149,6 +150,7 @@ def runutah(telescope='apo25m', apred='daily',nodes=2, updatePSF=False, startnum
 
 def utah(framenum,telescope='lco25m',apred='daily'):
     load = apload.ApLoad(apred=apred, telescope=telescope)
+    apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
     outdir = apodir+'quickred/'+telescope+'/'
     outfile = outdir+'apQ-'+str(framenum).zfill(8)+'.fits'
     rawfilepath = load.filename('R', num=framenum, chips='b').replace('R-','R-b-')
