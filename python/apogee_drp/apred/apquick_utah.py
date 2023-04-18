@@ -112,7 +112,6 @@ def utah(telescope='apo25m', apred='daily', updatePSF=False):
     # Get PSF exposure numbers from getPsfList subroutine
     psfnums = getPsfList(load=load, update=updatePSF)
 
-    pdb.set_trace()
     # Loop over exposures
     for iexp in range(500,501):
         edata = edata0[iexp]
