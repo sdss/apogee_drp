@@ -925,7 +925,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         if load.telescope == 'lco25m': psffile = load.filename('PSF', num=plans['psfid:'], chips=True).replace('PSF-','PSF-b-')
     redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
     caldir = redux_dir+'cal/'+load.instrument+'/'
-    if load.telescope == 'lco25m': psffile = caldir+'psf/apPSF-b-36680072.fits'
+    if load.telescope == 'lco25m': psffile = caldir+'psf/asPSF-b-36680072.fits'
     if load.telescope == 'apo25m': psffile = caldir+'psf/apPSF-b-39540016_300fibers.fits'
     if load.telescope == 'apo25m': bpmfile = caldir+'bpm/apBPM-b-33770001.fits'
 
