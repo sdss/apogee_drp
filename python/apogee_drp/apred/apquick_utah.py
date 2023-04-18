@@ -68,8 +68,8 @@ Wrappper for running apquick on data stored at Utah
 
 detPlateN = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/detector/apDetector-b-13390003.fits'
 detPlateS = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/detector/asDetector-b-22810006.fits'
-bpmPlateN = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/psf/apBPM-b-33770001.fits'
-bpmPlateS = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/psf/asBPM-b-35800002.fits'
+bpmPlateN = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/bpm/apBPM-b-33770001.fits'
+bpmPlateS = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/bpm/asBPM-b-35800002.fits'
 
 def getPsfList(load=None, update=False):
     # Find the psf list directory
@@ -909,9 +909,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         else:
             print('Loading '+plugfile)
             plugmap = yanny.yanny(plugfile,np=True)
-
-    pdb.set_trace()
-
 
     # Load the reads
     nfowler = 2
