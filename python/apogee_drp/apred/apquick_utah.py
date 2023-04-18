@@ -976,8 +976,10 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     frame = bpmfix(frame,bpm)
 
     # Load the trace information
-    gd, = np.where(np.abs(int(framenum)-psfnums) == np.nanmin(np.abs(int(framenum)-psfnums)))
-    psffile = psfdir+load.prefix+'PSF-b-'+str(psfnums[gd][0]).zfill(8)+'.fits'
+    gd, = np.where(psfnums - int(framenum) > 0)
+    gd1, = np.where(psfnums[gd] - int(framenum) == np.min(psfnums[gd] - int(framenum)))
+    #gd, = np.where(np.abs(int(framenum)-psfnums) == np.nanmin(np.abs(int(framenum)-psfnums)))
+    psffile = psfdir+load.prefix+'PSF-b-'+str(psfnums[gd][gd1][0]).zfill(8)+'.fits'
     if os.path.exists(psffile) == False:
         print(psffile+' NOT FOUND. Stopping.')
         pdb.set_trace()
