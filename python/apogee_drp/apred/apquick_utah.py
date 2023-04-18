@@ -88,7 +88,7 @@ def getPsfList(load=None, update=False):
         pfiles = np.array(pfiles)
         npfiles = len(pfiles)
         expFPS = np.empty(npfiles).astype(str)
-        for i in range(npfiles): exp[i]=os.path.basename(f[i]).split('-')[2].split('.')[0]
+        for i in range(npfiles): exp[i]=os.path.basename(pfiles[i]).split('-')[2].split('.')[0]
         expAll = np.concatenate([expPlate,expFPS])
         numAll = np.char.zfill(np.arange(len(expAll)).astype(str),8)
         pdb.set_trace()
