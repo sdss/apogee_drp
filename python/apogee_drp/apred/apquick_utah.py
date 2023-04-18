@@ -817,7 +817,7 @@ apPlateSum-5815-56396.fits
 
 
 # Run everything
-def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None,apred='daily',lastread=None,hfid=11.0,plugfile=None,ncol=51):
+def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None,apred='daily',lastread=None,hfid=11.0,plugfile=None,ncol=2048):
     """This runs all of the main steps of the quick reduction.
     
     Parameters
@@ -956,7 +956,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     tracestr = fits.getdata(psffile)
     pdb.set_trace()
     if fps:
-        plugmap1 = yanny.yanny(plugfile1)#,np=True)
+        plugmap1 = yanny.yanny(plugfile1,np=True)
         plugmap2 = plugmap1#,np=True)
         fibermap1 = plugmap1['FIBERMAP']
         fibermap2 = fibermap1
