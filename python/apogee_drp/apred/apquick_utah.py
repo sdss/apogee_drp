@@ -93,7 +93,7 @@ def getPsfList(load=None, update=False):
         numAll = np.char.zfill(np.arange(len(expAll)).astype(str),8)
         ascii.write([numAll,expAll], pfile, format='no_header', overwrite=True)
 
-    ascii.read(pfile)
+    d = ascii.read(pfile)
     return np.array(d['col2'])
 
 def utah(telescope='apo25m', apred='daily', updatePSF=False):
