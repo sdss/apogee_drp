@@ -923,6 +923,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     caldir = redux_dir+'cal/'+load.instrument+'/'
     if load.telescope == 'lco25m': psffile = caldir+'psf/apPSF-b-36680072.fits'
     if load.telescope == 'apo25m': psffile = caldir+'psf/apPSF-b-39540016_300fibers.fits'
+    if load.telescope == 'apo25m': bpmfile = caldir+'bpm/apBPM-b-33770001.fits'
 
     if os.path.exists(plugfile1) == False:
         print(plugfile1+' NOT FOUND. Stopping.')
