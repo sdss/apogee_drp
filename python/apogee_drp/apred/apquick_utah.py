@@ -888,6 +888,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
             print('No configID in header.')
             if plugfile is not None:
                 print('Using input plugfile '+str(plugfile))
+        plugfile1 = plugfile
     else:
         redux_dir = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
         caldir = redux_dir+'cal/'
@@ -896,7 +897,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         plfolder = '{:0>4d}XX'.format(int(head['PLATEID']) // 100)
         plstr = str(head['PLATEID']).zfill(6)
         plugfile = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
-        plugfile = plugdir+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-01.par'
+        plugfile1 = plugdir+'plPlugMapM-'+str(head['PLATEID'])+'-'+mjd+'-01.par'
     psfdir = caldir+'psf/'
     detdir = caldir+'detector/'
     bpmdir = caldir+'bpm/'
@@ -1021,6 +1022,8 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     else:
         subspec = spec
     # Create the S/N catalog
+    plugmap = yanny.yanny(plugfile1,np=True)
+
     #pdb.set_trace()
     cat = snrcat(subspec,plugmap)
     print('Mean S/N = %5.2f' % np.mean(cat['snr']))
