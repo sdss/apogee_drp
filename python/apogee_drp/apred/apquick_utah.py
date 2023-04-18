@@ -1019,7 +1019,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         xlo = np.maximum(midcol-half_ncol,0)
         xhi = np.minimum(xlo+ncol-1,2047)
     pdb.set_trace()
-    spec = boxextract(frame,tracestr,xlo=xlo,xhi=xhi,fibers=fiberid)
+    spec = boxextract(frame,tracestr,xlo=xlo,xhi=xhi,fibers=300-fiberid)
 
     # Add some important configuration values to the header
     if plugmap is not None:
