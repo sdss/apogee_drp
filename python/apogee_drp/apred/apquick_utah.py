@@ -145,7 +145,7 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
 
     key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=logger,**slurmpars1)
     logger.info('PBS key is '+key)
-    slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
+    slrm.queue_wait('apq',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
 
 def utah(framenum,telescope='lco25m',apred='daily'):
     # Raw data will be extracted temporarily to current working directory (then removed)
