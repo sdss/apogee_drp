@@ -893,7 +893,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         caldir = redux_dir+'cal/'
         plugdir = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/mapper/'+load.observatory+'/'+mjd+'/'
         phsdir = '/uufs/chpc.utah.edu/common/home/sdss/software/svn.sdss.org/data/sdss/platelist/trunk/plates/'
-        plfolder = '{:0>4d}XX'.format(int(plateid) // 100)
+        plfolder = '{:0>4d}XX'.format(int(head['PLATEID']) // 100)
         plstr = str(head['PLATEID']).zfill(6)
         plugfile = phsdir+plfolder+'/'+plstr+'/plateHolesSorted-'+plstr+'.par'
     psfdir = caldir+'psf/'
