@@ -206,7 +206,7 @@ def makesumfiles(telescope='lco25m',apred='daily'):
                    ('ZERO',                 np.float64),
                    ('ZERONORM',             np.float64),
                    ('EXPTYPE',              np.str),
-                   ('DITHERPOS',            np.float64),
+                   ('DITHERPOS',            np.float64)])
                    #('APOGEE_ID',            np.str,(300)),
                    #('CATALOGID',            np.int64,(300)),
                    #('RA',                   np.float64,(300)),
