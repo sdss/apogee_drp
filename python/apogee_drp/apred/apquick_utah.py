@@ -201,7 +201,7 @@ def makesumfile(telescope='lco25m',apred='daily'):
         outstr = vstack([outstr,d1])
         del d1
     outstr.write(outfile, overwrite=True)
-    pdb.set_trace()
+    #pdb.set_trace()
 
 def makesumfiles(telescope='lco25m',apred='daily'):
     load = apload.ApLoad(apred=apred, telescope=telescope)
