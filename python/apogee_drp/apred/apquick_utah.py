@@ -240,16 +240,16 @@ def makesumfiles(telescope='lco25m',apred='daily'):
         outstr['DITHERPOS'][i] = d1['ditherpos'][0]
         #pdb.set_trace()
         ##outstr['APOGEE_ID'][i] = np.array(d2['apogee_id'])
-        outstr['CATALOGID'][i] = d2['catalogid']
-        outstr['RA'][i] = d2['ra']
-        outstr['DEC'][i] = d2['dec']
-        outstr['HMAG'][i] = d2['hmag']
-        outstr['OBJTYPE'][i] = d2['objtype']
-        outstr['FIBERID'][i] = d2['fiberid']
-        outstr['FIBERINDEX'][i] = d2['fiberindex']
-        outstr['FLUX'][i] = d2['flux']
-        outstr['ERR'][i] = d2['err']
-        outstr['SNR'][i] = d2['snr']
+        #outstr['CATALOGID'][i] = d2['catalogid']
+        #outstr['RA'][i] = d2['ra']
+        #outstr['DEC'][i] = d2['dec']
+        #outstr['HMAG'][i] = d2['hmag']
+        #outstr['OBJTYPE'][i] = d2['objtype']
+        #outstr['FIBERID'][i] = d2['fiberid']
+        #outstr['FIBERINDEX'][i] = d2['fiberindex']
+        #outstr['FLUX'][i] = d2['flux']
+        #outstr['ERR'][i] = d2['err']
+        #outstr['SNR'][i] = d2['snr']
         del d1
         del d2
     Table(outstr).write(outfile, overwrite=True)
