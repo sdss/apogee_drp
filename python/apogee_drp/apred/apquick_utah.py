@@ -65,7 +65,10 @@ warnings.filterwarnings('ignore', category=UserWarning, append=True)
     #config['apogee_mountain']['plugmap_dir'] = config['apogee_mountain']['plugmap_dir'].replace('apo','lco')
 
 """
-Wrappper for running apquick on data stored at Utah
+RUNUTAH is a parallelized wrapper for running apquick on data stored at Utah.
+It calls the procedure UTAH.
+The GETPSFLIST procedure is no longer need.
+MAKESUMFILES concatenates the individual apQ files into master apQ files
 """
 
 detPlateN = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/detector/apDetector-b-13390003.fits'
@@ -73,6 +76,9 @@ detPlateS = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redu
 bpmPlateN = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/bpm/apBPM-b-33770001.fits'
 bpmPlateS = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/bpm/asBPM-b-35800002.fits'
 
+"""
+This part isn't used anymore. We just one PSF file for quickred extraction, regardless of MJD.
+"""
 def getPsfList(load=None, update=False):
     # Find the psf list directory
     codedir = os.path.dirname(os.path.abspath(__file__))
@@ -119,6 +125,7 @@ def runutah(telescope='lco25m', apred='daily',nodes=2, updatePSF=False, startnum
     edata0 = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
     nexp = len(edata0)
     print(str(nexp)+' exposures to run\n')
+
     # Get PSF exposure numbers from getPsfList subroutine
     #psfnums = getPsfList(load=load, update=updatePSF)
 
@@ -173,6 +180,78 @@ def utah(framenum,telescope='lco25m',apred='daily'):
     except: pass
 
     os.remove(infile)
+
+def makesumfiles(telescope='lco25m',apred='daily'):
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
+    qdir = apodir+'quickred/'+telescope+'/'
+    print('Finding apQ files...')
+    files = glob.glob(qdir+'*/*fits')
+    files.sort()
+    files = np.array(files)
+    nfiles = len(files)
+    print('Found '+str(nfiles)+' files')
+
+    outfile = qdir+'apQ-'+telescope+'.fits'
+    dt = np.dtype([('FRAMENUM',             np.int32),
+                   ('MJD',                  np.int32),
+                   ('READ',                 np.int16),
+                   ('HMAG_FID',             np.float64),
+                   ('SNR_FID',              np.float64),
+                   ('SNR_FID_SCALE',        np.float64),
+                   ('LOGSNR_HMAG_COEF_ALL', np.float64),
+                   ('LOGSNR_HMAG_COEF',     np.float64),
+                   ('SNR_PREDICT',          np.float64),
+                   ('ZERO',                 np.float64),
+                   ('ZERONORM',             np.float64),
+                   ('EXPTYPE',              np.str,20),
+                   ('DITHERPOS',            np.float64),
+                   ('APOGEE_ID',            np.str,(300)),
+                   ('CATALOGID',            np.int32,(300)),
+                   ('RA',                   np.float64,(300)),
+                   ('DEC',                  np.float64,(300)),
+                   ('HMAG',                 np.float64,(300)),
+                   ('OBJTYPE',              np.str,(300)),
+                   ('FIBERID',              np.int16,(300)),
+                   ('FIBERINDEX',           np.int16,(300)),
+                   ('FLUX',                 np.float64,(300)),
+                   ('ERR',                  np.float64,(300)),
+                   ('SNR',                  np.float64,(300))])
+    outstr = np.zeros(nfiles, dtype=dt)
+
+    for i in range(nfiles):
+        d1 = fits.getdata(files[i])
+        d2 = fits.getdata(files[i],2)
+        mjd = getmjd(d1['framenum'])
+        outstr['FRAMENUM'][i] = d1['framenum']
+        outstr['MJD'][i] = mjd
+        outstr['READ'][i] = d1['read']
+        outstr['HMAG_FID'][i] = d1['hmag_fid']
+        outstr['SNR_FID'][i] = d1['snr_fid']
+        outstr['SNR_FID_SCALE'][i] = d1['snr_fid_scale']
+        outstr['LOGSNR_HMAG_COEF_ALL'][i] = d1['logsnr_hmag_coef_all']
+        outstr['LOGSNR_HMAG_COEF'][i] = d1['logsnr_hmag_coef']
+        outstr['SNR_PREDICT'][i] = d1['snr_predict']
+        outstr['ZERO'][i] = d1['zero']
+        outstr['ZERONORM'][i] = d1['zeronorm']
+        outstr['EXPTYPE'][i] = d1['exptype']
+        outstr['DITHERPOS'][i] = d1['ditherpos']
+        outstr['APOGEE_ID'][i] = d2['apogee_id']
+        outstr['CATALOGID'][i] = d2['catalogid']
+        outstr['RA'][i] = d2['ra']
+        outstr['DEC'][i] = d2['dec']
+        outstr['HMAG'][i] = d2['hmag']
+        outstr['OBJTYPE'][i] = d2['objtype']
+        outstr['FIBERID'][i] = d2['fiberid']
+        outstr['FIBERINDEX'][i] = d2['fiberindex']
+        outstr['FLUX'][i] = d2['flux']
+        outstr['ERR'][i] = d2['err']
+        outstr['SNR'][i] = d2['snr']
+        del d1
+        del d2
+    Table(outstr).write(outfile, overwrite=True)
+    pdb.set_trace()
+
 
 def nanmedfilt(x,size,mode='reflect'):
     return generic_filter(x, np.nanmedian, size=size)
