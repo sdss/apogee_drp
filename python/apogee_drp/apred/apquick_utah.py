@@ -238,7 +238,7 @@ def makesumfiles(telescope='lco25m',apred='daily'):
         outstr['ZERONORM'][i] = d1['zeronorm'][0]
         outstr['EXPTYPE'][i] = d1['exptype'][0]
         outstr['DITHERPOS'][i] = d1['ditherpos'][0]
-        #pdb.set_trace()
+        pdb.set_trace()
         ##outstr['APOGEE_ID'][i] = np.array(d2['apogee_id'])
         outstr['CATALOGID'][i] = d2['catalogid']
         outstr['RA'][i] = d2['ra']
