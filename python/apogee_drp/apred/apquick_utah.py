@@ -186,7 +186,7 @@ def makesumfiles(telescope='lco25m',apred='daily'):
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
     qdir = apodir+'quickred/'+telescope+'/'
     print('Finding apQ files...')
-    files = glob.glob(qdir+'*/*fits')
+    files = glob(qdir+'*/*fits')
     files.sort()
     files = np.array(files)
     nfiles = len(files)
