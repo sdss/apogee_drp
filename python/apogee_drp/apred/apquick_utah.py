@@ -190,6 +190,7 @@ def makesumfile(telescope='lco25m',apred='daily'):
     files.sort()
     files = np.array(files)
     nfiles = len(files)
+    nfilesS = str(nfiles)
     print('Found '+str(nfiles)+' files')
 
     outfile = qdir+'apQ-'+telescope+'.fits'
@@ -201,7 +202,6 @@ def makesumfile(telescope='lco25m',apred='daily'):
         outstr = vstack([outstr,d1])
         del d1
     outstr.write(outfile, overwrite=True)
-    #pdb.set_trace()
 
 def makesumfiles(telescope='lco25m',apred='daily'):
     load = apload.ApLoad(apred=apred, telescope=telescope)
