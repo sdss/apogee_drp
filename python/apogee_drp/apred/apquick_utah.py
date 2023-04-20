@@ -208,16 +208,16 @@ def makesumfiles(telescope='lco25m',apred='daily'):
                    ('EXPTYPE',              np.str),
                    ('DITHERPOS',            np.float64),
                    #('APOGEE_ID',            np.str,(300)),
-                   ('CATALOGID',            np.int64,(300)),
-                   ('RA',                   np.float64,(300)),
-                   ('DEC',                  np.float64,(300)),
-                   ('HMAG',                 np.float64,(300)),
-                   ('OBJTYPE',              np.str,30,(300)),
-                   ('FIBERID',              np.int16,(300)),
-                   ('FIBERINDEX',           np.int16,(300)),
-                   ('FLUX',                 np.float64,(300)),
-                   ('ERR',                  np.float64,(300)),
-                   ('SNR',                  np.float64,(300))])
+                   #('CATALOGID',            np.int64,(300)),
+                   #('RA',                   np.float64,(300)),
+                   #('DEC',                  np.float64,(300)),
+                   #('HMAG',                 np.float64,(300)),
+                   #('OBJTYPE',              np.str,30,(300)),
+                   #('FIBERID',              np.int16,(300)),
+                   #('FIBERINDEX',           np.int16,(300)),
+                   #('FLUX',                 np.float64,(300)),
+                   #('ERR',                  np.float64,(300)),
+                   #('SNR',                  np.float64,(300))])
     outstr = np.zeros(nfiles, dtype=dt)
 
     for i in range(15000,15002):
