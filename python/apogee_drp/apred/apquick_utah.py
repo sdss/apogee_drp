@@ -31,7 +31,7 @@ import numpy as np
 import warnings
 import subprocess
 from astropy.io import fits,ascii
-from astropy.table import Table, Column
+from astropy.table import Table, Column, vstack
 from glob import glob
 from scipy.ndimage import median_filter,generic_filter
 from apogee_drp.utils import apzip,plan,apload,yanny,plugmap,platedata,bitmask,info,slurm as slrm
