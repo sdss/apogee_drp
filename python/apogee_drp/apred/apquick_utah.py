@@ -181,6 +181,29 @@ def utah(framenum,telescope='lco25m',apred='daily'):
 
     os.remove(infile)
 
+def makesumfile(telescope='lco25m',apred='daily'):
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
+    qdir = apodir+'quickred/'+telescope+'/'
+    print('Finding apQ files...')
+    files = glob(qdir+'*/*fits')
+    files.sort()
+    files = np.array(files)
+    nfiles = len(files)
+    nfilesS = str(nfiles)
+    print('Found '+str(nfiles)+' files')
+
+    outfile = qdir+'apQ-'+telescope+'.fits'
+    outstr = Table(fits.getdata(files[0]))
+
+    for i in range(1,15):
+        print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
+        d1 = Table(fits.getdata(files[i]))
+        outstr = vstack([outstr,d1])
+        del d1
+    outstr.write(outfile, overwrite=True)
+    pdb.set_trace()
+
 def makesumfiles(telescope='lco25m',apred='daily'):
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
