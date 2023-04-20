@@ -212,7 +212,7 @@ def makesumfiles(telescope='lco25m',apred='daily'):
                    ('RA',                   np.float64,(300)),
                    ('DEC',                  np.float64,(300)),
                    ('HMAG',                 np.float64,(300)),
-                   ('OBJTYPE',              np.chararray,(300)),
+                   ('OBJTYPE',              np.str,300),
                    ('FIBERID',              np.int16,(300)),
                    ('FIBERINDEX',           np.int16,(300)),
                    ('FLUX',                 np.float64,(300)),
