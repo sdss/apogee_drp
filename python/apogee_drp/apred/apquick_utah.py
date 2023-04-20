@@ -190,6 +190,7 @@ def makesumfiles(telescope='lco25m',apred='daily'):
     files.sort()
     files = np.array(files)
     nfiles = len(files)
+    nfilesS = str(nfiles)
     print('Found '+str(nfiles)+' files')
 
     outfile = qdir+'apQ-'+telescope+'.fits'
@@ -219,7 +220,8 @@ def makesumfiles(telescope='lco25m',apred='daily'):
                    ('SNR',                  np.float64,(300))])
     outstr = np.zeros(nfiles, dtype=dt)
 
-    for i in range(nfiles):
+    for i in range(5):
+        print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
         d1 = fits.getdata(files[i])
         d2 = fits.getdata(files[i],2)
         mjd = getmjd(d1['framenum'])
