@@ -180,6 +180,8 @@ def utah(framenum,telescope='lco25m',apred='daily'):
         writeresults(outfile, frame, subspec, cat, coefstr, compress=False)
     except: pass
 
+    print('made '+outfile)
+
     os.remove(infile)
 
 def makesumfile(telescope='lco25m',apred='daily'):
