@@ -251,7 +251,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
                     ('FIBFLUX',              np.float64,300),
                     ('FIBERR',               np.float64,300),
                     ('FIBSNR',               np.float64,300)])
-    outstr1 = np.zeros(nfiles, dtype=dt1)
+    outstr = np.zeros(nfiles, dtype=dt1)
 
     for i in range(0,10):
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
