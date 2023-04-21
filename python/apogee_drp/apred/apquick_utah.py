@@ -283,7 +283,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
             outstr['ZERO1'] = exp['ZERO'][g][0]
             outstr['ZERORMS1'] = exp['ZERORMS'][g][0]
             outstr['ZERONORM1'] = exp['ZERONORM'][g][0]
-            outstr['SKY'] = exp['SKY'][g][0]
+            outstr['SKY'] = exp['SKY'][g][0][1]
         outstr['FIBID'] = d2['fiberid']
         outstr['FIBINDEX'] = d2['fiberid']
         outstr['FIBRA'] = d2['fiberid']
