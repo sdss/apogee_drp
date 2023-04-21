@@ -241,7 +241,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
                    ('FIBTYPE',              np.int16,300), # 1 if science, 0 if sky
                    ('FIBFLUX',              np.float64,300),
                    ('FIBERR',               np.float64,300),
-                   ('FIBSNR',               np.float64,300)
+                   ('FIBSNR',               np.float64,300),
                    ('SEEING',               np.float64),
                    ('SNRATIO',              np.float64),
                    ('MOONDIST',             np.float64),
