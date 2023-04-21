@@ -217,41 +217,41 @@ def makesumfile2(telescope='lco25m',apred='daily'):
 
     exp = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
 
-    outfile1 = qdir+'apQ-'+telescope+'_new.fits'
-    dt1 = np.dtype([('FRAMENUM',             np.int32),
-                    ('MJD',                  np.int32),
-                    ('PLATE',                np.int32),
-                    ('EXPTIME',              np.int32),
-                    ('NREAD',                np.int16),
-                    ('HMAG_FID',             np.float64),
-                    ('SNR_FID',              np.float64),
-                    ('SNR_FID_SCALE',        np.float64),
-                    ('LOGSNR_HMAG_COEF_ALL', np.float64,2),
-                    ('LOGSNR_HMAG_COEF',     np.float64,2),
-                    ('SNR_PREDICT',          np.float64),
-                    ('ZERO',                 np.float64),
-                    ('ZERONORM',             np.float64),
-                    ('EXPTYPE',              np.str),
-                    ('DITHERPOS',            np.float64),
-                    ('N_10pt0_11pt5',        np.int16),
-                    ('SEEING',               np.float64),
-                    ('SNRATIO',              np.float64),
-                    ('MOONDIST',             np.float64),
-                    ('MOONPHASE',            np.float64),
-                    ('SECZ',                 np.float64),
-                    ('ZERO1',                np.float64),
-                    ('ZERORMS1',             np.float64),
-                    ('ZERONORM1',            np.float64),
-                    ('SKY',                  np.float64),
-                    ('FIBID',                np.int16,300),
-                    ('FIBINDEX',             np.int16,300),
-                    ('FIBRA',                np.float64,300),
-                    ('FIBDEC',               np.float64,300),
-                    ('FIBTYPE',              np.int16,300), # 1 if science, 0 if sky
-                    ('FIBFLUX',              np.float64,300),
-                    ('FIBERR',               np.float64,300),
-                    ('FIBSNR',               np.float64,300)])
-    outstr = np.zeros(nfiles, dtype=dt1)
+    outfile = qdir+'apQ-'+telescope+'_new.fits'
+    dt = np.dtype([('FRAMENUM',             np.int32),
+                   ('MJD',                  np.int32),
+                   ('PLATE',                np.int32),
+                   ('EXPTIME',              np.int32),
+                   ('NREAD',                np.int16),
+                   ('HMAG_FID',             np.float64),
+                   ('SNR_FID',              np.float64),
+                   ('SNR_FID_SCALE',        np.float64),
+                   ('LOGSNR_HMAG_COEF_ALL', np.float64,2),
+                   ('LOGSNR_HMAG_COEF',     np.float64,2),
+                   ('SNR_PREDICT',          np.float64),
+                   ('ZERO',                 np.float64),
+                   ('ZERONORM',             np.float64),
+                   ('EXPTYPE',              np.str),
+                   ('DITHERPOS',            np.float64),
+                   ('N_10pt0_11pt5',        np.int16),
+                   ('FIBID',                np.int16,300),
+                   ('FIBINDEX',             np.int16,300),
+                   ('FIBRA',                np.float64,300),
+                   ('FIBDEC',               np.float64,300),
+                   ('FIBTYPE',              np.int16,300), # 1 if science, 0 if sky
+                   ('FIBFLUX',              np.float64,300),
+                   ('FIBERR',               np.float64,300),
+                   ('FIBSNR',               np.float64,300)
+                   ('SEEING',               np.float64),
+                   ('SNRATIO',              np.float64),
+                   ('MOONDIST',             np.float64),
+                   ('MOONPHASE',            np.float64),
+                   ('SECZ',                 np.float64),
+                   ('ZERO1',                np.float64),
+                   ('ZERORMS1',             np.float64),
+                   ('ZERONORM1',            np.float64),
+                   ('SKY',                  np.float64)])
+    outstr = np.zeros(nfiles, dtype=dt)
 
     for i in range(0,10):
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
