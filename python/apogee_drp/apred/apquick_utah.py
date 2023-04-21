@@ -873,9 +873,18 @@ def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
         objtype1 = np.char.array(fibermap1['objType']).astype(str).upper()
         holetype2 = np.char.array(fibermap2['holetype']).astype(str).upper()
         objtype2 = np.char.array(fibermap2['targettype']).astype(str).upper()
-        fibs1, = np.where((fibermap1['fiberId']>=0) & (holetype1=='OBJECT') & (fibermap1['spectrographId']==2))
-        fibs2, = np.where((fibermap2['fiberid']>=0) & (fibermap2['assigned']==1) & (holetype2=='APOGEE') & (objtype2!='NA'))
-        pdb.set_trace()
+        #fibs1, = np.where((fibermap1['fiberId']>=0) & (holetype1=='OBJECT') & (fibermap1['spectrographId']==2))
+        fibs2, = np.where((fibermap2['fiberid']>=0) & (fibermap2['assigned']==1) & ((holetype2=='APOGEE') | (holetype2=='APOGEE_SOUTH')) & (objtype2!='NA'))          
+        fiberindex = 300-fibermap2['fiberid'][fibs2]
+        cat['objtype'][fiberindex] = 'OBJECT'   # default
+        skyind, = np.where(objtype2 == 'SKY')
+        if len(skyind) > 0: cat['objtype'][fiberindex[skyind]] = 'SKY'
+        tellind, = np.where(objtype2 == 'SKY')
+        if len(tellind) > 0: cat['objtype'][fiberindex[tellind]] = 'HOT_STD'
+        cat['fiberid'][fiberindex] = fibermap2[fibs2]['fiberid']
+        cat['ra'][fiberindex] = fibermap[fibs2]['target_ra']
+        cat['dec'][fiberindex] = fibermap[fibs2]['target_dec']
+        cat['hmag'][fiberindex] = fibermap2[fibs2]['tmass_h']
 
     cat = Table(cat)
     return cat
