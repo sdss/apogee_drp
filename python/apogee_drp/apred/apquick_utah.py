@@ -174,11 +174,13 @@ def utah(framenum,telescope='lco25m',apred='daily'):
     if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=os.environ.get('APOGEE_REDUX')+'/'+apred+'/')
     hdulist = fits.open(infile)
     nreads = len(hdulist)-1
-    #try:
-    frame, subspec, cat, coefstr = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load)
-    print('writing '+outfile)
-    writeresults(outfile, frame, subspec, cat, coefstr, compress=False)
-    #except: pass
+    try:
+        frame, subspec, cat, coefstr = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load)
+        print('writing '+outfile)
+        writeresults(outfile, frame, subspec, cat, coefstr, compress=False)
+    except: 
+        print(str(framenum)+' failed.')
+        pass
 
     print('made '+outfile)
 
@@ -887,7 +889,6 @@ def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
         cat['ra'][fiberindex] = fibermap2[fibs2]['target_ra']
         cat['dec'][fiberindex] = fibermap2[fibs2]['target_dec']
         cat['hmag'][fiberindex] = fibermap2[fibs2]['tmass_h']
-    pdb.set_trace()
 
     cat = Table(cat)
     return cat
@@ -1219,7 +1220,6 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
 
     # Create the S/N catalog
     cat = snrcat(subspec,plugmap1=plugmap1,plugmap2=plugmap2,fps=fps)
-    pdb.set_trace()
     print('Mean S/N = %5.2f' % np.mean(cat['snr']))
     if exptype != 'OBJECT':
         cat['apogee_id'] = 'N/A'
