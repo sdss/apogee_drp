@@ -272,28 +272,27 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         outstr['EXPTYPE'][i] = d1['exptype'][0]
         outstr['DITHERPOS'][i] = d1['ditherpos'][0]
         g, = np.where((d2['hmag'] >= 10.0) & (d2['hmag'] <= 11.5))
-        outstr['N_10pt0_11pt5'] = len(g)
+        outstr['N_10pt0_11pt5'][i] = len(g)
         g, = np.where(d1['framenum'] == exp['im'])
         if len(g) > 0:
-            outstr['SEEING'] = exp['SEEING'][g][0]
-            outstr['SNRATIO'] = exp['SNRATIO'][g][0]
-            outstr['MOONDIST'] = exp['MOONDIST'][g][0]
-            outstr['MOONPHASE'] = exp['MOONPHASE'][g][0]
-            outstr['SECZ'] = exp['SECZ'][g][0]
-            outstr['ZERO1'] = exp['ZERO'][g][0]
-            outstr['ZERORMS1'] = exp['ZERORMS'][g][0]
-            outstr['ZERONORM1'] = exp['ZERONORM'][g][0]
-            outstr['SKY'] = exp['SKY'][g][0][1]
-        outstr['FIBID'] = d2['fiberid']
-        outstr['FIBINDEX'] = d2['fiberid']
-        outstr['FIBRA'] = d2['fiberid']
-        outstr['FIBDEC'] = d2['fiberid']
+            outstr['SEEING'][i] = exp['SEEING'][g][0]
+            outstr['SNRATIO'][i] = exp['SNRATIO'][g][0]
+            outstr['MOONDIST'][i] = exp['MOONDIST'][g][0]
+            outstr['MOONPHASE'][i] = exp['MOONPHASE'][g][0]
+            outstr['SECZ'][i] = exp['SECZ'][g][0]
+            outstr['ZERO1'][i] = exp['ZERO'][g][0]
+            outstr['ZERORMS1'][i] = exp['ZERORMS'][g][0]
+            outstr['ZERONORM1'][i] = exp['ZERONORM'][g][0]
+            outstr['SKY'][i] = exp['SKY'][g][0][1]
+        outstr['FIBID'][i] = d2['fiberid']
+        outstr['FIBINDEX'][i] = d2['fiberid']
+        outstr['FIBRA'][i] = d2['fiberid']
+        outstr['FIBDEC'][i] = d2['fiberid']
         g, = np.where(d2['objtype'] != 'SKY')
-        pdb.set_trace()
-        if len(g) > 0: outstr['FIBTYPE'][g] = np.full(len(g),1)
-        outstr['FIBFLUX'] = d2['flux']
-        outstr['FIBERR'] = d2['err']
-        outstr['FIBSNR'] = d2['snr']
+        if len(g) > 0: outstr['FIBTYPE'][i][g] = np.full(len(g),1)
+        outstr['FIBFLUX'][i] = d2['flux']
+        outstr['FIBERR'][i] = d2['err']
+        outstr['FIBSNR'][i] = d2['snr']
         del d1
         del d2
     Table(outstr).write(outfile, overwrite=True)
