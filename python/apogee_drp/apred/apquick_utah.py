@@ -884,9 +884,10 @@ def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
         tellind, = np.where(objtype2 == 'SKY')
         if len(tellind) > 0: cat['objtype'][fiberindex[tellind]] = 'HOT_STD'
         cat['fiberid'][fiberindex] = fibermap2[fibs2]['fiberid']
-        cat['ra'][fiberindex] = fibermap[fibs2]['target_ra']
-        cat['dec'][fiberindex] = fibermap[fibs2]['target_dec']
+        cat['ra'][fiberindex] = fibermap2[fibs2]['target_ra']
+        cat['dec'][fiberindex] = fibermap2[fibs2]['target_dec']
         cat['hmag'][fiberindex] = fibermap2[fibs2]['tmass_h']
+        pdb.set_trace()
 
     cat = Table(cat)
     return cat
