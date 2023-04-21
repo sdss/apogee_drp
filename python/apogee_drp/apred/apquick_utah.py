@@ -1219,6 +1219,7 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
 
     # Create the S/N catalog
     cat = snrcat(subspec,plugmap1=plugmap1,plugmap2=plugmap2,fps=fps)
+    pdb.set_trace()
     print('Mean S/N = %5.2f' % np.mean(cat['snr']))
     if exptype != 'OBJECT':
         cat['apogee_id'] = 'N/A'
