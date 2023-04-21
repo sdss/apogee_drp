@@ -879,10 +879,9 @@ def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
         fibs2, = np.where((fibermap2['fiberid']>=0) & (fibermap2['assigned']==1) & ((holetype2=='APOGEE') | (holetype2=='APOGEE_SOUTH')) & (objtype2!='NA'))          
         fiberindex = 300-fibermap2['fiberid'][fibs2]
         cat['objtype'][fiberindex] = 'OBJECT'   # default
-        skyind, = np.where(objtype2 == 'SKY')
-        pdb.set_trace()
+        skyind, = np.where(objtype2[fibs2] == 'SKY')
         if len(skyind) > 0: cat['objtype'][fiberindex[skyind]] = 'SKY'
-        tellind, = np.where(objtype2 == 'SKY')
+        tellind, = np.where(objtype2[fibs2] == 'STANDARD')
         if len(tellind) > 0: cat['objtype'][fiberindex[tellind]] = 'HOT_STD'
         cat['fiberid'][fiberindex] = fibermap2[fibs2]['fiberid']
         cat['ra'][fiberindex] = fibermap2[fibs2]['target_ra']
