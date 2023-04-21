@@ -174,11 +174,11 @@ def utah(framenum,telescope='lco25m',apred='daily'):
     if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=os.environ.get('APOGEE_REDUX')+'/'+apred+'/')
     hdulist = fits.open(infile)
     nreads = len(hdulist)-1
-    try:
-        frame, subspec, cat, coefstr = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load)
-        print('writing '+outfile)
-        writeresults(outfile, frame, subspec, cat, coefstr, compress=False)
-    except: pass
+    #try:
+    frame, subspec, cat, coefstr = runquick(infile, hdulist=hdulist, framenum=framenum, mjd=mjd, load=load)
+    print('writing '+outfile)
+    writeresults(outfile, frame, subspec, cat, coefstr, compress=False)
+    #except: pass
 
     print('made '+outfile)
 
