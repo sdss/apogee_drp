@@ -260,7 +260,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         mjd = getmjd(d1['framenum'])
         outstr['FRAMENUM'][i] = d1['framenum'][0]
         outstr['MJD'][i] = mjd
-        outstr['READ'][i] = d1['read'][0]
+        outstr['NREAD'][i] = d1['read'][0]
         outstr['HMAG_FID'][i] = d1['hmag_fid'][0]
         outstr['SNR_FID'][i] = d1['snr_fid'][0]
         outstr['SNR_FID_SCALE'][i] = d1['snr_fid_scale'][0]
