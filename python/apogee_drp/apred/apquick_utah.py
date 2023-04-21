@@ -880,6 +880,7 @@ def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
         fiberindex = 300-fibermap2['fiberid'][fibs2]
         cat['objtype'][fiberindex] = 'OBJECT'   # default
         skyind, = np.where(objtype2 == 'SKY')
+        pdb.set_trace()
         if len(skyind) > 0: cat['objtype'][fiberindex[skyind]] = 'SKY'
         tellind, = np.where(objtype2 == 'SKY')
         if len(tellind) > 0: cat['objtype'][fiberindex[tellind]] = 'HOT_STD'
