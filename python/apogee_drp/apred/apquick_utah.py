@@ -203,7 +203,7 @@ def makesumfile(telescope='lco25m',apred='daily'):
         del d1
     outstr.write(outfile, overwrite=True)
 
-def makesumfiles(telescope='lco25m',apred='daily'):
+def makesumfile2(telescope='lco25m',apred='daily'):
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
     qdir = apodir+'quickred/'+telescope+'/'
@@ -215,34 +215,45 @@ def makesumfiles(telescope='lco25m',apred='daily'):
     nfilesS = str(nfiles)
     print('Found '+str(nfiles)+' files')
 
-    outfile = qdir+'apQ-'+telescope+'.fits'
-    dt = np.dtype([('FRAMENUM',             np.int32),
-                   ('MJD',                  np.int32),
-                   ('READ',                 np.int16),
-                   ('HMAG_FID',             np.float64),
-                   ('SNR_FID',              np.float64),
-                   ('SNR_FID_SCALE',        np.float64),
-                   ('LOGSNR_HMAG_COEF_ALL', np.float64,2),
-                   ('LOGSNR_HMAG_COEF',     np.float64,2),
-                   ('SNR_PREDICT',          np.float64),
-                   ('ZERO',                 np.float64),
-                   ('ZERONORM',             np.float64),
-                   ('EXPTYPE',              np.str),
-                   ('DITHERPOS',            np.float64)])
-                   #('APOGEE_ID',            np.str,(300)),
-                   #('CATALOGID',            np.int64,(300)),
-                   #('RA',                   np.float64,(300)),
-                   #('DEC',                  np.float64,(300)),
-                   #('HMAG',                 np.float64,(300)),
-                   #('OBJTYPE',              np.str,30,(300)),
-                   #('FIBERID',              np.int16,(300)),
-                   #('FIBERINDEX',           np.int16,(300)),
-                   #('FLUX',                 np.float64,(300)),
-                   #('ERR',                  np.float64,(300)),
-                   #('SNR',                  np.float64,(300))])
-    outstr = np.zeros(nfiles, dtype=dt)
+    exp = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
 
-    for i in range(15000,15002):
+    outfile1 = qdir+'apQ-'+telescope+'_new.fits'
+    dt1 = np.dtype([('FRAMENUM',             np.int32),
+                    ('MJD',                  np.int32),
+                    ('PLATE',                np.int32),
+                    ('EXPTIME',              np.int32),
+                    ('NREAD',                np.int16),
+                    ('HMAG_FID',             np.float64),
+                    ('SNR_FID',              np.float64),
+                    ('SNR_FID_SCALE',        np.float64),
+                    ('LOGSNR_HMAG_COEF_ALL', np.float64,2),
+                    ('LOGSNR_HMAG_COEF',     np.float64,2),
+                    ('SNR_PREDICT',          np.float64),
+                    ('ZERO',                 np.float64),
+                    ('ZERONORM',             np.float64),
+                    ('EXPTYPE',              np.str),
+                    ('DITHERPOS',            np.float64),
+                    ('N_10pt0_11pt5',        np.int16),
+                    ('SEEING',               np.float64),
+                    ('SNRATIO',              np.float64),
+                    ('MOONDIST',             np.float64),
+                    ('MOONPHASE',            np.float64),
+                    ('SECZ',                 np.float64),
+                    ('ZERO1',                np.float64),
+                    ('ZERORMS1',             np.float64),
+                    ('ZERONORM1',            np.float64),
+                    ('SKY',                  np.float64),
+                    ('FIBID',                np.int16,300),
+                    ('FIBINDEX',             np.int16,300),
+                    ('FIBRA',                np.float64,300),
+                    ('FIBDEC',               np.float64,300),
+                    ('FIBTYPE',              np.int16,300), # 1 if science, 0 if sky
+                    ('FIBFLUX',              np.float64,300),
+                    ('FIBERR',               np.float64,300),
+                    ('FIBSNR',               np.float64,300)])
+    outstr1 = np.zeros(nfiles, dtype=dt1)
+
+    for i in range(0,10):
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
         d1 = fits.getdata(files[i])
         d2 = fits.getdata(files[i],2)
@@ -260,23 +271,31 @@ def makesumfiles(telescope='lco25m',apred='daily'):
         outstr['ZERONORM'][i] = d1['zeronorm'][0]
         outstr['EXPTYPE'][i] = d1['exptype'][0]
         outstr['DITHERPOS'][i] = d1['ditherpos'][0]
-        #pdb.set_trace()
-        ##outstr['APOGEE_ID'][i] = np.array(d2['apogee_id'])
-        #outstr['CATALOGID'][i] = d2['catalogid']
-        #outstr['RA'][i] = d2['ra']
-        #outstr['DEC'][i] = d2['dec']
-        #outstr['HMAG'][i] = d2['hmag']
-        #outstr['OBJTYPE'][i] = d2['objtype']
-        #outstr['FIBERID'][i] = d2['fiberid']
-        #outstr['FIBERINDEX'][i] = d2['fiberindex']
-        #outstr['FLUX'][i] = d2['flux']
-        #outstr['ERR'][i] = d2['err']
-        #outstr['SNR'][i] = d2['snr']
+        g, = np.where((d2['hmag'] >= 10.0) & (d2['hmag'] <= 11.5))
+        outstr['N_10pt0_11pt5'] = len(g)
+        g, = np.where(d1['framenum'] == exp['im'])
+        if len(g) > 0:
+            outstr['SEEING'] = exp['SEEING'][g][0]
+            outstr['SNRATIO'] = exp['SNRATIO'][g][0]
+            outstr['MOONDIST'] = exp['MOONDIST'][g][0]
+            outstr['MOONPHASE'] = exp['MOONPHASE'][g][0]
+            outstr['SECZ'] = exp['SECZ'][g][0]
+            outstr['ZERO1'] = exp['ZERO'][g][0]
+            outstr['ZERORMS1'] = exp['ZERORMS'][g][0]
+            outstr['ZERONORM1'] = exp['ZERONORM'][g][0]
+            outstr['SKY'] = exp['SKY'][g][0]
+        outstr['FIBID'] = d2['fiberid']
+        outstr['FIBINDEX'] = d2['fiberid']
+        outstr['FIBRA'] = d2['fiberid']
+        outstr['FIBDEC'] = d2['fiberid']
+        g, = np.where(d2['objtype'] != 'SKY')
+        if len(g) > 0: outstr['FIBTYPE'][g] = np.full(len(g),1)
+        outstr['FIBFLUX'] = d2['flux']
+        outstr['FIBERR'] = d2['err']
+        outstr['FIBSNR'] = d2['snr']
         del d1
         del d2
     Table(outstr).write(outfile, overwrite=True)
-    pdb.set_trace()
-
 
 def nanmedfilt(x,size,mode='reflect'):
     return generic_filter(x, np.nanmedian, size=size)
@@ -915,7 +934,7 @@ apPlateSum-5815-56396.fits
 
     # This is the full pipeline exposure-level S/N (altsn)
     #   copied from apogeereduce/qa/plotmag.pro
-    #   alternative S/N as computed from median of all stars with H<12.2, scaled
+    #   alternative S/N as computed from median of all stars with H<11.0, scaled
     snstars, = np.where( (cat['objtype'] != 'SKY') & (cat['hmag'] > 4) & (cat['hmag'] < hfid) & (cat['snr'] > 0))
     if len(snstars)>0:
         scale = np.sqrt(10**(0.4*(cat['hmag'][snstars]-hfid)))
@@ -1006,8 +1025,8 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     exptype = head['EXPTYPE']
     plateid = head['PLATEID']
     if exptype is None: exptype=''
-    try: nreads = head['NREADS']
-    except: nreads = head['NFRAMES']
+    #try: nreads = head['NREADS']
+    #except: nreads = head['NFRAMES']
 
     # Setup directories and load the plugmap (FPS) or plateHolesSorted (plate) 
     plugmap = None
