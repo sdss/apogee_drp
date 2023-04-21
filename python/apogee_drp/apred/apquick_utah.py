@@ -253,7 +253,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
                    ('SKY',                  np.float64)])
     outstr = np.zeros(nfiles, dtype=dt)
 
-    for i in range(0,10):
+    for i in range(18000,18010):
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
         d1 = fits.getdata(files[i])
         d2 = fits.getdata(files[i],2)
