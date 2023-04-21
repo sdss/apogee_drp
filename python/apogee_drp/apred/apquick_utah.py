@@ -293,6 +293,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         outstr['FIBFLUX'][i] = d2['flux']
         outstr['FIBERR'][i] = d2['err']
         outstr['FIBSNR'][i] = d2['snr']
+        pdb.set_trace()
         del d1
         del d2
     Table(outstr).write(outfile, overwrite=True)
