@@ -171,7 +171,7 @@ def utah(framenum,telescope='lco25m',apred='daily'):
     mjd = os.path.basename(os.path.dirname(rawfilepath))
     infile = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+rawfilefits
     # Unzip the file
-    if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=os.environ.get('APOGEE_REDUX')+'/')
+    if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=os.environ.get('APOGEE_REDUX')+'/'+apred+'/')
     hdulist = fits.open(infile)
     nreads = len(hdulist)-1
     try:
