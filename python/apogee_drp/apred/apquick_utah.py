@@ -253,7 +253,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
                    ('SKY',                  np.float64)])
     outstr = np.zeros(nfiles, dtype=dt)
 
-    for i in range(18000,18010):
+    for i in range(nfiles):
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
         d1 = fits.getdata(files[i])
         d2 = fits.getdata(files[i],2)
@@ -293,7 +293,6 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         outstr['FIBFLUX'][i] = d2['flux']
         outstr['FIBERR'][i] = d2['err']
         outstr['FIBSNR'][i] = d2['snr']
-        pdb.set_trace()
         del d1
         del d2
     Table(outstr).write(outfile, overwrite=True)
