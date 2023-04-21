@@ -289,6 +289,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         outstr['FIBRA'] = d2['fiberid']
         outstr['FIBDEC'] = d2['fiberid']
         g, = np.where(d2['objtype'] != 'SKY')
+        pdb.set_trace()
         if len(g) > 0: outstr['FIBTYPE'][g] = np.full(len(g),1)
         outstr['FIBFLUX'] = d2['flux']
         outstr['FIBERR'] = d2['err']
