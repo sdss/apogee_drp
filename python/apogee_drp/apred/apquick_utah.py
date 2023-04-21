@@ -887,7 +887,7 @@ def snrcat(spec,plugmap1=None,plugmap2=None,fps=False):
         cat['ra'][fiberindex] = fibermap2[fibs2]['target_ra']
         cat['dec'][fiberindex] = fibermap2[fibs2]['target_dec']
         cat['hmag'][fiberindex] = fibermap2[fibs2]['tmass_h']
-        pdb.set_trace()
+    pdb.set_trace()
 
     cat = Table(cat)
     return cat
