@@ -32,6 +32,7 @@ import warnings
 import subprocess
 from astropy.io import fits,ascii
 from astropy.table import Table, Column, vstack
+from astropy.time import Time
 from glob import glob
 from scipy.ndimage import median_filter,generic_filter
 from apogee_drp.utils import apzip,plan,apload,yanny,plugmap,platedata,bitmask,info,slurm as slrm
@@ -259,7 +260,6 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         d2 = fits.getdata(files[i],2)
         mjd = getmjd(d1['framenum'])
         outstr['FRAMENUM'][i] = d1['framenum'][0]
-        outstr['MJD'][i] = mjd
         outstr['NREAD'][i] = d1['read'][0]
         outstr['HMAG_FID'][i] = d1['hmag_fid'][0]
         outstr['SNR_FID'][i] = d1['snr_fid'][0]
@@ -275,6 +275,10 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         outstr['N_10pt0_11pt5'][i] = len(g)
         g, = np.where(d1['framenum'] == exp['im'])
         if len(g) > 0:
+            t = Time(exp['DATEOBS'][g][0], format='fits')
+            outstr['MJD'][i] = t.mjd
+            outstr['PLATE'][i] = exp['PLATE'][g][0]
+            outstr['EXPTIME'][i] = exp['EXPTIME'][g][0]
             outstr['SEEING'][i] = exp['SEEING'][g][0]
             outstr['SNRATIO'][i] = exp['SNRATIO'][g][0]
             outstr['MOONDIST'][i] = exp['MOONDIST'][g][0]
