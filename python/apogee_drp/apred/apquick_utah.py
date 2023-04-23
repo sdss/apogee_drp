@@ -241,6 +241,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
                    ('N_10pt0_11pt5',        np.int16),
                    ('FIBID',                np.int16,300),
                    ('FIBINDEX',             np.int16,300),
+                   ('FIBHMAG',              np.float64,300),
                    ('FIBRA',                np.float64,300),
                    ('FIBDEC',               np.float64,300),
                    ('FIBTYPE',              np.int16,300), # 1 if science, 0 if sky
@@ -294,6 +295,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
             outstr['SKY'][i] = exp['SKY'][g][0][1]
         outstr['FIBID'][i] = d2['fiberid']
         outstr['FIBINDEX'][i] = d2['fiberid']
+        outstr['FIBHMAG'][i] = d2['hmag']
         outstr['FIBRA'][i] = d2['fiberid']
         outstr['FIBDEC'][i] = d2['fiberid']
         g, = np.where(d2['objtype'] != 'SKY')
