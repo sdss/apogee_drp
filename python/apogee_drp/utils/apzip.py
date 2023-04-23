@@ -483,7 +483,7 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
             os.remove(lockfile)
 
     if os.path.exists(os.path.dirname(lockfile))==False:
-        os.mkdirs(os.path.dirname(lockfile))
+        os.makedirs(os.path.dirname(lockfile))
     open(lockfile,'w').close()
 
     if os.path.exists(finalfile) and clobber==False:
