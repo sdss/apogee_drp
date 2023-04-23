@@ -278,7 +278,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         outstr['DITHERPOS'][i] = d1['ditherpos'][0]
         g, = np.where((d2['hmag'] >= 10.0) & (d2['hmag'] <= 11.5))
         outstr['N_10pt0_11pt5'][i] = len(g)
-        if outstr['N_10pt0_11pt5'][i] == 0: pdb.set_trace()
+        if outstr['N_10pt0_11pt5'][i] == 0: print('  zero stars with 10.0 < H < 11.5')
         g, = np.where(d1['framenum'] == exp['im'])
         if len(g) > 0:
             t = Time(exp['DATEOBS'][g][0], format='fits')
