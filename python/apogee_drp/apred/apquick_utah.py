@@ -228,7 +228,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
     codedir = os.path.dirname(os.path.abspath(__file__))
 
     # Get Magellan telescope seeing data
-    print('Reading Magellan ')
+    print('Reading Magellan telescope seeing data')
     magfile = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/seeing/magellan_2014.csv'
     magdata = pd.read_csv(magfile)
     magT = Time(np.array(magdata['tm']).astype(str), format='fits')
