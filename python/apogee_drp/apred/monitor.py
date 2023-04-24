@@ -1216,6 +1216,95 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.close('all')
 
         ###########################################################################################
+        # quickredSNR.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/quickredSNR.png'
+        qfile = specdir5 + 'quickred/' + load.telescope + '/apQ-' + load.telescope + '.fits'
+        if ((os.path.exists(plotfile) == False) | (clobber == True)) & (os.path.exists(qfile)):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            qdata0 = fits.getdata(qfile)
+            g, = np.where((qdata0['snr_fid'] > 0) & 
+                          (qdata0['NREAD'] > 42)  & 
+                          (qdata0['NREAD'] < 50) & 
+                          (qdata0['N_10pt0_11pt5'] > 20) & 
+                          (qdata0['SEEING'] > 0))
+            qdata = qdata0[g]
+            x = qdata['mjd']
+            t = Time(x, format='mjd')
+            xvals = t.jd - 2.4e6
+            yvals = qdata['snr_fid']
+            c1 = qdata['SEEING']
+            c2 = qdata['MOONPHASE']
+            c3 = qdata['SECZ']
+            clabs = np.array(['Seeing','Moon Phase','sec(z)'])
+
+            ngd = len(allsnrg)
+
+            ymin = 0
+            ymax = 80
+            yspan = ymax-ymin
+
+            fig = plt.figure(figsize=(37,20))
+
+            for irow in range(3):
+                cvals = c1
+                if irow == 1: cvals = c2
+                if irow == 2: cvals = c3
+                ax = plt.subplot2grid((3,1), (irow,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
+                if irow == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
+                if irow == 1: ax.text(-0.035, 0.5, r'Quickred S/N scaled for H=11', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                if irow < 2: ax.axes.xaxis.set_ticklabels([])
+                #ax.axvline(x=59146, color='teal', linewidth=2)
+                #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                ax.scatter(xvals, yvals, marker='o', s=markersz, c=cvals, cmap='copper')
+
+                plate, = np.where(xvals < startFPS)
+                fpsi, = np.where(xvals > startFPS)
+
+                xx = [np.min(xvals[plate]),np.max(xvals[plate])]
+                yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
+                pl1 = ax.plot(xx, yy, c='r', linewidth=2, label='plate median ('+str(int(round(np.nanmedian(yvals[plate]))))+')')
+
+                if len(fpsi) > 0: 
+                    xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
+                    yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
+                    pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
+
+                    ax.legend(loc=[0.25,0.78], ncol=2, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
+                              fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if irow == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center', fontsize=fsz80)
+
+                ax_divider = make_axes_locatable(ax)
+                cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                cax.minorticks_on()
+                cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                cax.tick_params(axis='both',which='major',length=axmajlen)
+                cax.tick_params(axis='both',which='minor',length=axminlen)
+                cax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
+                if irow == 1: ax.text(1.065, 0.5, clabs[irow],ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+            fig.subplots_adjust(left=0.052,right=0.951,bottom=0.066,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(plotfile)
+            plt.close('all')
+
+
+        ###########################################################################################
         # qflux.png
         plotfile = specdir5 + 'monitor/' + instrument + '/qflux.png'
         if (os.path.exists(plotfile) == False) | (clobber == True):
