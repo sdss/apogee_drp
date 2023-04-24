@@ -282,8 +282,8 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
                    ('ZERORMS1',               np.float64),
                    ('ZERONORM1',              np.float64),
                    ('SKY',                    np.float64)])
-    if ndo is not None: utstr = np.zeros(ndo, dtype=dt)
-    else: outstr = np.zeros(nfiles, dtype=dt)
+    if ndo == None: outstr = np.zeros(nfiles, dtype=dt)
+    else: outstr = np.zeros(ndo, dtype=dt)
 
     for i in range(100):
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
