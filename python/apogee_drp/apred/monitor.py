@@ -1670,7 +1670,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     if icol == 0: ax.set_xlabel(r'Seeing', labelpad=12)
                     if icol == 1: ax.set_xlabel(r'Moon Phase', labelpad=12)
-                    if icol == 0: ax.text(-0.035, 0.0, r'Quickred S/N / $\sqrt{\rm nreads-2}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                    if icol == 0: ax.text(-0.045, 0.5, r'Quickred S/N / $\sqrt{\rm nreads-2}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
                     if icol == 1: ax.axes.yaxis.set_ticklabels([])
                     #ax.axvline(x=59146, color='teal', linewidth=2)
                     #ax.axvline(x=startFPS, color='teal', linewidth=2)
@@ -1691,7 +1691,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
 
 
-                fig.subplots_adjust(left=0.052,right=0.951,bottom=0.072,top=0.96,hspace=0.08,wspace=0.10)
+                fig.subplots_adjust(left=0.05,right=0.985,bottom=0.072,top=0.985,hspace=0.08,wspace=0.05)
                 plt.savefig(qplotfile)
                 plt.close('all')
 
