@@ -1687,7 +1687,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         if j == 2: 
                             xxvals = qdata[xcols[0]][g3]
                             yvals = yvals0[g3]
-                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*5, c=colors[j], label=labels[j])
                         if icol == 0:
                             popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
                             yfit = linefit(xxvals, *popt)
