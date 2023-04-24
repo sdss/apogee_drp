@@ -2857,7 +2857,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 yvals0 = qdata['SNR_FID_1']/np.sqrt(qdata['NREAD']-2)
                 ncols = 2
 
-                colors = np.array(['k','dodgerblue','crimson'])
+                qcolors = np.array(['k','dodgerblue','crimson'])
                 labels = np.array(['Plate','Plate-V','FPI'])
 
                 g1, = np.where(qdata['MJD'] < 59000)
@@ -2898,13 +2898,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         if icol == 0:
                             popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
                             yfit = linefit(xxvals, *popt)
-                            ax.plot(xxvals, yfit, c=colors[j], linewidth=3)
+                            ax.plot(xxvals, yfit, c=qcolors[j], linewidth=3)
                         if icol == 1 and (j == 1 or j == 2): xxvals -= np.nanmedian(xxvals)-np.nanmedian(qdata[xcols[0]][g1])
                         if icol == 1:
                             popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
                             yfit = linefit(xxvals, *popt)
-                            ax.plot(xxvals, yfit, c=colors[j], linewidth=3)
-                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*5, c=colors[j], label=labels[j])
+                            ax.plot(xxvals, yfit, c=qcolors[j], linewidth=3)
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*5, c=qcolors[j], label=labels[j])
 
                     if icol == 0:
                         ax.legend(loc='upper right', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=4, columnspacing=0.3,
