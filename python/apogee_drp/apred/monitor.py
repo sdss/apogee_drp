@@ -506,12 +506,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('</ul>\n')
     html.write('<HR>\n')
 
-            g, = np.where((qdata0['snr_fid'] > 0) & 
-                          (qdata0['NREAD'] > 40)  & 
-                          (qdata0['NREAD'] < 50) & 
-                          (qdata0['N_10pt0_11pt5'] > 10) & 
-                          (qdata0['SEEING'] > 0))
-
     # S/N Plots ######################################################################################################################
     html.write('<h3> <a name=scisnr></a> S/N history for H=10.6-11.0 stars</h3>\n')
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=750></A>\n')
