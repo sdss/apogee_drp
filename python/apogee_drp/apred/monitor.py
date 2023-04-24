@@ -1242,6 +1242,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             c2 = qdata['MOONPHASE']
             c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
             clabs = np.array(['Seeing','Moon Phase','log(S/N) $H$ Coef[0]'])
+            nrows = 2
 
             ngd = len(allsnrg)
 
@@ -1249,13 +1250,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ymax = 80
             yspan = ymax-ymin
 
-            fig = plt.figure(figsize=(37,20))
+            fig = plt.figure(figsize=(37,18))
 
-            for irow in range(3):
+            for irow in range(nrows):
                 cvals = c1
                 if irow == 1: cvals = c2
-                if irow == 2: cvals = c3
-                ax = plt.subplot2grid((3,1), (irow,0))
+                #if irow == 2: cvals = c3
+                ax = plt.subplot2grid((nrows,1), (irow,0))
                 ax.set_xlim(xmin, xmax)
                 ax.set_ylim(ymin, ymax)
                 ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
@@ -1267,13 +1268,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if irow == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
                 if irow == 1: ax.text(-0.035, 0.5, r'Quickred S/N scaled for $H$=11', transform=ax.transAxes, rotation=90, ha='right', va='center')
-                if irow < 2: ax.axes.xaxis.set_ticklabels([])
+                if irow < nrows-1: ax.axes.xaxis.set_ticklabels([])
                 #ax.axvline(x=59146, color='teal', linewidth=2)
                 #ax.axvline(x=startFPS, color='teal', linewidth=2)
                 #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                 if irow == 0:
-                    sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=cvals, cmap='copper', vmin=0.5, vmax=2.5)
+                    sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=cvals, cmap='copper', vmin=0.5, vmax=2.0)
                 else:
                     sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=cvals, cmap='copper')
 
