@@ -210,6 +210,8 @@ def makesumfile(telescope='lco25m',apred='daily'):
     outstr.write(outfile, overwrite=True)
 
 def makesumfile2(telescope='lco25m',apred='daily'):
+    outfile = qdir+'apQ-'+telescope+'_new.fits'
+
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
     qdir = apodir+'quickred/'+telescope+'/'
@@ -233,7 +235,6 @@ def makesumfile2(telescope='lco25m',apred='daily'):
 
     exp = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
 
-    outfile = qdir+'apQ-'+telescope+'_new.fits'
     dt = np.dtype([('FRAMENUM',               np.int32),
                    ('MJD',                    np.int32),
                    ('PLATE',                  np.int32),
