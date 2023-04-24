@@ -1348,7 +1348,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             nrows = 2
 
             ymin = 0
-            ymax = 65
+            ymax = 10
             yspan = ymax-ymin
 
             fig = plt.figure(figsize=(37,18))
@@ -1368,7 +1368,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axthick)
                 for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if irow == nrows-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
-                if irow == 0: ax.text(-0.035, 0.0, r'Quickred S/N scaled for $H$=11', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                if irow == 0: ax.text(-0.035, 0.0, r'Quickred S/N / sqrt(nreads-2)', transform=ax.transAxes, rotation=90, ha='right', va='center')
                 if irow < nrows-1: ax.axes.xaxis.set_ticklabels([])
                 #ax.axvline(x=59146, color='teal', linewidth=2)
                 #ax.axvline(x=startFPS, color='teal', linewidth=2)
@@ -1384,13 +1384,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 xx = [np.min(xvals[plate]),np.max(xvals[plate])]
                 yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
-                linelab = 'plate median ('+str(int(round(np.nanmedian(yvals[plate]))))+')'
+                linelab = 'plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate],3)))+')'
                 pl1 = ax.plot(xx, yy, c='k', linewidth=4, label=linelab)
 
                 if len(fpsi) > 0: 
                     xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
                     yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
-                    linelab = 'FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')'
+                    linelab = 'FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi],3)))+')'
                     pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
                     if irow == 0:
                         ax.legend(loc=[0.65,0.10], ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
