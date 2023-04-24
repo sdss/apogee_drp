@@ -1394,7 +1394,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     xx = [np.min(xvals[plate1]),np.max(xvals[plate1])]
                     yy = [np.nanmedian(yvals[plate1]), np.nanmedian(yvals[plate1])]
                     linelab = 'plate-V median ('+str("%.3f" % round(np.nanmedian(yvals[plate1]),3))+')'
-                    pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(3,1)), label=linelab)
+                    pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(1,1)), label=linelab)
 
                 if len(fpsi) > 0: 
                     xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
