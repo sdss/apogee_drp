@@ -332,6 +332,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         tdifmin = tdif[g]
         if tdifmin*24 < 1:
             print('  adding Magellan-Baade seeing data')
+            pdb.set_trace()
             outstr['SEEING_BAADE'][i] = magdata['fw'][g][0]
         g, = np.where((magdata['un'] == 1) & (tdif == np.nanmin(tdif)))
         tdifmin = tdif[g]
