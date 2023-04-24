@@ -346,7 +346,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
             outstr['SEEING_BAADE'][i] = magSeeing1[g][0]
         tdif = np.abs(t.mjd - magMJD2)
         g, = np.where(tdif == np.nanmin(tdif))
-        tdifmin = tdif[g]
+        tdifmin = tdif[g][0]
         if tdifmin*24 < 1:
             print('  adding Magellan-Clay seeing data')
             outstr['SEEING_CLAY'][i] = magSeeing2[g][0]
