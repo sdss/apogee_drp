@@ -1267,7 +1267,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 ax.tick_params(axis='both',which='both',width=axthick)
                 for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                 if irow == nchips-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
-                if irow == 1: ax.text(-0.035, 0.5, r'Quickred S/N scaled for $H$=11', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                ax.text(-0.035, 0.5, r'Quickred S/N scaled for $H$=11', transform=ax.transAxes, rotation=90, ha='right', va='center')
                 if irow < nrows-1: ax.axes.xaxis.set_ticklabels([])
                 #ax.axvline(x=59146, color='teal', linewidth=2)
                 #ax.axvline(x=startFPS, color='teal', linewidth=2)
