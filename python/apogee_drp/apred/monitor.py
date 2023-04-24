@@ -1232,7 +1232,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             g, = np.where((qdata0['snr_fid'] > 0) & 
                           (qdata0['NREAD'] > 40)  & 
                           (qdata0['NREAD'] < 50) & 
-                          (qdata0['N_10pt0_11pt5'] > 50) & 
+                          (qdata0['N_10pt0_11pt5'] > 10) & 
                           (qdata0['SEEING'] > 0))
             qdata = qdata0[g]
             x = qdata['mjd']
