@@ -1658,7 +1658,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 fig = plt.figure(figsize=(37,18))
 
                 for icol in range(ncols):
-                    ax = plt.subplot2grid((ncols,1), (icol,0))
+                    ax = plt.subplot2grid((1,ncols), (0,icol))
                     #ax.set_xlim(xmin, xmax)
                     #ax.set_ylim(ymin, ymax)
                     #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
