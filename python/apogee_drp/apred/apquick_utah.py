@@ -344,13 +344,13 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
         g, = np.where(tdif == np.nanmin(tdif))
         tdifmin = tdif[g][0]
         if tdifmin < 1/24:
-            print('  adding Magellan-Baade seeing data '+str("%.3f" % round(tdifmin,3))+' days)')
+            print('  adding Magellan-Baade seeing data '+str("%.3f" % round(tdifmin*24,3))+' hours)')
             outstr['SEEING_BAADE'][i] = magSeeing1[g][0]
         tdif = np.abs(t.mjd - magMJD2)
         g, = np.where(tdif == np.nanmin(tdif))
         tdifmin = tdif[g][0]
         if tdifmin < 1/24:
-            print('  adding Magellan-Clay seeing data '+str("%.3f" % round(tdifmin,3))+' days)')
+            print('  adding Magellan-Clay seeing data '+str("%.3f" % round(tdifmin*24,3))+' hours)')
             outstr['SEEING_CLAY'][i] = magSeeing2[g][0]
         del d1
         del d2
