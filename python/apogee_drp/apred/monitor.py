@@ -1687,7 +1687,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                             yvals = yvals0[g3]
                         sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*5, c=colors[j], label=labels[j])
                         
-                    ax.legend(loc='upper left', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
+                    ax.legend(loc='upper left', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=4, columnspacing=0.3,
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
 
 
