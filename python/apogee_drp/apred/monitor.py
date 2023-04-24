@@ -1686,6 +1686,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                             xxvals = qdata[xcols[icol]][g3]
                             yvals = yvals0[g3]
                         sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*5, c=colors[j], label=labels[j])
+                        if icol == 0:
+                           popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
+                            yfit = linefit(xxvals, *popt)
+                            ax.plot(xxvals, yfit, c=colors[j], linewidth=3)
+
                         
                     ax.legend(loc='upper left', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=4, columnspacing=0.3,
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
@@ -3336,6 +3341,10 @@ def getSnrStruct(instrument=None, plsum=None):
             jj+=1
 
     return outstr
+
+###########################################################################
+def linefit(x, slope, yint):
+    return x*slope + yint
 
 #            mjdmean = np.zeros((nmjd, nchips))
 #           mjdsig  = np.zeros((nmjd, nchips))
