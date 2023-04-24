@@ -1681,7 +1681,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     for j in range(3):
                         xxvals = qdata[xcols[0]][g1]
                         yvals = yvals0[g1]
-                        pdb.set_trace()
                         if j == 1: 
                             xxvals = qdata[xcols[0]][g2]
                             yvals = yvals0[g2]
