@@ -209,7 +209,7 @@ def makesumfile(telescope='lco25m',apred='daily'):
         del d1
     outstr.write(outfile, overwrite=True)
 
-def makesumfile2(telescope='lco25m',apred='daily'):
+def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
@@ -282,7 +282,8 @@ def makesumfile2(telescope='lco25m',apred='daily'):
                    ('ZERORMS1',               np.float64),
                    ('ZERONORM1',              np.float64),
                    ('SKY',                    np.float64)])
-    outstr = np.zeros(nfiles, dtype=dt)
+    if ndo is not None: utstr = np.zeros(ndo, dtype=dt)
+    else: outstr = np.zeros(nfiles, dtype=dt)
 
     for i in range(100):
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
@@ -342,13 +343,13 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         tdif = np.abs(t.mjd - magMJD1)
         g, = np.where(tdif == np.nanmin(tdif))
         tdifmin = tdif[g][0]
-        if tdifmin*24 < 1:
+        if tdifmin < 1/24:
             print('  adding Magellan-Baade seeing data '+str("%.3f" % round(tdifmin,3))+' days)')
             outstr['SEEING_BAADE'][i] = magSeeing1[g][0]
         tdif = np.abs(t.mjd - magMJD2)
         g, = np.where(tdif == np.nanmin(tdif))
         tdifmin = tdif[g][0]
-        if tdifmin*24 < 1:
+        if tdifmin < 1/24:
             print('  adding Magellan-Clay seeing data '+str("%.3f" % round(tdifmin,3))+' days)')
             outstr['SEEING_CLAY'][i] = magSeeing2[g][0]
         del d1
