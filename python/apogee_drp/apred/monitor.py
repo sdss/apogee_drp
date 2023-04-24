@@ -1285,9 +1285,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
                     yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
                     pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
-
-                    ax.legend(loc=[0.25,0.78], ncol=2, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
-                              fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
+                    if irow == 0:
+                        ax.legend(loc=[0.25,0.78], ncol=2, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
+                                  fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
 
                 for iyear in range(nyears):
                     ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
