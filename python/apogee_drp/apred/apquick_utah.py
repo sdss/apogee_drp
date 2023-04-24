@@ -223,10 +223,13 @@ def makesumfile2(telescope='lco25m',apred='daily'):
 
     # Find the psf list directory
     codedir = os.path.dirname(os.path.abspath(__file__))
+
+    # Get Magellan telescope seeing data
     magfile = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/seeing/magellan_2014.csv'
     magdata = pd.read_csv(magfile)
     magT = Time(np.array(magdata['tm']).astype(str), format='fits')
     magMJD = magT.mjd
+    magSeeing = np.array(magdata['fw'])
 
     exp = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
 
@@ -332,13 +335,12 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         tdifmin = tdif[g]
         if tdifmin*24 < 1:
             print('  adding Magellan-Baade seeing data')
-            pdb.set_trace()
-            outstr['SEEING_BAADE'][i] = magdata['fw'][g][0]
+            outstr['SEEING_BAADE'][i] = magSeeing[g][0]
         g, = np.where((magdata['un'] == 1) & (tdif == np.nanmin(tdif)))
         tdifmin = tdif[g]
         if tdifmin*24 < 1:
             print('  adding Magellan-Clay seeing data')
-            outstr['SEEING_CLAY'][i] = magdata['fw'][g][0]
+            outstr['SEEING_CLAY'][i] = magSeeing[g][0]
         del d1
         del d2
     Table(outstr).write(outfile, overwrite=True)
