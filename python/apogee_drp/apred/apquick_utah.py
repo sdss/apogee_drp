@@ -38,6 +38,7 @@ from scipy.ndimage import median_filter,generic_filter
 from apogee_drp.utils import apzip,plan,apload,yanny,plugmap,platedata,bitmask,info,slurm as slrm
 import slurm
 from slurm import queue as pbsqueue
+import pandas as pd
 #from apogee_drp.utils import yanny, apload
 #from sdss_access.path import path
 #from . import config  # get loaded config values 
@@ -219,6 +220,10 @@ def makesumfile2(telescope='lco25m',apred='daily'):
     nfiles = len(files)
     nfilesS = str(nfiles)
     print('Found '+str(nfiles)+' files')
+
+    # Find the psf list directory
+    codedir = os.path.dirname(os.path.abspath(__file__))
+    magfile = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/seeing/magellan_2014.csv'
 
     exp = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
 
