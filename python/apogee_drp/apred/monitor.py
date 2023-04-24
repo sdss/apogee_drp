@@ -1302,7 +1302,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 cb1 = colorbar(sc1, cax=cax, orientation="vertical")
                 cax.minorticks_on()
                 if clabs[irow] == 'Moon Phase': cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
-               c ax.tick_params(axis='both',which='both',direction='out',bottom=False,top=False,left=False,right=True,pad=10,labelsize=fsz80)
+                cax.tick_params(axis='both',which='both',direction='out',bottom=False,top=False,left=False,right=True,pad=10,labelsize=fsz80)
                 cax.tick_params(axis='both',which='major',length=axmajlen)
                 cax.tick_params(axis='both',which='minor',length=axminlen)
                 cax.tick_params(axis='both',which='both',width=axthick)
