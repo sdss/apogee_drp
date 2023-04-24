@@ -224,7 +224,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
     # Find the psf list directory
     codedir = os.path.dirname(os.path.abspath(__file__))
     magfile = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/seeing/magellan_2014.csv'
-    magdata = pandas.read_csv(magfile)
+    magdata = pd.read_csv(magfile)
     pdb.set_trace()
 
     exp = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
