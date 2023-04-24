@@ -221,6 +221,7 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
     files.sort()
     files = np.array(files)
     nfiles = len(files)
+    if ndo != None: nfiles = ndo
     nfilesS = str(nfiles)
     print('Found '+str(nfiles)+' files')
 
@@ -282,10 +283,10 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
                    ('ZERORMS1',               np.float64),
                    ('ZERONORM1',              np.float64),
                    ('SKY',                    np.float64)])
-    if ndo == None: outstr = np.zeros(nfiles, dtype=dt)
-    else: outstr = np.zeros(ndo, dtype=dt)
+    else: outstr = np.zeros(nfiles, dtype=dt)
 
-    for i in range(100):
+    for i in range(nfiles):
+        if nfiles % 10 != 0: continue
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
         d1 = fits.getdata(files[i])
         d2 = fits.getdata(files[i],2)
