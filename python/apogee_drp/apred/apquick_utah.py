@@ -326,7 +326,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
             snr_fid_scale = np.median(d2['snr'][g] * scale)
             outstr['SNR_FID_1'][i] = snr_fid
             outstr['SNR_FID_SCALE_1'][i] = snr_fid_scale
-            outstr['LOGSNR_HMAG_COEF_1'][i] = coeffall
+            outstr['LOGSNR_HMAG_COEF_1'][i] = coefall
         tdif = np.abs(t.mjd - magMJD)
         g, = np.where((magdata['un'] == 0) & (tdif == np.nanmin(tdif)))
         tdifmin = tdif[g]
