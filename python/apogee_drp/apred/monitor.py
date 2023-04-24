@@ -1223,6 +1223,107 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.close('all')
 
         ###########################################################################################
+        # pipelineSNR.png
+        plotfile = specdir5 + 'monitor/' + instrument + '/pipelineSNR.png'
+        if (os.path.exists(plotfile) == False) | (clobber == True):
+            print("----> monitor: Making " + os.path.basename(plotfile))
+
+            plateobs, = np.where(allsnr['MJD'] < startFPS)
+            allsnrplate = allsnr[plateobs]
+            part1, = np.where(allsnr['MJD'] > startFPS)
+            fpsfield = np.array(allsnr['FIELD'][part1]).astype(int)
+            if instrument == 'apogee-n':
+                part2, = np.where((fpsfield > 100000) & (fpsfield < 110000))
+                allsnrfps = allsnr[part1][part2]
+            else: allsnrfps = allsnr[part1]
+            allsnrg = vstack([Table(allsnrplate), Table(allsnrfps)])
+            g, = np.where(np.nanmedian(allsnrg['NSNBINS'][:,snbins[0]:snbins[1]], axis=1) > 5)
+            allsnrg = allsnrg[g]
+            pdb.set_trace()
+
+            qdata = qdata0[g]
+            x = qdata['mjd']
+            t = Time(x, format='mjd')
+            xvals = t.jd - 2.4e6
+            yvals = qdata['snr_fid']
+            c1 = qdata['SEEING']
+            c2 = qdata['MOONPHASE']
+            c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
+            clabs = np.array(['Seeing','Moon Phase','log(S/N) $H$ Coef[0]'])
+            nrows = 2
+
+            ngd = len(allsnrg)
+
+            ymin = 0
+            ymax = 65
+            yspan = ymax-ymin
+
+            fig = plt.figure(figsize=(37,18))
+
+            for irow in range(nrows):
+                cvals = c1
+                if irow == 1: cvals = c2
+                #if irow == 2: cvals = c3
+                ax = plt.subplot2grid((nrows,1), (irow,0))
+                ax.set_xlim(xmin, xmax)
+                ax.set_ylim(ymin, ymax)
+                ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                ax.minorticks_on()
+                ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
+                ax.tick_params(axis='both',which='major',length=axmajlen)
+                ax.tick_params(axis='both',which='minor',length=axminlen)
+                ax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
+                if irow == nrows-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
+                if irow == 0: ax.text(-0.035, 0.0, r'Quickred S/N scaled for $H$=11', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                if irow < nrows-1: ax.axes.xaxis.set_ticklabels([])
+                #ax.axvline(x=59146, color='teal', linewidth=2)
+                #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                if irow == 0:
+                    sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
+                else:
+                    sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
+
+                plate, = np.where(xvals < startFPS)
+                fpsi, = np.where(xvals > startFPS)
+
+                xx = [np.min(xvals[plate]),np.max(xvals[plate])]
+                yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
+                linelab = 'plate median ('+str(int(round(np.nanmedian(yvals[plate]))))+')'
+                pl1 = ax.plot(xx, yy, c='k', linewidth=4, label=linelab)
+
+                if len(fpsi) > 0: 
+                    xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
+                    yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
+                    linelab = 'FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')'
+                    pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
+                    if irow == 0:
+                        ax.legend(loc=[0.65,0.10], ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
+                                  fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
+
+                for iyear in range(nyears):
+                    ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                    if irow == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center', fontsize=fsz80)
+
+                ax_divider = make_axes_locatable(ax)
+                cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                cax.minorticks_on()
+                if clabs[irow] == 'Moon Phase': cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                cax.tick_params(axis='both',which='both',direction='out',bottom=False,top=False,left=False,right=True,pad=10,labelsize=fsz80)
+                cax.tick_params(axis='both',which='major',length=axmajlen)
+                cax.tick_params(axis='both',which='minor',length=axminlen)
+                cax.tick_params(axis='both',which='both',width=axthick)
+                for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
+                ax.text(1.065, 0.5, clabs[irow],ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+            fig.subplots_adjust(left=0.052,right=0.951,bottom=0.072,top=0.96,hspace=0.08,wspace=0.00)
+            plt.savefig(qplotfile)
+            plt.close('all')
+
+        ###########################################################################################
         # quickredSNR.png
         qfile = specdir5 + 'quickred/' + load.telescope + '/apQ-' + load.telescope + '.fits'
         if ((os.path.exists(qplotfile) == False) | (clobber == True)) & (os.path.exists(qfile)):
