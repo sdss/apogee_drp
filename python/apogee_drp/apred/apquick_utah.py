@@ -233,6 +233,12 @@ def makesumfile2(telescope='lco25m',apred='daily'):
     magT = Time(np.array(magdata['tm']).astype(str), format='fits')
     magMJD = magT.mjd
     magSeeing = np.array(magdata['fw'])
+    g, = np.where(np.array(magdata['un']) == 0)
+    magMJD1 = magMJD[g]
+    magSeeing1 = magSeeing[g]
+    g, = np.where(np.array(magdata['un']) == 1)
+    magMJD2 = magMJD[g]
+    magSeeing2 = magSeeing[g]
 
     exp = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
 
@@ -332,17 +338,18 @@ def makesumfile2(telescope='lco25m',apred='daily'):
             outstr['SNR_FID_1'][i] = snr_fid
             outstr['SNR_FID_SCALE_1'][i] = snr_fid_scale
             outstr['LOGSNR_HMAG_COEF_1'][i] = coefall
-        tdif = np.abs(t.mjd - magMJD)
-        g, = np.where((magdata['un'] == 0) & (tdif == np.nanmin(tdif)))
+        tdif = np.abs(t.mjd - magMJD1)
+        g, = np.where(tdif == np.nanmin(tdif))
         tdifmin = tdif[g][0]
         if tdifmin*24 < 1:
             print('  adding Magellan-Baade seeing data')
-            outstr['SEEING_BAADE'][i] = magSeeing[g][0]
-        g, = np.where((magdata['un'] == 1) & (tdif == np.nanmin(tdif)))
+            outstr['SEEING_BAADE'][i] = magSeeing1[g][0]
+        tdif = np.abs(t.mjd - magMJD2)
+        g, = np.where(tdif == np.nanmin(tdif))
         tdifmin = tdif[g]
         if tdifmin*24 < 1:
             print('  adding Magellan-Clay seeing data')
-            outstr['SEEING_CLAY'][i] = magSeeing[g][0]
+            outstr['SEEING_CLAY'][i] = magSeeing2[g][0]
         del d1
         del d2
     Table(outstr).write(outfile, overwrite=True)
