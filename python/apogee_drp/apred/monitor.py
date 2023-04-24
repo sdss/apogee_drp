@@ -1290,7 +1290,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
                     pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
                     if irow == 0:
-                        ax.legend(loc=[0.6,0.10], ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
+                        ax.legend(loc=[0.65,0.10], ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
                                   fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
 
                 for iyear in range(nyears):
