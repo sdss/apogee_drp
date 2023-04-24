@@ -228,43 +228,48 @@ def makesumfile2(telescope='lco25m',apred='daily'):
     exp = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
 
     outfile = qdir+'apQ-'+telescope+'_new.fits'
-    dt = np.dtype([('FRAMENUM',             np.int32),
-                   ('MJD',                  np.int32),
-                   ('PLATE',                np.int32),
-                   ('EXPTIME',              np.int32),
-                   ('NREAD',                np.int16),
-                   ('HMAG_FID',             np.float64),
-                   ('SNR_FID',              np.float64),
-                   ('SNR_FID_SCALE',        np.float64),
-                   ('LOGSNR_HMAG_COEF_ALL', np.float64,2),
-                   ('LOGSNR_HMAG_COEF',     np.float64,2),
-                   ('SNR_PREDICT',          np.float64),
-                   ('ZERO',                 np.float64),
-                   ('ZERONORM',             np.float64),
-                   ('EXPTYPE',              np.str),
-                   ('DITHERPOS',            np.float64),
-                   ('N_10pt0_11pt5',        np.int16),
-                   ('FIBID',                np.int16,300),
-                   ('FIBINDEX',             np.int16,300),
-                   ('FIBHMAG',              np.float64,300),
-                   ('FIBRA',                np.float64,300),
-                   ('FIBDEC',               np.float64,300),
-                   ('FIBTYPE',              np.int16,300), # 1 if science, 0 if sky
-                   ('FIBFLUX',              np.float64,300),
-                   ('FIBERR',               np.float64,300),
-                   ('FIBSNR',               np.float64,300),
-                   ('SEEING',               np.float64),
-                   ('SNRATIO',              np.float64),
-                   ('MOONDIST',             np.float64),
-                   ('MOONPHASE',            np.float64),
-                   ('SECZ',                 np.float64),
-                   ('ZERO1',                np.float64),
-                   ('ZERORMS1',             np.float64),
-                   ('ZERONORM1',            np.float64),
-                   ('SKY',                  np.float64)])
+    dt = np.dtype([('FRAMENUM',               np.int32),
+                   ('MJD',                    np.int32),
+                   ('PLATE',                  np.int32),
+                   ('EXPTIME',                np.int32),
+                   ('NREAD',                  np.int16),
+                   ('HMAG_FID',               np.float64),
+                   ('SNR_FID',                np.float64),
+                   ('SNR_FID_SCALE',          np.float64),
+                   ('LOGSNR_HMAG_COEF_ALL',   np.float64,2),
+                   ('LOGSNR_HMAG_COEF',       np.float64,2),
+                   ('SNR_PREDICT',            np.float64),
+                   ('SNR_FID_1',              np.float64),
+                   ('SNR_FID_SCALE_1',        np.float64),
+                   ('LOGSNR_HMAG_COEF_1',     np.float64,2),
+                   ('ZERO',                   np.float64),
+                   ('ZERONORM',               np.float64),
+                   ('EXPTYPE',                np.str),
+                   ('DITHERPOS',              np.float64),
+                   ('N_10pt0_11pt5',          np.int16),
+                   ('FIBID',                  np.int16,300),
+                   ('FIBINDEX',               np.int16,300),
+                   ('FIBHMAG',                np.float64,300),
+                   ('FIBRA',                  np.float64,300),
+                   ('FIBDEC',                 np.float64,300),
+                   ('FIBTYPE',                np.int16,300), # 1 if science, 0 if sky
+                   ('FIBFLUX',                np.float64,300),
+                   ('FIBERR',                 np.float64,300),
+                   ('FIBSNR',                 np.float64,300),
+                   ('SEEING_BAADE',           np.float64),
+                   ('SEEING_CLAY',            np.float64),
+                   ('SEEING',                 np.float64),
+                   ('SNRATIO',                np.float64),
+                   ('MOONDIST',               np.float64),
+                   ('MOONPHASE',              np.float64),
+                   ('SECZ',                   np.float64),
+                   ('ZERO1',                  np.float64),
+                   ('ZERORMS1',               np.float64),
+                   ('ZERONORM1',              np.float64),
+                   ('SKY',                    np.float64)])
     outstr = np.zeros(nfiles, dtype=dt)
 
-    for i in range(nfiles):
+    for i in range(100):
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
         d1 = fits.getdata(files[i])
         d2 = fits.getdata(files[i],2)
@@ -309,6 +314,16 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         outstr['FIBFLUX'][i] = d2['flux']
         outstr['FIBERR'][i] = d2['err']
         outstr['FIBSNR'][i] = d2['snr']
+        g, = np.where((d2['objtype'] != 'SKY') & (d2['hmag']>8.0) & (d2['HMAG'] < 11.5) & (d2['snr'] > 0))
+        if len(g) > 20:
+            print('  '+str(len(g))+' stars with H between 8 and 11.5')
+            coefall = np.polyfit(d2['hmag'][g], np.log10(d2['snr'][g]), 1)
+            snr_fid = 10**np.polyval(coefall,11.0)
+            scale = np.sqrt(10**(0.4*(d2['hmag'][g] - 11.0)))
+            snr_fid_scale = np.median(d2['snr'][g] * scale)
+            outstr['SNR_FID_1'][i] = snr_fid
+            outstr['SNR_FID_SCALE_1'][i] = snr_fid_scale
+            outstr['LOGSNR_HMAG_COEF_1'][i] = coeffall
         del d1
         del d2
     Table(outstr).write(outfile, overwrite=True)
