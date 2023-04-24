@@ -33,6 +33,7 @@ from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 from datetime import date,datetime
 from scipy.signal import medfilt2d
+from scipy.optimize import curve_fit
 
 ###############################################################################################
 # Set up some basic plotting parameters
