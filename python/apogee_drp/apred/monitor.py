@@ -1239,7 +1239,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allsnrg = vstack([Table(allsnrplate), Table(allsnrfps)])
             g, = np.where(np.nanmedian(allsnrg['NSNBINS'][:,snbins[0]:snbins[1]], axis=1) > 5)
             allsnrg = allsnrg[g]
-            pdb.set_trace()
 
             g, = np.where((allsnrg['SN'][:,1] > 0) & 
                           (allsnrg['NREADS'] > 40)  & 
