@@ -1695,6 +1695,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.savefig(qplotfile)
                 plt.close('all')
 
+        return
 
         ###########################################################################################
         # qflux.png
