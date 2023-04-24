@@ -1272,7 +1272,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #ax.axvline(x=startFPS, color='teal', linewidth=2)
                 #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
-                ax.scatter(xvals, yvals, marker='o', s=markersz, c=cvals, cmap='copper')
+                sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=cvals, cmap='copper')
 
                 plate, = np.where(xvals < startFPS)
                 fpsi, = np.where(xvals > startFPS)
