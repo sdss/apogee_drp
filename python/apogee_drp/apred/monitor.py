@@ -1340,7 +1340,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 qdata = qdata0[g]
                 x = qdata['mjd']
                 t = Time(x, format='mjd')
-                xvals = t.jd - 2.4e6
+                xxvals = t.jd - 2.4e6
                 yvals = qdata['snr_fid']/np.sqrt(qdata['NREAD']-2)
                 c1 = qdata['SEEING']
                 c2 = qdata['MOONPHASE']
@@ -1376,29 +1376,29 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                     if irow == 0:
-                        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
                     else:
-                        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
 
-                    plate, = np.where(xvals < startFPS)
+                    plate, = np.where(xxvals < startFPS)
                     plate1 = plate
-                    fpsi, = np.where(xvals > startFPS)
+                    fpsi, = np.where(xxvals > startFPS)
                     if load.telescope == 'lco25m':
-                        plate, = np.where(xvals < 59000)
-                        plate1, = np.where((xvals > 59000) & (xvals < 59500))
+                        plate, = np.where(xxvals < 59000)
+                        plate1, = np.where((xxvals > 59000) & (xxvals < 59500))
 
-                    xx = [np.min(xvals[plate]),np.max(xvals[plate])]
+                    xx = [np.min(xxvals[plate]),np.max(xxvals[plate])]
                     yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
                     linelab = 'plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate]),3))+')'
                     pl1 = ax.plot(xx, yy, c='k', linewidth=4, label=linelab)
                     if load.telescope == 'lco25m':
-                        xx = [np.min(xvals[plate1]),np.max(xvals[plate1])]
+                        xx = [np.min(xxvals[plate1]),np.max(xxvals[plate1])]
                         yy = [np.nanmedian(yvals[plate1]), np.nanmedian(yvals[plate1])]
                         linelab = 'plate-V median ('+str("%.3f" % round(np.nanmedian(yvals[plate1]),3))+')'
                         pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(1,1)), label=linelab)
 
                     if len(fpsi) > 0: 
-                        xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
+                        xx = [np.min(xxvals[fpsi]),np.max(xxvals[fpsi])]
                         yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
                         linelab = 'FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi]),3))+')'
                         pl3 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
@@ -1442,7 +1442,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 qdata = qdata0[g]
                 x = qdata['mjd']
                 t = Time(x, format='mjd')
-                xvals = t.jd - 2.4e6
+                xxvals = t.jd - 2.4e6
                 yvals = qdata['SNR_FID_1']/np.sqrt(qdata['NREAD']-2)
                 c1 = qdata['SEEING']
                 c2 = qdata['MOONPHASE']
@@ -1478,29 +1478,29 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                     if irow == 0:
-                        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
                     else:
-                        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
 
-                    plate, = np.where(xvals < startFPS)
+                    plate, = np.where(xxvals < startFPS)
                     plate1 = plate
-                    fpsi, = np.where(xvals > startFPS)
+                    fpsi, = np.where(xxvals > startFPS)
                     if load.telescope == 'lco25m':
-                        plate, = np.where(xvals < 59000)
-                        plate1, = np.where((xvals > 59000) & (xvals < 59500))
+                        plate, = np.where(xxvals < 59000)
+                        plate1, = np.where((xxvals > 59000) & (xxvals < 59500))
 
-                    xx = [np.min(xvals[plate]),np.max(xvals[plate])]
+                    xx = [np.min(xxvals[plate]),np.max(xxvals[plate])]
                     yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
                     linelab = 'plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate]),3))+')'
                     pl1 = ax.plot(xx, yy, c='k', linewidth=4, label=linelab)
                     if load.telescope == 'lco25m':
-                        xx = [np.min(xvals[plate1]),np.max(xvals[plate1])]
+                        xx = [np.min(xxvals[plate1]),np.max(xxvals[plate1])]
                         yy = [np.nanmedian(yvals[plate1]), np.nanmedian(yvals[plate1])]
                         linelab = 'plate-V median ('+str("%.3f" % round(np.nanmedian(yvals[plate1]),3))+')'
                         pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(1,1)), label=linelab)
 
                     if len(fpsi) > 0: 
-                        xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
+                        xx = [np.min(xxvals[fpsi]),np.max(xxvals[fpsi])]
                         yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
                         linelab = 'FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi]),3))+')'
                         pl3 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
@@ -1544,7 +1544,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 qdata = qdata0[g]
                 x = qdata['mjd']
                 t = Time(x, format='mjd')
-                xvals = t.jd - 2.4e6
+                xxvals = t.jd - 2.4e6
                 yvals = qdata['SNR_FID_1']/np.sqrt(qdata['NREAD']-2)
                 c1 = qdata['SEEING_BAADE']
                 c2 = qdata['MOONPHASE']
@@ -1580,29 +1580,29 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                     if irow == 0:
-                        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
                     else:
-                        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
 
-                    plate, = np.where(xvals < startFPS)
+                    plate, = np.where(xxvals < startFPS)
                     plate1 = plate
-                    fpsi, = np.where(xvals > startFPS)
+                    fpsi, = np.where(xxvals > startFPS)
                     if load.telescope == 'lco25m':
-                        plate, = np.where(xvals < 59000)
-                        plate1, = np.where((xvals > 59000) & (xvals < 59500))
+                        plate, = np.where(xxvals < 59000)
+                        plate1, = np.where((xxvals > 59000) & (xxvals < 59500))
 
-                    xx = [np.min(xvals[plate]),np.max(xvals[plate])]
+                    xx = [np.min(xxvals[plate]),np.max(xvals[plate])]
                     yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
                     linelab = 'plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate]),3))+')'
                     pl1 = ax.plot(xx, yy, c='k', linewidth=4, label=linelab)
                     if load.telescope == 'lco25m':
-                        xx = [np.min(xvals[plate1]),np.max(xvals[plate1])]
+                        xx = [np.min(xxvals[plate1]),np.max(xxvals[plate1])]
                         yy = [np.nanmedian(yvals[plate1]), np.nanmedian(yvals[plate1])]
                         linelab = 'plate-V median ('+str("%.3f" % round(np.nanmedian(yvals[plate1]),3))+')'
                         pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(1,1)), label=linelab)
 
                     if len(fpsi) > 0: 
-                        xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
+                        xx = [np.min(xxvals[fpsi]),np.max(xxvals[fpsi])]
                         yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
                         linelab = 'FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi]),3))+')'
                         pl3 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
@@ -1677,15 +1677,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                     for j in range(3):
-                        xvals = qdata[xcols[icol]][g1]
+                        xxvals = qdata[xcols[icol]][g1]
                         yvals = yvals0[g1]
                         if j == 1: 
-                            xvals = qdata[xcols[icol]][g2]
+                            xxvals = qdata[xcols[icol]][g2]
                             yvals = yvals0[g2]
                         if j == 2: 
-                            xvals = qdata[xcols[icol]][g3]
+                            xxvals = qdata[xcols[icol]][g3]
                             yvals = yvals0[g3]
-                        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=colors[j], label=labels[j])
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=colors[j], label=labels[j])
                         
                     ax.legend(loc='upper left', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
