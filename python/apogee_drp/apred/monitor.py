@@ -1311,7 +1311,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
                 ax.text(1.065, 0.5, clabs[irow],ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
-            fig.subplots_adjust(left=0.052,right=0.951,bottom=0.07,top=0.96,hspace=0.08,wspace=0.00)
+            fig.subplots_adjust(left=0.052,right=0.951,bottom=0.072,top=0.96,hspace=0.08,wspace=0.00)
             plt.savefig(qplotfile)
             plt.close('all')
 
