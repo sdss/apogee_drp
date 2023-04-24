@@ -1248,7 +1248,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
             allsnrg = allsnrg[g]
             xvals = allsnrg['JD']
-            yvals = allsnrg['SN']
+            yvals = allsnrg['SN'][:,1]
             c1 = allsnrg['SEEING']
             c2 = allsnrg['MOONPHASE']
             #c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
