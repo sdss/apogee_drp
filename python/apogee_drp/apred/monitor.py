@@ -1669,8 +1669,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     ax.tick_params(axis='both',which='minor',length=axminlen)
                     ax.tick_params(axis='both',which='both',width=axthick)
                     for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
-                    if icol == 0: ax.set_xlabel(r'Seeing', labelpad=12)
-                    if icol == 1: ax.set_xlabel(r'Moon Phase', labelpad=12)
+                    #if icol == 0: ax.set_xlabel(r'Seeing', labelpad=12)
+                    #if icol == 1: ax.set_xlabel(r'Moon Phase', labelpad=12)
+                    ax.set_xlabel(r'Seeing', labelpad=12)
                     if icol == 0: ax.text(-0.045, 0.5, r'Quickred S/N / $\sqrt{\rm nreads-2}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
                     if icol == 1: ax.axes.yaxis.set_ticklabels([])
                     #ax.axvline(x=59146, color='teal', linewidth=2)
@@ -1678,19 +1679,21 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                     for j in range(3):
-                        xxvals = qdata[xcols[icol]][g1]
+                        xxvals = qdata[xcols[0]][g1]
                         yvals = yvals0[g1]
                         if j == 1: 
-                            xxvals = qdata[xcols[icol]][g2]
+                            xxvals = qdata[xcols[0]][g2]
                             yvals = yvals0[g2]
                         if j == 2: 
-                            xxvals = qdata[xcols[icol]][g3]
+                            xxvals = qdata[xcols[0]][g3]
                             yvals = yvals0[g3]
                         sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*5, c=colors[j], label=labels[j])
                         if icol == 0:
                             popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
                             yfit = linefit(xxvals, *popt)
                             ax.plot(xxvals, yfit, c=colors[j], linewidth=3)
+                        if icol == 1 and j == 2: xxvals -= np.nanmin(xxvals)-np.nanmin(qdata[xcols[0]][g1])
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*5, c=colors[j], label=labels[j])
 
                     if icol == 0:
                         ax.legend(loc='upper right', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=4, columnspacing=0.3,
