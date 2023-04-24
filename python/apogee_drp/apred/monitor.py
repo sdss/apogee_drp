@@ -1693,6 +1693,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                             yfit = linefit(xxvals, *popt)
                             ax.plot(xxvals, yfit, c=colors[j], linewidth=3)
                         if icol == 1 and j == 2: xxvals -= np.nanmin(xxvals)-np.nanmin(qdata[xcols[0]][g1])
+                        if icol == 1:
+                            popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
+                            yfit = linefit(xxvals, *popt)
+                            ax.plot(xxvals, yfit, c=colors[j], linewidth=3)
                         sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*5, c=colors[j], label=labels[j])
 
                     if icol == 0:
