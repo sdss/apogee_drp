@@ -1340,7 +1340,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             x = qdata['mjd']
             t = Time(x, format='mjd')
             xvals = t.jd - 2.4e6
-            yvals = qdata['snr_fid']
+            yvals = qdata['snr_fid']/np.sqrt(qdata['NREAD']-2)
             c1 = qdata['SEEING']
             c2 = qdata['MOONPHASE']
             c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
