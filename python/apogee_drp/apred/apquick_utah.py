@@ -228,6 +228,7 @@ def makesumfile2(telescope='lco25m',apred='daily'):
     codedir = os.path.dirname(os.path.abspath(__file__))
 
     # Get Magellan telescope seeing data
+    print('Reading Magellan ')
     magfile = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/seeing/magellan_2014.csv'
     magdata = pd.read_csv(magfile)
     magT = Time(np.array(magdata['tm']).astype(str), format='fits')
@@ -342,13 +343,13 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         g, = np.where(tdif == np.nanmin(tdif))
         tdifmin = tdif[g][0]
         if tdifmin*24 < 1:
-            print('  adding Magellan-Baade seeing data')
+            print('  adding Magellan-Baade seeing data '+str("%.3f" % round(tdifmin,3))+' days)')
             outstr['SEEING_BAADE'][i] = magSeeing1[g][0]
         tdif = np.abs(t.mjd - magMJD2)
         g, = np.where(tdif == np.nanmin(tdif))
         tdifmin = tdif[g][0]
         if tdifmin*24 < 1:
-            print('  adding Magellan-Clay seeing data')
+            print('  adding Magellan-Clay seeing data '+str("%.3f" % round(tdifmin,3))+' days)')
             outstr['SEEING_CLAY'][i] = magSeeing2[g][0]
         del d1
         del d2
