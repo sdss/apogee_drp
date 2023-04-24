@@ -480,7 +480,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
     html.write('<H4> Throughput: </H4>\n')
     html.write('<ul>\n')
-    html.write('<li> <a href=#scisnr> S/N history</a>\n')
+    html.write('<li> <a href=#scisnr>Full pipeline S/N history</a>\n')
+    qplotfile = specdir5 + 'monitor/' + instrument + '/quickredSNR.png'
+    if os.path.exists(qplotfile): html.write('<li> <a href=#qsnr>Quickred S/N history</a>\n')
     html.write('<li> <a href=' + instrument + '/fiber/fiber_qrtz.html target="_blank">Fiber throughput from quartz lamp</a> (external page)\n')
     html.write('<li> <a href=' + instrument + '/fiber/fiber.html target="_blank">Fiber throughput from dome flats</a> (external page)\n')
     html.write('</ul>\n')
@@ -504,10 +506,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('</ul>\n')
     html.write('<HR>\n')
 
-    # S/N Plot ######################################################################################################################
+    # S/N Plots ######################################################################################################################
     html.write('<h3> <a name=scisnr></a> S/N history for H=10.6-11.0 stars</h3>\n')
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=750></A>\n')
     html.write('<HR>\n')
+    if os.path.exists(qplotfile): 
+        html.write('<h3> <a name=qsnr></a> Quickred S/N history</h3>\n')
+        html.write('<A HREF=' + instrument + '/quickredSNR.png target="_blank"><IMG SRC=' + instrument + '/quickredSNR.png WIDTH=750></A>\n')
+        html.write('<HR>\n')
 
     # Quartz flat Plots ######################################################################################################################
     html.write('<h3> <a name=qflux></a> Quartz lamp median flux (per 10 reads; 1D). The legend gives fiber numbers. </h3>\n')
@@ -1217,10 +1223,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
         ###########################################################################################
         # quickredSNR.png
-        plotfile = specdir5 + 'monitor/' + instrument + '/quickredSNR.png'
         qfile = specdir5 + 'quickred/' + load.telescope + '/apQ-' + load.telescope + '.fits'
-        if ((os.path.exists(plotfile) == False) | (clobber == True)) & (os.path.exists(qfile)):
-            print("----> monitor: Making " + os.path.basename(plotfile))
+        if ((os.path.exists(qplotfile) == False) | (clobber == True)) & (os.path.exists(qfile)):
+            print("----> monitor: Making " + os.path.basename(qplotfile))
 
             qdata0 = fits.getdata(qfile)
             g, = np.where((qdata0['snr_fid'] > 0) & 
@@ -1300,7 +1305,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 if irow == 1: ax.text(1.065, 0.5, clabs[irow],ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
             fig.subplots_adjust(left=0.052,right=0.951,bottom=0.066,top=0.96,hspace=0.08,wspace=0.00)
-            plt.savefig(plotfile)
+            plt.savefig(qplotfile)
             plt.close('all')
 
 
