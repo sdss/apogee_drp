@@ -1241,18 +1241,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             allsnrg = allsnrg[g]
             pdb.set_trace()
 
-            qdata = qdata0[g]
-            x = qdata['mjd']
-            t = Time(x, format='mjd')
-            xvals = t.jd - 2.4e6
-            yvals = qdata['snr_fid']
-            c1 = qdata['SEEING']
-            c2 = qdata['MOONPHASE']
-            c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
-            clabs = np.array(['Seeing','Moon Phase','log(S/N) $H$ Coef[0]'])
-            nrows = 2
+            g, = np.where((allsnrg['SN'][:,1] > 0) & 
+                          (allsnrg['NREADS'] > 40)  & 
+                          (allsnrg['NREADS'] < 50) & 
+                          #(qdata0['N_10pt0_11pt5'] > 10) & 
+                          (allsnrg['SEEING'] > 0))
 
-            ngd = len(allsnrg)
+            allsnrg = allsnrg[g]
+            xvals = allsnrg['JD']
+            yvals = allsnrg['SN']
+            c1 = allsnrg['SEEING']
+            c2 = allsnrg['MOONPHASE']
+            #c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
+            clabs = np.array(['Seeing','Moon Phase'])#,'log(S/N) $H$ Coef[0]'])
+            nrows = 2
 
             ymin = 0
             ymax = 65
@@ -1345,8 +1347,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
             clabs = np.array(['Seeing','Moon Phase','log(S/N) $H$ Coef[0]'])
             nrows = 2
-
-            ngd = len(allsnrg)
 
             ymin = 0
             ymax = 65
