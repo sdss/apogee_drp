@@ -1692,9 +1692,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                             yfit = linefit(xxvals, *popt)
                             ax.plot(xxvals, yfit, c=colors[j], linewidth=3)
 
-                        
-                    ax.legend(loc='upper left', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=4, columnspacing=0.3,
-                              fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
+                    if icol == 0:
+                        ax.legend(loc='upper right', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=4, columnspacing=0.3,
+                                  fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
 
 
                 fig.subplots_adjust(left=0.05,right=0.985,bottom=0.072,top=0.985,hspace=0.08,wspace=0.05)
