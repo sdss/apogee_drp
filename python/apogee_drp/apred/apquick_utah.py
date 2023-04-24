@@ -286,7 +286,7 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
     outstr = np.zeros(nfiles, dtype=dt)
 
     for i in range(nfiles):
-        if nfiles % 10 != 0: continue
+        if i % 10 != 0: continue
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
         d1 = fits.getdata(files[i])
         d2 = fits.getdata(files[i],2)
