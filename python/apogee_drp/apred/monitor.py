@@ -1384,13 +1384,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 xx = [np.min(xvals[plate]),np.max(xvals[plate])]
                 yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
-                linelab = 'plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate],3)))+')'
+                linelab = 'plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate]),3))+')'
                 pl1 = ax.plot(xx, yy, c='k', linewidth=4, label=linelab)
 
                 if len(fpsi) > 0: 
                     xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
                     yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
-                    linelab = 'FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi],3)))+')'
+                    linelab = 'FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi]),3))+')'
                     pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
                     if irow == 0:
                         ax.legend(loc=[0.65,0.10], ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
