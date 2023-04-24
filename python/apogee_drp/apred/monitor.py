@@ -1380,18 +1380,27 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
 
                 plate, = np.where(xvals < startFPS)
+                plate1 = plate
                 fpsi, = np.where(xvals > startFPS)
+                if load.telescope == 'lco25m':
+                    plate, = np.where(xvals < 59000)
+                    plate1, = np.where((xvals > 59000) & (xvals < 59500))
 
                 xx = [np.min(xvals[plate]),np.max(xvals[plate])]
                 yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
                 linelab = 'plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate]),3))+')'
                 pl1 = ax.plot(xx, yy, c='k', linewidth=4, label=linelab)
+                if load.telescope == 'lco25m':
+                    xx = [np.min(xvals[plate1]),np.max(xvals[plate1])]
+                    yy = [np.nanmedian(yvals[plate1]), np.nanmedian(yvals[plate1])]
+                    linelab = 'plate-V median ('+str("%.3f" % round(np.nanmedian(yvals[plate1]),3))+')'
+                    pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(3,1)), label=linelab)
 
                 if len(fpsi) > 0: 
                     xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
                     yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
                     linelab = 'FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi]),3))+')'
-                    pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
+                    pl3 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
                     if irow == 0:
                         ax.legend(loc=[0.65,0.10], ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
                                   fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
