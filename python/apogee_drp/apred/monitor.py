@@ -1645,7 +1645,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                               (qdata0['SEEING'] > 0))
                 qdata = qdata0[g]
                 xcols = np.array(['SEEING','MOONPHASE'])
-                yvals = qdata['SNR_FID_1']/np.sqrt(qdata['NREAD']-2)
+                yvals0 = qdata['SNR_FID_1']/np.sqrt(qdata['NREAD']-2)
                 ncols = 2
 
                 colors = np.array(['k','dodgerblue','crimson'])
@@ -1678,10 +1678,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                     for j in range(3):
                         xvals = qdata[xcols[icol]][g1]
-                        if j == 1: xvals = qdata[xcols[icol]][g2]
-                        if j == 2: xvals = qdata[xcols[icol]][g3]
-                        pdb.set_trace()
-                        sc1 = ax.scatter(xvals, yvals[g1], marker='o', s=markersz*2, c=colors[j], label=labels[j])
+                        yvals = yvals0[g1]
+                        if j == 1: 
+                            xvals = qdata[xcols[icol]][g2]
+                            yvals = yvals0[g2]
+                        if j == 2: 
+                            xvals = qdata[xcols[icol]][g3]
+                            yvals = yvals0[g3]
+                        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=colors[j], label=labels[j])
                         
                     ax.legend(loc='upper left', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
