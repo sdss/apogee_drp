@@ -210,11 +210,12 @@ def makesumfile(telescope='lco25m',apred='daily'):
     outstr.write(outfile, overwrite=True)
 
 def makesumfile2(telescope='lco25m',apred='daily'):
-    outfile = qdir+'apQ-'+telescope+'_new.fits'
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
     qdir = apodir+'quickred/'+telescope+'/'
+    outfile = qdir+'apQ-'+telescope+'_new.fits'
+
     print('Finding apQ files...')
     files = glob(qdir+'*/*fits')
     files.sort()
