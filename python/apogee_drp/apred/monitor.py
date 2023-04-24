@@ -1680,7 +1680,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         xvals = qdata[xcols[icol]][g1]
                         if j == 1: xvals = qdata[xcols[icol]][g2]
                         if j == 2: xvals = qdata[xcols[icol]][g3]
-                        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=colors[j], label=labels[j])
+                        sc1 = ax.scatter(xvals, yvals[g1], marker='o', s=markersz*2, c=colors[j], label=labels[j])
                         
                     ax.legend(loc='upper left', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
