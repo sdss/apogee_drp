@@ -512,7 +512,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<HR>\n')
     if os.path.exists(qplotfile): 
         html.write('<h3> <a name=qsnr></a> Quickred S/N history</h3>\n')
-        html.write('<P> Green chip exposures only;   40 < NREADS < 50;   seeing > 0;   S/N > 0;  minimum of 10 stars with H betwen 10.0 and 11.5 </P>\n')
+        html.write('<P> Green chip exposures only;   40 < NREADS < 50;   seeing > 0;   S/N > 0;  minimum of 10 stars with H between 10.0 and 11.5 </P>\n')
         html.write('<A HREF=' + instrument + '/quickredSNR.png target="_blank"><IMG SRC=' + instrument + '/quickredSNR.png WIDTH=750></A>\n')
         html.write('<HR>\n')
 
