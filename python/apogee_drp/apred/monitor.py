@@ -1247,7 +1247,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ngd = len(allsnrg)
 
             ymin = 0
-            ymax = 80
+            ymax = 65
             yspan = ymax-ymin
 
             fig = plt.figure(figsize=(37,18))
@@ -1274,9 +1274,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                 if irow == 0:
-                    sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=cvals, cmap='copper', vmin=0.5, vmax=2.0)
+                    sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*1.2, c=cvals, cmap='copper', vmin=0.5, vmax=2.0)
                 else:
-                    sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz, c=cvals, cmap='copper')
+                    sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*1.2, c=cvals, cmap='copper')
 
                 plate, = np.where(xvals < startFPS)
                 fpsi, = np.where(xvals > startFPS)
