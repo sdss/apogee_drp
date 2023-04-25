@@ -1159,7 +1159,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                     if irow == 0:
-                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.2, vmax=1.5)
                     else:
                         sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
 
