@@ -393,7 +393,6 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
         # Add in secz if missing
         if outstr['SECZ'][i] == 0:
             onedfile = load.filename('1D', num=outstr['FRAMENUM'][i], chips=True).replace('1D-','1D-b-')
-            pdb.set_trace()
             if os.path.exists(onedfile) == False: onedfile = expdir4+load.instrument+'/'+mjdS+'/as1D-b-'+str(outstr['FRAMENUM'][i])+'.fits'
             if os.path.exists(onedfile) == False: continue
             hdr=fits.getheader(onedfile)
