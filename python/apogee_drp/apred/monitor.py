@@ -1480,7 +1480,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                             popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
                             yfit = linefit(xxvals, *popt)
                             ax.plot(xxvals, yfit, c=qcolors[j], linewidth=3)
-                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*5, c=qcolors[j], label=labels[j])
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*10, c=qcolors[j], label=labels[j])
 
                     if icol == 0:
                         ax.legend(loc='upper right', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=4, columnspacing=0.3,
@@ -1560,7 +1560,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                             popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
                             yfit = linefit(xxvals, *popt)
                             ax.plot(xxvals, yfit, c=qcolors[j], linewidth=3)
-                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*5, c=qcolors[j], label=labels[j])
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*10, c=qcolors[j], label=labels[j])
 
                     if icol == 0:
                         ax.legend(loc='upper right', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=4, columnspacing=0.3,
