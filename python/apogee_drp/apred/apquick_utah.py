@@ -399,6 +399,8 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
             try: 
                 outstr['SECZ'][i] = hdr['ARMASS']
                 print('  added in SECZ from as1D header')
+                del onedfile
+                del hdr
             except: pass
         del d1
         del d2
