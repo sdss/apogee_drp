@@ -1426,7 +1426,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                               (qdata0['NREAD'] > 40)  & 
                               (qdata0['NREAD'] < 50) & 
                               (qdata0['N_10pt0_11pt5'] > 10) & 
-                              (qdata0['SEEING'] > 0))
+                              (qdata0['SEEING'] > 0) & 
+                              (qdata0['SECZ'] > 0))
                 qdata = qdata0[g]
                 xcols = np.array(['SEEING','MOONPHASE'])
                 yvals0 = qdata['SNR_FID_1']/np.sqrt(qdata['NREAD']-2)
@@ -1462,13 +1463,13 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                     for j in range(3):
-                        xxvals = qdata[xcols[0]][g1]
+                        xxvals = qdata['SEEING'][g1]/(qdata['SECZ'][g1]**0.6)
                         yvals = yvals0[g1]
                         if j == 1: 
-                            xxvals = qdata[xcols[0]][g2]
+                            xxvals = qdata['SEEING'][g2]/(qdata['SECZ'][g2]**0.6)
                             yvals = yvals0[g2]
                         if j == 2: 
-                            xxvals = qdata[xcols[0]][g3]
+                            xxvals = qdata['SEEING'][g3]/(qdata['SECZ'][g3]**0.6)
                             yvals = yvals0[g3]
                         if icol == 0:
                             popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
@@ -1503,7 +1504,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                               (qdata0['NREAD'] < 50) & 
                               (qdata0['N_10pt0_11pt5'] > 10) & 
                               (qdata0['SEEING_BAADE'] > 0) & 
-                              (qdata0['SEEING_CLAY'] > 0))
+                              (qdata0['SECZ_BAADE'] > 0) & 
+                              (qdata0['SEEING_CLAY'] > 0) & 
+                              (qdata0['SECZ_CLAY'] > 0))
                 qdata = qdata0[g]
 
                 xcols = np.array(['SEEING_BAADE','MOONPHASE'])
