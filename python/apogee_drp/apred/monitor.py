@@ -1425,7 +1425,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 g, = np.where((qdata0['SNR_FID_1'] > 0) & 
                               (qdata0['NREAD'] > 40)  & 
                               (qdata0['NREAD'] < 50) & 
-                              #(qdata0['N_10pt0_11pt5'] > 10) & 
+                              (qdata0['N_10pt0_11pt5'] > 10) & 
                               (qdata0['SEEING'] > 0))
                 qdata = qdata0[g]
                 xcols = np.array(['SEEING','MOONPHASE'])
@@ -1454,7 +1454,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
                     #if icol == 0: ax.set_xlabel(r'Seeing', labelpad=12)
                     #if icol == 1: ax.set_xlabel(r'Moon Phase', labelpad=12)
-                    ax.set_xlabel(r'Seeing', labelpad=12)
+                    ax.set_xlabel(r'Seeing APOGEE', labelpad=12)
                     if icol == 0: ax.text(-0.045, 0.5, r'Quickred S/N / $\sqrt{\rm nreads-2}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
                     if icol == 1: ax.axes.yaxis.set_ticklabels([])
                     #ax.axvline(x=59146, color='teal', linewidth=2)
@@ -1501,9 +1501,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 g, = np.where((qdata0['SNR_FID_1'] > 0) & 
                               (qdata0['NREAD'] > 40)  & 
                               (qdata0['NREAD'] < 50) & 
-                              #(qdata0['N_10pt0_11pt5'] > 10) & 
-                              (qdata0['SEEING_BAADE'] > 0))
+                              (qdata0['N_10pt0_11pt5'] > 10) & 
+                              (qdata0['SEEING_BAADE'] > 0) & 
+                              (qdata0['SEEING_CLAY'] > 0))
                 qdata = qdata0[g]
+
                 xcols = np.array(['SEEING_BAADE','MOONPHASE'])
                 yvals0 = qdata['SNR_FID_1']/np.sqrt(qdata['NREAD']-2)
                 ncols = 2
@@ -1538,13 +1540,14 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                     for j in range(3):
-                        xxvals = qdata[xcols[0]][g1]
+                    c1 = 
+                        xxvals = np.nanmean([qdata['SEEING_BAADE'][g1]/(qdata['SECZ_BAADE'][g1]**0.6), qdata['SEEING_CLAY'][g1]/(qdata['SECZ_CLAY'][g1]**0.6)], axis=0)
                         yvals = yvals0[g1]
                         if j == 1: 
-                            xxvals = qdata[xcols[0]][g2]
+                            xxvals = np.nanmean([qdata['SEEING_BAADE'][g2]/(qdata['SECZ_BAADE'][g2]**0.6), qdata['SEEING_CLAY'][g2]/(qdata['SECZ_CLAY'][g2]**0.6)], axis=0)
                             yvals = yvals0[g2]
                         if j == 2: 
-                            xxvals = qdata[xcols[0]][g3]
+                            xxvals = np.nanmean([qdata['SEEING_BAADE'][g3]/(qdata['SECZ_BAADE'][g3]**0.6), qdata['SEEING_CLAY'][g3]/(qdata['SECZ_CLAY'][g3]**0.6)], axis=0)
                             yvals = yvals0[g3]
                         if icol == 0:
                             popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
