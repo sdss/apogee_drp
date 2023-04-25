@@ -367,8 +367,7 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
             tdif = np.abs(apT.mjd - dimMJD)
             g, = np.where(tdif == np.nanmin(tdif))
             tdifmin = tdif[g][0]
-            print('  DIM tdif = '+str(tdifmin*24*60))
-            pdb.set_trace()
+            #print('  DIM tdif = '+str(tdifmin*24*60))
             if tdifmin*24*60 < 15:
                 print('  adding DIMM seeing data ('+str("%.5f" % round(dimMJD[g][0],5))+'-'+str("%.5f" % round(apT.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
                 outstr['SEEING_DIMM'][i] = dimSeeing[g][0]
