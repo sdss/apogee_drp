@@ -241,6 +241,15 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
     g, = np.where(np.array(magdata['un']) == 1)
     magMJD2 = magMJD[g]
     magSeeing2 = magSeeing[g]
+    dimfile = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/seeing/dimm_2014.csv'
+    dimdata = pd.read_csv(dimfile)
+    dimT = Time(np.array(magdata['tm']).astype(str), format='fits')
+    dimMJD = dimT.mjd
+    dimSeeing = np.array(dimdata['se'])
+
+    # Get DIMM seeing data
+    print('Reading DIMM seeing data')
+
 
     exp = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
 
@@ -274,6 +283,7 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
                    ('FIBSNR',                 np.float64,300),
                    ('SEEING_BAADE',           np.float64),
                    ('SEEING_CLAY',            np.float64),
+                   ('SEEING_DIMM',            np.float64),
                    ('SEEING',                 np.float64),
                    ('SNRATIO',                np.float64),
                    ('MOONDIST',               np.float64),
@@ -353,6 +363,12 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
         if tdifmin*24*60 < 15:
             print('  adding Magellan-Clay seeing data ('+str("%.5f" % round(magMJD2[g][0],5))+'-'+str("%.5f" % round(t.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
             outstr['SEEING_CLAY'][i] = magSeeing2[g][0]
+        tdif = np.abs(t.mjd - dimMJD)
+        g, = np.where(tdif == np.nanmin(tdif))
+        tdifmin = tdif[g][0]
+        if tdifmin*24*60 < 15:
+            print('  adding DIMM seeing data ('+str("%.5f" % round(dimMJD[g][0],5))+'-'+str("%.5f" % round(t.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
+            outstr['SEEING_DIMM'][i] = dimSeeing[g][0]
         del d1
         del d2
     print('made '+outfile)
