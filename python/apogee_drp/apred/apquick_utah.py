@@ -246,7 +246,6 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
     dimT = Time(np.array(dimdata['tm']).astype(str), format='fits')
     dimMJD = dimT.mjd
     dimSeeing = np.array(dimdata['se'])
-    pdb.set_trace()
 
     # Get DIMM seeing data
     print('Reading DIMM seeing data')
