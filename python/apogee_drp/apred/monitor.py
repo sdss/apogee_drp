@@ -1543,7 +1543,6 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                     for j in range(3):
-                    c1 = 
                         xxvals = np.nanmean([qdata['SEEING_BAADE'][g1]/(qdata['SECZ_BAADE'][g1]**0.6), qdata['SEEING_CLAY'][g1]/(qdata['SECZ_CLAY'][g1]**0.6)], axis=0)
                         yvals = yvals0[g1]
                         if j == 1: 
