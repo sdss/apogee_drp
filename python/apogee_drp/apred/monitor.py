@@ -1221,16 +1221,17 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                               (qdata0['NREAD'] > 40)  & 
                               (qdata0['NREAD'] < 50) & 
                               (qdata0['N_10pt0_11pt5'] > 10) & 
-                              (qdata0['SEEING_BAADE'] > 0))
+                              (qdata0['SEEING_BAADE'] > 0) & 
+                              (qdata0['SEEING_CLAY'] > 0))
                 qdata = qdata0[g]
                 x = qdata['mjd']
                 t = Time(x, format='mjd')
                 xxvals = t.jd - 2.4e6
                 yvals = qdata['snr_fid']/np.sqrt(qdata['NREAD']-2)
-                c1 = qdata['SEEING_BAADE']/(qdata['SECZ_BAADE']**0.6)
+                c1 = np.nanmean([qdata['SEEING_BAADE']/(qdata['SECZ_BAADE']**0.6), qdata['SEEING_CLAY']/(qdata['SECZ_CLAY']**0.6)], axis=0)
                 c2 = qdata['MOONPHASE']
                 c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
-                clabs = np.array(['Seeing Magellan/Baade','Moon Phase','log(S/N) $H$ Coef[0]'])
+                clabs = np.array(['Seeing Magellan','Moon Phase','log(S/N) $H$ Coef[0]'])
                 nrows = 2
 
                 ymin = 0
