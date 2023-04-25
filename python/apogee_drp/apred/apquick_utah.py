@@ -73,6 +73,7 @@ The GETPSFLIST procedure is no longer need.
 MAKESUMFILES concatenates the individual apQ files into master apQ files
 """
 
+expdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/exposures/'
 detPlateN = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/detector/apDetector-b-13390003.fits'
 detPlateS = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/detector/asDetector-b-22810006.fits'
 bpmPlateN = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/bpm/apBPM-b-33770001.fits'
@@ -238,9 +239,16 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
     g, = np.where(np.array(magdata['un']) == 0)
     magMJD1 = magMJD[g]
     magSeeing1 = magSeeing[g]
+    magAz1 = np.array(magdata['az'])[g]
+    magAlt1 = np.array(magdata['el'])[g]
+    magSecz1 = 1/(np.cos((90-magAlt1)*(np.pi/180)))
     g, = np.where(np.array(magdata['un']) == 1)
     magMJD2 = magMJD[g]
     magSeeing2 = magSeeing[g]
+    magAz2 = np.array(magdata['az'])[g]
+    magAlt2 = np.array(magdata['el'])[g]
+    magSecz2 = 1/(np.cos((90-magAlt2)*(np.pi/180)))
+
     dimfile = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/seeing/dimm_2014.csv'
     dimdata = pd.read_csv(dimfile)
     dimT = Time(np.array(dimdata['tm']).astype(str), format='fits')
@@ -249,7 +257,6 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
 
     # Get DIMM seeing data
     print('Reading DIMM seeing data')
-
 
     exp = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
 
@@ -281,9 +288,6 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
                    ('FIBFLUX',                np.float64,300),
                    ('FIBERR',                 np.float64,300),
                    ('FIBSNR',                 np.float64,300),
-                   ('SEEING_BAADE',           np.float64),
-                   ('SEEING_CLAY',            np.float64),
-                   ('SEEING_DIMM',            np.float64),
                    ('SEEING',                 np.float64),
                    ('SNRATIO',                np.float64),
                    ('MOONDIST',               np.float64),
@@ -292,7 +296,17 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
                    ('ZERO1',                  np.float64),
                    ('ZERORMS1',               np.float64),
                    ('ZERONORM1',              np.float64),
-                   ('SKY',                    np.float64)])
+                   ('SKY',                    np.float64),
+                   ('SEEING_BAADE',           np.float64),
+                   ('SECZ_BAADE',             np.float64),
+                   ('AZ_BAADE',               np.float64),
+                   ('SEEING_CLAY',            np.float64),
+                   ('SECZ_CLAY',              np.float64),
+                   ('AZ_CLAY',                np.float64),
+                   ('SEEING_DIMM',            np.float64),
+                   ('SECZ_DIMM',              np.float64),
+                   ('AZ_DIMM',                np.float64)])
+
     outstr = np.zeros(nfiles, dtype=dt)
 
     for i in range(nfiles):
@@ -300,7 +314,7 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
         d1 = fits.getdata(files[i])
         d2 = fits.getdata(files[i],2)
-        mjd = getmjd(d1['framenum'])
+        mjdS = str(getmjd(d1['framenum'][0]))
         outstr['FRAMENUM'][i] = d1['framenum'][0]
         outstr['NREAD'][i] = d1['read'][0]
         outstr['HMAG_FID'][i] = d1['hmag_fid'][0]
@@ -331,6 +345,7 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
             outstr['ZERORMS1'][i] = exp['ZERORMS'][g1][0]
             outstr['ZERONORM1'][i] = exp['ZERONORM'][g1][0]
             outstr['SKY'][i] = exp['SKY'][g1][0][1]
+            
         outstr['FIBID'][i] = d2['fiberid']
         outstr['FIBINDEX'][i] = d2['fiberid']
         outstr['FIBHMAG'][i] = d2['hmag']
@@ -358,12 +373,16 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
             if tdifmin*24*60 < 15:
                 print('  adding Magellan-Baade seeing data ('+str("%.5f" % round(magMJD1[g][0],5))+'-'+str("%.5f" % round(apT.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
                 outstr['SEEING_BAADE'][i] = magSeeing1[g][0]
+                outstr['AZ_BAADE'][i] = magAz1[g][0]
+                outstr['SECZ_BAADE'][i] = magSecz1[g][0]
             tdif = np.abs(apT.mjd - magMJD2)
             g, = np.where(tdif == np.nanmin(tdif))
             tdifmin = tdif[g][0]
             if tdifmin*24*60 < 15:
                 print('  adding Magellan-Clay seeing data ('+str("%.5f" % round(magMJD2[g][0],5))+'-'+str("%.5f" % round(apT.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
                 outstr['SEEING_CLAY'][i] = magSeeing2[g][0]
+                outstr['AZ_CLAY'][i] = magAz2[g][0]
+                outstr['SECZ_CLAY'][i] = magSecz2[g][0]
             tdif = np.abs(apT.mjd - dimMJD)
             g, = np.where(tdif == np.nanmin(tdif))
             tdifmin = tdif[g][0]
@@ -371,6 +390,17 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
             if tdifmin*24*60 < 15:
                 print('  adding DIMM seeing data ('+str("%.5f" % round(dimMJD[g][0],5))+'-'+str("%.5f" % round(apT.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
                 outstr['SEEING_DIMM'][i] = dimSeeing[g][0]
+        # Add in secz if missing
+        if outstr['SECZ'][i] == 0:
+            onedfile = load.filename('1D', num=outstr['FRAMENUM'][i], chips=True).replace('1D-','1D-b-')
+            pdb.set_trace()
+            if os.path.exists(onedfile) == False: onedfile = expdir4+load.instrument+'/'+mjdS+'/as1D-b-'+str(outstr['FRAMENUM'][i])+'.fits'
+            if os.path.exists(onedfile) == False: continue
+            hdr=fits.getheader(onedfile)
+            try: 
+                outstr['SECZ'][i] = hdr['ARMASS']
+                print('  added in SECZ from as1D header')
+            except: pass
         del d1
         del d2
     print('made '+outfile)
