@@ -318,8 +318,8 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
         if outstr['N_10pt0_11pt5'][i] == 0: print('  zero stars with 10.0 < H < 11.5')
         g1, = np.where(d1['framenum'] == exp['im'])
         if len(g1) > 0:
-            t = Time(exp['DATEOBS'][g1][0], format='fits')
-            outstr['MJD'][i] = t.mjd
+            apT = Time(exp['DATEOBS'][g1][0], format='fits')
+            outstr['MJD'][i] = apT.mjd
             outstr['PLATE'][i] = exp['PLATE'][g1][0]
             outstr['EXPTIME'][i] = exp['EXPTIME'][g1][0]
             outstr['SEEING'][i] = exp['SEEING'][g1][0]
@@ -352,24 +352,25 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
             outstr['SNR_FID_SCALE_1'][i] = snr_fid_scale
             outstr['LOGSNR_HMAG_COEF_1'][i] = coefall
         if len(g1) > 0:
-            tdif = np.abs(t.mjd - magMJD1)
+            tdif = np.abs(apT.mjd - magMJD1)
             g, = np.where(tdif == np.nanmin(tdif))
             tdifmin = tdif[g][0]
             if tdifmin*24*60 < 15:
-                print('  adding Magellan-Baade seeing data ('+str("%.5f" % round(magMJD1[g][0],5))+'-'+str("%.5f" % round(t.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
+                print('  adding Magellan-Baade seeing data ('+str("%.5f" % round(magMJD1[g][0],5))+'-'+str("%.5f" % round(apT.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
                 outstr['SEEING_BAADE'][i] = magSeeing1[g][0]
-            tdif = np.abs(t.mjd - magMJD2)
+            tdif = np.abs(apT.mjd - magMJD2)
             g, = np.where(tdif == np.nanmin(tdif))
             tdifmin = tdif[g][0]
             if tdifmin*24*60 < 15:
-                print('  adding Magellan-Clay seeing data ('+str("%.5f" % round(magMJD2[g][0],5))+'-'+str("%.5f" % round(t.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
+                print('  adding Magellan-Clay seeing data ('+str("%.5f" % round(magMJD2[g][0],5))+'-'+str("%.5f" % round(apT.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
                 outstr['SEEING_CLAY'][i] = magSeeing2[g][0]
-            tdif = np.abs(t.mjd - dimMJD)
+            tdif = np.abs(apT.mjd - dimMJD)
             g, = np.where(tdif == np.nanmin(tdif))
             tdifmin = tdif[g][0]
             print('  DIM tdif = '+str(tdifmin*24*60))
+            pdb.set_trace()
             if tdifmin*24*60 < 15:
-                print('  adding DIMM seeing data ('+str("%.5f" % round(dimMJD[g][0],5))+'-'+str("%.5f" % round(t.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
+                print('  adding DIMM seeing data ('+str("%.5f" % round(dimMJD[g][0],5))+'-'+str("%.5f" % round(apT.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
                 outstr['SEEING_DIMM'][i] = dimSeeing[g][0]
         del d1
         del d2
