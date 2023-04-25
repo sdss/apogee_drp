@@ -2814,6 +2814,82 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.close('all')
 
             ###########################################################################################
+            # quickredSNR5.png
+            qplotfile = qplotfile.replace('4.png','5.png')
+            qfile = specdir5 + 'quickred/' + load.telescope + '/apQ-' + load.telescope + '.fits'
+            if ((os.path.exists(qplotfile) == False) | (clobber == True)) & (os.path.exists(qfile)):
+                print("----> monitor: Making " + os.path.basename(qplotfile))
+
+                qdata0 = fits.getdata(qfile)
+                g, = np.where((qdata0['SNR_FID_1'] > 0) & 
+                              (qdata0['NREAD'] > 40)  & 
+                              (qdata0['NREAD'] < 50) & 
+                              #(qdata0['N_10pt0_11pt5'] > 10) & 
+                              (qdata0['SEEING_BAADE'] > 0))
+                qdata = qdata0[g]
+                xcols = np.array(['SEEING_BAADE','MOONPHASE'])
+                yvals0 = qdata['SNR_FID_1']/np.sqrt(qdata['NREAD']-2)
+                ncols = 2
+
+                qcolors = np.array(['k','dodgerblue','crimson'])
+                labels = np.array(['Plate','Plate-V','FPI'])
+
+                g1, = np.where(qdata['MJD'] < 59000)
+                g2, = np.where((qdata['MJD'] > 59000) & (qdata['MJD'] < 59500))
+                g3, = np.where(qdata['MJD'] > 59500)
+
+                fig = plt.figure(figsize=(37,18))
+
+                for icol in range(ncols):
+                    ax = plt.subplot2grid((1,ncols), (0,icol))
+                    #ax.set_xlim(xmin, xmax)
+                    #ax.set_ylim(ymin, ymax)
+                    #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                    ax.minorticks_on()
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
+                    ax.tick_params(axis='both',which='major',length=axmajlen)
+                    ax.tick_params(axis='both',which='minor',length=axminlen)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
+                    #if icol == 0: ax.set_xlabel(r'Seeing', labelpad=12)
+                    #if icol == 1: ax.set_xlabel(r'Moon Phase', labelpad=12)
+                    ax.set_xlabel(r'Seeing Magellan/Baade', labelpad=12)
+                    if icol == 0: ax.text(-0.045, 0.5, r'Quickred S/N / $\sqrt{\rm nreads-2}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                    if icol == 1: ax.axes.yaxis.set_ticklabels([])
+                    #ax.axvline(x=59146, color='teal', linewidth=2)
+                    #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                    #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                    for j in range(3):
+                        xxvals = qdata[xcols[0]][g1]
+                        yvals = yvals0[g1]
+                        if j == 1: 
+                            xxvals = qdata[xcols[0]][g2]
+                            yvals = yvals0[g2]
+                        if j == 2: 
+                            xxvals = qdata[xcols[0]][g3]
+                            yvals = yvals0[g3]
+                        if icol == 0:
+                            popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
+                            yfit = linefit(xxvals, *popt)
+                            ax.plot(xxvals, yfit, c=qcolors[j], linewidth=3)
+                        if icol == 1 and (j == 1 or j == 2): xxvals -= np.nanmedian(xxvals)-np.nanmedian(qdata[xcols[0]][g1])
+                        if icol == 1:
+                            popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
+                            yfit = linefit(xxvals, *popt)
+                            ax.plot(xxvals, yfit, c=qcolors[j], linewidth=3)
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*5, c=qcolors[j], label=labels[j])
+
+                    if icol == 0:
+                        ax.legend(loc='upper right', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=4, columnspacing=0.3,
+                                  fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
+
+
+                fig.subplots_adjust(left=0.05,right=0.985,bottom=0.072,top=0.985,hspace=0.08,wspace=0.05)
+                plt.savefig(qplotfile)
+                plt.close('all')
+
+            ###########################################################################################
             # pipelineSNR.png
             plotfile = specdir5 + 'monitor/' + instrument + '/pipelineSNR.png'
             if (os.path.exists(plotfile) == False) | (clobber == True):
