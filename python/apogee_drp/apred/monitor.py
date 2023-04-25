@@ -1128,7 +1128,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 c1 = qdata['SEEING']/(qdata['SECZ']**0.6)
                 c2 = qdata['MOONPHASE']
                 c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
-                clabs = np.array(['Seeing','Moon Phase','log(S/N) $H$ Coef[0]'])
+                clabs = np.array(['Seeing APOGEE','Moon Phase','log(S/N) $H$ Coef[0]'])
                 nrows = 2
 
                 ymin = 0
@@ -1159,7 +1159,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                     if irow == 0:
-                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.2, vmax=1.5)
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
                     else:
                         sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
 
@@ -1203,7 +1203,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     cax.tick_params(axis='both',which='minor',length=axminlen)
                     cax.tick_params(axis='both',which='both',width=axthick)
                     for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
-                    ax.text(1.065, 0.5, clabs[irow],ha='left', va='center', rotation=-90, transform=ax.transAxes)
+                    ax.text(1.065, 0.5, clabs[irow], ha='left', va='center', rotation=-90, transform=ax.transAxes)
 
                 fig.subplots_adjust(left=0.052,right=0.951,bottom=0.072,top=0.96,hspace=0.08,wspace=0.00)
                 plt.savefig(qplotfile)
@@ -1230,7 +1230,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 c1 = qdata['SEEING_BAADE']/(qdata['SECZ_BAADE']**0.6)
                 c2 = qdata['MOONPHASE']
                 c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
-                clabs = np.array(['Seeing','Moon Phase','log(S/N) $H$ Coef[0]'])
+                clabs = np.array(['Seeing Magellan/Baade','Moon Phase','log(S/N) $H$ Coef[0]'])
                 nrows = 2
 
                 ymin = 0
@@ -1261,7 +1261,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
 
                     if irow == 0:
-                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.2, vmax=1.5)
                     else:
                         sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
 
