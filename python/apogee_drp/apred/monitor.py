@@ -1444,8 +1444,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for icol in range(ncols):
                     ax = plt.subplot2grid((1,ncols), (0,icol))
-                    #ax.set_xlim(xmin, xmax)
-                    #ax.set_ylim(ymin, ymax)
+                    ax.set_xlim(0.3,2)
+                    ax.set_ylim(0, 10)
                     #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                     ax.minorticks_on()
                     ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
@@ -1524,8 +1524,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                 for icol in range(ncols):
                     ax = plt.subplot2grid((1,ncols), (0,icol))
-                    #ax.set_xlim(xmin, xmax)
-                    #ax.set_ylim(ymin, ymax)
+                    ax.set_xlim(0.3,2)
+                    ax.set_ylim(0, 10)
                     #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
                     ax.minorticks_on()
                     ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
