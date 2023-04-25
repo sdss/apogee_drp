@@ -243,7 +243,7 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
     magSeeing2 = magSeeing[g]
     dimfile = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/seeing/dimm_2014.csv'
     dimdata = pd.read_csv(dimfile)
-    dimT = Time(np.array(magdata['tm']).astype(str), format='fits')
+    dimT = Time(np.array(dimdata['tm']).astype(str), format='fits')
     dimMJD = dimT.mjd
     dimSeeing = np.array(dimdata['se'])
 
