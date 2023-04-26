@@ -33,6 +33,7 @@ from mpl_toolkits.axes_grid1.axes_divider import make_axes_locatable
 from mpl_toolkits.axes_grid1.colorbar import colorbar
 from datetime import date,datetime
 from scipy.signal import medfilt2d
+from scipy.optimize import curve_fit
 
 ###############################################################################################
 # Set up some basic plotting parameters
@@ -480,7 +481,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
     html.write('<H4> Throughput: </H4>\n')
     html.write('<ul>\n')
-    html.write('<li> <a href=#scisnr> S/N history</a>\n')
+    html.write('<li> <a href=#scisnr>Full pipeline S/N history</a>\n')
+    qplotfile = specdir5 + 'monitor/' + instrument + '/quickredSNR.png'
+    if os.path.exists(qplotfile): html.write('<li> <a href=#qsnr>Quickred S/N history</a>\n')
     html.write('<li> <a href=' + instrument + '/fiber/fiber_qrtz.html target="_blank">Fiber throughput from quartz lamp</a> (external page)\n')
     html.write('<li> <a href=' + instrument + '/fiber/fiber.html target="_blank">Fiber throughput from dome flats</a> (external page)\n')
     html.write('</ul>\n')
@@ -504,10 +507,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     html.write('</ul>\n')
     html.write('<HR>\n')
 
-    # S/N Plot ######################################################################################################################
+    # S/N Plots ######################################################################################################################
     html.write('<h3> <a name=scisnr></a> S/N history for H=10.6-11.0 stars</h3>\n')
     html.write('<A HREF=' + instrument + '/snhistory.png target="_blank"><IMG SRC=' + instrument + '/snhistory.png WIDTH=750></A>\n')
     html.write('<HR>\n')
+    if os.path.exists(qplotfile): 
+        html.write('<h3> <a name=qsnr></a> Quickred S/N history</h3>\n')
+        html.write('<P> Green chip exposures only;   40 < NREADS < 50;   seeing > 0;   S/N > 0;  minimum of 10 stars with H between 10.0 and 11.5 </P>\n')
+        html.write('<A HREF=' + instrument + '/quickredSNR.png target="_blank"><IMG SRC=' + instrument + '/quickredSNR.png WIDTH=750></A>\n')
+        html.write('<HR>\n')
 
     # Quartz flat Plots ######################################################################################################################
     html.write('<h3> <a name=qflux></a> Quartz lamp median flux (per 10 reads; 1D). The legend gives fiber numbers. </h3>\n')
@@ -1099,6 +1107,471 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 plt.close('all')
 
     if makeplots is True:
+        if load.telescope == 'lco25m':
+            ###########################################################################################
+            # quickredSNR.png
+            qfile = specdir5 + 'quickred/' + load.telescope + '/apQ-' + load.telescope + '.fits'
+            if ((os.path.exists(qplotfile) == False) | (clobber == True)) & (os.path.exists(qfile)):
+                print("----> monitor: Making " + os.path.basename(qplotfile))
+
+                qdata0 = fits.getdata(qfile)
+                g, = np.where((qdata0['snr_fid'] > 0) & 
+                              (qdata0['NREAD'] > 40)  & 
+                              (qdata0['NREAD'] < 50) & 
+                              (qdata0['N_10pt0_11pt5'] > 10) & 
+                              (qdata0['SEEING'] > 0))
+                qdata = qdata0[g]
+                x = qdata['mjd']
+                t = Time(x, format='mjd')
+                xxvals = t.jd - 2.4e6
+                yvals = qdata['snr_fid']/np.sqrt(qdata['NREAD']-2)
+                c1 = qdata['SEEING']/(qdata['SECZ']**0.6)
+                c2 = qdata['MOONPHASE']
+                c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
+                clabs = np.array(['Seeing APOGEE','Moon Phase','log(S/N) $H$ Coef[0]'])
+                nrows = 2
+
+                ymin = 0
+                ymax = 10
+                yspan = ymax-ymin
+
+                fig = plt.figure(figsize=(37,18))
+
+                for irow in range(nrows):
+                    cvals = c1
+                    if irow == 1: cvals = c2
+                    #if irow == 2: cvals = c3
+                    ax = plt.subplot2grid((nrows,1), (irow,0))
+                    ax.set_xlim(xmin, xmax)
+                    ax.set_ylim(ymin, ymax)
+                    ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                    ax.minorticks_on()
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
+                    ax.tick_params(axis='both',which='major',length=axmajlen)
+                    ax.tick_params(axis='both',which='minor',length=axminlen)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
+                    if irow == nrows-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
+                    if irow == 0: ax.text(-0.035, 0.0, r'Quickred S/N / $\sqrt{\rm nreads-2}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                    if irow < nrows-1: ax.axes.xaxis.set_ticklabels([])
+                    #ax.axvline(x=59146, color='teal', linewidth=2)
+                    #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                    #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                    if irow == 0:
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=1.5)
+                    else:
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
+
+                    plate, = np.where(xxvals < startFPS)
+                    plate1 = plate
+                    fpsi, = np.where(xxvals > startFPS)
+                    if load.telescope == 'lco25m':
+                        plate, = np.where(xxvals < 59000)
+                        plate1, = np.where((xxvals > 59000) & (xxvals < 59500))
+
+                    xx = [np.min(xxvals[plate]),np.max(xxvals[plate])]
+                    yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
+                    linelab = 'plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate]),3))+')'
+                    pl1 = ax.plot(xx, yy, c='k', linewidth=4, label=linelab)
+                    if load.telescope == 'lco25m':
+                        xx = [np.min(xxvals[plate1]),np.max(xxvals[plate1])]
+                        yy = [np.nanmedian(yvals[plate1]), np.nanmedian(yvals[plate1])]
+                        linelab = 'plate-V median ('+str("%.3f" % round(np.nanmedian(yvals[plate1]),3))+')'
+                        pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(1,1)), label=linelab)
+
+                    if len(fpsi) > 0: 
+                        xx = [np.min(xxvals[fpsi]),np.max(xxvals[fpsi])]
+                        yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
+                        linelab = 'FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi]),3))+')'
+                        pl3 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
+                        if irow == 0:
+                            ax.legend(loc=[0.65,0.10], ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
+                                      fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
+
+                    for iyear in range(nyears):
+                        ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                        if irow == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center', fontsize=fsz80)
+
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                    cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                    cax.minorticks_on()
+                    if clabs[irow] == 'Moon Phase': cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                    cax.tick_params(axis='both',which='both',direction='out',bottom=False,top=False,left=False,right=True,pad=10,labelsize=fsz80)
+                    cax.tick_params(axis='both',which='major',length=axmajlen)
+                    cax.tick_params(axis='both',which='minor',length=axminlen)
+                    cax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
+                    ax.text(1.065, 0.5, clabs[irow], ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+                fig.subplots_adjust(left=0.052,right=0.951,bottom=0.072,top=0.96,hspace=0.08,wspace=0.00)
+                plt.savefig(qplotfile)
+                plt.close('all')
+
+            ###########################################################################################
+            # quickredSNR1.png
+            qplotfile = specdir5 + 'monitor/' + instrument + '/quickredSNR1.png'
+            qfile = specdir5 + 'quickred/' + load.telescope + '/apQ-' + load.telescope + '.fits'
+            if ((os.path.exists(qplotfile) == False) | (clobber == True)) & (os.path.exists(qfile)):
+                print("----> monitor: Making " + os.path.basename(qplotfile))
+
+                qdata0 = fits.getdata(qfile)
+                g, = np.where((qdata0['snr_fid'] > 0) & 
+                              (qdata0['NREAD'] > 40)  & 
+                              (qdata0['NREAD'] < 50) & 
+                              (qdata0['N_10pt0_11pt5'] > 10) & 
+                              (qdata0['SEEING_BAADE'] > 0) & 
+                              (qdata0['SEEING_CLAY'] > 0))
+                qdata = qdata0[g]
+                x = qdata['mjd']
+                t = Time(x, format='mjd')
+                xxvals = t.jd - 2.4e6
+                yvals = qdata['snr_fid']/np.sqrt(qdata['NREAD']-2)
+                c1 = np.nanmean([qdata['SEEING_BAADE']/(qdata['SECZ_BAADE']**0.6), qdata['SEEING_CLAY']/(qdata['SECZ_CLAY']**0.6)], axis=0)
+                c2 = qdata['MOONPHASE']
+                c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
+                clabs = np.array(['Seeing Magellan','Moon Phase','log(S/N) $H$ Coef[0]'])
+                nrows = 2
+
+                ymin = 0
+                ymax = 10
+                yspan = ymax-ymin
+
+                fig = plt.figure(figsize=(37,18))
+
+                for irow in range(nrows):
+                    cvals = c1
+                    if irow == 1: cvals = c2
+                    #if irow == 2: cvals = c3
+                    ax = plt.subplot2grid((nrows,1), (irow,0))
+                    ax.set_xlim(xmin, xmax)
+                    ax.set_ylim(ymin, ymax)
+                    ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                    ax.minorticks_on()
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
+                    ax.tick_params(axis='both',which='major',length=axmajlen)
+                    ax.tick_params(axis='both',which='minor',length=axminlen)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
+                    if irow == nrows-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
+                    if irow == 0: ax.text(-0.035, 0.0, r'Quickred S/N / $\sqrt{\rm nreads-2}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                    if irow < nrows-1: ax.axes.xaxis.set_ticklabels([])
+                    #ax.axvline(x=59146, color='teal', linewidth=2)
+                    #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                    #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                    if irow == 0:
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.3, vmax=1.2)
+                    else:
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
+
+                    plate, = np.where(xxvals < startFPS)
+                    plate1 = plate
+                    fpsi, = np.where(xxvals > startFPS)
+                    if load.telescope == 'lco25m':
+                        plate, = np.where(xxvals < 59000)
+                        plate1, = np.where((xxvals > 59000) & (xxvals < 59500))
+
+                    xx = [np.min(xxvals[plate]),np.max(xxvals[plate])]
+                    yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
+                    linelab = 'plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate]),3))+')'
+                    pl1 = ax.plot(xx, yy, c='k', linewidth=4, label=linelab)
+                    if load.telescope == 'lco25m':
+                        xx = [np.min(xxvals[plate1]),np.max(xxvals[plate1])]
+                        yy = [np.nanmedian(yvals[plate1]), np.nanmedian(yvals[plate1])]
+                        linelab = 'plate-V median ('+str("%.3f" % round(np.nanmedian(yvals[plate1]),3))+')'
+                        pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(1,1)), label=linelab)
+
+                    if len(fpsi) > 0: 
+                        xx = [np.min(xxvals[fpsi]),np.max(xxvals[fpsi])]
+                        yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
+                        linelab = 'FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi]),3))+')'
+                        pl3 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
+                        if irow == 0:
+                            ax.legend(loc=[0.65,0.10], ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
+                                      fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
+
+                    for iyear in range(nyears):
+                        ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                        if irow == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center', fontsize=fsz80)
+
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                    cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                    cax.minorticks_on()
+                    if clabs[irow] == 'Moon Phase': cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                    cax.tick_params(axis='both',which='both',direction='out',bottom=False,top=False,left=False,right=True,pad=10,labelsize=fsz80)
+                    cax.tick_params(axis='both',which='major',length=axmajlen)
+                    cax.tick_params(axis='both',which='minor',length=axminlen)
+                    cax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
+                    ax.text(1.065, 0.5, clabs[irow],ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+                fig.subplots_adjust(left=0.052,right=0.951,bottom=0.072,top=0.96,hspace=0.08,wspace=0.00)
+                plt.savefig(qplotfile)
+                plt.close('all')
+
+            ###########################################################################################
+            # quickredSNR2.png
+            qplotfile = specdir5 + 'monitor/' + instrument + '/quickredSNR2.png'
+            qfile = specdir5 + 'quickred/' + load.telescope + '/apQ-' + load.telescope + '.fits'
+            if ((os.path.exists(qplotfile) == False) | (clobber == True)) & (os.path.exists(qfile)):
+                print("----> monitor: Making " + os.path.basename(qplotfile))
+
+                qdata0 = fits.getdata(qfile)
+                g, = np.where((qdata0['SNR_FID_1'] > 0) & 
+                              (qdata0['NREAD'] > 40)  & 
+                              (qdata0['NREAD'] < 50) & 
+                              #(qdata0['N_10pt0_11pt5'] > 10) & 
+                              (qdata0['SEEING'] > 0))
+                qdata = qdata0[g]
+                x = qdata['mjd']
+                t = Time(x, format='mjd')
+                xxvals = t.jd - 2.4e6
+                yvals = qdata['SNR_FID_1']/np.sqrt(qdata['NREAD']-2)
+                c1 = qdata['SEEING']
+                c2 = qdata['MOONPHASE']
+                c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
+                clabs = np.array(['Seeing','Moon Phase','log(S/N) $H$ Coef[0]'])
+                nrows = 2
+
+                ymin = 0
+                ymax = 10
+                yspan = ymax-ymin
+
+                fig = plt.figure(figsize=(37,18))
+
+                for irow in range(nrows):
+                    cvals = c1
+                    if irow == 1: cvals = c2
+                    #if irow == 2: cvals = c3
+                    ax = plt.subplot2grid((nrows,1), (irow,0))
+                    ax.set_xlim(xmin, xmax)
+                    ax.set_ylim(ymin, ymax)
+                    ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                    ax.minorticks_on()
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
+                    ax.tick_params(axis='both',which='major',length=axmajlen)
+                    ax.tick_params(axis='both',which='minor',length=axminlen)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
+                    if irow == nrows-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
+                    if irow == 0: ax.text(-0.035, 0.0, r'Quickred S/N / $\sqrt{\rm nreads-2}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                    if irow < nrows-1: ax.axes.xaxis.set_ticklabels([])
+                    #ax.axvline(x=59146, color='teal', linewidth=2)
+                    #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                    #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                    if irow == 0:
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
+                    else:
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
+
+                    plate, = np.where(xxvals < startFPS)
+                    plate1 = plate
+                    fpsi, = np.where(xxvals > startFPS)
+                    if load.telescope == 'lco25m':
+                        plate, = np.where(xxvals < 59000)
+                        plate1, = np.where((xxvals > 59000) & (xxvals < 59500))
+
+                    xx = [np.min(xxvals[plate]),np.max(xxvals[plate])]
+                    yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
+                    linelab = 'plate median ('+str("%.3f" % round(np.nanmedian(yvals[plate]),3))+')'
+                    pl1 = ax.plot(xx, yy, c='k', linewidth=4, label=linelab)
+                    if load.telescope == 'lco25m':
+                        xx = [np.min(xxvals[plate1]),np.max(xxvals[plate1])]
+                        yy = [np.nanmedian(yvals[plate1]), np.nanmedian(yvals[plate1])]
+                        linelab = 'plate-V median ('+str("%.3f" % round(np.nanmedian(yvals[plate1]),3))+')'
+                        pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(1,1)), label=linelab)
+
+                    if len(fpsi) > 0: 
+                        xx = [np.min(xxvals[fpsi]),np.max(xxvals[fpsi])]
+                        yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
+                        linelab = 'FPS median ('+str("%.3f" % round(np.nanmedian(yvals[fpsi]),3))+')'
+                        pl3 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
+                        if irow == 0:
+                            ax.legend(loc=[0.65,0.10], ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
+                                      fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
+
+                    for iyear in range(nyears):
+                        ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                        if irow == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center', fontsize=fsz80)
+
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                    cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                    cax.minorticks_on()
+                    if clabs[irow] == 'Moon Phase': cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                    cax.tick_params(axis='both',which='both',direction='out',bottom=False,top=False,left=False,right=True,pad=10,labelsize=fsz80)
+                    cax.tick_params(axis='both',which='major',length=axmajlen)
+                    cax.tick_params(axis='both',which='minor',length=axminlen)
+                    cax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
+                    ax.text(1.065, 0.5, clabs[irow],ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+                fig.subplots_adjust(left=0.052,right=0.951,bottom=0.072,top=0.96,hspace=0.08,wspace=0.00)
+                plt.savefig(qplotfile)
+                plt.close('all')
+
+            ###########################################################################################
+            # quickredSNR4.png
+            qplotfile = specdir5 + 'monitor/' + instrument + '/quickredSNR4.png'
+            qfile = specdir5 + 'quickred/' + load.telescope + '/apQ-' + load.telescope + '.fits'
+            if ((os.path.exists(qplotfile) == False) | (clobber == True)) & (os.path.exists(qfile)):
+                print("----> monitor: Making " + os.path.basename(qplotfile))
+
+                qdata0 = fits.getdata(qfile)
+                g, = np.where((qdata0['SNR_FID_1'] > 0) & 
+                              (qdata0['NREAD'] > 40)  & 
+                              (qdata0['NREAD'] < 50) & 
+                              (qdata0['N_10pt0_11pt5'] > 10) & 
+                              (qdata0['SEEING'] > 0) & 
+                              (qdata0['SECZ'] > 0))
+                qdata = qdata0[g]
+                xcols = np.array(['SEEING','MOONPHASE'])
+                yvals0 = qdata['SNR_FID_1']/np.sqrt(qdata['NREAD']-2)
+                ncols = 2
+
+                qcolors = np.array(['k','dodgerblue','crimson'])
+                labels = np.array(['Plate','Plate-V','FPI'])
+
+                g1, = np.where(qdata['MJD'] < 59000)
+                g2, = np.where((qdata['MJD'] > 59000) & (qdata['MJD'] < 59500))
+                g3, = np.where(qdata['MJD'] > 59500)
+
+                fig = plt.figure(figsize=(37,18))
+
+                for icol in range(ncols):
+                    ax = plt.subplot2grid((1,ncols), (0,icol))
+                    ax.set_xlim(0.3,2)
+                    ax.set_ylim(0, 10)
+                    #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                    ax.minorticks_on()
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
+                    ax.tick_params(axis='both',which='major',length=axmajlen)
+                    ax.tick_params(axis='both',which='minor',length=axminlen)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
+                    #if icol == 0: ax.set_xlabel(r'Seeing', labelpad=12)
+                    #if icol == 1: ax.set_xlabel(r'Moon Phase', labelpad=12)
+                    ax.set_xlabel(r'Seeing APOGEE', labelpad=12)
+                    if icol == 0: ax.text(-0.045, 0.5, r'Quickred S/N / $\sqrt{\rm nreads-2}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                    if icol == 1: ax.axes.yaxis.set_ticklabels([])
+                    #ax.axvline(x=59146, color='teal', linewidth=2)
+                    #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                    #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                    for j in range(3):
+                        xxvals = qdata['SEEING'][g1]/(qdata['SECZ'][g1]**0.6)
+                        yvals = yvals0[g1]
+                        if j == 1: 
+                            xxvals = qdata['SEEING'][g2]/(qdata['SECZ'][g2]**0.6)
+                            yvals = yvals0[g2]
+                        if j == 2: 
+                            xxvals = qdata['SEEING'][g3]/(qdata['SECZ'][g3]**0.6)
+                            yvals = yvals0[g3]
+                        if icol == 0:
+                            popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
+                            yfit = linefit(xxvals, *popt)
+                            ax.plot(xxvals, yfit, c=qcolors[j], linewidth=3)
+                        if icol == 1 and (j == 1 or j == 2): xxvals -= np.nanmedian(xxvals)-np.nanmedian(qdata[xcols[0]][g1])
+                        if icol == 1:
+                            popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
+                            yfit = linefit(xxvals, *popt)
+                            ax.plot(xxvals, yfit, c=qcolors[j], linewidth=3)
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*10, c=qcolors[j], label=labels[j])
+
+                    if icol == 0:
+                        ax.legend(loc='upper right', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=4, columnspacing=0.3,
+                                  fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
+
+
+                fig.subplots_adjust(left=0.05,right=0.985,bottom=0.072,top=0.985,hspace=0.08,wspace=0.05)
+                plt.savefig(qplotfile)
+                plt.close('all')
+
+            ###########################################################################################
+            # quickredSNR5.png
+            qplotfile = specdir5 + 'monitor/' + instrument + '/quickredSNR5.png'
+            qfile = specdir5 + 'quickred/' + load.telescope + '/apQ-' + load.telescope + '.fits'
+            if ((os.path.exists(qplotfile) == False) | (clobber == True)) & (os.path.exists(qfile)):
+                print("----> monitor: Making " + os.path.basename(qplotfile))
+
+                qdata0 = fits.getdata(qfile)
+                g, = np.where((qdata0['SNR_FID_1'] > 0) & 
+                              (qdata0['NREAD'] > 40)  & 
+                              (qdata0['NREAD'] < 50) & 
+                              (qdata0['N_10pt0_11pt5'] > 10) & 
+                              (qdata0['SEEING_BAADE'] > 0) & 
+                              (qdata0['SECZ_BAADE'] > 0) & 
+                              (qdata0['SEEING_CLAY'] > 0) & 
+                              (qdata0['SECZ_CLAY'] > 0))
+                qdata = qdata0[g]
+
+                xcols = np.array(['SEEING_BAADE','MOONPHASE'])
+                yvals0 = qdata['SNR_FID_1']/np.sqrt(qdata['NREAD']-2)
+                ncols = 2
+
+                qcolors = np.array(['k','dodgerblue','crimson'])
+                labels = np.array(['Plate','Plate-V','FPI'])
+
+                g1, = np.where(qdata['MJD'] < 59000)
+                g2, = np.where((qdata['MJD'] > 59000) & (qdata['MJD'] < 59500))
+                g3, = np.where(qdata['MJD'] > 59500)
+
+                fig = plt.figure(figsize=(37,18))
+
+                for icol in range(ncols):
+                    ax = plt.subplot2grid((1,ncols), (0,icol))
+                    ax.set_xlim(0.3,2)
+                    ax.set_ylim(0, 10)
+                    #ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                    ax.minorticks_on()
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
+                    ax.tick_params(axis='both',which='major',length=axmajlen)
+                    ax.tick_params(axis='both',which='minor',length=axminlen)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
+                    #if icol == 0: ax.set_xlabel(r'Seeing', labelpad=12)
+                    #if icol == 1: ax.set_xlabel(r'Moon Phase', labelpad=12)
+                    ax.set_xlabel(r'Seeing Magellan/Baade', labelpad=12)
+                    if icol == 0: ax.text(-0.045, 0.5, r'Quickred S/N / $\sqrt{\rm nreads-2}$', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                    if icol == 1: ax.axes.yaxis.set_ticklabels([])
+                    #ax.axvline(x=59146, color='teal', linewidth=2)
+                    #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                    #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                    for j in range(3):
+                        xxvals = np.nanmean([qdata['SEEING_BAADE'][g1]/(qdata['SECZ_BAADE'][g1]**0.6), qdata['SEEING_CLAY'][g1]/(qdata['SECZ_CLAY'][g1]**0.6)], axis=0)
+                        yvals = yvals0[g1]
+                        if j == 1: 
+                            xxvals = np.nanmean([qdata['SEEING_BAADE'][g2]/(qdata['SECZ_BAADE'][g2]**0.6), qdata['SEEING_CLAY'][g2]/(qdata['SECZ_CLAY'][g2]**0.6)], axis=0)
+                            yvals = yvals0[g2]
+                        if j == 2: 
+                            xxvals = np.nanmean([qdata['SEEING_BAADE'][g3]/(qdata['SECZ_BAADE'][g3]**0.6), qdata['SEEING_CLAY'][g3]/(qdata['SECZ_CLAY'][g3]**0.6)], axis=0)
+                            yvals = yvals0[g3]
+                        if icol == 0:
+                            popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
+                            yfit = linefit(xxvals, *popt)
+                            ax.plot(xxvals, yfit, c=qcolors[j], linewidth=3)
+                        if icol == 1 and (j == 1 or j == 2): xxvals -= np.nanmedian(xxvals)-np.nanmedian(qdata[xcols[0]][g1])
+                        if icol == 1:
+                            popt,pcov = curve_fit(linefit, xxvals, yvals)#, bounds=bounds)#, sigma=ey[mask])
+                            yfit = linefit(xxvals, *popt)
+                            ax.plot(xxvals, yfit, c=qcolors[j], linewidth=3)
+                        sc1 = ax.scatter(xxvals, yvals, marker='o', s=markersz*10, c=qcolors[j], label=labels[j])
+
+                    if icol == 0:
+                        ax.legend(loc='upper right', ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=4, columnspacing=0.3,
+                                  fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
+
+
+                fig.subplots_adjust(left=0.05,right=0.985,bottom=0.072,top=0.985,hspace=0.08,wspace=0.05)
+                plt.savefig(qplotfile)
+                plt.close('all')
+        return
+
         ###########################################################################################
         # snhistory.png
         plotfile = specdir5 + 'monitor/' + instrument + '/snhistory.png'
@@ -2525,6 +2998,111 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             plt.savefig(plotfile)
             plt.close('all')
 
+
+
+            ###########################################################################################
+            # pipelineSNR.png
+            plotfile = specdir5 + 'monitor/' + instrument + '/pipelineSNR.png'
+            if (os.path.exists(plotfile) == False) | (clobber == True):
+                print("----> monitor: Making " + os.path.basename(plotfile))
+
+                plateobs, = np.where(allsnr['MJD'] < startFPS)
+                allsnrplate = allsnr[plateobs]
+                part1, = np.where(allsnr['MJD'] > startFPS)
+                fpsfield = np.array(allsnr['FIELD'][part1]).astype(int)
+                if instrument == 'apogee-n':
+                    part2, = np.where((fpsfield > 100000) & (fpsfield < 110000))
+                    allsnrfps = allsnr[part1][part2]
+                else: allsnrfps = allsnr[part1]
+                allsnrg = vstack([Table(allsnrplate), Table(allsnrfps)])
+                g, = np.where(np.nanmedian(allsnrg['NSNBINS'][:,snbins[0]:snbins[1]], axis=1) > 5)
+                allsnrg = allsnrg[g]
+
+                g, = np.where((allsnrg['SN'][:,1] > 0) & 
+                              (allsnrg['NREADS'] > 40)  & 
+                              (allsnrg['NREADS'] < 50) & 
+                              #(qdata0['N_10pt0_11pt5'] > 10) & 
+                              (allsnrg['SEEING'] > 0))
+
+                allsnrg = allsnrg[g]
+                xvals = allsnrg['JD']
+                yvals = allsnrg['SN'][:,1]
+                c1 = allsnrg['SEEING']
+                c2 = allsnrg['MOONPHASE']
+                #c3 = qdata['LOGSNR_HMAG_COEF_ALL'][:,0]
+                clabs = np.array(['Seeing','Moon Phase'])#,'log(S/N) $H$ Coef[0]'])
+                nrows = 2
+
+                ymin = 0
+                ymax = 65
+                yspan = ymax-ymin
+
+                fig = plt.figure(figsize=(37,18))
+
+                for irow in range(nrows):
+                    cvals = c1
+                    if irow == 1: cvals = c2
+                    #if irow == 2: cvals = c3
+                    ax = plt.subplot2grid((nrows,1), (irow,0))
+                    ax.set_xlim(xmin, xmax)
+                    ax.set_ylim(ymin, ymax)
+                    ax.xaxis.set_major_locator(ticker.MultipleLocator(500))
+                    ax.minorticks_on()
+                    ax.tick_params(axis='both',which='both',direction='in',bottom=True,top=True,left=True,right=True,pad=10,labelsize=fsz80)
+                    ax.tick_params(axis='both',which='major',length=axmajlen)
+                    ax.tick_params(axis='both',which='minor',length=axminlen)
+                    ax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: ax.spines[axis].set_linewidth(axthick)
+                    if irow == nrows-1: ax.set_xlabel(r'JD - 2,400,000', labelpad=12)
+                    if irow == 0: ax.text(-0.035, 0.0, r'Full pipeline S/N scaled for $H$=12.2', transform=ax.transAxes, rotation=90, ha='right', va='center')
+                    if irow < nrows-1: ax.axes.xaxis.set_ticklabels([])
+                    #ax.axvline(x=59146, color='teal', linewidth=2)
+                    #ax.axvline(x=startFPS, color='teal', linewidth=2)
+                    #ax.text(0.02, 0.95, chip.capitalize() + ' Chip', transform=ax.transAxes, fontsize=fsz80, ha='left', va='top', color=chip, bbox=bboxpar)
+
+                    if irow == 0:
+                        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow', vmin=0.5, vmax=2.0)
+                    else:
+                        sc1 = ax.scatter(xvals, yvals, marker='o', s=markersz*2, c=cvals, cmap='rainbow')
+
+                    plate, = np.where(xvals < startFPS)
+                    fpsi, = np.where(xvals > startFPS)
+
+                    xx = [np.min(xvals[plate]),np.max(xvals[plate])]
+                    yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
+                    linelab = 'plate median ('+str(int(round(np.nanmedian(yvals[plate]))))+')'
+                    pl1 = ax.plot(xx, yy, c='k', linewidth=4, label=linelab)
+
+                    if len(fpsi) > 0: 
+                        xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
+                        yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
+                        linelab = 'FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')'
+                        pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label=linelab)
+                        if irow == 0:
+                            ax.legend(loc=[0.65,0.10], ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
+                                      fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
+
+                    for iyear in range(nyears):
+                        ax.axvline(x=yearjd[iyear], color='k', linestyle='dashed', alpha=alf)
+                        if irow == 0: ax.text(yearjd[iyear], ymax+yspan*0.03, cyears[iyear], ha='center', fontsize=fsz80)
+
+                    ax_divider = make_axes_locatable(ax)
+                    cax = ax_divider.append_axes("right", size="2%", pad="1%")
+                    cb1 = colorbar(sc1, cax=cax, orientation="vertical")
+                    cax.minorticks_on()
+                    if clabs[irow] == 'Moon Phase': cax.yaxis.set_major_locator(ticker.MultipleLocator(0.2))
+                    cax.tick_params(axis='both',which='both',direction='out',bottom=False,top=False,left=False,right=True,pad=10,labelsize=fsz80)
+                    cax.tick_params(axis='both',which='major',length=axmajlen)
+                    cax.tick_params(axis='both',which='minor',length=axminlen)
+                    cax.tick_params(axis='both',which='both',width=axthick)
+                    for axis in ['top','bottom','left','right']: cax.spines[axis].set_linewidth(axthick)
+                    ax.text(1.065, 0.5, clabs[irow],ha='left', va='center', rotation=-90, transform=ax.transAxes)
+
+                fig.subplots_adjust(left=0.052,right=0.951,bottom=0.072,top=0.96,hspace=0.08,wspace=0.00)
+                plt.savefig(plotfile)
+                plt.close('all')
+
+
     print("----> monitor done")
 
 ''' GETQACALSTRUCT: put SDSS-IV and SDSS-V QAcal files in structure '''
@@ -2854,6 +3432,10 @@ def getSnrStruct(instrument=None, plsum=None):
             jj+=1
 
     return outstr
+
+###########################################################################
+def linefit(x, slope, yint):
+    return x*slope + yint
 
 #            mjdmean = np.zeros((nmjd, nchips))
 #           mjdsig  = np.zeros((nmjd, nchips))

@@ -38,6 +38,7 @@ from scipy.ndimage import median_filter,generic_filter
 from apogee_drp.utils import apzip,plan,apload,yanny,plugmap,platedata,bitmask,info,slurm as slrm
 import slurm
 from slurm import queue as pbsqueue
+import pandas as pd
 #from apogee_drp.utils import yanny, apload
 #from sdss_access.path import path
 #from . import config  # get loaded config values 
@@ -72,6 +73,7 @@ The GETPSFLIST procedure is no longer need.
 MAKESUMFILES concatenates the individual apQ files into master apQ files
 """
 
+expdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/exposures/'
 detPlateN = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/detector/apDetector-b-13390003.fits'
 detPlateS = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/detector/asDetector-b-22810006.fits'
 bpmPlateN = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/bpm/apBPM-b-33770001.fits'
@@ -208,61 +210,111 @@ def makesumfile(telescope='lco25m',apred='daily'):
         del d1
     outstr.write(outfile, overwrite=True)
 
-def makesumfile2(telescope='lco25m',apred='daily'):
+def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
+
     load = apload.ApLoad(apred=apred, telescope=telescope)
     apodir = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'
     qdir = apodir+'quickred/'+telescope+'/'
+    outfile = qdir+'apQ-'+telescope+'_new.fits'
+
     print('Finding apQ files...')
     files = glob(qdir+'*/*fits')
     files.sort()
     files = np.array(files)
     nfiles = len(files)
+    if ndo != None: nfiles = ndo
     nfilesS = str(nfiles)
     print('Found '+str(nfiles)+' files')
 
+    # Find the psf list directory
+    codedir = os.path.dirname(os.path.abspath(__file__))
+
+    # Get Magellan telescope seeing data
+    print('Reading Magellan telescope seeing data')
+    magfile = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/seeing/magellan_2014.csv'
+    magdata = pd.read_csv(magfile)
+    magT = Time(np.array(magdata['tm']).astype(str), format='fits')
+    magMJD = magT.mjd
+    magSeeing = np.array(magdata['fw'])
+    g, = np.where(np.array(magdata['un']) == 0)
+    magMJD1 = magMJD[g]
+    magSeeing1 = magSeeing[g]
+    magAz1 = np.array(magdata['az'])[g]
+    magAlt1 = np.array(magdata['el'])[g]
+    magSecz1 = 1/(np.cos((90-magAlt1)*(np.pi/180)))
+    g, = np.where(np.array(magdata['un']) == 1)
+    magMJD2 = magMJD[g]
+    magSeeing2 = magSeeing[g]
+    magAz2 = np.array(magdata['az'])[g]
+    magAlt2 = np.array(magdata['el'])[g]
+    magSecz2 = 1/(np.cos((90-magAlt2)*(np.pi/180)))
+
+    dimfile = os.path.dirname(os.path.dirname(os.path.dirname(codedir))) + '/data/seeing/dimm_2014.csv'
+    dimdata = pd.read_csv(dimfile)
+    dimT = Time(np.array(dimdata['tm']).astype(str), format='fits')
+    dimMJD = dimT.mjd
+    dimSeeing = np.array(dimdata['se'])
+
+    # Get DIMM seeing data
+    print('Reading DIMM seeing data')
+
     exp = fits.getdata(apodir+'monitor/'+load.instrument+'Sci.fits')
 
-    outfile = qdir+'apQ-'+telescope+'_new.fits'
-    dt = np.dtype([('FRAMENUM',             np.int32),
-                   ('MJD',                  np.int32),
-                   ('PLATE',                np.int32),
-                   ('EXPTIME',              np.int32),
-                   ('NREAD',                np.int16),
-                   ('HMAG_FID',             np.float64),
-                   ('SNR_FID',              np.float64),
-                   ('SNR_FID_SCALE',        np.float64),
-                   ('LOGSNR_HMAG_COEF_ALL', np.float64,2),
-                   ('LOGSNR_HMAG_COEF',     np.float64,2),
-                   ('SNR_PREDICT',          np.float64),
-                   ('ZERO',                 np.float64),
-                   ('ZERONORM',             np.float64),
-                   ('EXPTYPE',              np.str),
-                   ('DITHERPOS',            np.float64),
-                   ('N_10pt0_11pt5',        np.int16),
-                   ('FIBID',                np.int16,300),
-                   ('FIBINDEX',             np.int16,300),
-                   ('FIBRA',                np.float64,300),
-                   ('FIBDEC',               np.float64,300),
-                   ('FIBTYPE',              np.int16,300), # 1 if science, 0 if sky
-                   ('FIBFLUX',              np.float64,300),
-                   ('FIBERR',               np.float64,300),
-                   ('FIBSNR',               np.float64,300),
-                   ('SEEING',               np.float64),
-                   ('SNRATIO',              np.float64),
-                   ('MOONDIST',             np.float64),
-                   ('MOONPHASE',            np.float64),
-                   ('SECZ',                 np.float64),
-                   ('ZERO1',                np.float64),
-                   ('ZERORMS1',             np.float64),
-                   ('ZERONORM1',            np.float64),
-                   ('SKY',                  np.float64)])
+    dt = np.dtype([('FRAMENUM',               np.int32),
+                   ('MJD',                    np.int32),
+                   ('PLATE',                  np.int32),
+                   ('EXPTIME',                np.int32),
+                   ('NREAD',                  np.int16),
+                   ('HMAG_FID',               np.float64),
+                   ('SNR_FID',                np.float64),
+                   ('SNR_FID_SCALE',          np.float64),
+                   ('LOGSNR_HMAG_COEF_ALL',   np.float64,2),
+                   ('LOGSNR_HMAG_COEF',       np.float64,2),
+                   ('SNR_PREDICT',            np.float64),
+                   ('SNR_FID_1',              np.float64),
+                   ('SNR_FID_SCALE_1',        np.float64),
+                   ('LOGSNR_HMAG_COEF_1',     np.float64,2),
+                   ('ZERO',                   np.float64),
+                   ('ZERONORM',               np.float64),
+                   ('EXPTYPE',                np.str),
+                   ('DITHERPOS',              np.float64),
+                   ('N_10pt0_11pt5',          np.int16),
+                   ('FIBID',                  np.int16,300),
+                   ('FIBINDEX',               np.int16,300),
+                   ('FIBHMAG',                np.float64,300),
+                   ('FIBRA',                  np.float64,300),
+                   ('FIBDEC',                 np.float64,300),
+                   ('FIBTYPE',                np.int16,300), # 1 if science, 0 if sky
+                   ('FIBFLUX',                np.float64,300),
+                   ('FIBERR',                 np.float64,300),
+                   ('FIBSNR',                 np.float64,300),
+                   ('SEEING',                 np.float64),
+                   ('SNRATIO',                np.float64),
+                   ('MOONDIST',               np.float64),
+                   ('MOONPHASE',              np.float64),
+                   ('SECZ',                   np.float64),
+                   ('ZERO1',                  np.float64),
+                   ('ZERORMS1',               np.float64),
+                   ('ZERONORM1',              np.float64),
+                   ('SKY',                    np.float64),
+                   ('SEEING_BAADE',           np.float64),
+                   ('SECZ_BAADE',             np.float64),
+                   ('AZ_BAADE',               np.float64),
+                   ('SEEING_CLAY',            np.float64),
+                   ('SECZ_CLAY',              np.float64),
+                   ('AZ_CLAY',                np.float64),
+                   ('SEEING_DIMM',            np.float64),
+                   ('SECZ_DIMM',              np.float64),
+                   ('AZ_DIMM',                np.float64)])
+
     outstr = np.zeros(nfiles, dtype=dt)
 
     for i in range(nfiles):
+        #if i % 10 != 0: continue
         print('('+str(i+1).zfill(5)+'/'+nfilesS+'): '+os.path.basename(files[i]))
         d1 = fits.getdata(files[i])
         d2 = fits.getdata(files[i],2)
-        mjd = getmjd(d1['framenum'])
+        mjdS = str(getmjd(d1['framenum'][0]))
         outstr['FRAMENUM'][i] = d1['framenum'][0]
         outstr['NREAD'][i] = d1['read'][0]
         outstr['HMAG_FID'][i] = d1['hmag_fid'][0]
@@ -277,23 +329,26 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         outstr['DITHERPOS'][i] = d1['ditherpos'][0]
         g, = np.where((d2['hmag'] >= 10.0) & (d2['hmag'] <= 11.5))
         outstr['N_10pt0_11pt5'][i] = len(g)
-        g, = np.where(d1['framenum'] == exp['im'])
-        if len(g) > 0:
-            t = Time(exp['DATEOBS'][g][0], format='fits')
-            outstr['MJD'][i] = t.mjd
-            outstr['PLATE'][i] = exp['PLATE'][g][0]
-            outstr['EXPTIME'][i] = exp['EXPTIME'][g][0]
-            outstr['SEEING'][i] = exp['SEEING'][g][0]
-            outstr['SNRATIO'][i] = exp['SNRATIO'][g][0]
-            outstr['MOONDIST'][i] = exp['MOONDIST'][g][0]
-            outstr['MOONPHASE'][i] = exp['MOONPHASE'][g][0]
-            outstr['SECZ'][i] = exp['SECZ'][g][0]
-            outstr['ZERO1'][i] = exp['ZERO'][g][0]
-            outstr['ZERORMS1'][i] = exp['ZERORMS'][g][0]
-            outstr['ZERONORM1'][i] = exp['ZERONORM'][g][0]
-            outstr['SKY'][i] = exp['SKY'][g][0][1]
+        if outstr['N_10pt0_11pt5'][i] == 0: print('  zero stars with 10.0 < H < 11.5')
+        g1, = np.where(d1['framenum'] == exp['im'])
+        if len(g1) > 0:
+            apT = Time(exp['DATEOBS'][g1][0], format='fits')
+            outstr['MJD'][i] = apT.mjd
+            outstr['PLATE'][i] = exp['PLATE'][g1][0]
+            outstr['EXPTIME'][i] = exp['EXPTIME'][g1][0]
+            outstr['SEEING'][i] = exp['SEEING'][g1][0]
+            outstr['SNRATIO'][i] = exp['SNRATIO'][g1][0]
+            outstr['MOONDIST'][i] = exp['MOONDIST'][g1][0]
+            outstr['MOONPHASE'][i] = exp['MOONPHASE'][g1][0]
+            outstr['SECZ'][i] = exp['SECZ'][g1][0]
+            outstr['ZERO1'][i] = exp['ZERO'][g1][0]
+            outstr['ZERORMS1'][i] = exp['ZERORMS'][g1][0]
+            outstr['ZERONORM1'][i] = exp['ZERONORM'][g1][0]
+            outstr['SKY'][i] = exp['SKY'][g1][0][1]
+            
         outstr['FIBID'][i] = d2['fiberid']
         outstr['FIBINDEX'][i] = d2['fiberid']
+        outstr['FIBHMAG'][i] = d2['hmag']
         outstr['FIBRA'][i] = d2['fiberid']
         outstr['FIBDEC'][i] = d2['fiberid']
         g, = np.where(d2['objtype'] != 'SKY')
@@ -301,8 +356,55 @@ def makesumfile2(telescope='lco25m',apred='daily'):
         outstr['FIBFLUX'][i] = d2['flux']
         outstr['FIBERR'][i] = d2['err']
         outstr['FIBSNR'][i] = d2['snr']
+        g, = np.where((d2['objtype'] != 'SKY') & (d2['hmag']>8.0) & (d2['HMAG'] < 11.5) & (d2['snr'] > 0))
+        if len(g) > 20:
+            print('  '+str(len(g))+' stars with H between 8 and 11.5')
+            coefall = np.polyfit(d2['hmag'][g], np.log10(d2['snr'][g]), 1)
+            snr_fid = 10**np.polyval(coefall,11.0)
+            scale = np.sqrt(10**(0.4*(d2['hmag'][g] - 11.0)))
+            snr_fid_scale = np.median(d2['snr'][g] * scale)
+            outstr['SNR_FID_1'][i] = snr_fid
+            outstr['SNR_FID_SCALE_1'][i] = snr_fid_scale
+            outstr['LOGSNR_HMAG_COEF_1'][i] = coefall
+        if len(g1) > 0:
+            tdif = np.abs(apT.mjd - magMJD1)
+            g, = np.where(tdif == np.nanmin(tdif))
+            tdifmin = tdif[g][0]
+            if tdifmin*24*60 < 15:
+                print('  adding Magellan-Baade seeing data ('+str("%.5f" % round(magMJD1[g][0],5))+'-'+str("%.5f" % round(apT.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
+                outstr['SEEING_BAADE'][i] = magSeeing1[g][0]
+                outstr['AZ_BAADE'][i] = magAz1[g][0]
+                outstr['SECZ_BAADE'][i] = magSecz1[g][0]
+            tdif = np.abs(apT.mjd - magMJD2)
+            g, = np.where(tdif == np.nanmin(tdif))
+            tdifmin = tdif[g][0]
+            if tdifmin*24*60 < 15:
+                print('  adding Magellan-Clay seeing data ('+str("%.5f" % round(magMJD2[g][0],5))+'-'+str("%.5f" % round(apT.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
+                outstr['SEEING_CLAY'][i] = magSeeing2[g][0]
+                outstr['AZ_CLAY'][i] = magAz2[g][0]
+                outstr['SECZ_CLAY'][i] = magSecz2[g][0]
+            tdif = np.abs(apT.mjd - dimMJD)
+            g, = np.where(tdif == np.nanmin(tdif))
+            tdifmin = tdif[g][0]
+            #print('  DIM tdif = '+str(tdifmin*24*60))
+            if tdifmin*24*60 < 15:
+                print('  adding DIMM seeing data ('+str("%.5f" % round(dimMJD[g][0],5))+'-'+str("%.5f" % round(apT.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
+                outstr['SEEING_DIMM'][i] = dimSeeing[g][0]
+        # Add in secz if missing
+        if outstr['SECZ'][i] == 0:
+            onedfile = load.filename('1D', num=outstr['FRAMENUM'][i], chips=True).replace('1D-','1D-b-')
+            if os.path.exists(onedfile) == False: onedfile = expdir4+load.instrument+'/'+mjdS+'/as1D-b-'+str(outstr['FRAMENUM'][i])+'.fits'
+            if os.path.exists(onedfile) == False: continue
+            hdr=fits.getheader(onedfile)
+            try: 
+                outstr['SECZ'][i] = hdr['ARMASS']
+                print('  added in SECZ from as1D header')
+                del onedfile
+                del hdr
+            except: pass
         del d1
         del d2
+    print('made '+outfile)
     Table(outstr).write(outfile, overwrite=True)
 
 def nanmedfilt(x,size,mode='reflect'):
