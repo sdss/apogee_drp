@@ -2,7 +2,7 @@
 module purge
 module load mwm/daily
 set running=`ps -C runapogeelco --no-headers | wc -l`
-if ( $running > 0 ) then
+if ( $running > 1 ) then
   echo "One process of runapogeelco already running.  Will try again when it is finished."
   exit
 endif
