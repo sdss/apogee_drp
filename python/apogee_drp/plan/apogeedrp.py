@@ -2892,13 +2892,14 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
 
     if logger is None:
         logger = dln.basiclogger()
-    
+        
     # Get plan files for these MJDs
     planfiles = getplanfiles(load,mjds,logger=logger)
     nplans = len(planfiles)
     # Only want apPlan files
     if nplans>0:
-        planfiles = [p for p in planfiles if os.path.basename(p).startswith(load.prefix+'Plan')]        
+        planfiles = [p for p in planfiles if os.path.basename(p).startswith(load.prefix+'Plan')]
+        nplans = len(planfiles)
         #if load.instrument=='apogee-n':
         #    planfiles = [p for p in planfiles if os.path.basename(p).startswith('apPlan')]
         #else:
@@ -2916,9 +2917,9 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     logger.info('Slurm settings: '+str(slurmpars1))
     queue = pbsqueue(verbose=True)
     queue.create(label='apqa', **slurmpars1)
-    plates = np.empty(nplans).astype(str)
-    mjds = np.empty(nplans).astype(str)
-    fields = np.empty(nplans).astype(str)
+    plates = np.zeros(nplans).astype(str)
+    mjds = np.zeros(nplans).astype(str)
+    fields = np.zeros(nplans).astype(str)
     for i,pf in enumerate(planfiles):
         logger.info('planfile %d : %s' % (i+1,pf))
         fdir = os.path.dirname(pf)
@@ -3206,7 +3207,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
 
     # Defaults for check tables
     chkmaster,chk3d,chkcal,planfiles,chkexp,chkvisit,chkrv = None,None,None,None,None,None,None
-
+    
     # 1) Setup the directory structure
     #----------------------------------
     if 'setup' in steps:
@@ -3308,7 +3309,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('=============================================')
         rootLogger.info('')
         #rununified(load,mjds,**kws)
-
+        
     # 10) Run QA script
     #------------------
     if 'qa' in steps:
