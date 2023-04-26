@@ -1391,7 +1391,7 @@ def measuretrace(frame,traceim,xcen,nbin,avgtype='median',nrepeat=12,fibers=None
     tab['ycent'] = np.nan
     tab['yoffset'] = np.nan    
     tab['x'] = xcen
-    tab['fiber'] = np.arange(300)
+    tab['fiber'] = np.arange(ntraces)
     
     # Get the average/median/sum profile flux
     xlo = np.maximum(xcen-nbin,0)
@@ -1566,7 +1566,7 @@ def getoffset(frame,traceframe,traceim):
     elif exptype == 'object' or exptype == 'skyflat':
         # Get flux values
         tab0 = measuretrace(frame,traceim,1024,50,avgtype='median',
-                            fibers=np.arange(300),fitmethod=fitmethod)
+                            fibers=np.arange(nfibers),fitmethod=fitmethod)
         # Check the fluxes
         gd, = np.where(tab0['snr'] > 50)
         # Essentially no continuume flux, use sky lines
