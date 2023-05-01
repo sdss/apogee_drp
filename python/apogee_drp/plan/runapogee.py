@@ -241,7 +241,6 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     if updatemjdfile is True:
         writeNewMJD(observatory,mjd5,apred=apred)
 
-
     # Set up logging to screen and logfile
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
     rootLogger = logging.getLogger() 
@@ -389,6 +388,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     #rootLogger.info('=============================================')
     #apogeedrp.rununified(load[,mjd5],**kws) 
 
+    
     # 8) Run QA script
     #------------------    
     rootLogger.info('')
