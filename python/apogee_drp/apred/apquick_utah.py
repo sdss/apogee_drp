@@ -171,9 +171,10 @@ def utah(framenum,telescope='lco25m',apred='daily'):
     rawfile = os.path.basename(rawfilepath)
     rawfilefits = rawfile.replace('.apz','.fits')
     mjd = os.path.basename(os.path.dirname(rawfilepath))
-    infile = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+rawfilefits
+    #infile = os.environ.get('APOGEE_REDUX')+'/'+apred+'/'+rawfilefits
+    infile = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/users/u0955897/projects/'+rawfilefits
     # Unzip the file
-    if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir=os.environ.get('APOGEE_REDUX')+'/'+apred+'/')
+    if os.path.exists(infile) == False: apzip.unzip(rawfilepath, fitsdir='/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/users/u0955897/projects/')
     hdulist = fits.open(infile)
     nreads = len(hdulist)-1
     try:
@@ -367,6 +368,7 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
             outstr['SNR_FID_SCALE_1'][i] = snr_fid_scale
             outstr['LOGSNR_HMAG_COEF_1'][i] = coefall
         if len(g1) > 0:
+            # Magellen Baade seeing data
             tdif = np.abs(apT.mjd - magMJD1)
             g, = np.where(tdif == np.nanmin(tdif))
             tdifmin = tdif[g][0]
@@ -375,6 +377,7 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
                 outstr['SEEING_BAADE'][i] = magSeeing1[g][0]
                 outstr['AZ_BAADE'][i] = magAz1[g][0]
                 outstr['SECZ_BAADE'][i] = magSecz1[g][0]
+            # Magellen Clay seeing data
             tdif = np.abs(apT.mjd - magMJD2)
             g, = np.where(tdif == np.nanmin(tdif))
             tdifmin = tdif[g][0]
@@ -383,10 +386,10 @@ def makesumfile2(telescope='lco25m',apred='daily', ndo=None):
                 outstr['SEEING_CLAY'][i] = magSeeing2[g][0]
                 outstr['AZ_CLAY'][i] = magAz2[g][0]
                 outstr['SECZ_CLAY'][i] = magSecz2[g][0]
+            # DIMMy seeing data
             tdif = np.abs(apT.mjd - dimMJD)
             g, = np.where(tdif == np.nanmin(tdif))
             tdifmin = tdif[g][0]
-            #print('  DIM tdif = '+str(tdifmin*24*60))
             if tdifmin*24*60 < 15:
                 print('  adding DIMM seeing data ('+str("%.5f" % round(dimMJD[g][0],5))+'-'+str("%.5f" % round(apT.mjd,5))+' = '+str("%.3f" % round(tdifmin*24*60,3))+' minutes)')
                 outstr['SEEING_DIMM'][i] = dimSeeing[g][0]
@@ -1137,8 +1140,9 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     print('Running APQUICK on '+os.path.basename(filename)+' MJD='+mjd+' all reads ')
 
     fps = False
-    if load.telescope == 'apo25m' and int(mjd) >= 59146: fps = True
-    if load.telescope == 'lco25m' and int(mjd) >= 59809: fps = True
+    imjd = int(mjd)
+    if load.telescope == 'apo25m' and imjd >= 59146: fps = True
+    if load.telescope == 'lco25m' and imjd >= 59809: fps = True
 
     head = fits.getheader(filename)#eframes[0].head.copy()   # header of first read
     nframes = np.int(head['NFRAMES'])
@@ -1197,9 +1201,17 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
         if load.telescope == 'lco25m': psffile = load.filename('PSF', num=plans['psfid:'], chips=True).replace('PSF-','PSF-b-')
     redux_dir = os.environ.get('APOGEE_REDUX')+'/'+load.apred+'/'
     caldir = redux_dir+'cal/'+load.instrument+'/'
-    if load.telescope == 'lco25m': psffile = caldir+'psf/asPSF-b-36680072.fits'
     if load.telescope == 'apo25m': psffile = caldir+'psf/apPSF-b-39540016_300fibers.fits'
     if load.telescope == 'apo25m': bpmfile = caldir+'bpm/apBPM-b-33770001.fits'
+    if load.telescope == 'lco25m':
+        if imjd < 58000: psffile = caldir+'psf/asPSF-b-23500008.fits'
+        if imjd > 58000 and imjd < 58125: psffile = caldir+'psf/asPSF-b-25280053.fits'
+        if imjd > 58125 and imjd < 58520: psffile = caldir+'psf/asPSF-b-27960083.fits'
+        if imjd > 58520 and imjd < 58725: psffile = caldir+'psf/asPSF-b-30660018.fits'
+        if imjd > 58725 and imjd < 59000: psffile = caldir+'psf/asPSF-b-32930007.fits'
+        if imjd > 59000 and imjd < 59500: psffile = caldir+'psf/asPSF-b-36380009.fits'
+        if imjd > 59500: psffile = caldir+'psf/asPSF-b-43880003.fits'
+        #psffile = caldir+'psf/asPSF-b-36680072.fits'
 
     if os.path.exists(plugfile1) == False:
         print(plugfile1+' NOT FOUND. Stopping.')
