@@ -1205,12 +1205,12 @@ def runquick(filename,hdulist=None,framenum=None,mjd=None,load=None,psfnums=None
     if load.telescope == 'apo25m': bpmfile = caldir+'bpm/apBPM-b-33770001.fits'
     if load.telescope == 'lco25m':
         if imjd < 58000: psffile = caldir+'psf/asPSF-b-23500008.fits'
-        if imjd > 58000 and imjd < 58125: psffile = caldir+'psf/asPSF-b-25280053.fits'
-        if imjd > 58125 and imjd < 58520: psffile = caldir+'psf/asPSF-b-27960083.fits'
-        if imjd > 58520 and imjd < 58725: psffile = caldir+'psf/asPSF-b-30660018.fits'
-        if imjd > 58725 and imjd < 59000: psffile = caldir+'psf/asPSF-b-32930007.fits'
-        if imjd > 59000 and imjd < 59500: psffile = caldir+'psf/asPSF-b-36380009.fits'
-        if imjd > 59500: psffile = caldir+'psf/asPSF-b-43880003.fits'
+        if imjd > 58000 and imjd < 58125: psffile = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/psf/asPSF-b-25280053.fits'
+        if imjd > 58125 and imjd < 58520: psffile = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/psf/asPSF-b-27960083.fits'
+        if imjd > 58520 and imjd < 58725: psffile = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/psf/asPSF-b-30660018.fits'
+        if imjd > 58725 and imjd < 59000: psffile = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/psf/asPSF-b-32930007.fits'
+        if imjd > 59000 and imjd < 59500: psffile = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/cal/psf/asPSF-b-36380009.fits'
+        if imjd > 59500: psffile = '/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/psf/asPSF-b-43880003.fits'
         #psffile = caldir+'psf/asPSF-b-36680072.fits'
 
     if os.path.exists(plugfile1) == False:
