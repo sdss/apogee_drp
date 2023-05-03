@@ -1181,12 +1181,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                     xx = [np.min(xvals[plate]),np.max(xvals[plate])]
                     yy = [np.nanmedian(yvals[plate]), np.nanmedian(yvals[plate])]
-                    pl1 = ax.plot(xx, yy, c='r', linewidth=2, label='plate median ('+str(int(round(np.nanmedian(yvals[plate]))))+')')
+                    pl1 = ax.plot(xx, yy, c='r', linewidth=4, label='plate median ('+str(int(round(np.nanmedian(yvals[plate]))))+')')
 
                     if len(fpsi) > 0: 
                         xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
                         yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
-                        pl2 = ax.plot(xx, yy, c='b', linewidth=2, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
+                        pl2 = ax.plot(xx, yy, c='b', linewidth=4, label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
 
                     ax.legend(loc=[0.25,0.78], ncol=2, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
@@ -1201,15 +1201,15 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
                     xx = [np.min(xvals[plate1]),np.max(xvals[plate1])]
                     yy = [np.nanmedian(yvals[plate1]), np.nanmedian(yvals[plate1])]
-                    pl1 = ax.plot(xx, yy, c='k', linewidth=2, label='plate1 median ('+str(int(round(np.nanmedian(yvals[plate1]))))+')')
+                    pl1 = ax.plot(xx, yy, c='k', linewidth=4, label='plate1 median ('+str(int(round(np.nanmedian(yvals[plate1]))))+')')
                     xx = [np.min(xvals[plate2]),np.max(xvals[plate2])]
                     yy = [np.nanmedian(yvals[plate2]), np.nanmedian(yvals[plate2])]
-                    pl1 = ax.plot(xx, yy, c='k', linewidth=2, linestyle=(0,(1,1)), label='plate2 median ('+str(int(round(np.nanmedian(yvals[plate2]))))+')')
+                    pl1 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(1,1)), label='plate2 median ('+str(int(round(np.nanmedian(yvals[plate2]))))+')')
 
                     if len(fpsi) > 0: 
                         xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
                         yy = [np.nanmedian(yvals[fpsi]), np.nanmedian(yvals[fpsi])]
-                        pl2 = ax.plot(xx, yy, c='k', linewidth=2, linestyle=(0,(5,1)), label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
+                        pl2 = ax.plot(xx, yy, c='k', linewidth=4, linestyle=(0,(5,1)), label='FPS median ('+str(int(round(np.nanmedian(yvals[fpsi]))))+')')
 
                     ax.legend(loc=[0.6,0.1], ncol=1, labelspacing=0.5, handletextpad=0.5, markerscale=1, columnspacing=0.3,
                               fontsize=fsz80, edgecolor='k', framealpha=1, borderaxespad=0.8, borderpad=0.6)
