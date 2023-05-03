@@ -1204,7 +1204,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     pl1 = ax.plot(xx, yy, c='k', linewidth=2, label='plate1 median ('+str(int(round(np.nanmedian(yvals[plate1]))))+')')
                     xx = [np.min(xvals[plate2]),np.max(xvals[plate2])]
                     yy = [np.nanmedian(yvals[plate2]), np.nanmedian(yvals[plate2])]
-                    pl1 = ax.plot(xx, yy, c='k', linewidth=2, linestyle=(0,(1,1)), label='plate1 median ('+str(int(round(np.nanmedian(yvals[plate2]))))+')')
+                    pl1 = ax.plot(xx, yy, c='k', linewidth=2, linestyle=(0,(1,1)), label='plate2 median ('+str(int(round(np.nanmedian(yvals[plate2]))))+')')
 
                     if len(fpsi) > 0: 
                         xx = [np.min(xvals[fpsi]),np.max(xvals[fpsi])]
