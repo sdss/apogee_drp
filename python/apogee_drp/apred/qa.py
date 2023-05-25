@@ -2943,7 +2943,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
         print("----> apStarPlots: Running on single star:" + objid)
 
     apodir = os.environ.get('APOGEE_REDUX') + '/'
-    load = apload.ApLoad(apred=apred, telescope=telescope)
+    if load is None: load = apload.ApLoad(apred=apred, telescope=telescope)
 
     # Setup doppler cannon models
     models = doppler.cannon.models
@@ -4239,8 +4239,8 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
                        ('UNE',     np.int16),
                        ('THAR',    np.int16),
                        ('FPI',     np.int16),
-                       ('FLUX',    np.float32,(nchips,300)),
-                       ('GAUSS',   np.float32,(nlines,nchips,nfibers,4)),
+                       ('FLUX',    np.float64,(nchips,300)),
+                       ('GAUSS',   np.float64,(nlines,nchips,nfibers,4)),
                        ('WAVE',    np.float64,(nlines,nchips,nfibers)),
                        ('FIBERS',  np.int16,(nfibers)),
                        ('LINES',   np.float32,(nlines,nchips))])
@@ -4372,13 +4372,13 @@ def makeDarkFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
                        ('JD',      np.float64),
                        ('NFRAMES', np.int16),
                        ('NREAD',   np.int16),
-                       ('EXPTIME', np.float32),
+                       ('EXPTIME', np.float64),
                        ('QRTZ',    np.int16),
                        ('UNE',     np.int16),
                        ('THAR',    np.int16),
                        ('EXPTYPE', np.str, 30),
-                       ('MEAN',    np.float32, (nquad,nchips)),
-                       ('SIG',     np.float32, (nquad,nchips))])
+                       ('MEAN',    np.float64, (nquad,nchips)),
+                       ('SIG',     np.float64, (nquad,nchips))])
 
         struct = np.zeros(n_exposures, dtype=dt)
 
