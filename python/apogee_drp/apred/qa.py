@@ -2564,7 +2564,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
             #cnfiber = str(nfiber)
     else:
         g, = np.where(allv1['apogee_id'] == objid)
-        allv = allv1[g][0]
+        allv = allv1[g]
         nfiber = 1
         cnfiber = '1'
 
@@ -2573,12 +2573,13 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
 
     # Loop over the fibers
     for j in range(nfiber):
-        #if objid == None:
         jdata = allv[j]
-        fiber = jdata['fiberid']
-            #objtype = jdata['OBJTYPE']
-        if objid == None: obj = jdata['apogee_id']
-        else: obj = objid
+        if objid == None: 
+            obj = jdata['apogee_id']
+            fiber = jdata['fiberid']
+        else: 
+            obj = objid
+            fiber = 1
         #else:
         #    fiber = 100
             #objtype = 'SCI'
