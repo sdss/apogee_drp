@@ -37,7 +37,7 @@ if __name__ == '__main__' :
     parser.add_argument('star', type=str, nargs=1,  help='APOGEE ID')
     parser.add_argument('apred', type=str, nargs=1, default='daily', help='APOGEE reduction version')
     parser.add_argument('telescope', type=str, nargs=1, default='apo25m', help='Telescope')
-    parser.add_argument('-p','--plot', action='store_true', help='Make a plot')
+    parser.add_argument('--plot', action='store_true', help='Make a plot')
     args = parser.parse_args()
 
     logger = dln.basiclogger()
