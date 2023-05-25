@@ -2541,10 +2541,6 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     
     apodir = os.environ.get('APOGEE_REDUX') + '/'
 
-    # Base directory where star-level stuff goes
-    #starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
-    #starHTMLbase = apodir + apred + '/' + telescope +'/'
-
     # Get visit info from allVisit
     if allv1 == None:
         allvfile = load.filename('allVisit')
@@ -2558,18 +2554,12 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
             allv = allv1[g]
             nfiber = len(allv)
             cnfiber = str(nfiber)
-            # Load in the apPlate file
-            #apPlate = load.apPlate(int(plate), mjd)
-            #data = apPlate['a'][11].data[::-1]
-            #cnfiber = str(nfiber)
     else:
+        makeplot = True
         g, = np.where(allv1['apogee_id'] == objid)
         allv = allv1[g]
         nfiber = 1
         cnfiber = '1'
-
-    # Start db session for getting all visit info
-    #db = apogeedb.DBSession()
 
     # Loop over the fibers
     for j in range(nfiber):
@@ -2580,19 +2570,10 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         else: 
             obj = objid
             fiber = 1
-        #else:
-        #    fiber = 100
-            #objtype = 'SCI'
 
-        #if fiber <= 0 or objtype == 'SKY': continue
         if obj == '2MNone' or obj == '2M' or obj == '' or obj == None or obj == 'None': continue
 
         print("----> makeStarHTML:   making html for " + obj + " (" + str(j+1) + "/" + cnfiber + ")")
-
-        # Find which healpix this star is in
-        #healpix = apload.obj2healpix(obj)
-        #healpixgroup = str(healpix // 1000)
-        #healpix = str(healpix)
 
         # Find the associated html directories; make them if they don't already exist
         apStarPath = load.filename('Star', obj=obj)
@@ -2767,7 +2748,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     #if objid is None:
     #    print("----> makeStarHTML: Done with plate " + plate + ", MJD " + mjd + ".\n")
     #else:
-    #    if makeplot: apStarPlots(objid=objid, load=load, apred=apred, telescope=telescope)
+    if makeplot: apStarPlots(objid=objid, load=load, apred=apred, telescope=telescope)
     #    print("----> makeStarHTML: Done with " + objid)
 
 ###################################################################################################
@@ -2991,45 +2972,31 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
             allv = allv1[g]
             nfiber = len(allv)
             cnfiber = str(nfiber)
-            # Load in the apPlate file
-            #apPlate = load.apPlate(int(plate), mjd)
-            #data = apPlate['a'][11].data[::-1]
-            #cnfiber = str(nfiber)
     else:
         g, = np.where(allv1['apogee_id'] == objid)
-        allv = allv1[g][0]
+        allv = allv1[g]
         nfiber = 1
         cnfiber = '1'
-    #if objid is None: 
-    #    # Load in the apPlate file
-    #    apPlate = load.apPlate(int(plate), mjd)
-    #    data = apPlate['a'][11].data[::-1]
-    #    objtype = data['OBJTYPE']
-    #    nfiber = len(data)
-    #    cnfiber = str(nfiber)
-    #else:
-    #    nfib = 1
 
     # Loop over the fibers
     for j in range(nfiber):
-        #if objid is None:
         jdata = allv[j]
-        fiber = jdata['fiberid']
-        #objtype = jdata['OBJTYPE']
-        objid = jdata['apogee_id']
-        #else:
-        #    objtype = 'SCI'
-        #fiber = 100
+        if objid == None: 
+            obj = jdata['apogee_id']
+            fiber = jdata['fiberid']
+        else: 
+            obj = objid
+            fiber = 1
 
         # Only run it for valid stars
-        if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
+        if obj == '2MNone' or obj == '2M' or obj == '' or obj == None or obj == 'None': continue
 
         # Find the associated html directories; make them if they don't already exist
-        apStarPath = load.filename('Star', obj=objid)
+        apStarPath = load.filename('Star', obj=obj)
         starDir = os.path.dirname(apStarPath)+'/'
         starPlotDir = starDir + 'plots/'
         if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
-        starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + objid + '_spec+model.png'
+        starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + obj + '_spec+model.png'
         starPlotFilePath = starPlotDir + starPlotFile
 
         healpixgroup = starDir.split('/')[-3]
@@ -3038,11 +3005,11 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
         starPlotFileRelPath = starRelPath + 'plots/' + starPlotFile
 
         # Make sure an apStar file exists
-        apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + objid + '-*.fits')
+        apStarCheck = glob.glob(starDir + 'apStar-' + apred + '-' + telescope + '-' + obj + '-*.fits')
         if len(apStarCheck) < 1: 
-            print("----> apStarPlots:    apStar file not found for " + objid)
+            print("----> apStarPlots:    apStar file not found for " + obj)
             continue
-        print("----> apStarPlots:    making plot for " + objid)
+        print("----> apStarPlots:    making plot for " + obj)
         # Find the newest apStar file
         apStarCheck.sort()
         apStarCheck = np.array(apStarCheck)
@@ -3067,7 +3034,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
                 wave = apstar.wave[:, 0]
                 flux = apstar.flux[:, 0]
             if np.nanmax(flux) < 0.1:
-                print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
+                print('----> apStarPlots:    problem with ' + obj + ' apStar file!!! Skipping.')
                 continue
             gd, = np.where((np.isnan(flux) == False) & (flux > 0))
             wave = wave[gd]
@@ -3081,7 +3048,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
             #try:
             sumstr, finalstr, bmodel, specmlist, gout = modelVals
             #except:
-            #    print("----> apStarPlots:    BAD! pickle.load returned None for " + objid)
+            #    print("----> apStarPlots:    BAD! pickle.load returned None for " + obj)
             #    return
             pmodels = models.prepare(specmlist[0])
             bestmodel = pmodels(teff=sumstr['teff'], logg=sumstr['logg'], feh=sumstr['feh'], rv=0)
@@ -3150,7 +3117,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
                 if ii % 2 == 1: ichip += 1
                 ii += 1
 
-            txt1 = objid + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits          '
+            txt1 = obj + r'          $H$ = ' + chmag + '          ' + str(nvis) + ' visits          '
             txt2 = r'$T_{\rm eff}$ = ' + rvteff + ' K          log(g) = ' + rvlogg + '          [Fe/H] = '+rvfeh
             ax1.text(0.5, 1.05, txt1 + txt2, transform=ax1.transAxes, ha='center', fontsize=fontsize*1.25, color='k')#, bbox=bboxpar)
             #ax2.legend(loc='upper left', edgecolor='k', ncol=2, fontsize=fontsize*1.25, framealpha=0.8)
@@ -3159,10 +3126,10 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
             plt.savefig(starPlotFilePath)
             plt.close('all')
         except:
-            print('----> apStarPlots:    problem with ' + objid + ' apStar file!!! Skipping.')
+            print('----> apStarPlots:    problem with ' + obj + ' apStar file!!! Skipping.')
             continue
 
-        print("----> apStarPlots: Done with " + objid)
+        print("----> apStarPlots: Done with " + obj)
 
 ###################################################################################################
 '''  MAKENIGHTQA: makes nightly QA pages '''
