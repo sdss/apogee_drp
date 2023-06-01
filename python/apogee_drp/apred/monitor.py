@@ -34,6 +34,9 @@ from mpl_toolkits.axes_grid1.colorbar import colorbar
 from datetime import date,datetime
 from scipy.signal import medfilt2d
 from scipy.optimize import curve_fit
+import logging
+
+logging.getLogger('matplotlib.font_manager').disabled = True
 
 ###############################################################################################
 # Set up some basic plotting parameters
