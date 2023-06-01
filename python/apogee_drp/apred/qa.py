@@ -37,6 +37,9 @@ from scipy.signal import medfilt, convolve, boxcar, argrelextrema, find_peaks
 from scipy.optimize import curve_fit
 from scipy import interpolate
 import datetime
+import logging
+
+logging.getLogger('matplotlib.font_manager').disabled = True
 
 cspeed = 299792.458e0
 
