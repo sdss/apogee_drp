@@ -1,0 +1,299 @@
+2023-02-19 23:12:08,031 [INFO ]  Running daily APOGEE data reduction for APO 59989 daily
+2023-02-19 23:12:08,040 [INFO ]  Getting exposure information
+2023-02-19 23:12:08,962 [INFO ]  25 exposures
+2023-02-19 23:12:09,013 [INFO ]  
+2023-02-19 23:12:09,013 [INFO ]  --------------------------------
+2023-02-19 23:12:09,013 [INFO ]  1) Running AP3D on all exposures
+2023-02-19 23:12:09,013 [INFO ]  ================================
+2023-02-19 23:12:09,195 [INFO ]  25 exposures
+2023-02-19 23:12:09,198 [INFO ]  1 ap2D-44270001.fits already exists and clobber==False
+2023-02-19 23:12:09,199 [INFO ]  2 ap2D-44270002.fits already exists and clobber==False
+2023-02-19 23:12:09,200 [INFO ]  3 ap2D-44270003.fits already exists and clobber==False
+2023-02-19 23:12:09,201 [INFO ]  4 ap2D-44270004.fits already exists and clobber==False
+2023-02-19 23:12:09,203 [INFO ]  5 ap2D-44270005.fits already exists and clobber==False
+2023-02-19 23:12:09,204 [INFO ]  6 ap2D-44270006.fits already exists and clobber==False
+2023-02-19 23:12:09,205 [INFO ]  7 ap2D-44270007.fits already exists and clobber==False
+2023-02-19 23:12:09,206 [INFO ]  8 ap2D-44270008.fits already exists and clobber==False
+2023-02-19 23:12:09,207 [INFO ]  9 ap2D-44270009.fits already exists and clobber==False
+2023-02-19 23:12:09,208 [INFO ]  10 ap2D-44270010.fits already exists and clobber==False
+2023-02-19 23:12:09,209 [INFO ]  11 ap2D-44270011.fits already exists and clobber==False
+2023-02-19 23:12:09,210 [INFO ]  12 ap2D-44270012.fits already exists and clobber==False
+2023-02-19 23:12:09,211 [INFO ]  13 ap2D-44270013.fits already exists and clobber==False
+2023-02-19 23:12:09,212 [INFO ]  14 ap2D-44270014.fits already exists and clobber==False
+2023-02-19 23:12:09,213 [INFO ]  15 ap2D-44270015.fits already exists and clobber==False
+2023-02-19 23:12:09,214 [INFO ]  16 ap2D-44270016.fits already exists and clobber==False
+2023-02-19 23:12:09,215 [INFO ]  17 ap2D-44270017.fits already exists and clobber==False
+2023-02-19 23:12:09,216 [INFO ]  18 ap2D-44270018.fits already exists and clobber==False
+2023-02-19 23:12:09,217 [INFO ]  19 ap2D-44270019.fits already exists and clobber==False
+2023-02-19 23:12:09,218 [INFO ]  20 ap2D-44270020.fits already exists and clobber==False
+2023-02-19 23:12:09,219 [INFO ]  21 ap2D-44270021.fits already exists and clobber==False
+2023-02-19 23:12:09,220 [INFO ]  22 ap2D-44270022.fits already exists and clobber==False
+2023-02-19 23:12:09,221 [INFO ]  23 ap2D-44270023.fits already exists and clobber==False
+2023-02-19 23:12:09,222 [INFO ]  24 ap2D-44270024.fits already exists and clobber==False
+2023-02-19 23:12:09,223 [INFO ]  25 ap2D-44270025.fits already exists and clobber==False
+2023-02-19 23:12:09,223 [INFO ]  0 exposures to run
+2023-02-19 23:12:09,223 [INFO ]  No exposures need AP3D processing
+2023-02-19 23:12:09,223 [INFO ]   
+2023-02-19 23:12:09,223 [INFO ]  Doing quality checks on all exposures
+2023-02-19 23:12:09,224 [INFO ]  NUM           EXPTYPE      MASK   OKAY
+2023-02-19 23:12:09,508 [INFO ]  44270001           DARK      0    True    
+2023-02-19 23:12:09,731 [INFO ]  44270002           DARK      0    True    
+2023-02-19 23:12:09,977 [INFO ]  44270003     QUARTZFLAT      0    True    
+2023-02-19 23:12:10,226 [INFO ]  44270004        ARCLAMP      0    True    
+2023-02-19 23:12:10,477 [INFO ]  44270005        ARCLAMP      0    True    
+2023-02-19 23:12:10,705 [INFO ]  44270006        ARCLAMP      0    True    
+2023-02-19 23:12:10,957 [INFO ]  44270007        ARCLAMP      0    True    
+2023-02-19 23:12:11,193 [INFO ]  44270008           DARK      0    True    
+2023-02-19 23:12:11,580 [INFO ]  44270009            FPI      0    True    
+2023-02-19 23:12:11,923 [INFO ]  44270010           DARK      0    True    
+2023-02-19 23:12:12,186 [INFO ]  44270011           DARK      0    True    
+2023-02-19 23:12:12,504 [INFO ]  44270012           DARK      0    True    
+2023-02-19 23:12:12,796 [INFO ]  44270013     QUARTZFLAT      0    True    
+2023-02-19 23:12:13,096 [INFO ]  44270014     QUARTZFLAT      0    True    
+2023-02-19 23:12:13,312 [INFO ]  44270015     QUARTZFLAT      0    True    
+2023-02-19 23:12:13,586 [INFO ]  44270016        ARCLAMP      0    True    
+2023-02-19 23:12:13,840 [INFO ]  44270017        ARCLAMP      0    True    
+2023-02-19 23:12:14,079 [INFO ]  44270018        ARCLAMP      0    True    
+2023-02-19 23:12:14,562 [INFO ]  44270019        ARCLAMP      0    True    
+2023-02-19 23:12:14,811 [INFO ]  44270020           DARK      8   False  Wrong shutter state  
+2023-02-19 23:12:15,052 [INFO ]  44270021   INTERNALFLAT      0    True    
+2023-02-19 23:12:15,304 [INFO ]  44270022   INTERNALFLAT      0    True    
+2023-02-19 23:12:15,575 [INFO ]  44270023   INTERNALFLAT      0    True    
+2023-02-19 23:12:15,813 [INFO ]  44270024           DARK      0    True    
+2023-02-19 23:12:16,085 [INFO ]  44270025            FPI      0    True    
+2023-02-19 23:12:16,085 [INFO ]   
+2023-02-19 23:12:16,085 [INFO ]  
+2023-02-19 23:12:16,085 [INFO ]  ----------------------------------------
+2023-02-19 23:12:16,085 [INFO ]  2) Generating daily calibration products
+2023-02-19 23:12:16,085 [INFO ]  ========================================
+2023-02-19 23:12:16,085 [INFO ]  Getting exposure information
+2023-02-19 23:12:16,270 [INFO ]  25 exposures
+2023-02-19 23:12:16,270 [INFO ]   
+2023-02-19 23:12:16,270 [INFO ]  Doing quality checks on all calibration exposures
+2023-02-19 23:12:16,270 [INFO ]  NUM           EXPTYPE      MASK   OKAY
+2023-02-19 23:12:16,396 [INFO ]  44270003     QUARTZFLAT      0    True    
+2023-02-19 23:12:16,530 [INFO ]  44270004        ARCLAMP      0    True    
+2023-02-19 23:12:16,661 [INFO ]  44270005        ARCLAMP      0    True    
+2023-02-19 23:12:16,794 [INFO ]  44270006        ARCLAMP      0    True    
+2023-02-19 23:12:16,925 [INFO ]  44270007        ARCLAMP      0    True    
+2023-02-19 23:12:17,047 [INFO ]  44270009            FPI      0    True    
+2023-02-19 23:12:17,171 [INFO ]  44270013     QUARTZFLAT      0    True    
+2023-02-19 23:12:17,294 [INFO ]  44270014     QUARTZFLAT      0    True    
+2023-02-19 23:12:17,418 [INFO ]  44270015     QUARTZFLAT      0    True    
+2023-02-19 23:12:17,551 [INFO ]  44270016        ARCLAMP      0    True    
+2023-02-19 23:12:17,685 [INFO ]  44270017        ARCLAMP      0    True    
+2023-02-19 23:12:17,818 [INFO ]  44270018        ARCLAMP      0    True    
+2023-02-19 23:12:17,951 [INFO ]  44270019        ARCLAMP      0    True    
+2023-02-19 23:12:18,073 [INFO ]  44270025            FPI      0    True    
+2023-02-19 23:12:18,073 [INFO ]   
+2023-02-19 23:12:18,399 [INFO ]  
+2023-02-19 23:12:18,399 [INFO ]  ----------------------------------------------
+2023-02-19 23:12:18,399 [INFO ]  Running Calibration Files: PSF
+2023-02-19 23:12:18,399 [INFO ]  ==============================================
+2023-02-19 23:12:18,399 [INFO ]  
+2023-02-19 23:12:18,399 [INFO ]  4 file(s)
+2023-02-19 23:12:18,403 [INFO ]  1  apPSF-44270003.fits already exists and clobber==False
+2023-02-19 23:12:18,405 [INFO ]  2  apPSF-44270013.fits already exists and clobber==False
+2023-02-19 23:12:18,408 [INFO ]  3  apPSF-44270014.fits already exists and clobber==False
+2023-02-19 23:12:18,410 [INFO ]  4  apPSF-44270015.fits already exists and clobber==False
+2023-02-19 23:12:18,410 [INFO ]  0 PSF to run
+2023-02-19 23:12:18,410 [INFO ]  No psf calibration files need to be run
+2023-02-19 23:12:18,410 [INFO ]  
+2023-02-19 23:12:18,410 [INFO ]  ----------------------------------------------
+2023-02-19 23:12:18,410 [INFO ]  Running Calibration Files: FLUX
+2023-02-19 23:12:18,410 [INFO ]  ==============================================
+2023-02-19 23:12:18,410 [INFO ]  
+2023-02-19 23:12:18,410 [INFO ]  0 file(s)
+2023-02-19 23:12:18,410 [INFO ]  0 FLUX to run
+2023-02-19 23:12:18,411 [INFO ]  No flux calibration files need to be run
+2023-02-19 23:12:18,411 [INFO ]  
+2023-02-19 23:12:18,411 [INFO ]  ----------------------------------------------
+2023-02-19 23:12:18,411 [INFO ]  Running Calibration Files: ARCS
+2023-02-19 23:12:18,411 [INFO ]  ==============================================
+2023-02-19 23:12:18,411 [INFO ]  
+2023-02-19 23:12:18,411 [INFO ]  8 file(s)
+2023-02-19 23:12:18,457 [INFO ]  1  apWave-44270004.fits already exists and clobber==False
+2023-02-19 23:12:18,464 [INFO ]  2  apWave-44270005.fits already exists and clobber==False
+2023-02-19 23:12:18,466 [INFO ]  3  apWave-44270006.fits already exists and clobber==False
+2023-02-19 23:12:18,467 [INFO ]  4  apWave-44270007.fits already exists and clobber==False
+2023-02-19 23:12:18,468 [INFO ]  5  apWave-44270016.fits already exists and clobber==False
+2023-02-19 23:12:18,469 [INFO ]  6  apWave-44270017.fits already exists and clobber==False
+2023-02-19 23:12:18,473 [INFO ]  7  apWave-44270018.fits already exists and clobber==False
+2023-02-19 23:12:18,474 [INFO ]  8  apWave-44270019.fits already exists and clobber==False
+2023-02-19 23:12:18,474 [INFO ]  0 ARCS to run
+2023-02-19 23:12:18,474 [INFO ]  No arcs calibration files need to be run
+2023-02-19 23:12:18,474 [INFO ]  
+2023-02-19 23:12:18,474 [INFO ]  ----------------------------------------------
+2023-02-19 23:12:18,474 [INFO ]  Running Calibration Files: DAILYWAVE
+2023-02-19 23:12:18,474 [INFO ]  ==============================================
+2023-02-19 23:12:18,474 [INFO ]  
+2023-02-19 23:12:18,474 [INFO ]  1 file(s)
+2023-02-19 23:12:18,554 [INFO ]  1  apWave-59989.fits already exists and clobber==False
+2023-02-19 23:12:18,554 [INFO ]  0 DAILYWAVE to run
+2023-02-19 23:12:18,554 [INFO ]  No dailywave calibration files need to be run
+2023-02-19 23:12:18,554 [INFO ]  
+2023-02-19 23:12:18,554 [INFO ]  ----------------------------------------------
+2023-02-19 23:12:18,554 [INFO ]  Running Calibration Files: FPI
+2023-02-19 23:12:18,554 [INFO ]  ==============================================
+2023-02-19 23:12:18,554 [INFO ]  
+2023-02-19 23:12:18,555 [INFO ]  1 file(s)
+2023-02-19 23:12:18,556 [INFO ]  1  apWaveFPI-59989-44270009.fits already exists and clobber==False
+2023-02-19 23:12:18,556 [INFO ]  0 FPI to run
+2023-02-19 23:12:18,556 [INFO ]  No fpi calibration files need to be run
+2023-02-19 23:12:18,556 [INFO ]  
+2023-02-19 23:12:18,556 [INFO ]  ----------------------------------------------
+2023-02-19 23:12:18,556 [INFO ]  Running Calibration Files: TELLURIC
+2023-02-19 23:12:18,556 [INFO ]  ==============================================
+2023-02-19 23:12:18,556 [INFO ]  
+2023-02-19 23:12:18,571 [INFO ]  1 file(s)
+2023-02-19 23:12:18,597 [INFO ]  1  apTelluric-59989-40030031.fits already exists and clobber==False
+2023-02-19 23:12:18,598 [INFO ]  0 TELLURIC to run
+2023-02-19 23:12:18,598 [INFO ]  No telluric calibration files need to be run
+2023-02-19 23:12:18,598 [INFO ]   
+2023-02-19 23:12:18,598 [INFO ]  --------------------
+2023-02-19 23:12:18,598 [INFO ]  3) Making plan files
+2023-02-19 23:12:18,598 [INFO ]  ====================
+2023-02-19 23:12:18,598 [INFO ]   
+2023-02-19 23:12:18,598 [INFO ]  Making plan files for MJD=59989
+2023-02-19 23:12:18,598 [INFO ]  Making MJD5.yaml file for MJD=59989
+2023-02-19 23:12:18,777 [INFO ]  25 exposures found
+2023-02-19 23:12:18,777 [INFO ]  SDSS-V FPS data.  Using configid for plateid
+2023-02-19 23:12:18,777 [INFO ]    ARCLAMP: 8
+2023-02-19 23:12:18,777 [INFO ]    DARK: 8
+2023-02-19 23:12:18,777 [INFO ]    FPI: 2
+2023-02-19 23:12:18,777 [INFO ]    INTERNALFLAT: 3
+2023-02-19 23:12:18,777 [INFO ]    QUARTZFLAT: 4
+2023-02-19 23:12:21,923 [INFO ]  No domeflat apPSF files exist
+2023-02-19 23:12:21,926 [INFO ]  Available quartzflat apPSF:: [44270003, 44270013, 44270014, 44270015]
+2023-02-19 23:12:21,926 [INFO ]  No apFlux files exist
+2023-02-19 23:12:21,926 [INFO ]  No apFlux files for this night exist.  They will be created as needed
+2023-02-19 23:12:22,053 [INFO ]  Available apWaveFPI: [44270009]
+2023-02-19 23:12:22,118 [INFO ]  Dailywave /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-59989.fits exists
+2023-02-19 23:12:22,118 [INFO ]  44270020 DARK          has QA problems:  Wrong shutter state 
+2023-02-19 23:12:22,120 [INFO ]  Writing MJD5.yaml file to /uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/apogeereduceplan/master/yaml/daily/apo25m/apo25m_59989auto.yaml
+2023-02-19 23:12:22,141 [INFO ]  Information for 2 plan files
+2023-02-19 23:12:22,141 [INFO ]   
+2023-02-19 23:12:22,141 [INFO ]  Plan file 1
+2023-02-19 23:12:22,141 [INFO ]  ------------
+2023-02-19 23:12:22,141 [INFO ]  Making plan for MJD: 59989
+2023-02-19 23:12:22,167 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59989/apDarkPlan-apogee-n-59989.yaml
+2023-02-19 23:12:22,204 [INFO ]  None
+2023-02-19 23:12:22,209 [INFO ]  44270001
+2023-02-19 23:12:22,216 [INFO ]   
+2023-02-19 23:12:22,216 [INFO ]  Plan file 2
+2023-02-19 23:12:22,216 [INFO ]  ------------
+2023-02-19 23:12:22,216 [INFO ]  Making plan for MJD: 59989
+2023-02-19 23:12:22,244 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59989/apCalPlan-apogee-n-59989.yaml
+2023-02-19 23:12:22,276 [INFO ]  None
+2023-02-19 23:12:22,281 [INFO ]  44270003
+2023-02-19 23:12:22,289 [INFO ]  Writing list of plan files to /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/log/apo/59989.plans
+2023-02-19 23:12:22,375 [INFO ]  
+2023-02-19 23:12:22,375 [INFO ]  ----------------
+2023-02-19 23:12:22,375 [INFO ]  4) Running APRED
+2023-02-19 23:12:22,375 [INFO ]  ================
+2023-02-19 23:12:22,414 [INFO ]  2 plan files
+2023-02-19 23:12:22,601 [INFO ]  25 exposures
+2023-02-19 23:12:22,605 [INFO ]  2 planfiles to run
+2023-02-19 23:12:22,605 [INFO ]  Slurm settings: {'nodes': 1, 'alloc': 'sdss-np', 'ppn': 64, 'cpus': 2, 'qos': 'sdss-fast', 'shared': True, 'numpy_num_threads': 2, 'walltime': '23:00:00', 'notification': False}
+2023-02-19 23:12:22,669 [INFO ]  planfile 1 : /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59989/apCalPlan-apogee-n-59989.yaml
+2023-02-19 23:12:22,670 [INFO ]  Command : apred /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59989/apCalPlan-apogee-n-59989.yaml
+2023-02-19 23:12:22,670 [INFO ]  Logfile : /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59989/apCalPlan-apogee-n-59989_pbs.20230219231222.log
+2023-02-19 23:12:22,676 [INFO ]  planfile 2 : /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59989/apDarkPlan-apogee-n-59989.yaml
+2023-02-19 23:12:22,676 [INFO ]  Command : apred /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59989/apDarkPlan-apogee-n-59989.yaml
+2023-02-19 23:12:22,676 [INFO ]  Logfile : /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59989/apDarkPlan-apogee-n-59989_pbs.20230219231222.log
+2023-02-19 23:12:23,140 [INFO ]  PBS key is 89f0fdb6-b0e5-11ed-9bd2-2cea7ff4461c
+2023-02-19 23:14:23,668 [INFO ]  percent complete = 50
+2023-02-19 23:16:23,923 [INFO ]  percent complete = 50
+2023-02-19 23:18:24,262 [INFO ]  percent complete = 50
+2023-02-19 23:20:24,601 [INFO ]  percent complete = 50
+2023-02-19 23:22:24,915 [INFO ]  percent complete = 50
+2023-02-19 23:24:25,202 [INFO ]  percent complete = 50
+2023-02-19 23:26:25,493 [INFO ]  percent complete = 50
+2023-02-19 23:28:25,830 [INFO ]  percent complete = 50
+2023-02-19 23:30:26,157 [INFO ]  percent complete = 50
+2023-02-19 23:32:26,456 [INFO ]  percent complete = 50
+2023-02-19 23:34:26,793 [INFO ]  percent complete = 50
+2023-02-19 23:36:27,129 [INFO ]  percent complete = 50
+2023-02-19 23:38:27,466 [INFO ]  percent complete = 50
+2023-02-19 23:40:27,802 [INFO ]  percent complete = 50
+2023-02-19 23:42:28,092 [INFO ]  percent complete = 50
+2023-02-19 23:44:28,373 [INFO ]  percent complete = 50
+2023-02-19 23:46:28,708 [INFO ]  percent complete = 50
+2023-02-19 23:48:29,046 [INFO ]  percent complete = 50
+2023-02-19 23:50:29,283 [INFO ]  percent complete = 50
+2023-02-19 23:52:29,621 [INFO ]  percent complete = 50
+2023-02-19 23:54:29,956 [INFO ]  percent complete = 50
+2023-02-19 23:56:30,292 [INFO ]  percent complete = 50
+2023-02-19 23:58:30,628 [INFO ]  percent complete = 50
+2023-02-20 00:00:30,966 [INFO ]  percent complete = 100
+2023-02-20 00:00:30,966 [INFO ]  
+2023-02-20 00:00:30,967 [INFO ]  --------------------
+2023-02-20 00:00:30,967 [INFO ]  Checking APRED runs
+2023-02-20 00:00:30,967 [INFO ]  ====================
+2023-02-20 00:00:31,657 [INFO ]  
+2023-02-20 00:00:31,658 [INFO ]  1/2
+2023-02-20 00:00:31,658 [INFO ]  planfile: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59989/apCalPlan-apogee-n-59989.yaml
+2023-02-20 00:00:31,658 [INFO ]  log/errfile: apCalPlan-apogee-n-59989_pbs.log, apCalPlan-apogee-n-59989_pbs.err
+2023-02-20 00:00:31,658 [INFO ]  platetype: cal
+2023-02-20 00:00:31,658 [INFO ]  mjd: 59989
+2023-02-20 00:00:31,658 [INFO ]  nexp: 12
+2023-02-20 00:00:31,658 [INFO ]  3D/2D/Cframe:
+2023-02-20 00:00:31,658 [INFO ]  Num    EXPID   NREAD  3D     2D  Cframe
+2023-02-20 00:00:31,658 [INFO ]   1   44270003   10   True   True  False
+2023-02-20 00:00:31,658 [INFO ]   2   44270004   12   True   True  False
+2023-02-20 00:00:31,658 [INFO ]   3   44270005   40   True   True  False
+2023-02-20 00:00:31,658 [INFO ]   4   44270006   12   True   True  False
+2023-02-20 00:00:31,658 [INFO ]   5   44270007   40   True   True  False
+2023-02-20 00:00:31,658 [INFO ]   6   44270013   10   True   True  False
+2023-02-20 00:00:31,658 [INFO ]   7   44270014   10   True   True  False
+2023-02-20 00:00:31,658 [INFO ]   8   44270015   10   True   True  False
+2023-02-20 00:00:31,659 [INFO ]   9   44270016   12   True   True  False
+2023-02-20 00:00:31,659 [INFO ]  10   44270017   40   True   True  False
+2023-02-20 00:00:31,659 [INFO ]  11   44270018   12   True   True  False
+2023-02-20 00:00:31,659 [INFO ]  12   44270019   40   True   True  False
+2023-02-20 00:00:31,659 [INFO ]  Plan success: True 
+2023-02-20 00:00:33,629 [INFO ]  
+2023-02-20 00:00:33,629 [INFO ]  2/2
+2023-02-20 00:00:33,629 [INFO ]  planfile: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59989/apDarkPlan-apogee-n-59989.yaml
+2023-02-20 00:00:33,629 [INFO ]  log/errfile: apDarkPlan-apogee-n-59989_pbs.log, apDarkPlan-apogee-n-59989_pbs.err
+2023-02-20 00:00:33,629 [INFO ]  platetype: dark
+2023-02-20 00:00:33,629 [INFO ]  mjd: 59989
+2023-02-20 00:00:33,629 [INFO ]  nexp: 10
+2023-02-20 00:00:33,630 [INFO ]  3D/2D/Cframe:
+2023-02-20 00:00:33,630 [INFO ]  Num    EXPID   NREAD  3D     2D  Cframe
+2023-02-20 00:00:33,630 [INFO ]   1   44270001    3   True  False  False
+2023-02-20 00:00:33,630 [INFO ]   2   44270002   60   True  False  False
+2023-02-20 00:00:33,630 [INFO ]   3   44270008   60   True  False  False
+2023-02-20 00:00:33,630 [INFO ]   4   44270010   60   True  False  False
+2023-02-20 00:00:33,630 [INFO ]   5   44270011   60   True  False  False
+2023-02-20 00:00:33,630 [INFO ]   6   44270012   60   True  False  False
+2023-02-20 00:00:33,630 [INFO ]   7   44270021   30   True  False  False
+2023-02-20 00:00:33,630 [INFO ]   8   44270022   30   True  False  False
+2023-02-20 00:00:33,630 [INFO ]   9   44270023   30   True  False  False
+2023-02-20 00:00:33,630 [INFO ]  10   44270024   30   True  False  False
+2023-02-20 00:00:33,630 [INFO ]  Plan success: True 
+2023-02-20 00:00:33,723 [INFO ]  34/34 exposures successfully processed
+2023-02-20 00:00:33,723 [INFO ]  2/2 visits successfully processed
+2023-02-20 00:00:33,723 [INFO ]  
+2023-02-20 00:00:33,723 [INFO ]  --------------------------------
+2023-02-20 00:00:33,723 [INFO ]  5) Running RV+Visit Combination
+2023-02-20 00:00:33,723 [INFO ]  ================================
+2023-02-20 00:00:33,737 [INFO ]  No visits found for MJDs
+2023-02-20 00:00:33,737 [INFO ]  
+2023-02-20 00:00:33,737 [INFO ]  -----------------------
+2023-02-20 00:00:33,737 [INFO ]  6) Create summary files
+2023-02-20 00:00:33,737 [INFO ]  =======================
+2023-02-20 00:01:12,624 [INFO ]  Writing allStar file to /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/summary/allStar-daily-apo25m.fits
+2023-02-20 00:01:12,624 [INFO ]  280625 stars
+2023-02-20 00:04:59,242 [INFO ]  Writing allVisit file to /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/summary/allVisit-daily-apo25m.fits
+2023-02-20 00:04:59,242 [INFO ]  760471 visits
+2023-02-20 00:05:16,513 [INFO ]  Writing Nightly allStarMJD file to /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/summary/59989/allStarMJD-daily-apo25m-59989.fits
+2023-02-20 00:05:16,513 [INFO ]  0 stars for 59989
+2023-02-20 00:05:16,518 [INFO ]  Writing Nightly allVisitMJD file to /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/summary/59989/allVisitMJD-daily-apo25m-59989.fits
+2023-02-20 00:05:16,518 [INFO ]  0 visits for 59989
+2023-02-20 00:05:16,631 [INFO ]  
+2023-02-20 00:05:16,631 [INFO ]  --------------
+2023-02-20 00:05:16,631 [INFO ]  8) Running QA
+2023-02-20 00:05:16,631 [INFO ]  ==============
+2023-02-20 00:05:16,647 [INFO ]  No plan files
+2023-02-20 00:05:16,655 [INFO ]  Daily APOGEE reduction finished for MJD=59989 and observatory=apo

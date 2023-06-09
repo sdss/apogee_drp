@@ -1,0 +1,21 @@
+2022-02-09 15:55:04,140 [INFO ]  Running APOGEE DRP for APO apred=daily
+2022-02-09 15:55:04,140 [INFO ]  60 MJDs: 59560,59561,59562,59563,59564,59565,59566,59567,59568,59569,59570,59571,59572,59573,59574,59575,59576,59577,59578,59579,59580,59581,59582,59583,59584,59585,59586,59587,59588,59589,59590,59591,59592,59593,59594,59595,59596,59597,59598,59599,59600,59601,59602,59603,59604,59605,59606,59607,59608,59609,59610,59611,59612,59613,59614,59615,59616,59617,59618,59619
+2022-02-09 15:55:04,140 [INFO ]  5 steps: apred,qa,rv,summary,unified
+2022-02-09 15:55:04,140 [INFO ]  Clobber is True
+2022-02-09 15:55:04,140 [INFO ]  
+2022-02-09 15:55:04,140 [INFO ]  ----------------
+2022-02-09 15:55:04,140 [INFO ]  7) Running APRED
+2022-02-09 15:55:04,140 [INFO ]  ================
+2022-02-09 15:55:04,140 [INFO ]  
+2022-02-09 15:55:04,280 [INFO ]  598 plan files
+2022-02-09 15:55:08,028 [ERROR]  Traceback (most recent call last):
+  File [36m"/uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/apogee_drp/daily/bin/apogeedrp"[39;49;00m, line [34m46[39;49;00m, in <module>
+    apogeedrp.run(observatory,apred,mjd=mjd,steps=steps,qos=args.qos,fresh=args.fresh,clobber=args.clobber)
+  File [36m"/uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/apogee_drp/daily/python/apogee_drp/plan/apogeedrp.py"[39;49;00m, line [34m1489[39;49;00m, in run
+    chkapred = runapred(load,mjds,**kws)
+  File [36m"/uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/apogee_drp/daily/python/apogee_drp/plan/apogeedrp.py"[39;49;00m, line [34m944[39;49;00m, in runapred
+    expinfo = getexpinfo(load,mjds,logger=logger,verbose=[34mFalse[39;49;00m)
+  File [36m"/uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/apogee_drp/daily/python/apogee_drp/plan/apogeedrp.py"[39;49;00m, line [34m124[39;49;00m, in getexpinfo
+    vals,ind1,ind2 = np.intersect1d(expinfo1[[33m'[39;49;00m[33mnum[39;49;00m[33m'[39;49;00m],dbexpinfo[[33m'[39;49;00m[33mnum[39;49;00m[33m'[39;49;00m],return_indices=[34mTrue[39;49;00m)
+[91mIndexError[39;49;00m: only integers, slices (`:`), ellipsis (`...`), numpy.newaxis (`None`) and integer or boolean arrays are valid indices
+

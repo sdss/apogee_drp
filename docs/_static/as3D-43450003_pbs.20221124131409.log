@@ -1,0 +1,317 @@
+
+RUNNING AP3D
+
+1 PLAN files
+
+=========================================================================
+1/1  Processing Plan file 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-s/59907/logs/as3DPlan-43450003.yaml
+=========================================================================
+
+Plan file information:
+apogee_drp_ver = daily
+telescope = lco25m
+instrument = apogee-s
+plateid =            0
+fps = False
+force = False
+fpi =            0
+mjd =        59907
+planfile = as3DPlan-43450003.yaml
+apred_vers = daily
+platetype = single
+detid =     22810006
+bpmid =     22620001
+littrowid =            0
+persistid =            0
+persistmodelid =            0
+darkid =     22620001
+flatid =     22660002
+testing detector file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/detector/asDetector-c-22810006.fits
+ Detector file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/detector/asDetector-c-22810006.fits
+ already made
+makecal dark:     22620001
+ dark file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/darkcorr/asDark-22620001.tab
+ already made
+makecal flat:     22660002
+ flat file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/flatcorr/asFlat-22660002.tab
+ already made
+makecal bpm:     22620001
+ bpm file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/bpm/asBPM-c-22620001.fits
+ already made
+
+------------------------------------------------------
+1/1  Processing files for Frame Number >>43450003<<
+------------------------------------------------------
+This is an OBJECT frame
+
+-----------------------------------------
+ Processing chip a - asR-a-43450003.apz
+-----------------------------------------
+
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/lco/59907/asR-a-43450003.apz
+----------------------------------
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/lco/59907/asR-a-43450003.apz
+ is a COMPRESSED file
+Decompressing with APUNZIP
+no_checksum:        0
+Uncompressing >>
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/lco/59907/asR-a-43450003.apz
+<< (70.54 MB)
+Step I: Uncompress with funpack
+        Nreads = 20
+Step II: Reconstructing the original reads
+checking checksum 0
+checking checksum 1
+checking checksum       2
+checking checksum       3
+checking checksum       4
+checking checksum       5
+checking checksum       6
+checking checksum       7
+checking checksum       8
+checking checksum       9
+checking checksum      10
+checking checksum      11
+checking checksum      12
+checking checksum      13
+checking checksum      14
+checking checksum      15
+checking checksum      16
+checking checksum      17
+checking checksum      18
+checking checksum      19
+checking checksum      20
+dt = 23.686871 sec
+
+Removing recently decompressed FITS file at end of processing
+Data file description:
+Datacube size = 2560 x 2048 x 20
+Nreads = 20
+Chip = a
+
+DET file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/detector/asDetector-a-22810006.fits
+BPM file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/bpm/asBPM-a-22620001.fits
+Dark Correction file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/darkcorr/asDark-a-22620001.fits
+Flat Field Correction file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/flatcorr/asFlat-a-22660002.fits
+
+Checking for bad reads
+in aprefcorr, indiv:        3
+Calculating mean reference
+reading ref:   0   1Rejecting:        0       28345.519       2.4110190       28362
+reading ref:   1   2reading ref:   2   3reading ref:   3   4reading ref:   4   5reading ref:   5   6reading ref:   6   7reading ref:   7   8reading ref:   8   9reading ref:   9  10reading ref:  10  11reading ref:  11  12reading ref:  12  13reading ref:  13  14reading ref:  14  15reading ref:  15  16reading ref:  16  17reading ref:  17  18reading ref:  18  19reading ref:  19  20Reference processing 
+Ref processing:   1  nsat:     1Ref processing:   2  nsat:     1Ref processing:   3  nsat:     1Ref processing:   4  nsat:     1Ref processing:   5  nsat:     1Ref processing:   6  nsat:     1Ref processing:   7  nsat:     1Ref processing:   8  nsat:     1Ref processing:   9  nsat:     1Ref processing:  10  nsat:     1Ref processing:  11  nsat:     1Ref processing:  12  nsat:     1Ref processing:  13  nsat:     1Ref processing:  14  nsat:     1Ref processing:  15  nsat:     1Ref processing:  16  nsat:     1Ref processing:  17  nsat:     1Ref processing:  18  nsat:     1Ref processing:  19  nsat:     1Ref processing:  20  nsat:     1
+lastgood:           19
+Read(s) 1 are bad.
+Processing the datacube
+ 500/2048
+1000/2048
+1500/2048
+2000/2048
+subtracting reference array...
+
+Writing output to: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-s/59907/as2D-a-43450003.fits
+Deleting recently decompressed file 
+/scratch/general/nfs1/mwm//asR-a-43450003.fits
+
+BAD/CR/Saturated Pixels:
+132305 pixels are bad
+0 pixels have cosmic rays
+0 pixels are saturated
+0 pixels are unfixable
+
+dt = 57.9 sec
+
+-----------------------------------------
+ Processing chip b - asR-b-43450003.apz
+-----------------------------------------
+
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/lco/59907/asR-b-43450003.apz
+----------------------------------
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/lco/59907/asR-b-43450003.apz
+ is a COMPRESSED file
+Decompressing with APUNZIP
+no_checksum:        0
+Uncompressing >>
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/lco/59907/asR-b-43450003.apz
+<< (74.37 MB)
+Step I: Uncompress with funpack
+        Nreads = 20
+Step II: Reconstructing the original reads
+checking checksum 0
+checking checksum 1
+checking checksum       2
+checking checksum       3
+checking checksum       4
+checking checksum       5
+checking checksum       6
+checking checksum       7
+checking checksum       8
+checking checksum       9
+checking checksum      10
+checking checksum      11
+checking checksum      12
+checking checksum      13
+checking checksum      14
+checking checksum      15
+checking checksum      16
+checking checksum      17
+checking checksum      18
+checking checksum      19
+checking checksum      20
+dt = 86.546773 sec
+
+Removing recently decompressed FITS file at end of processing
+Data file description:
+Datacube size = 2560 x 2048 x 20
+Nreads = 20
+Chip = b
+
+DET file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/detector/asDetector-b-22810006.fits
+BPM file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/bpm/asBPM-b-22620001.fits
+Dark Correction file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/darkcorr/asDark-b-22620001.fits
+Flat Field Correction file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/flatcorr/asFlat-b-22660002.fits
+
+Checking for bad reads
+in aprefcorr, indiv:        3
+Calculating mean reference
+reading ref:   0   1Rejecting:        0       28056.930       4.1442224       28074
+reading ref:   1   2reading ref:   2   3reading ref:   3   4reading ref:   4   5reading ref:   5   6reading ref:   6   7reading ref:   7   8reading ref:   8   9reading ref:   9  10reading ref:  10  11reading ref:  11  12reading ref:  12  13reading ref:  13  14reading ref:  14  15reading ref:  15  16reading ref:  16  17reading ref:  17  18reading ref:  18  19reading ref:  19  20Reference processing 
+Ref processing:   1  nsat:     1Ref processing:   2  nsat:     1Ref processing:   3  nsat:     1Ref processing:   4  nsat:     1Ref processing:   5  nsat:     1Ref processing:   6  nsat:     1Ref processing:   7  nsat:     1Ref processing:   8  nsat:     1Ref processing:   9  nsat:     1Ref processing:  10  nsat:     1Ref processing:  11  nsat:     1Ref processing:  12  nsat:     1Ref processing:  13  nsat:     1Ref processing:  14  nsat:     1Ref processing:  15  nsat:     1Ref processing:  16  nsat:     1Ref processing:  17  nsat:     1Ref processing:  18  nsat:     1Ref processing:  19  nsat:     1Ref processing:  20  nsat:     1
+lastgood:           19
+Read(s) 1 are bad.
+Processing the datacube
+ 500/2048
+1000/2048
+1500/2048
+2000/2048
+subtracting reference array...
+
+Writing output to: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-s/59907/as2D-b-43450003.fits
+Deleting recently decompressed file 
+/scratch/general/nfs1/mwm//asR-b-43450003.fits
+
+BAD/CR/Saturated Pixels:
+75358 pixels are bad
+0 pixels have cosmic rays
+0 pixels are saturated
+0 pixels are unfixable
+
+dt = 114.4 sec
+
+-----------------------------------------
+ Processing chip c - asR-c-43450003.apz
+-----------------------------------------
+
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/lco/59907/asR-c-43450003.apz
+----------------------------------
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/lco/59907/asR-c-43450003.apz
+ is a COMPRESSED file
+Decompressing with APUNZIP
+no_checksum:        0
+Uncompressing >>
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/lco/59907/asR-c-43450003.apz
+<< (66.95 MB)
+Step I: Uncompress with funpack
+        Nreads = 20
+Step II: Reconstructing the original reads
+checking checksum 0
+checking checksum 1
+checking checksum       2
+checking checksum       3
+checking checksum       4
+checking checksum       5
+checking checksum       6
+checking checksum       7
+checking checksum       8
+checking checksum       9
+checking checksum      10
+checking checksum      11
+checking checksum      12
+checking checksum      13
+checking checksum      14
+checking checksum      15
+checking checksum      16
+checking checksum      17
+checking checksum      18
+checking checksum      19
+checking checksum      20
+dt = 49.904981 sec
+
+Removing recently decompressed FITS file at end of processing
+Data file description:
+Datacube size = 2560 x 2048 x 20
+Nreads = 20
+Chip = c
+
+DET file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/detector/asDetector-c-22810006.fits
+BPM file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/bpm/asBPM-c-22620001.fits
+Dark Correction file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/darkcorr/asDark-c-22620001.fits
+Flat Field Correction file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-s/flatcorr/asFlat-c-22660002.fits
+
+Checking for bad reads
+in aprefcorr, indiv:        3
+Calculating mean reference
+reading ref:   0   1Rejecting:        0       27214.986       2.8044357       27230
+reading ref:   1   2reading ref:   2   3reading ref:   3   4reading ref:   4   5reading ref:   5   6reading ref:   6   7reading ref:   7   8reading ref:   8   9reading ref:   9  10reading ref:  10  11reading ref:  11  12reading ref:  12  13reading ref:  13  14reading ref:  14  15reading ref:  15  16reading ref:  16  17reading ref:  17  18reading ref:  18  19reading ref:  19  20Reference processing 
+Ref processing:   1  nsat:     1Ref processing:   2  nsat:     1Ref processing:   3  nsat:     1Ref processing:   4  nsat:     1Ref processing:   5  nsat:     1Ref processing:   6  nsat:     1Ref processing:   7  nsat:     1Ref processing:   8  nsat:     1Ref processing:   9  nsat:     1Ref processing:  10  nsat:     1Ref processing:  11  nsat:     1Ref processing:  12  nsat:     1Ref processing:  13  nsat:     1Ref processing:  14  nsat:     1Ref processing:  15  nsat:     1Ref processing:  16  nsat:     1Ref processing:  17  nsat:     1Ref processing:  18  nsat:     1Ref processing:  19  nsat:     1Ref processing:  20  nsat:     1
+lastgood:           19
+Read(s) 1 are bad.
+Processing the datacube
+ 500/2048
+1000/2048
+1500/2048
+2000/2048
+subtracting reference array...
+
+Writing output to: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-s/59907/as2D-c-43450003.fits
+Deleting recently decompressed file 
+/scratch/general/nfs1/mwm//asR-c-43450003.fits
+
+BAD/CR/Saturated Pixels:
+83893 pixels are bad
+0 pixels have cosmic rays
+0 pixels are saturated
+0 pixels are unfixable
+
+dt = 101.5 sec
+AP3D finished
+dt = 279.5 sec

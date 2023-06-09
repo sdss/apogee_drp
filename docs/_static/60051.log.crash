@@ -1,0 +1,18 @@
+Traceback (most recent call last):
+  File "/uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/apogee_drp/daily/bin/runapogee", line 45, in <module>
+    runapogee.run_daily(observatory,mjd5=mjd,apred=vers,qos=qos,clobber=clobber)
+  File "/uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/apogee_drp/daily/python/apogee_drp/plan/runapogee.py", line 361, in run_daily
+    chkexp,chkvisit = apogeedrp.runapred(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
+  File "/uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/apogee_drp/daily/python/apogee_drp/plan/apogeedrp.py", line 2551, in runapred
+    queue.commit(hard=True,submit=True)
+  File "/uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/slurm/main/python/slurm/queue.py", line 111, in commit
+    self.client.commit(submit=submit)
+  File "/uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/slurm/main/python/slurm/session/Client.py", line 178, in commit
+    if submit: self.submit()
+  File "/uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/slurm/main/python/slurm/session/Client.py", line 160, in submit
+    submit_output = check_output(submit_command,universal_newlines=True).rstrip()
+  File "/uufs/chpc.utah.edu/common/home/sdss50/software/pkg/miniconda/3.8.5_mwm/lib/python3.8/subprocess.py", line 411, in check_output
+    return run(*popenargs, stdout=PIPE, timeout=timeout, check=True,
+  File "/uufs/chpc.utah.edu/common/home/sdss50/software/pkg/miniconda/3.8.5_mwm/lib/python3.8/subprocess.py", line 512, in run
+    raise CalledProcessError(retcode, process.args,
+subprocess.CalledProcessError: Command '['sbatch', '/scratch/general/nfs1/u0914350/pbs/apred/d74050d8-dc9d-11ed-a9fb-2cea7ff4461c/node01.slurm']' returned non-zero exit status 1.

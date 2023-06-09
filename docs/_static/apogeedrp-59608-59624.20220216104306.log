@@ -1,0 +1,948 @@
+2022-02-16 10:43:06,849 [INFO ]  Running APOGEE DRP for APO apred=daily
+2022-02-16 10:43:06,849 [INFO ]  4 MJDs: 59608,59615,59616,59624
+2022-02-16 10:43:06,849 [INFO ]  1 steps: cal
+2022-02-16 10:43:06,849 [INFO ]  Clobber is True
+2022-02-16 10:43:06,849 [INFO ]  
+2022-02-16 10:43:06,849 [INFO ]  ----------------------------------------
+2022-02-16 10:43:06,849 [INFO ]  5) Generating daily calibration products
+2022-02-16 10:43:06,849 [INFO ]  ========================================
+2022-02-16 10:43:06,849 [INFO ]  
+2022-02-16 10:43:08,505 [INFO ]  226 exposures
+2022-02-16 10:43:08,506 [INFO ]   
+2022-02-16 10:43:08,506 [INFO ]  Doing quality checks on all calibration exposures
+2022-02-16 10:43:08,506 [INFO ]  NUM           EXPTYPE      MASK   OKAY
+2022-02-16 10:43:08,705 [INFO ]  40460004     QUARTZFLAT      0    True    
+2022-02-16 10:43:08,892 [INFO ]  40460005        ARCLAMP      0    True    
+2022-02-16 10:43:09,052 [INFO ]  40460006        ARCLAMP      0    True    
+2022-02-16 10:43:09,217 [INFO ]  40460007        ARCLAMP      0    True    
+2022-02-16 10:43:09,387 [INFO ]  40460008        ARCLAMP      0    True    
+2022-02-16 10:43:09,478 [INFO ]  40460010            FPI      0    True    
+2022-02-16 10:43:09,568 [INFO ]  40460011            FPI      0    True    
+2022-02-16 10:43:09,663 [INFO ]  40460012       DOMEFLAT      0    True    
+2022-02-16 10:43:09,757 [INFO ]  40460013       DOMEFLAT      0    True    
+2022-02-16 10:43:09,850 [INFO ]  40460014       DOMEFLAT      0    True    
+2022-02-16 10:43:10,021 [INFO ]  40460018     QUARTZFLAT      0    True    
+2022-02-16 10:43:10,169 [INFO ]  40460019     QUARTZFLAT      0    True    
+2022-02-16 10:43:10,365 [INFO ]  40460020     QUARTZFLAT      0    True    
+2022-02-16 10:43:10,521 [INFO ]  40460021        ARCLAMP      0    True    
+2022-02-16 10:43:10,697 [INFO ]  40460022        ARCLAMP      0    True    
+2022-02-16 10:43:10,855 [INFO ]  40460023        ARCLAMP      0    True    
+2022-02-16 10:43:10,998 [INFO ]  40460024        ARCLAMP      0    True    
+2022-02-16 10:43:11,090 [INFO ]  40460030            FPI      0    True    
+2022-02-16 10:43:11,274 [INFO ]  40530003     QUARTZFLAT      0    True    
+2022-02-16 10:43:11,468 [INFO ]  40530004        ARCLAMP      0    True    
+2022-02-16 10:43:11,630 [INFO ]  40530005        ARCLAMP      0    True    
+2022-02-16 10:43:11,799 [INFO ]  40530006        ARCLAMP      0    True    
+2022-02-16 10:43:11,971 [INFO ]  40530007        ARCLAMP      0    True    
+2022-02-16 10:43:12,060 [INFO ]  40530009            FPI      0    True    
+2022-02-16 10:43:12,154 [INFO ]  40530014       DOMEFLAT      0    True    
+2022-02-16 10:43:12,247 [INFO ]  40530021       DOMEFLAT      0    True    
+2022-02-16 10:43:12,341 [INFO ]  40530027       DOMEFLAT      0    True    
+2022-02-16 10:43:12,435 [INFO ]  40530050       DOMEFLAT      0    True    
+2022-02-16 10:43:12,586 [INFO ]  40530054     QUARTZFLAT      0    True    
+2022-02-16 10:43:12,735 [INFO ]  40530055     QUARTZFLAT      0    True    
+2022-02-16 10:43:12,879 [INFO ]  40530056     QUARTZFLAT      0    True    
+2022-02-16 10:43:13,069 [INFO ]  40530057        ARCLAMP      0    True    
+2022-02-16 10:43:13,227 [INFO ]  40530058        ARCLAMP      0    True    
+2022-02-16 10:43:13,427 [INFO ]  40530059        ARCLAMP      0    True    
+2022-02-16 10:43:13,611 [INFO ]  40530060        ARCLAMP      0    True    
+2022-02-16 10:43:13,702 [INFO ]  40530066            FPI      0    True    
+2022-02-16 10:43:13,890 [INFO ]  40540005     QUARTZFLAT      0    True    
+2022-02-16 10:43:14,062 [INFO ]  40540006        ARCLAMP      0    True    
+2022-02-16 10:43:14,225 [INFO ]  40540007        ARCLAMP      0    True    
+2022-02-16 10:43:14,388 [INFO ]  40540008        ARCLAMP      0    True    
+2022-02-16 10:43:14,561 [INFO ]  40540009        ARCLAMP      0    True    
+2022-02-16 10:43:14,651 [INFO ]  40540011            FPI      0    True    
+2022-02-16 10:43:14,744 [INFO ]  40540014       DOMEFLAT      0    True    
+2022-02-16 10:43:14,839 [INFO ]  40540019       DOMEFLAT      0    True    
+2022-02-16 10:43:14,934 [INFO ]  40540028       DOMEFLAT      0    True    
+2022-02-16 10:43:15,033 [INFO ]  40540030       DOMEFLAT      0    True    
+2022-02-16 10:43:15,136 [INFO ]  40540032       DOMEFLAT      0    True    
+2022-02-16 10:43:15,238 [INFO ]  40540052       DOMEFLAT      0    True    
+2022-02-16 10:43:15,403 [INFO ]  40540056     QUARTZFLAT      0    True    
+2022-02-16 10:43:15,558 [INFO ]  40540057     QUARTZFLAT      0    True    
+2022-02-16 10:43:15,721 [INFO ]  40540058     QUARTZFLAT      0    True    
+2022-02-16 10:43:15,884 [INFO ]  40540059        ARCLAMP      0    True    
+2022-02-16 10:43:16,056 [INFO ]  40540060        ARCLAMP      0    True    
+2022-02-16 10:43:16,232 [INFO ]  40540061        ARCLAMP      0    True    
+2022-02-16 10:43:16,379 [INFO ]  40540062        ARCLAMP      0    True    
+2022-02-16 10:43:16,471 [INFO ]  40540068            FPI      0    True    
+2022-02-16 10:43:16,590 [INFO ]  40620003     QUARTZFLAT      0    True    
+2022-02-16 10:43:16,692 [INFO ]  40620004        ARCLAMP      0    True    
+2022-02-16 10:43:16,794 [INFO ]  40620005        ARCLAMP      0    True    
+2022-02-16 10:43:16,897 [INFO ]  40620006        ARCLAMP      0    True    
+2022-02-16 10:43:16,999 [INFO ]  40620007        ARCLAMP      0    True    
+2022-02-16 10:43:17,090 [INFO ]  40620009            FPI      0    True    
+2022-02-16 10:43:17,183 [INFO ]  40620012       DOMEFLAT      0    True    
+2022-02-16 10:43:17,278 [INFO ]  40620028       DOMEFLAT      0    True    
+2022-02-16 10:43:17,373 [INFO ]  40620042       DOMEFLAT      0    True    
+2022-02-16 10:43:17,468 [INFO ]  40620045       DOMEFLAT      0    True    
+2022-02-16 10:43:17,562 [INFO ]  40620048       DOMEFLAT      0    True    
+2022-02-16 10:43:17,656 [INFO ]  40620052     QUARTZFLAT      0    True    
+2022-02-16 10:43:17,750 [INFO ]  40620053     QUARTZFLAT      0    True    
+2022-02-16 10:43:17,841 [INFO ]  40620054     QUARTZFLAT      0    True    
+2022-02-16 10:43:17,945 [INFO ]  40620055        ARCLAMP      0    True    
+2022-02-16 10:43:18,045 [INFO ]  40620056        ARCLAMP      0    True    
+2022-02-16 10:43:18,147 [INFO ]  40620057        ARCLAMP      0    True    
+2022-02-16 10:43:18,248 [INFO ]  40620058        ARCLAMP      0    True    
+2022-02-16 10:43:18,338 [INFO ]  40620064            FPI      0    True    
+2022-02-16 10:43:18,338 [INFO ]   
+2022-02-16 10:43:18,339 [INFO ]  
+2022-02-16 10:43:18,339 [INFO ]  ----------------------------------------------
+2022-02-16 10:43:18,339 [INFO ]  Running Calibration Files: DOMEFLAT/QUARTZFLAT
+2022-02-16 10:43:18,339 [INFO ]  ==============================================
+2022-02-16 10:43:18,339 [INFO ]  
+2022-02-16 10:43:18,339 [INFO ]  16 file(s)
+2022-02-16 10:43:18,339 [INFO ]  Slurm settings: {'nodes': '5', 'alloc': 'sdss-np', 'shared': True, 'ppn': 64, 'walltime': '336:00:00', 'notification': False, 'cpus': 16, 'numpy_num_threads': 2}
+2022-02-16 10:43:18,552 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apPSF-40460004_pbs.20220216104306.log
+2022-02-16 10:43:18,552 [INFO ]  Calibration file 1 : QUARTZFLAT 40460004
+2022-02-16 10:43:18,552 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apPSF-40460004_pbs.20220216104306.log
+2022-02-16 10:43:18,584 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apPSF-40460018_pbs.20220216104306.log
+2022-02-16 10:43:18,584 [INFO ]  Calibration file 2 : QUARTZFLAT 40460018
+2022-02-16 10:43:18,584 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apPSF-40460018_pbs.20220216104306.log
+2022-02-16 10:43:18,594 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apPSF-40460019_pbs.20220216104306.log
+2022-02-16 10:43:18,594 [INFO ]  Calibration file 3 : QUARTZFLAT 40460019
+2022-02-16 10:43:18,594 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apPSF-40460019_pbs.20220216104306.log
+2022-02-16 10:43:18,602 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apPSF-40460020_pbs.20220216104306.log
+2022-02-16 10:43:18,603 [INFO ]  Calibration file 4 : QUARTZFLAT 40460020
+2022-02-16 10:43:18,603 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apPSF-40460020_pbs.20220216104306.log
+2022-02-16 10:43:18,621 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apPSF-40530003_pbs.20220216104306.log
+2022-02-16 10:43:18,622 [INFO ]  Calibration file 5 : QUARTZFLAT 40530003
+2022-02-16 10:43:18,622 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apPSF-40530003_pbs.20220216104306.log
+2022-02-16 10:43:18,627 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apPSF-40530054_pbs.20220216104306.log
+2022-02-16 10:43:18,628 [INFO ]  Calibration file 6 : QUARTZFLAT 40530054
+2022-02-16 10:43:18,628 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apPSF-40530054_pbs.20220216104306.log
+2022-02-16 10:43:18,636 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apPSF-40530055_pbs.20220216104306.log
+2022-02-16 10:43:18,636 [INFO ]  Calibration file 7 : QUARTZFLAT 40530055
+2022-02-16 10:43:18,636 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apPSF-40530055_pbs.20220216104306.log
+2022-02-16 10:43:18,644 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apPSF-40530056_pbs.20220216104306.log
+2022-02-16 10:43:18,644 [INFO ]  Calibration file 8 : QUARTZFLAT 40530056
+2022-02-16 10:43:18,644 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apPSF-40530056_pbs.20220216104306.log
+2022-02-16 10:43:18,667 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apPSF-40540005_pbs.20220216104306.log
+2022-02-16 10:43:18,667 [INFO ]  Calibration file 9 : QUARTZFLAT 40540005
+2022-02-16 10:43:18,667 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apPSF-40540005_pbs.20220216104306.log
+2022-02-16 10:43:18,678 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apPSF-40540056_pbs.20220216104306.log
+2022-02-16 10:43:18,678 [INFO ]  Calibration file 10 : QUARTZFLAT 40540056
+2022-02-16 10:43:18,678 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apPSF-40540056_pbs.20220216104306.log
+2022-02-16 10:43:18,686 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apPSF-40540057_pbs.20220216104306.log
+2022-02-16 10:43:18,686 [INFO ]  Calibration file 11 : QUARTZFLAT 40540057
+2022-02-16 10:43:18,686 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apPSF-40540057_pbs.20220216104306.log
+2022-02-16 10:43:18,694 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apPSF-40540058_pbs.20220216104306.log
+2022-02-16 10:43:18,694 [INFO ]  Calibration file 12 : QUARTZFLAT 40540058
+2022-02-16 10:43:18,694 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apPSF-40540058_pbs.20220216104306.log
+2022-02-16 10:43:18,733 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apPSF-40620003_pbs.20220216104306.log
+2022-02-16 10:43:18,733 [INFO ]  Calibration file 13 : QUARTZFLAT 40620003
+2022-02-16 10:43:18,733 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apPSF-40620003_pbs.20220216104306.log
+2022-02-16 10:43:18,744 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apPSF-40620052_pbs.20220216104306.log
+2022-02-16 10:43:18,744 [INFO ]  Calibration file 14 : QUARTZFLAT 40620052
+2022-02-16 10:43:18,744 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apPSF-40620052_pbs.20220216104306.log
+2022-02-16 10:43:18,753 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apPSF-40620053_pbs.20220216104306.log
+2022-02-16 10:43:18,753 [INFO ]  Calibration file 15 : QUARTZFLAT 40620053
+2022-02-16 10:43:18,753 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apPSF-40620053_pbs.20220216104306.log
+2022-02-16 10:43:18,761 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apPSF-40620054_pbs.20220216104306.log
+2022-02-16 10:43:18,761 [INFO ]  Calibration file 16 : QUARTZFLAT 40620054
+2022-02-16 10:43:18,761 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apPSF-40620054_pbs.20220216104306.log
+2022-02-16 10:43:20,812 [INFO ]  PBS key is ed1e5d88-8f4f-11ec-a241-2cea7ff4461c
+2022-02-16 10:44:21,149 [INFO ]  percent complete = 0
+2022-02-16 10:45:21,322 [INFO ]  percent complete = 0
+2022-02-16 10:46:21,511 [INFO ]  percent complete = 0
+2022-02-16 10:47:21,698 [INFO ]  percent complete = 0
+2022-02-16 10:48:21,874 [INFO ]  percent complete = 0
+2022-02-16 10:49:22,047 [INFO ]  percent complete = 0
+2022-02-16 10:50:22,222 [INFO ]  percent complete = 0
+2022-02-16 10:51:22,388 [INFO ]  percent complete = 0
+2022-02-16 10:52:22,574 [INFO ]  percent complete = 0
+2022-02-16 10:53:22,764 [INFO ]  percent complete = 0
+2022-02-16 10:54:22,959 [INFO ]  percent complete = 25
+2022-02-16 10:55:23,133 [INFO ]  percent complete = 62
+2022-02-16 10:56:23,247 [INFO ]  percent complete = 93
+2022-02-16 10:57:23,422 [INFO ]  percent complete = 100
+2022-02-16 10:57:23,423 [INFO ]  
+2022-02-16 10:57:23,423 [INFO ]  -------------------------
+2022-02-16 10:57:23,423 [INFO ]  Checking Calibration runs
+2022-02-16 10:57:23,423 [INFO ]  =========================
+2022-02-16 10:57:23,477 [INFO ]  
+2022-02-16 10:57:23,477 [INFO ]  1/16
+2022-02-16 10:57:23,477 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,477 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40460004.fits
+2022-02-16 10:57:23,477 [INFO ]  log/errfile: apPSF-40460004_pbs.20220216104306.log, apPSF-40460004_pbs.20220216104306.err
+2022-02-16 10:57:23,477 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,512 [INFO ]  
+2022-02-16 10:57:23,512 [INFO ]  2/16
+2022-02-16 10:57:23,512 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,512 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40460018.fits
+2022-02-16 10:57:23,512 [INFO ]  log/errfile: apPSF-40460018_pbs.20220216104306.log, apPSF-40460018_pbs.20220216104306.err
+2022-02-16 10:57:23,512 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,529 [INFO ]  
+2022-02-16 10:57:23,530 [INFO ]  3/16
+2022-02-16 10:57:23,530 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,530 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40460019.fits
+2022-02-16 10:57:23,530 [INFO ]  log/errfile: apPSF-40460019_pbs.20220216104306.log, apPSF-40460019_pbs.20220216104306.err
+2022-02-16 10:57:23,530 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,546 [INFO ]  
+2022-02-16 10:57:23,546 [INFO ]  4/16
+2022-02-16 10:57:23,546 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,546 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40460020.fits
+2022-02-16 10:57:23,546 [INFO ]  log/errfile: apPSF-40460020_pbs.20220216104306.log, apPSF-40460020_pbs.20220216104306.err
+2022-02-16 10:57:23,546 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,572 [INFO ]  
+2022-02-16 10:57:23,572 [INFO ]  5/16
+2022-02-16 10:57:23,572 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,572 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40530003.fits
+2022-02-16 10:57:23,572 [INFO ]  log/errfile: apPSF-40530003_pbs.20220216104306.log, apPSF-40530003_pbs.20220216104306.err
+2022-02-16 10:57:23,572 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,590 [INFO ]  
+2022-02-16 10:57:23,590 [INFO ]  6/16
+2022-02-16 10:57:23,590 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,590 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40530054.fits
+2022-02-16 10:57:23,590 [INFO ]  log/errfile: apPSF-40530054_pbs.20220216104306.log, apPSF-40530054_pbs.20220216104306.err
+2022-02-16 10:57:23,590 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,607 [INFO ]  
+2022-02-16 10:57:23,607 [INFO ]  7/16
+2022-02-16 10:57:23,607 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,607 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40530055.fits
+2022-02-16 10:57:23,607 [INFO ]  log/errfile: apPSF-40530055_pbs.20220216104306.log, apPSF-40530055_pbs.20220216104306.err
+2022-02-16 10:57:23,607 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,623 [INFO ]  
+2022-02-16 10:57:23,623 [INFO ]  8/16
+2022-02-16 10:57:23,623 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,623 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40530056.fits
+2022-02-16 10:57:23,623 [INFO ]  log/errfile: apPSF-40530056_pbs.20220216104306.log, apPSF-40530056_pbs.20220216104306.err
+2022-02-16 10:57:23,623 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,640 [INFO ]  
+2022-02-16 10:57:23,640 [INFO ]  9/16
+2022-02-16 10:57:23,640 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,640 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40540005.fits
+2022-02-16 10:57:23,640 [INFO ]  log/errfile: apPSF-40540005_pbs.20220216104306.log, apPSF-40540005_pbs.20220216104306.err
+2022-02-16 10:57:23,640 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,656 [INFO ]  
+2022-02-16 10:57:23,656 [INFO ]  10/16
+2022-02-16 10:57:23,656 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,656 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40540056.fits
+2022-02-16 10:57:23,656 [INFO ]  log/errfile: apPSF-40540056_pbs.20220216104306.log, apPSF-40540056_pbs.20220216104306.err
+2022-02-16 10:57:23,656 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,673 [INFO ]  
+2022-02-16 10:57:23,673 [INFO ]  11/16
+2022-02-16 10:57:23,673 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,673 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40540057.fits
+2022-02-16 10:57:23,673 [INFO ]  log/errfile: apPSF-40540057_pbs.20220216104306.log, apPSF-40540057_pbs.20220216104306.err
+2022-02-16 10:57:23,673 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,689 [INFO ]  
+2022-02-16 10:57:23,689 [INFO ]  12/16
+2022-02-16 10:57:23,689 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,689 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40540058.fits
+2022-02-16 10:57:23,689 [INFO ]  log/errfile: apPSF-40540058_pbs.20220216104306.log, apPSF-40540058_pbs.20220216104306.err
+2022-02-16 10:57:23,689 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,706 [INFO ]  
+2022-02-16 10:57:23,706 [INFO ]  13/16
+2022-02-16 10:57:23,706 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,706 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40620003.fits
+2022-02-16 10:57:23,706 [INFO ]  log/errfile: apPSF-40620003_pbs.20220216104306.log, apPSF-40620003_pbs.20220216104306.err
+2022-02-16 10:57:23,706 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,722 [INFO ]  
+2022-02-16 10:57:23,722 [INFO ]  14/16
+2022-02-16 10:57:23,722 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,722 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40620052.fits
+2022-02-16 10:57:23,722 [INFO ]  log/errfile: apPSF-40620052_pbs.20220216104306.log, apPSF-40620052_pbs.20220216104306.err
+2022-02-16 10:57:23,722 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,737 [INFO ]  
+2022-02-16 10:57:23,737 [INFO ]  15/16
+2022-02-16 10:57:23,737 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,737 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40620053.fits
+2022-02-16 10:57:23,737 [INFO ]  log/errfile: apPSF-40620053_pbs.20220216104306.log, apPSF-40620053_pbs.20220216104306.err
+2022-02-16 10:57:23,738 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,754 [INFO ]  
+2022-02-16 10:57:23,754 [INFO ]  16/16
+2022-02-16 10:57:23,754 [INFO ]  Calibration type: PSF
+2022-02-16 10:57:23,754 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-40620054.fits
+2022-02-16 10:57:23,754 [INFO ]  log/errfile: apPSF-40620054_pbs.20220216104306.log, apPSF-40620054_pbs.20220216104306.err
+2022-02-16 10:57:23,754 [INFO ]  Calibration success: True 
+2022-02-16 10:57:23,778 [INFO ]  
+2022-02-16 10:57:23,778 [INFO ]  ----------------------------------------------
+2022-02-16 10:57:23,778 [INFO ]  Running Calibration Files: FLUX
+2022-02-16 10:57:23,778 [INFO ]  ==============================================
+2022-02-16 10:57:23,778 [INFO ]  
+2022-02-16 10:57:23,778 [INFO ]  18 file(s)
+2022-02-16 10:57:23,778 [INFO ]  Slurm settings: {'nodes': '5', 'alloc': 'sdss-np', 'shared': True, 'ppn': 64, 'walltime': '336:00:00', 'notification': False, 'cpus': 18, 'numpy_num_threads': 2}
+2022-02-16 10:57:23,824 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFlux-40460012_pbs.20220216104306.log
+2022-02-16 10:57:23,824 [INFO ]  Calibration file 1 : DOMEFLAT 40460012
+2022-02-16 10:57:23,825 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFlux-40460012_pbs.20220216104306.log
+2022-02-16 10:57:23,840 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFlux-40460013_pbs.20220216104306.log
+2022-02-16 10:57:23,840 [INFO ]  Calibration file 2 : DOMEFLAT 40460013
+2022-02-16 10:57:23,840 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFlux-40460013_pbs.20220216104306.log
+2022-02-16 10:57:23,849 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFlux-40460014_pbs.20220216104306.log
+2022-02-16 10:57:23,849 [INFO ]  Calibration file 3 : DOMEFLAT 40460014
+2022-02-16 10:57:23,849 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFlux-40460014_pbs.20220216104306.log
+2022-02-16 10:57:23,857 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFlux-40530014_pbs.20220216104306.log
+2022-02-16 10:57:23,857 [INFO ]  Calibration file 4 : DOMEFLAT 40530014
+2022-02-16 10:57:23,857 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFlux-40530014_pbs.20220216104306.log
+2022-02-16 10:57:23,865 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFlux-40530021_pbs.20220216104306.log
+2022-02-16 10:57:23,865 [INFO ]  Calibration file 5 : DOMEFLAT 40530021
+2022-02-16 10:57:23,865 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFlux-40530021_pbs.20220216104306.log
+2022-02-16 10:57:23,874 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFlux-40530027_pbs.20220216104306.log
+2022-02-16 10:57:23,874 [INFO ]  Calibration file 6 : DOMEFLAT 40530027
+2022-02-16 10:57:23,874 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFlux-40530027_pbs.20220216104306.log
+2022-02-16 10:57:23,882 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFlux-40530050_pbs.20220216104306.log
+2022-02-16 10:57:23,882 [INFO ]  Calibration file 7 : DOMEFLAT 40530050
+2022-02-16 10:57:23,882 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFlux-40530050_pbs.20220216104306.log
+2022-02-16 10:57:23,891 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540014_pbs.20220216104306.log
+2022-02-16 10:57:23,891 [INFO ]  Calibration file 8 : DOMEFLAT 40540014
+2022-02-16 10:57:23,891 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540014_pbs.20220216104306.log
+2022-02-16 10:57:23,899 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540019_pbs.20220216104306.log
+2022-02-16 10:57:23,899 [INFO ]  Calibration file 9 : DOMEFLAT 40540019
+2022-02-16 10:57:23,899 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540019_pbs.20220216104306.log
+2022-02-16 10:57:23,907 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540028_pbs.20220216104306.log
+2022-02-16 10:57:23,907 [INFO ]  Calibration file 10 : DOMEFLAT 40540028
+2022-02-16 10:57:23,907 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540028_pbs.20220216104306.log
+2022-02-16 10:57:23,915 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540030_pbs.20220216104306.log
+2022-02-16 10:57:23,915 [INFO ]  Calibration file 11 : DOMEFLAT 40540030
+2022-02-16 10:57:23,915 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540030_pbs.20220216104306.log
+2022-02-16 10:57:23,924 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540032_pbs.20220216104306.log
+2022-02-16 10:57:23,924 [INFO ]  Calibration file 12 : DOMEFLAT 40540032
+2022-02-16 10:57:23,924 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540032_pbs.20220216104306.log
+2022-02-16 10:57:23,932 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540052_pbs.20220216104306.log
+2022-02-16 10:57:23,932 [INFO ]  Calibration file 13 : DOMEFLAT 40540052
+2022-02-16 10:57:23,932 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFlux-40540052_pbs.20220216104306.log
+2022-02-16 10:57:23,941 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFlux-40620012_pbs.20220216104306.log
+2022-02-16 10:57:23,941 [INFO ]  Calibration file 14 : DOMEFLAT 40620012
+2022-02-16 10:57:23,941 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFlux-40620012_pbs.20220216104306.log
+2022-02-16 10:57:23,949 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFlux-40620028_pbs.20220216104306.log
+2022-02-16 10:57:23,949 [INFO ]  Calibration file 15 : DOMEFLAT 40620028
+2022-02-16 10:57:23,949 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFlux-40620028_pbs.20220216104306.log
+2022-02-16 10:57:23,957 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFlux-40620042_pbs.20220216104306.log
+2022-02-16 10:57:23,957 [INFO ]  Calibration file 16 : DOMEFLAT 40620042
+2022-02-16 10:57:23,957 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFlux-40620042_pbs.20220216104306.log
+2022-02-16 10:57:23,965 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFlux-40620045_pbs.20220216104306.log
+2022-02-16 10:57:23,965 [INFO ]  Calibration file 17 : DOMEFLAT 40620045
+2022-02-16 10:57:23,965 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFlux-40620045_pbs.20220216104306.log
+2022-02-16 10:57:23,974 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFlux-40620048_pbs.20220216104306.log
+2022-02-16 10:57:23,974 [INFO ]  Calibration file 18 : DOMEFLAT 40620048
+2022-02-16 10:57:23,974 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFlux-40620048_pbs.20220216104306.log
+2022-02-16 10:57:24,566 [INFO ]  PBS key is e4f6fc58-8f51-11ec-a241-2cea7ff4461c
+2022-02-16 10:58:24,810 [INFO ]  percent complete = 0
+2022-02-16 10:59:24,986 [INFO ]  percent complete = 0
+2022-02-16 11:00:25,160 [INFO ]  percent complete = 0
+2022-02-16 11:01:25,337 [INFO ]  percent complete = 0
+2022-02-16 11:02:25,513 [INFO ]  percent complete = 0
+2022-02-16 11:03:25,688 [INFO ]  percent complete = 0
+2022-02-16 11:04:25,862 [INFO ]  percent complete = 0
+2022-02-16 11:05:26,038 [INFO ]  percent complete = 0
+2022-02-16 11:06:26,203 [INFO ]  percent complete = 0
+2022-02-16 11:07:26,391 [INFO ]  percent complete = 0
+2022-02-16 11:08:26,566 [INFO ]  percent complete = 0
+2022-02-16 11:09:26,741 [INFO ]  percent complete = 5
+2022-02-16 11:10:26,916 [INFO ]  percent complete = 22
+2022-02-16 11:11:27,125 [INFO ]  percent complete = 50
+2022-02-16 11:12:27,276 [INFO ]  percent complete = 83
+2022-02-16 11:13:27,465 [INFO ]  percent complete = 94
+2022-02-16 11:14:27,640 [INFO ]  percent complete = 100
+2022-02-16 11:14:27,641 [INFO ]  
+2022-02-16 11:14:27,641 [INFO ]  -------------------------
+2022-02-16 11:14:27,641 [INFO ]  Checking Calibration runs
+2022-02-16 11:14:27,641 [INFO ]  =========================
+2022-02-16 11:14:27,688 [INFO ]  
+2022-02-16 11:14:27,688 [INFO ]  1/18
+2022-02-16 11:14:27,688 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,688 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40460012.fits
+2022-02-16 11:14:27,688 [INFO ]  log/errfile: apFlux-40460012_pbs.20220216104306.log, apFlux-40460012_pbs.20220216104306.err
+2022-02-16 11:14:27,688 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,705 [INFO ]  
+2022-02-16 11:14:27,705 [INFO ]  2/18
+2022-02-16 11:14:27,705 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,705 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40460013.fits
+2022-02-16 11:14:27,706 [INFO ]  log/errfile: apFlux-40460013_pbs.20220216104306.log, apFlux-40460013_pbs.20220216104306.err
+2022-02-16 11:14:27,706 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,722 [INFO ]  
+2022-02-16 11:14:27,723 [INFO ]  3/18
+2022-02-16 11:14:27,723 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,723 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40460014.fits
+2022-02-16 11:14:27,723 [INFO ]  log/errfile: apFlux-40460014_pbs.20220216104306.log, apFlux-40460014_pbs.20220216104306.err
+2022-02-16 11:14:27,723 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,740 [INFO ]  
+2022-02-16 11:14:27,740 [INFO ]  4/18
+2022-02-16 11:14:27,740 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,740 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40530014.fits
+2022-02-16 11:14:27,740 [INFO ]  log/errfile: apFlux-40530014_pbs.20220216104306.log, apFlux-40530014_pbs.20220216104306.err
+2022-02-16 11:14:27,740 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,757 [INFO ]  
+2022-02-16 11:14:27,757 [INFO ]  5/18
+2022-02-16 11:14:27,757 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,757 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40530021.fits
+2022-02-16 11:14:27,757 [INFO ]  log/errfile: apFlux-40530021_pbs.20220216104306.log, apFlux-40530021_pbs.20220216104306.err
+2022-02-16 11:14:27,757 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,775 [INFO ]  
+2022-02-16 11:14:27,775 [INFO ]  6/18
+2022-02-16 11:14:27,775 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,775 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40530027.fits
+2022-02-16 11:14:27,775 [INFO ]  log/errfile: apFlux-40530027_pbs.20220216104306.log, apFlux-40530027_pbs.20220216104306.err
+2022-02-16 11:14:27,775 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,791 [INFO ]  
+2022-02-16 11:14:27,792 [INFO ]  7/18
+2022-02-16 11:14:27,792 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,792 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40530050.fits
+2022-02-16 11:14:27,792 [INFO ]  log/errfile: apFlux-40530050_pbs.20220216104306.log, apFlux-40530050_pbs.20220216104306.err
+2022-02-16 11:14:27,792 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,808 [INFO ]  
+2022-02-16 11:14:27,808 [INFO ]  8/18
+2022-02-16 11:14:27,808 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,809 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40540014.fits
+2022-02-16 11:14:27,809 [INFO ]  log/errfile: apFlux-40540014_pbs.20220216104306.log, apFlux-40540014_pbs.20220216104306.err
+2022-02-16 11:14:27,809 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,825 [INFO ]  
+2022-02-16 11:14:27,825 [INFO ]  9/18
+2022-02-16 11:14:27,825 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,825 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40540019.fits
+2022-02-16 11:14:27,825 [INFO ]  log/errfile: apFlux-40540019_pbs.20220216104306.log, apFlux-40540019_pbs.20220216104306.err
+2022-02-16 11:14:27,825 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,843 [INFO ]  
+2022-02-16 11:14:27,843 [INFO ]  10/18
+2022-02-16 11:14:27,843 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,843 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40540028.fits
+2022-02-16 11:14:27,843 [INFO ]  log/errfile: apFlux-40540028_pbs.20220216104306.log, apFlux-40540028_pbs.20220216104306.err
+2022-02-16 11:14:27,843 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,860 [INFO ]  
+2022-02-16 11:14:27,860 [INFO ]  11/18
+2022-02-16 11:14:27,861 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,861 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40540030.fits
+2022-02-16 11:14:27,861 [INFO ]  log/errfile: apFlux-40540030_pbs.20220216104306.log, apFlux-40540030_pbs.20220216104306.err
+2022-02-16 11:14:27,861 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,877 [INFO ]  
+2022-02-16 11:14:27,877 [INFO ]  12/18
+2022-02-16 11:14:27,877 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,877 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40540032.fits
+2022-02-16 11:14:27,877 [INFO ]  log/errfile: apFlux-40540032_pbs.20220216104306.log, apFlux-40540032_pbs.20220216104306.err
+2022-02-16 11:14:27,878 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,894 [INFO ]  
+2022-02-16 11:14:27,894 [INFO ]  13/18
+2022-02-16 11:14:27,894 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,894 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40540052.fits
+2022-02-16 11:14:27,894 [INFO ]  log/errfile: apFlux-40540052_pbs.20220216104306.log, apFlux-40540052_pbs.20220216104306.err
+2022-02-16 11:14:27,895 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,911 [INFO ]  
+2022-02-16 11:14:27,911 [INFO ]  14/18
+2022-02-16 11:14:27,911 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,911 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40620012.fits
+2022-02-16 11:14:27,911 [INFO ]  log/errfile: apFlux-40620012_pbs.20220216104306.log, apFlux-40620012_pbs.20220216104306.err
+2022-02-16 11:14:27,911 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,928 [INFO ]  
+2022-02-16 11:14:27,928 [INFO ]  15/18
+2022-02-16 11:14:27,928 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,928 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40620028.fits
+2022-02-16 11:14:27,928 [INFO ]  log/errfile: apFlux-40620028_pbs.20220216104306.log, apFlux-40620028_pbs.20220216104306.err
+2022-02-16 11:14:27,928 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,945 [INFO ]  
+2022-02-16 11:14:27,945 [INFO ]  16/18
+2022-02-16 11:14:27,945 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,945 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40620042.fits
+2022-02-16 11:14:27,945 [INFO ]  log/errfile: apFlux-40620042_pbs.20220216104306.log, apFlux-40620042_pbs.20220216104306.err
+2022-02-16 11:14:27,945 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,962 [INFO ]  
+2022-02-16 11:14:27,962 [INFO ]  17/18
+2022-02-16 11:14:27,962 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,962 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40620045.fits
+2022-02-16 11:14:27,962 [INFO ]  log/errfile: apFlux-40620045_pbs.20220216104306.log, apFlux-40620045_pbs.20220216104306.err
+2022-02-16 11:14:27,962 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,979 [INFO ]  
+2022-02-16 11:14:27,979 [INFO ]  18/18
+2022-02-16 11:14:27,979 [INFO ]  Calibration type: Flux
+2022-02-16 11:14:27,979 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-40620048.fits
+2022-02-16 11:14:27,979 [INFO ]  log/errfile: apFlux-40620048_pbs.20220216104306.log, apFlux-40620048_pbs.20220216104306.err
+2022-02-16 11:14:27,979 [INFO ]  Calibration success: True 
+2022-02-16 11:14:27,996 [INFO ]  
+2022-02-16 11:14:27,996 [INFO ]  ----------------------------------------------
+2022-02-16 11:14:27,996 [INFO ]  Running Calibration Files: ARCLAMP
+2022-02-16 11:14:27,996 [INFO ]  ==============================================
+2022-02-16 11:14:27,996 [INFO ]  
+2022-02-16 11:14:27,996 [INFO ]  32 file(s)
+2022-02-16 11:14:27,996 [INFO ]  Slurm settings: {'nodes': '5', 'alloc': 'sdss-np', 'shared': True, 'ppn': 64, 'walltime': '336:00:00', 'notification': False, 'cpus': 32, 'numpy_num_threads': 2}
+2022-02-16 11:14:28,053 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460005_pbs.20220216104306.log
+2022-02-16 11:14:28,053 [INFO ]  Calibration file 1 : ARCLAMP 40460005
+2022-02-16 11:14:28,053 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460005_pbs.20220216104306.log
+2022-02-16 11:14:28,068 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460006_pbs.20220216104306.log
+2022-02-16 11:14:28,068 [INFO ]  Calibration file 2 : ARCLAMP 40460006
+2022-02-16 11:14:28,069 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460006_pbs.20220216104306.log
+2022-02-16 11:14:28,077 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460007_pbs.20220216104306.log
+2022-02-16 11:14:28,077 [INFO ]  Calibration file 3 : ARCLAMP 40460007
+2022-02-16 11:14:28,077 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460007_pbs.20220216104306.log
+2022-02-16 11:14:28,085 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460008_pbs.20220216104306.log
+2022-02-16 11:14:28,085 [INFO ]  Calibration file 4 : ARCLAMP 40460008
+2022-02-16 11:14:28,085 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460008_pbs.20220216104306.log
+2022-02-16 11:14:28,093 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460021_pbs.20220216104306.log
+2022-02-16 11:14:28,093 [INFO ]  Calibration file 5 : ARCLAMP 40460021
+2022-02-16 11:14:28,093 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460021_pbs.20220216104306.log
+2022-02-16 11:14:28,102 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460022_pbs.20220216104306.log
+2022-02-16 11:14:28,102 [INFO ]  Calibration file 6 : ARCLAMP 40460022
+2022-02-16 11:14:28,102 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460022_pbs.20220216104306.log
+2022-02-16 11:14:28,110 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460023_pbs.20220216104306.log
+2022-02-16 11:14:28,110 [INFO ]  Calibration file 7 : ARCLAMP 40460023
+2022-02-16 11:14:28,110 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460023_pbs.20220216104306.log
+2022-02-16 11:14:28,118 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460024_pbs.20220216104306.log
+2022-02-16 11:14:28,119 [INFO ]  Calibration file 8 : ARCLAMP 40460024
+2022-02-16 11:14:28,119 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apWave-40460024_pbs.20220216104306.log
+2022-02-16 11:14:28,127 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530004_pbs.20220216104306.log
+2022-02-16 11:14:28,127 [INFO ]  Calibration file 9 : ARCLAMP 40530004
+2022-02-16 11:14:28,127 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530004_pbs.20220216104306.log
+2022-02-16 11:14:28,135 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530005_pbs.20220216104306.log
+2022-02-16 11:14:28,135 [INFO ]  Calibration file 10 : ARCLAMP 40530005
+2022-02-16 11:14:28,135 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530005_pbs.20220216104306.log
+2022-02-16 11:14:28,143 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530006_pbs.20220216104306.log
+2022-02-16 11:14:28,143 [INFO ]  Calibration file 11 : ARCLAMP 40530006
+2022-02-16 11:14:28,144 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530006_pbs.20220216104306.log
+2022-02-16 11:14:28,152 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530007_pbs.20220216104306.log
+2022-02-16 11:14:28,152 [INFO ]  Calibration file 12 : ARCLAMP 40530007
+2022-02-16 11:14:28,152 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530007_pbs.20220216104306.log
+2022-02-16 11:14:28,160 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530057_pbs.20220216104306.log
+2022-02-16 11:14:28,160 [INFO ]  Calibration file 13 : ARCLAMP 40530057
+2022-02-16 11:14:28,160 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530057_pbs.20220216104306.log
+2022-02-16 11:14:28,168 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530058_pbs.20220216104306.log
+2022-02-16 11:14:28,168 [INFO ]  Calibration file 14 : ARCLAMP 40530058
+2022-02-16 11:14:28,169 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530058_pbs.20220216104306.log
+2022-02-16 11:14:28,177 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530059_pbs.20220216104306.log
+2022-02-16 11:14:28,177 [INFO ]  Calibration file 15 : ARCLAMP 40530059
+2022-02-16 11:14:28,177 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530059_pbs.20220216104306.log
+2022-02-16 11:14:28,185 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530060_pbs.20220216104306.log
+2022-02-16 11:14:28,185 [INFO ]  Calibration file 16 : ARCLAMP 40530060
+2022-02-16 11:14:28,185 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apWave-40530060_pbs.20220216104306.log
+2022-02-16 11:14:28,194 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540006_pbs.20220216104306.log
+2022-02-16 11:14:28,194 [INFO ]  Calibration file 17 : ARCLAMP 40540006
+2022-02-16 11:14:28,194 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540006_pbs.20220216104306.log
+2022-02-16 11:14:28,202 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540007_pbs.20220216104306.log
+2022-02-16 11:14:28,202 [INFO ]  Calibration file 18 : ARCLAMP 40540007
+2022-02-16 11:14:28,202 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540007_pbs.20220216104306.log
+2022-02-16 11:14:28,210 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540008_pbs.20220216104306.log
+2022-02-16 11:14:28,210 [INFO ]  Calibration file 19 : ARCLAMP 40540008
+2022-02-16 11:14:28,210 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540008_pbs.20220216104306.log
+2022-02-16 11:14:28,219 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540009_pbs.20220216104306.log
+2022-02-16 11:14:28,219 [INFO ]  Calibration file 20 : ARCLAMP 40540009
+2022-02-16 11:14:28,219 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540009_pbs.20220216104306.log
+2022-02-16 11:14:28,235 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540059_pbs.20220216104306.log
+2022-02-16 11:14:28,235 [INFO ]  Calibration file 21 : ARCLAMP 40540059
+2022-02-16 11:14:28,235 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540059_pbs.20220216104306.log
+2022-02-16 11:14:28,244 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540060_pbs.20220216104306.log
+2022-02-16 11:14:28,244 [INFO ]  Calibration file 22 : ARCLAMP 40540060
+2022-02-16 11:14:28,244 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540060_pbs.20220216104306.log
+2022-02-16 11:14:28,252 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540061_pbs.20220216104306.log
+2022-02-16 11:14:28,252 [INFO ]  Calibration file 23 : ARCLAMP 40540061
+2022-02-16 11:14:28,252 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540061_pbs.20220216104306.log
+2022-02-16 11:14:28,260 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540062_pbs.20220216104306.log
+2022-02-16 11:14:28,260 [INFO ]  Calibration file 24 : ARCLAMP 40540062
+2022-02-16 11:14:28,260 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apWave-40540062_pbs.20220216104306.log
+2022-02-16 11:14:28,269 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620004_pbs.20220216104306.log
+2022-02-16 11:14:28,269 [INFO ]  Calibration file 25 : ARCLAMP 40620004
+2022-02-16 11:14:28,269 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620004_pbs.20220216104306.log
+2022-02-16 11:14:28,277 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620005_pbs.20220216104306.log
+2022-02-16 11:14:28,277 [INFO ]  Calibration file 26 : ARCLAMP 40620005
+2022-02-16 11:14:28,277 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620005_pbs.20220216104306.log
+2022-02-16 11:14:28,285 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620006_pbs.20220216104306.log
+2022-02-16 11:14:28,285 [INFO ]  Calibration file 27 : ARCLAMP 40620006
+2022-02-16 11:14:28,285 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620006_pbs.20220216104306.log
+2022-02-16 11:14:28,294 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620007_pbs.20220216104306.log
+2022-02-16 11:14:28,294 [INFO ]  Calibration file 28 : ARCLAMP 40620007
+2022-02-16 11:14:28,294 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620007_pbs.20220216104306.log
+2022-02-16 11:14:28,302 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620055_pbs.20220216104306.log
+2022-02-16 11:14:28,302 [INFO ]  Calibration file 29 : ARCLAMP 40620055
+2022-02-16 11:14:28,302 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620055_pbs.20220216104306.log
+2022-02-16 11:14:28,311 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620056_pbs.20220216104306.log
+2022-02-16 11:14:28,311 [INFO ]  Calibration file 30 : ARCLAMP 40620056
+2022-02-16 11:14:28,311 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620056_pbs.20220216104306.log
+2022-02-16 11:14:28,319 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620057_pbs.20220216104306.log
+2022-02-16 11:14:28,319 [INFO ]  Calibration file 31 : ARCLAMP 40620057
+2022-02-16 11:14:28,319 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620057_pbs.20220216104306.log
+2022-02-16 11:14:28,327 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620058_pbs.20220216104306.log
+2022-02-16 11:14:28,327 [INFO ]  Calibration file 32 : ARCLAMP 40620058
+2022-02-16 11:14:28,328 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apWave-40620058_pbs.20220216104306.log
+2022-02-16 11:14:29,078 [INFO ]  PBS key is 4772935e-8f54-11ec-a241-2cea7ff4461c
+2022-02-16 11:15:29,472 [INFO ]  percent complete = 0
+2022-02-16 11:16:29,647 [INFO ]  percent complete = 0
+2022-02-16 11:17:29,823 [INFO ]  percent complete = 0
+2022-02-16 11:18:29,999 [INFO ]  percent complete = 0
+2022-02-16 11:19:30,141 [INFO ]  percent complete = 0
+2022-02-16 11:20:30,316 [INFO ]  percent complete = 0
+2022-02-16 11:21:30,491 [INFO ]  percent complete = 0
+2022-02-16 11:22:30,666 [INFO ]  percent complete = 0
+2022-02-16 11:23:30,840 [INFO ]  percent complete = 3
+2022-02-16 11:24:31,015 [INFO ]  percent complete = 3
+2022-02-16 11:25:31,191 [INFO ]  percent complete = 3
+2022-02-16 11:26:31,305 [INFO ]  percent complete = 21
+2022-02-16 11:27:31,479 [INFO ]  percent complete = 40
+2022-02-16 11:28:31,656 [INFO ]  percent complete = 40
+2022-02-16 11:29:31,834 [INFO ]  percent complete = 46
+2022-02-16 11:30:31,962 [INFO ]  percent complete = 50
+2022-02-16 11:31:32,142 [INFO ]  percent complete = 50
+2022-02-16 11:32:32,316 [INFO ]  percent complete = 50
+2022-02-16 11:33:32,439 [INFO ]  percent complete = 50
+2022-02-16 11:34:32,614 [INFO ]  percent complete = 50
+2022-02-16 11:35:32,800 [INFO ]  percent complete = 50
+2022-02-16 11:36:32,976 [INFO ]  percent complete = 50
+2022-02-16 11:37:33,151 [INFO ]  percent complete = 50
+2022-02-16 11:38:33,273 [INFO ]  percent complete = 50
+2022-02-16 11:39:33,401 [INFO ]  percent complete = 50
+2022-02-16 11:40:33,537 [INFO ]  percent complete = 50
+2022-02-16 11:41:33,712 [INFO ]  percent complete = 50
+2022-02-16 11:42:33,887 [INFO ]  percent complete = 50
+2022-02-16 11:43:34,054 [INFO ]  percent complete = 50
+2022-02-16 11:44:34,229 [INFO ]  percent complete = 50
+2022-02-16 11:45:34,404 [INFO ]  percent complete = 50
+2022-02-16 11:46:34,579 [INFO ]  percent complete = 50
+2022-02-16 11:47:34,753 [INFO ]  percent complete = 50
+2022-02-16 11:48:34,946 [INFO ]  percent complete = 50
+2022-02-16 11:49:35,155 [INFO ]  percent complete = 50
+2022-02-16 11:50:35,338 [INFO ]  percent complete = 50
+2022-02-16 11:51:35,533 [INFO ]  percent complete = 50
+2022-02-16 11:52:35,728 [INFO ]  percent complete = 50
+2022-02-16 11:53:35,868 [INFO ]  percent complete = 50
+2022-02-16 11:54:36,042 [INFO ]  percent complete = 50
+2022-02-16 11:55:36,216 [INFO ]  percent complete = 50
+2022-02-16 11:56:36,391 [INFO ]  percent complete = 50
+2022-02-16 11:57:36,565 [INFO ]  percent complete = 50
+2022-02-16 11:58:36,739 [INFO ]  percent complete = 50
+2022-02-16 11:59:36,913 [INFO ]  percent complete = 50
+2022-02-16 12:00:37,051 [INFO ]  percent complete = 50
+2022-02-16 12:01:37,227 [INFO ]  percent complete = 50
+2022-02-16 12:02:37,403 [INFO ]  percent complete = 50
+2022-02-16 12:03:37,578 [INFO ]  percent complete = 50
+2022-02-16 12:04:37,752 [INFO ]  percent complete = 50
+2022-02-16 12:05:37,927 [INFO ]  percent complete = 50
+2022-02-16 12:06:38,101 [INFO ]  percent complete = 50
+2022-02-16 12:07:38,277 [INFO ]  percent complete = 50
+2022-02-16 12:08:38,452 [INFO ]  percent complete = 50
+2022-02-16 12:09:38,631 [INFO ]  percent complete = 50
+2022-02-16 12:10:38,781 [INFO ]  percent complete = 50
+2022-02-16 12:11:38,903 [INFO ]  percent complete = 50
+2022-02-16 12:12:39,053 [INFO ]  percent complete = 50
+2022-02-16 12:13:39,226 [INFO ]  percent complete = 50
+2022-02-16 12:14:39,400 [INFO ]  percent complete = 50
+2022-02-16 12:15:39,554 [INFO ]  percent complete = 50
+2022-02-16 12:16:39,672 [INFO ]  percent complete = 50
+2022-02-16 12:17:39,846 [INFO ]  percent complete = 50
+2022-02-16 12:18:40,021 [INFO ]  percent complete = 50
+2022-02-16 12:19:40,155 [INFO ]  percent complete = 50
+2022-02-16 12:20:40,329 [INFO ]  percent complete = 50
+2022-02-16 12:21:40,503 [INFO ]  percent complete = 53
+2022-02-16 12:22:40,676 [INFO ]  percent complete = 62
+2022-02-16 12:23:40,850 [INFO ]  percent complete = 71
+2022-02-16 12:24:41,025 [INFO ]  percent complete = 81
+2022-02-16 12:25:41,199 [INFO ]  percent complete = 87
+2022-02-16 12:26:41,372 [INFO ]  percent complete = 90
+2022-02-16 12:27:41,547 [INFO ]  percent complete = 96
+2022-02-16 12:28:41,720 [INFO ]  percent complete = 100
+2022-02-16 12:28:41,721 [INFO ]  
+2022-02-16 12:28:41,721 [INFO ]  -------------------------
+2022-02-16 12:28:41,721 [INFO ]  Checking Calibration runs
+2022-02-16 12:28:41,721 [INFO ]  =========================
+2022-02-16 12:28:41,828 [INFO ]  
+2022-02-16 12:28:41,828 [INFO ]  1/32
+2022-02-16 12:28:41,828 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:41,828 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40460005.fits
+2022-02-16 12:28:41,828 [INFO ]  log/errfile: apWave-40460005_pbs.20220216104306.log, apWave-40460005_pbs.20220216104306.err
+2022-02-16 12:28:41,828 [INFO ]  Calibration success: True 
+2022-02-16 12:28:41,852 [INFO ]  
+2022-02-16 12:28:41,853 [INFO ]  2/32
+2022-02-16 12:28:41,853 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:41,853 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40460006.fits
+2022-02-16 12:28:41,853 [INFO ]  log/errfile: apWave-40460006_pbs.20220216104306.log, apWave-40460006_pbs.20220216104306.err
+2022-02-16 12:28:41,853 [INFO ]  Calibration success: True 
+2022-02-16 12:28:41,878 [INFO ]  
+2022-02-16 12:28:41,878 [INFO ]  3/32
+2022-02-16 12:28:41,878 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:41,878 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40460007.fits
+2022-02-16 12:28:41,878 [INFO ]  log/errfile: apWave-40460007_pbs.20220216104306.log, apWave-40460007_pbs.20220216104306.err
+2022-02-16 12:28:41,878 [INFO ]  Calibration success: True 
+2022-02-16 12:28:41,923 [INFO ]  
+2022-02-16 12:28:41,923 [INFO ]  4/32
+2022-02-16 12:28:41,923 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:41,923 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40460008.fits
+2022-02-16 12:28:41,923 [INFO ]  log/errfile: apWave-40460008_pbs.20220216104306.log, apWave-40460008_pbs.20220216104306.err
+2022-02-16 12:28:41,924 [INFO ]  Calibration success: True 
+2022-02-16 12:28:41,939 [INFO ]  
+2022-02-16 12:28:41,939 [INFO ]  5/32
+2022-02-16 12:28:41,939 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:41,940 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40460021.fits
+2022-02-16 12:28:41,940 [INFO ]  log/errfile: apWave-40460021_pbs.20220216104306.log, apWave-40460021_pbs.20220216104306.err
+2022-02-16 12:28:41,940 [INFO ]  Calibration success: True 
+2022-02-16 12:28:41,955 [INFO ]  
+2022-02-16 12:28:41,955 [INFO ]  6/32
+2022-02-16 12:28:41,955 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:41,955 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40460022.fits
+2022-02-16 12:28:41,955 [INFO ]  log/errfile: apWave-40460022_pbs.20220216104306.log, apWave-40460022_pbs.20220216104306.err
+2022-02-16 12:28:41,955 [INFO ]  Calibration success: True 
+2022-02-16 12:28:41,983 [INFO ]  
+2022-02-16 12:28:41,983 [INFO ]  7/32
+2022-02-16 12:28:41,983 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:41,983 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40460023.fits
+2022-02-16 12:28:41,983 [INFO ]  log/errfile: apWave-40460023_pbs.20220216104306.log, apWave-40460023_pbs.20220216104306.err
+2022-02-16 12:28:41,983 [INFO ]  Calibration success: True 
+2022-02-16 12:28:41,999 [INFO ]  
+2022-02-16 12:28:42,000 [INFO ]  8/32
+2022-02-16 12:28:42,000 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,000 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40460024.fits
+2022-02-16 12:28:42,000 [INFO ]  log/errfile: apWave-40460024_pbs.20220216104306.log, apWave-40460024_pbs.20220216104306.err
+2022-02-16 12:28:42,000 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,043 [INFO ]  
+2022-02-16 12:28:42,043 [INFO ]  9/32
+2022-02-16 12:28:42,043 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,043 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40530004.fits
+2022-02-16 12:28:42,043 [INFO ]  log/errfile: apWave-40530004_pbs.20220216104306.log, apWave-40530004_pbs.20220216104306.err
+2022-02-16 12:28:42,043 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,060 [INFO ]  
+2022-02-16 12:28:42,061 [INFO ]  10/32
+2022-02-16 12:28:42,061 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,061 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40530005.fits
+2022-02-16 12:28:42,061 [INFO ]  log/errfile: apWave-40530005_pbs.20220216104306.log, apWave-40530005_pbs.20220216104306.err
+2022-02-16 12:28:42,061 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,087 [INFO ]  
+2022-02-16 12:28:42,087 [INFO ]  11/32
+2022-02-16 12:28:42,087 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,087 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40530006.fits
+2022-02-16 12:28:42,087 [INFO ]  log/errfile: apWave-40530006_pbs.20220216104306.log, apWave-40530006_pbs.20220216104306.err
+2022-02-16 12:28:42,087 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,102 [INFO ]  
+2022-02-16 12:28:42,103 [INFO ]  12/32
+2022-02-16 12:28:42,103 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,103 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40530007.fits
+2022-02-16 12:28:42,103 [INFO ]  log/errfile: apWave-40530007_pbs.20220216104306.log, apWave-40530007_pbs.20220216104306.err
+2022-02-16 12:28:42,103 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,119 [INFO ]  
+2022-02-16 12:28:42,120 [INFO ]  13/32
+2022-02-16 12:28:42,120 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,120 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40530057.fits
+2022-02-16 12:28:42,120 [INFO ]  log/errfile: apWave-40530057_pbs.20220216104306.log, apWave-40530057_pbs.20220216104306.err
+2022-02-16 12:28:42,120 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,136 [INFO ]  
+2022-02-16 12:28:42,136 [INFO ]  14/32
+2022-02-16 12:28:42,136 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,136 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40530058.fits
+2022-02-16 12:28:42,136 [INFO ]  log/errfile: apWave-40530058_pbs.20220216104306.log, apWave-40530058_pbs.20220216104306.err
+2022-02-16 12:28:42,136 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,162 [INFO ]  
+2022-02-16 12:28:42,162 [INFO ]  15/32
+2022-02-16 12:28:42,162 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,162 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40530059.fits
+2022-02-16 12:28:42,162 [INFO ]  log/errfile: apWave-40530059_pbs.20220216104306.log, apWave-40530059_pbs.20220216104306.err
+2022-02-16 12:28:42,162 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,177 [INFO ]  
+2022-02-16 12:28:42,177 [INFO ]  16/32
+2022-02-16 12:28:42,177 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,178 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40530060.fits
+2022-02-16 12:28:42,178 [INFO ]  log/errfile: apWave-40530060_pbs.20220216104306.log, apWave-40530060_pbs.20220216104306.err
+2022-02-16 12:28:42,178 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,212 [INFO ]  
+2022-02-16 12:28:42,212 [INFO ]  17/32
+2022-02-16 12:28:42,212 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,212 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40540006.fits
+2022-02-16 12:28:42,212 [INFO ]  log/errfile: apWave-40540006_pbs.20220216104306.log, apWave-40540006_pbs.20220216104306.err
+2022-02-16 12:28:42,212 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,229 [INFO ]  
+2022-02-16 12:28:42,230 [INFO ]  18/32
+2022-02-16 12:28:42,230 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,230 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40540007.fits
+2022-02-16 12:28:42,230 [INFO ]  log/errfile: apWave-40540007_pbs.20220216104306.log, apWave-40540007_pbs.20220216104306.err
+2022-02-16 12:28:42,230 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,259 [INFO ]  
+2022-02-16 12:28:42,259 [INFO ]  19/32
+2022-02-16 12:28:42,259 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,259 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40540008.fits
+2022-02-16 12:28:42,259 [INFO ]  log/errfile: apWave-40540008_pbs.20220216104306.log, apWave-40540008_pbs.20220216104306.err
+2022-02-16 12:28:42,259 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,275 [INFO ]  
+2022-02-16 12:28:42,275 [INFO ]  20/32
+2022-02-16 12:28:42,275 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,275 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40540009.fits
+2022-02-16 12:28:42,275 [INFO ]  log/errfile: apWave-40540009_pbs.20220216104306.log, apWave-40540009_pbs.20220216104306.err
+2022-02-16 12:28:42,275 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,301 [INFO ]  
+2022-02-16 12:28:42,301 [INFO ]  21/32
+2022-02-16 12:28:42,301 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,302 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40540059.fits
+2022-02-16 12:28:42,302 [INFO ]  log/errfile: apWave-40540059_pbs.20220216104306.log, apWave-40540059_pbs.20220216104306.err
+2022-02-16 12:28:42,302 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,318 [INFO ]  
+2022-02-16 12:28:42,318 [INFO ]  22/32
+2022-02-16 12:28:42,318 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,318 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40540060.fits
+2022-02-16 12:28:42,318 [INFO ]  log/errfile: apWave-40540060_pbs.20220216104306.log, apWave-40540060_pbs.20220216104306.err
+2022-02-16 12:28:42,318 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,348 [INFO ]  
+2022-02-16 12:28:42,348 [INFO ]  23/32
+2022-02-16 12:28:42,348 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,348 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40540061.fits
+2022-02-16 12:28:42,348 [INFO ]  log/errfile: apWave-40540061_pbs.20220216104306.log, apWave-40540061_pbs.20220216104306.err
+2022-02-16 12:28:42,348 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,363 [INFO ]  
+2022-02-16 12:28:42,364 [INFO ]  24/32
+2022-02-16 12:28:42,364 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,364 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40540062.fits
+2022-02-16 12:28:42,364 [INFO ]  log/errfile: apWave-40540062_pbs.20220216104306.log, apWave-40540062_pbs.20220216104306.err
+2022-02-16 12:28:42,364 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,416 [INFO ]  
+2022-02-16 12:28:42,416 [INFO ]  25/32
+2022-02-16 12:28:42,416 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,416 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40620004.fits
+2022-02-16 12:28:42,416 [INFO ]  log/errfile: apWave-40620004_pbs.20220216104306.log, apWave-40620004_pbs.20220216104306.err
+2022-02-16 12:28:42,416 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,434 [INFO ]  
+2022-02-16 12:28:42,434 [INFO ]  26/32
+2022-02-16 12:28:42,434 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,434 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40620005.fits
+2022-02-16 12:28:42,434 [INFO ]  log/errfile: apWave-40620005_pbs.20220216104306.log, apWave-40620005_pbs.20220216104306.err
+2022-02-16 12:28:42,434 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,459 [INFO ]  
+2022-02-16 12:28:42,459 [INFO ]  27/32
+2022-02-16 12:28:42,459 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,459 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40620006.fits
+2022-02-16 12:28:42,459 [INFO ]  log/errfile: apWave-40620006_pbs.20220216104306.log, apWave-40620006_pbs.20220216104306.err
+2022-02-16 12:28:42,459 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,475 [INFO ]  
+2022-02-16 12:28:42,475 [INFO ]  28/32
+2022-02-16 12:28:42,475 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,475 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40620007.fits
+2022-02-16 12:28:42,475 [INFO ]  log/errfile: apWave-40620007_pbs.20220216104306.log, apWave-40620007_pbs.20220216104306.err
+2022-02-16 12:28:42,475 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,521 [INFO ]  
+2022-02-16 12:28:42,521 [INFO ]  29/32
+2022-02-16 12:28:42,521 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,521 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40620055.fits
+2022-02-16 12:28:42,521 [INFO ]  log/errfile: apWave-40620055_pbs.20220216104306.log, apWave-40620055_pbs.20220216104306.err
+2022-02-16 12:28:42,521 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,538 [INFO ]  
+2022-02-16 12:28:42,538 [INFO ]  30/32
+2022-02-16 12:28:42,538 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,538 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40620056.fits
+2022-02-16 12:28:42,538 [INFO ]  log/errfile: apWave-40620056_pbs.20220216104306.log, apWave-40620056_pbs.20220216104306.err
+2022-02-16 12:28:42,538 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,562 [INFO ]  
+2022-02-16 12:28:42,562 [INFO ]  31/32
+2022-02-16 12:28:42,562 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,562 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40620057.fits
+2022-02-16 12:28:42,562 [INFO ]  log/errfile: apWave-40620057_pbs.20220216104306.log, apWave-40620057_pbs.20220216104306.err
+2022-02-16 12:28:42,562 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,578 [INFO ]  
+2022-02-16 12:28:42,578 [INFO ]  32/32
+2022-02-16 12:28:42,578 [INFO ]  Calibration type: Wave
+2022-02-16 12:28:42,578 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-40620058.fits
+2022-02-16 12:28:42,578 [INFO ]  log/errfile: apWave-40620058_pbs.20220216104306.log, apWave-40620058_pbs.20220216104306.err
+2022-02-16 12:28:42,578 [INFO ]  Calibration success: True 
+2022-02-16 12:28:42,598 [INFO ]  
+2022-02-16 12:28:42,598 [INFO ]  ----------------------------------------------
+2022-02-16 12:28:42,598 [INFO ]  Running Calibration Files: FPI
+2022-02-16 12:28:42,598 [INFO ]  ==============================================
+2022-02-16 12:28:42,598 [INFO ]  
+2022-02-16 12:28:42,598 [INFO ]  9 file(s)
+2022-02-16 12:28:42,598 [INFO ]  Slurm settings: {'nodes': '5', 'alloc': 'sdss-np', 'shared': True, 'ppn': 64, 'walltime': '336:00:00', 'notification': False, 'cpus': 9, 'numpy_num_threads': 2}
+2022-02-16 12:28:42,647 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFPI-40460010_pbs.20220216104306.log
+2022-02-16 12:28:42,647 [INFO ]  Calibration file 1 : FPI 40460010
+2022-02-16 12:28:42,647 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFPI-40460010_pbs.20220216104306.log
+2022-02-16 12:28:42,670 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFPI-40460011_pbs.20220216104306.log
+2022-02-16 12:28:42,670 [INFO ]  Calibration file 2 : FPI 40460011
+2022-02-16 12:28:42,670 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFPI-40460011_pbs.20220216104306.log
+2022-02-16 12:28:42,682 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFPI-40460030_pbs.20220216104306.log
+2022-02-16 12:28:42,682 [INFO ]  Calibration file 3 : FPI 40460030
+2022-02-16 12:28:42,682 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59608/apFPI-40460030_pbs.20220216104306.log
+2022-02-16 12:28:42,696 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFPI-40530009_pbs.20220216104306.log
+2022-02-16 12:28:42,696 [INFO ]  Calibration file 4 : FPI 40530009
+2022-02-16 12:28:42,696 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFPI-40530009_pbs.20220216104306.log
+2022-02-16 12:28:42,707 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFPI-40530066_pbs.20220216104306.log
+2022-02-16 12:28:42,707 [INFO ]  Calibration file 5 : FPI 40530066
+2022-02-16 12:28:42,707 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59615/apFPI-40530066_pbs.20220216104306.log
+2022-02-16 12:28:42,721 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFPI-40540011_pbs.20220216104306.log
+2022-02-16 12:28:42,721 [INFO ]  Calibration file 6 : FPI 40540011
+2022-02-16 12:28:42,721 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFPI-40540011_pbs.20220216104306.log
+2022-02-16 12:28:42,732 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFPI-40540068_pbs.20220216104306.log
+2022-02-16 12:28:42,732 [INFO ]  Calibration file 7 : FPI 40540068
+2022-02-16 12:28:42,732 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59616/apFPI-40540068_pbs.20220216104306.log
+2022-02-16 12:28:42,746 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFPI-40620009_pbs.20220216104306.log
+2022-02-16 12:28:42,746 [INFO ]  Calibration file 8 : FPI 40620009
+2022-02-16 12:28:42,746 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFPI-40620009_pbs.20220216104306.log
+2022-02-16 12:28:42,757 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFPI-40620064_pbs.20220216104306.log
+2022-02-16 12:28:42,757 [INFO ]  Calibration file 9 : FPI 40620064
+2022-02-16 12:28:42,757 [INFO ]  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/plans/59624/apFPI-40620064_pbs.20220216104306.log
+2022-02-16 12:28:43,357 [INFO ]  PBS key is a6981ffc-8f5e-11ec-a241-2cea7ff4461c
+2022-02-16 12:29:43,644 [INFO ]  percent complete = 0
+2022-02-16 12:30:43,819 [INFO ]  percent complete = 0
+2022-02-16 12:31:43,993 [INFO ]  percent complete = 0
+2022-02-16 12:32:44,167 [INFO ]  percent complete = 0
+2022-02-16 12:33:44,342 [INFO ]  percent complete = 0
+2022-02-16 12:34:44,517 [INFO ]  percent complete = 0
+2022-02-16 12:35:44,691 [INFO ]  percent complete = 0
+2022-02-16 12:36:44,847 [INFO ]  percent complete = 0
+2022-02-16 12:37:45,022 [INFO ]  percent complete = 0
+2022-02-16 12:38:45,196 [INFO ]  percent complete = 0
+2022-02-16 12:39:45,369 [INFO ]  percent complete = 0
+2022-02-16 12:40:45,543 [INFO ]  percent complete = 0
+2022-02-16 12:41:45,717 [INFO ]  percent complete = 0
+2022-02-16 12:42:45,869 [INFO ]  percent complete = 0
+2022-02-16 12:43:45,990 [INFO ]  percent complete = 0
+2022-02-16 12:44:46,165 [INFO ]  percent complete = 0
+2022-02-16 12:45:46,339 [INFO ]  percent complete = 0
+2022-02-16 12:46:46,513 [INFO ]  percent complete = 0
+2022-02-16 12:47:46,689 [INFO ]  percent complete = 0
+2022-02-16 12:48:46,810 [INFO ]  percent complete = 0
+2022-02-16 12:49:46,985 [INFO ]  percent complete = 0
+2022-02-16 12:50:47,160 [INFO ]  percent complete = 0
+2022-02-16 12:51:47,334 [INFO ]  percent complete = 0
+2022-02-16 12:52:47,482 [INFO ]  percent complete = 0
+2022-02-16 12:53:47,656 [INFO ]  percent complete = 0
+2022-02-16 12:54:47,830 [INFO ]  percent complete = 22
+2022-02-16 12:55:47,946 [INFO ]  percent complete = 22
+2022-02-16 12:56:48,120 [INFO ]  percent complete = 22
+2022-02-16 12:57:48,299 [INFO ]  percent complete = 55
+2022-02-16 12:58:48,464 [INFO ]  percent complete = 100
+2022-02-16 12:58:48,464 [INFO ]  
+2022-02-16 12:58:48,464 [INFO ]  -------------------------
+2022-02-16 12:58:48,464 [INFO ]  Checking Calibration runs
+2022-02-16 12:58:48,464 [INFO ]  =========================
+2022-02-16 12:58:48,521 [INFO ]  
+2022-02-16 12:58:48,521 [INFO ]  1/9
+2022-02-16 12:58:48,521 [INFO ]  Calibration type: FPI
+2022-02-16 12:58:48,521 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWaveFPI-59608-40460010.fits
+2022-02-16 12:58:48,521 [INFO ]  log/errfile: apFPI-40460010_pbs.20220216104306.log, apFPI-40460010_pbs.20220216104306.err
+2022-02-16 12:58:48,522 [INFO ]  Calibration success: True 
+2022-02-16 12:58:48,553 [INFO ]  
+2022-02-16 12:58:48,553 [INFO ]  2/9
+2022-02-16 12:58:48,553 [INFO ]  Calibration type: FPI
+2022-02-16 12:58:48,553 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWaveFPI-59608-40460011.fits
+2022-02-16 12:58:48,553 [INFO ]  log/errfile: apFPI-40460011_pbs.20220216104306.log, apFPI-40460011_pbs.20220216104306.err
+2022-02-16 12:58:48,553 [INFO ]  Calibration success: False 
+2022-02-16 12:58:48,585 [INFO ]  
+2022-02-16 12:58:48,585 [INFO ]  3/9
+2022-02-16 12:58:48,585 [INFO ]  Calibration type: FPI
+2022-02-16 12:58:48,585 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWaveFPI-59608-40460030.fits
+2022-02-16 12:58:48,585 [INFO ]  log/errfile: apFPI-40460030_pbs.20220216104306.log, apFPI-40460030_pbs.20220216104306.err
+2022-02-16 12:58:48,585 [INFO ]  Calibration success: False 
+2022-02-16 12:58:48,619 [INFO ]  
+2022-02-16 12:58:48,619 [INFO ]  4/9
+2022-02-16 12:58:48,619 [INFO ]  Calibration type: FPI
+2022-02-16 12:58:48,619 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWaveFPI-59615-40530009.fits
+2022-02-16 12:58:48,619 [INFO ]  log/errfile: apFPI-40530009_pbs.20220216104306.log, apFPI-40530009_pbs.20220216104306.err
+2022-02-16 12:58:48,619 [INFO ]  Calibration success: True 
+2022-02-16 12:58:48,652 [INFO ]  
+2022-02-16 12:58:48,652 [INFO ]  5/9
+2022-02-16 12:58:48,652 [INFO ]  Calibration type: FPI
+2022-02-16 12:58:48,652 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWaveFPI-59615-40530066.fits
+2022-02-16 12:58:48,652 [INFO ]  log/errfile: apFPI-40530066_pbs.20220216104306.log, apFPI-40530066_pbs.20220216104306.err
+2022-02-16 12:58:48,652 [INFO ]  Calibration success: False 
+2022-02-16 12:58:48,684 [INFO ]  
+2022-02-16 12:58:48,684 [INFO ]  6/9
+2022-02-16 12:58:48,684 [INFO ]  Calibration type: FPI
+2022-02-16 12:58:48,684 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWaveFPI-59616-40540011.fits
+2022-02-16 12:58:48,684 [INFO ]  log/errfile: apFPI-40540011_pbs.20220216104306.log, apFPI-40540011_pbs.20220216104306.err
+2022-02-16 12:58:48,684 [INFO ]  Calibration success: True 
+2022-02-16 12:58:48,715 [INFO ]  
+2022-02-16 12:58:48,715 [INFO ]  7/9
+2022-02-16 12:58:48,715 [INFO ]  Calibration type: FPI
+2022-02-16 12:58:48,715 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWaveFPI-59616-40540068.fits
+2022-02-16 12:58:48,715 [INFO ]  log/errfile: apFPI-40540068_pbs.20220216104306.log, apFPI-40540068_pbs.20220216104306.err
+2022-02-16 12:58:48,715 [INFO ]  Calibration success: False 
+2022-02-16 12:58:48,746 [INFO ]  
+2022-02-16 12:58:48,746 [INFO ]  8/9
+2022-02-16 12:58:48,746 [INFO ]  Calibration type: FPI
+2022-02-16 12:58:48,746 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWaveFPI-59624-40620009.fits
+2022-02-16 12:58:48,746 [INFO ]  log/errfile: apFPI-40620009_pbs.20220216104306.log, apFPI-40620009_pbs.20220216104306.err
+2022-02-16 12:58:48,746 [INFO ]  Calibration success: True 
+2022-02-16 12:58:48,777 [INFO ]  
+2022-02-16 12:58:48,777 [INFO ]  9/9
+2022-02-16 12:58:48,777 [INFO ]  Calibration type: FPI
+2022-02-16 12:58:48,777 [INFO ]  Calibration file: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWaveFPI-59624-40620064.fits
+2022-02-16 12:58:48,777 [INFO ]  log/errfile: apFPI-40620064_pbs.20220216104306.log, apFPI-40620064_pbs.20220216104306.err
+2022-02-16 12:58:48,777 [INFO ]  Calibration success: False 
+2022-02-16 12:58:48,793 [INFO ]  Daily APOGEE reduction finished for MJD=59608 to MJD=59624 and observatory=apo

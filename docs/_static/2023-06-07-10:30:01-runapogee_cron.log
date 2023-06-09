@@ -1,0 +1,20 @@
+Currently Loaded Modulefiles:
+ 1) postgresql/12.2         19) elodie/v1_3             
+ 2) slurm/notchpeak         20) spinspect/trunk         
+ 3) root/sdss5              21) specflat/v1_20          
+ 4) miniconda/3.8.5_mwm     22) speclog/trunk           
+ 5) sdsstools/0.4.14        23) platelist/trunk         
+ 6) sdss_access/main        24) photoop/v1_12_3         
+ 7) tree/sdss5              25) idlspec2d/apogee-v5_6_5 
+ 8) sdssdb/0.6.1            26) cfitsio/v3_27           
+ 9) sdsscore/main           27) apogeereduceplan/master 
+10) idl/8.8                 28) apogee_drp/daily        
+11) dust/v0_1               29) holtztools/1.0.0        
+12) photolog/dr10           30) dlnpyutils/1.0.9        
+13) twomass/allsky          31) doppler/1.0.5           
+14) usno/vB                 32) gausspy/1.1.0           
+15) coyote/1.0.0            33) thecannon/1.0.0         
+16) goddard/1.0.1b          34) astra/master            
+17) idlutils/6.1.0          35) mwm/daily               
+18) bbspec/trunk            
+One process of runapogeeapo already running.  Will try again when it is finished.
