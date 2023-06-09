@@ -372,16 +372,17 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     else:
         gdrv = []
 
-    # Load information into the database
-    dbingest(startab,starvisits)
-
     # Do the visit combination and write out apStar file
     if len(gdrv)>0:
         apstar = visitcomb(starvisits[visits[gdrv]],starver,load=load,
                            apstar_vers=apstar_vers,apred=apred,nres=nres,logger=logger)
+        startab['snr'] = apstar.header['SNR']
     else:
         logger.info('No good visits for '+star)
-
+        
+    # Load information into the database
+    dbingest(startab,starvisits)
+        
     # Run QA code to make final plot and HTML page
     qa.apStarPlots(objid=star,apred=apred,telescope=telescope)
     qa.makeStarHTML(objid=star,apred=apred,telescope=telescope) 
