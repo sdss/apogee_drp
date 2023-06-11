@@ -14,13 +14,15 @@ import statsmodels.api as sm
 from ..utils import peakfit, mmm, apload, utils
 from numba import njit
 import copy
-
+import matplotlib
+import matplotlib.pyplot as plt
 
 WARNMASK = -16640
 BADMASK = 16639
 BADERR = 1.00000e+10
 maskval = {'NOT_ENOUGH_PSF': 16384}
 chips = ['a','b','c']
+
 
 #####  EMPIRICAL PSF MODEL CLASS #######
 
@@ -629,15 +631,35 @@ def avgprofile(fibs,cols,hdulist,fiber2hdu):
     # Get profile data
     data = getprofdata(fibs,cols,hdulist,fiber2hdu)
 
-    # Do binning first
+    ndata = len(data)
+    xdata = data[:,0]
+    ydata = np.log10(data[:,1])
+
+    # Bspline with one 10 sigma outlier rejection round
+    spl = dln.bspline(xdata,ydata)
+    diff = ydata-spl(xdata)
+    sig = dln.mad(diff)
+    good, = np.where(np.abs(diff) < 10*sig)
+    spl = dln.bspline(xdata[good],ydata[good])
+    
+    #plt.clf()
+    #plt.scatter(xdata,ydata,s=10)
+    #plt.scatter(xdata[good],ydata[good],s=10)
+    #xx = np.arange(-6.5,6.5,0.1)
+    #plt.scatter(xx,spl(xx),c='green')
+    ##plt.scatter(xbin1,ybin1,s=100,c='green')
+    ##plt.plot(xbin1,ybin1,c='green')
+        
+    # Binning
     xr = [-7.0,7.0]
-    binsize = 0.1
+    binsize = 0.10
     nbins = int(np.ceil((xr[1]-xr[0])/binsize)+1)
     bins = np.linspace(xr[0],xr[1],nbins)
-    ybin, bin_edges, binnumber = bindata.binned_statistic(data[:,0],data[:,1],statistic='percentile',
+    ybin, bin_edges, binnumber = bindata.binned_statistic(xdata[good],ydata[good],statistic='percentile',
                                                           percentile=50,bins=bins)
     xbin = bin_edges[0:-1]+0.5*binsize
-
+    ybin = 10**ybin  # back to linear
+    
     # Use Gaussian smoothing
     gd, = np.where(np.isfinite(ybin) & (ybin>0))
     temp = ybin.copy()
@@ -648,7 +670,7 @@ def avgprofile(fibs,cols,hdulist,fiber2hdu):
         bd, = np.where(bad)
         gd, = np.where(~bad)
         fill_value = (ybinsm[gd[0]],ybinsm[gd[1]])
-        ybinsm[bd] = interp1d(xbin[~bad],ybinsm[~bad],bounds_error=False,fill_value=fill_value)(bd)
+        ybinsm[bd] = interp1d(xbin[~bad],ybinsm[~bad],bounds_error=False,fill_value=fill_value)(xbin[bd])
 
     # Make sure it's normalized
     ybinsm /= np.sum(ybinsm)*binsize
@@ -731,12 +753,13 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
     mnx = np.zeros((len(columns),len(fibers)),float)
     mny = np.zeros((len(columns),len(fibers)),float)
     profiles = np.zeros((len(columns),len(fibers),300),float)
+    fsparse = np.zeros((len(columns),len(fibers),31),float)    
     binsize = 0.1
     xx = np.arange(300)*binsize-14.95
     
     # Column loop
     for i,c in enumerate(columns):
-
+        
         # Get sparse profile
         sflux = np.zeros(2048,float)
         sflux[4:2044] = np.nanmedian(sim[4:2044,c:c+ncbin],axis=1)
@@ -755,27 +778,49 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
         
         # Fiber loop
         for j,f in enumerate(fibers):
-
+            
             if verbose:
                 print(f,c)
-            #data1, xbin,ybin,lowess,ylowess = avgprofile([f,f+nfbin],[c,c+ncbin],psfhdu,fiber2hdu)
             data1, xbin,ybin,ybinsm = avgprofile([f,f+nfbin],[c,c+ncbin],psfhdu,fiber2hdu)            
-            
-            # Get closest sparse fiber
+
+            # Get average sparse flux profile
+            # get median ytrace of the five fibers we are using in our "block"
             ytracearr = []
             for k in np.arange(f,f+nfbin):
                 if fiber2hdu.get(k) is not None:
                     psfcat = psfhdu[fiber2hdu[k]].data
                     ytracearr.append(np.median(psfcat['CENT']))
-            ytrace = np.median(np.array(ytracearr))
+            ytrace = np.median(np.array(ytracearr))  # average trace of our 5 fibers
             diff = linestr['pars'][:,1]-ytrace
-            bestind = np.argmin(np.abs(diff))
-            linestr1 = linestr[bestind]
-            ycensparse = linestr1['pars'][1]
-            dysparse = np.arange(31).astype(float)-15
-            fluxsparse = sflux[int(round(ycensparse))-15:int(round(ycensparse))+16]
-            fluxsparse /= np.sum(fluxsparse)   # normalize
-            # replace very low values with point on opposite side
+            si = np.argsort(np.abs(diff))
+            useind = si[0:5]
+            fluxsparsearr = np.zeros([5,31],float)
+            for k in range(5):
+                bestind = useind[k]
+                linestr1 = linestr[bestind]
+                ycensparse = linestr1['pars'][1]
+                dysparse = np.arange(31).astype(float)-15
+                fluxsparse1 = sflux[int(round(ycensparse))-15:int(round(ycensparse))+16].copy()
+                fluxsparse1 /= np.sum(fluxsparse1)   # normalize
+                fluxsparsearr[k,:] = fluxsparse1
+            # Now average with outlier rejection
+            fluxsparsearr = np.log10(np.maximum(fluxsparsearr,1e-6))
+            medfluxsparse = np.median(fluxsparsearr,axis=0)
+            fluxdiff = fluxsparsearr-medfluxsparse.reshape(1,-1)
+            sigfluxsparse = dln.mad(fluxdiff)
+            # Mask outlier pixels
+            goodmask = (np.abs(fluxdiff) < 5*sigfluxsparse)
+            tempfluxsparse = fluxsparsearr.copy()
+            tempfluxsparse[~goodmask] = np.nan
+            fluxsparse = np.nanmedian(tempfluxsparse,axis=0)
+            # Fix NaNs with median value
+            bdnan, = np.where(~np.isfinite(fluxsparse))
+            if len(bdnan)>0:
+                fluxsparse[bdnan] = medfluxsparse[bdnan]
+            # Back to linear
+            fluxsparse = 10**fluxsparse
+            
+            # Replace very low values with point on opposite side
             bad, = np.where(fluxsparse<1e-5)
             if len(bad)>0:
                 good = len(fluxsparse)-bad-1
@@ -796,7 +841,8 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
             #plt.yscale('log')
             #plt.plot(xbin,ybinsm,c='r')
             #plt.show()
-
+            #import pdb; pdb.set_trace()
+            
             # Use points +/-3 for scaling
             gdpt, = np.where((np.abs(dysparse) <= 3) & (fluxsparse > 0.4*np.max(fluxsparse)))
             ybinsm2 = interp1d(xbin,ybinsm)(dysparse[gdpt])
@@ -809,7 +855,7 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
             fluxsparsefine = 10**interp1d(dysparse,np.log10(fluxsparse),kind='quadratic',bounds_error=False,fill_value=np.nan)(xfine)
             #fluxsparsefine = 10**interp1d(dysparse,np.log10(fluxsparse),kind='quadratic',bounds_error=False,fill_value=np.nan)(xbin)            
 
-            # switch to the sparse courve around x~3, around 3sigma
+            # switch to the sparse curve around x~3, around 3sigma
             sigma = np.sqrt(np.sum(ybinsm*xbin**2)/np.sum(ybinsm))
             # use logistic curve
             wt = 1/(1+np.exp(-2*(np.abs(xbin)-2.5*sigma)))
@@ -843,23 +889,40 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
                 print('problem')
                 import matplotlib.pyplot as plt
                 import pdb; pdb.set_trace()
-            
-            #plt.clf()
-            #plt.scatter(data[:,0],data[:,1],s=5)
-            #plt.plot(xbin,ybin,c='r')
-            ##plt.plot(lowess[:,0],lowess[:,1],c='g')
-            #plt.plot(xbin,ybinsm,c='b')  
-            #plt.yscale('log')
-            #plt.xlim(-8,8)
-            #plt.ylim(1e-5,1)
-            #plt.title('fiber='+str(f)+' column='+str(c))
 
+            if 0:
+                import matplotlib.pyplot as plt
+                import matplotlib
+                matplotlib.use('Agg')
+                plt.figure()
+                plt.scatter(data1[:,0],data1[:,1],s=5)
+                plt.plot(xbin,ybin,c='r',label='binned')
+                #plt.plot(lowess[:,0],lowess[:,1],c='g')
+                plt.plot(xbin,ybinsm,c='b',label='smoothed binned')  
+                plt.yscale('log')
+                plt.xlim(-8,8)
+                plt.ylim(1e-5,1)
+                plt.xlabel('Pixel offset')
+                plt.ylabel('Profile flux')
+                plt.title('fiber='+str(f)+' column='+str(c))
+                plt.legend()
+                plt.savefig('gridprofile_fiber'+str(f)+'_column'+str(c)+'.png',bbox_inches='tight')
+                #plt.show()
+                import pdb; pdb.set_trace()
+
+            #if i==4 and j==53:
+            #    print('problem profile')
+            #    import pdb; pdb.set_trace()
+            
             data.append( [xbin,ybin,ybinsm,f,c] )
             mnx[i,j] = np.median(data1[:,2])
             mny[i,j] = np.median(data1[:,3])
-            profiles[i,j,:] = yprofile 
+            profiles[i,j,:] = yprofile
+            fsparse[i,j,:] = fluxsparse
 
-    return data,mnx,mny,profiles,xx
+            #import pdb; pdb.set_trace()
+            
+    return data,mnx,mny,profiles,xx,fsparse
 
 
 def mkmodelpsf(name,psfid,sparseid,apred,telescope,nfbin=5,ncbin=200,verbose=False):
@@ -906,13 +969,28 @@ def mkmodelpsf(name,psfid,sparseid,apred,telescope,nfbin=5,ncbin=200,verbose=Fal
     psffile = load.filename('EPSF',num=psfid,chips=True)
     for ch in chips:
         psffile1 = psffile.replace('EPSF-','EPSF-'+ch+'-')
-        data,mnx,mny,profiles,y = makeprofilegrid(psffile1,sparsefile,verbose=verbose)
+        data,mnx,mny,profiles,y,fsparse = makeprofilegrid(psffile1,sparsefile,verbose=verbose)
         labels = [mnx,mny]
         p = PSF((profiles,labels,y),kind='grid',log=False)
         outfile = load.filename('PSFModel',num=name,chips=True).replace('PSFModel-','PSFModel-'+ch+'-')
         print('Writing to '+outfile)
         p.write(outfile)
 
+        # Save a diagnostic plot
+        matplotlib.use('Agg')
+        nx,ny,_ = profiles.shape
+        for i in range(nx):
+            for j in range(ny):
+                plt.plot(y,profiles[i,j,:])
+        plt.xlabel('Pixel Offset')
+        plt.ylabel('Normalized Flux')
+        plt.title(os.path.basename(outfile))
+        plt.yscale('log')
+        pltdir = os.path.dirname(outfile)+'/plots/'
+        if os.path.exists(pltdir)==False:
+            os.makedirs(pltdir)
+        figfile = pltdir+os.path.basename(outfile).replace('.fits','.png')
+        plt.savefig(figfile,bbox_inches='tight')
 
 #####  EXTRACTION #######
 
