@@ -208,12 +208,12 @@ class PSF(object):
 
     def __str__(self):
         """ String representation of the PSF."""
-        return self.__class__.__name__+'(%.1f<X<%.1f, %.1f<X<%.1f, %s, Npix=%d)' % \
+        return self.__class__.__name__+'(%.1f<X<%.1f, %.1f<Y<%.1f, %s, Npix=%d)' % \
                                         (self.xmin[0],self.xmax[0],self.xmin[1],self.xmax[1],self,kind,self.npix)
 
     def __repr__(self):
         """ String representation of the PSF."""
-        return self.__class__.__name__+'(%.1f<X<%.1f, %.1f<X<%.1f, %s, Npix=%d)' % \
+        return self.__class__.__name__+'(%.1f<X<%.1f, %.1f<Y<%.1f, %s, Npix=%d)' % \
                                         (self.xmin[0],self.xmax[0],self.xmin[1],self.xmax[1],self.kind,self.npix)
     
     def __call__(self,labels,y=None,ycen=None):
