@@ -854,6 +854,11 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
                     print('fixing fluxsparse edge bad value')
                 #import matplotlib.pyplot as plt
                 #import pdb; pdb.set_trace()
+            # If still low, use second point
+            if fluxsparse[0]<1e-5:
+                fluxsparse[0] = fluxsparse[1]
+            if fluxsparse[-1]<1e-5:
+                fluxsparse[-1] = fluxsparse[-2] 
             fluxsparse /= np.sum(fluxsparse)   # normalize again          
             ymnsparse = np.sum(dysparse*fluxsparse)/np.sum(fluxsparse)
             dysparse -= ymnsparse
