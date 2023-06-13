@@ -237,10 +237,6 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
         print('No data for MJD5='+str(mjd5))
         return
 
-    # Update the currentmjd file
-    if updatemjdfile is True:
-        writeNewMJD(observatory,mjd5,apred=apred)
-
     # Set up logging to screen and logfile
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
     rootLogger = logging.getLogger() 
@@ -286,6 +282,11 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     si = np.argsort(expinfo['num'])
     expinfo = expinfo[si]
 
+    # Update the currentmjd file
+    if len(expinfo)>0:
+        if updatemjdfile is True:
+            writeNewMJD(observatory,mjd5,apred=apred)
+    
 
     # Process all exposures through ap3D first
     #-----------------------------------------
