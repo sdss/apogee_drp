@@ -915,10 +915,10 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
             # Normalize
             yprofile /= np.sum(yprofile)*binsize
 
-            if np.min(yprofile)<1e-5:
-                print('problem')
-                import matplotlib.pyplot as plt
-                import pdb; pdb.set_trace()
+            if np.min(yprofile)<1e-6:
+                print('some low fluxes <1e-6')
+                #import matplotlib.pyplot as plt
+                #import pdb; pdb.set_trace()
 
             if 0:
                 import matplotlib.pyplot as plt
