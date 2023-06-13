@@ -736,11 +736,36 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
         print('Fiber binning: '+str(nfbin))
         print('Column binning: '+str(ncbin))
 
+    # Get chip from psf filename
+    psfbase = os.path.basename(psffile)
+    chiptag = psfbase.split('-')[1]
+    chip = {'a':0,'b':1,'c':2}[chiptag]
+    # Load the sparse image
     allim,head = fits.getdata(sparsefile,0,header=True)
-    sim = allim[1,:,:]
-    psfhdu = fits.open(psffile)
+    sim = allim[chip,:,:]
+    # Subtract scatter light from the Sparse image
+    #  this takes the bottom 10 rows and takes the median in eight 256x10 chunks
+    #  same for the top 10 rows
+    medlobin = np.nanmedian(sim[5:15,:].T.reshape(8,10*256),axis=1)
+    medhibin = np.nanmedian(sim[2030:2040,:].T.reshape(8,10*256),axis=1)
+    xbin = np.arange(8)*256+128
+    locoef = np.polyfit(xbin,medlobin,2)
+    hicoef = np.polyfit(xbin,medhibin,2)
+    x = np.arange(2048)
+    medlo = np.polyval(locoef,x)
+    medhi = np.polyval(hicoef,x)
+    # Create ramp across the detector
+    slp = (medhi-medlo)/(2035-10)
+    off = medlo-slp*10
+    xx,yy = np.meshgrid(np.arange(2048),np.arange(2048))
+    scatim = yy*slp.reshape(1,-1) + medlo.reshape(1,-1)
+    # Now subtract the scattered light from the sparse image
+    print('Mean scattered light level = {:.1f} counts'.format(np.nanmedian(scatim)))
+    sim -= scatim
 
-    # Get fiber numbers for each hdu
+    
+    # Get fiber numbers for each PSF hdu
+    psfhdu = fits.open(psffile)    
     fiber2hdu = mkfiber2hdu(psfhdu)
     
     fibers = np.arange(0,300,nfbin)
@@ -893,7 +918,7 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
             if 0:
                 import matplotlib.pyplot as plt
                 import matplotlib
-                matplotlib.use('Agg')
+                #matplotlib.use('Agg')
                 plt.figure()
                 plt.scatter(data1[:,0],data1[:,1],s=5)
                 plt.plot(xbin,ybin,c='r',label='binned')
@@ -906,7 +931,7 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
                 plt.ylabel('Profile flux')
                 plt.title('fiber='+str(f)+' column='+str(c))
                 plt.legend()
-                plt.savefig('gridprofile_fiber'+str(f)+'_column'+str(c)+'.png',bbox_inches='tight')
+                #plt.savefig('gridprofile_fiber'+str(f)+'_column'+str(c)+'.png',bbox_inches='tight')
                 #plt.show()
                 import pdb; pdb.set_trace()
 
@@ -992,6 +1017,7 @@ def mkmodelpsf(name,psfid,sparseid,apred,telescope,nfbin=5,ncbin=200,verbose=Fal
         figfile = pltdir+os.path.basename(outfile).replace('.fits','.png')
         plt.savefig(figfile,bbox_inches='tight')
 
+        
 #####  EXTRACTION #######
 
 def loadframe(infile):
@@ -1365,7 +1391,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
             xvar = np.zeros(ngood,float)
             x[ngood-1] = v[ngood-1]/b[ngood-1]
             xvar[ngood-1] = vvar[ngood-1]/b[ngood-1]**2
-            # Use numba to speed up this slow lopp
+            # Use numba to speed up this slow loop
             #for j in np.flip(np.arange(0,ngood-1)):
             #    x[j] = (v[j]-c[j]*x[j+1])/b[j]
             #    xvar[j] = (vvar[j]+c[j]**2*xvar[j+1])/b[j]**2
