@@ -1,0 +1,9 @@
+#!/bin/csh
+module purge
+module load mwm/daily
+set running=`ps -C runapogeecurrentlco --no-headers | wc -l`
+if ( $running > 1 ) then
+  echo "One process of runapogeecurrentlco already running.  Will try again when it is finished."
+  exit
+endif
+runapogee lco --vers current
