@@ -1,9 +1,15 @@
 #!/bin/csh
-module purge
-module load mwm/daily
 set running=`ps -C runapogeecurrentapo --no-headers | wc -l`
 if ( $running > 1 ) then
-  echo "One process of runapogeeacurrentpo already running.  Will try again when it is finished."
+  echo "One process of runapogeeacurrentapo already running.  Will try again when it is finished."
   exit
 endif
-runapogee apo --vers current
+module purge
+module load mwm/daily
+# Get the current version name
+setenv VERS_DIR `readlink $APOGEE_REDUX/current`
+setenv APOGEE_VERS `basename $VERS_DIR`
+module switch apogee_drp/daily apogee_drp/$APOGEE_VERS
+module list
+echo "CURRENT APOGEE REDUCTION VERSION = "$APOGEE_VERS
+runapogee apo --vers $APOGEE_VERS
