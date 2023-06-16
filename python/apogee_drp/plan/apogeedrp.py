@@ -1255,6 +1255,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         cwd = os.path.abspath(os.curdir)
         for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','sparse','fiber','modelpsf','fpi']:
             for obs in ['apogee-n','apogee-s']:
+                prefix = {'apogee-n':'ap','apogee-s':'as'}[obs]
                 srcdir = apogee_redux+linkvers+'/cal/'+obs+'/'+d
                 destdir = apogee_redux+apred+'/cal/'+obs+'/'+d
                 if d=='sparse' or d=='modelpsf' or d=='fiber':
@@ -1262,48 +1263,110 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     destdir = apogee_redux+apred+'/cal/'+obs+'/psf'
                 logger.info('Creating symlinks for '+d+' '+obs)
                 os.chdir(destdir)
+                # PSFModel
                 if d=='modelpsf':
-                    subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'PSFModel-*.fits .'],shell=True)
+                    psfmfiles = glob(srcdir+'/'+prefix+'PSFModel-*.fits')
+                    if len(psfmfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSFModel-*.fits .'],shell=True)
+                    else:
+                        logger.info('No PSFModel files')
+                # Sparse
                 elif d=='sparse':
-                    subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'Sparse*.fits .'],shell=True)
+                    sparsefiles = glob(srcdir+'/'+prefix+'Sparse*.fits')
+                    if len(sparsefiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/'+prefix+'Sparse*.fits .'],shell=True)
+                    else:
+                        logger.info('No Sparse files')
                     # Need to link apEPSF files as well
-                    sfiles = glob(srcdir+'/'+load.prefix+'Sparse*.fits')
+                    sfiles = glob(srcdir+'/'+prefix+'Sparse*.fits')
                     if len(sfiles)>0:
                         snum = [os.path.basename(s)[9:-5] for s in sfiles]
                         for num in snum:
-                            subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'EPSF-?-'+num+'.fits .'],shell=True)
+                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+num+'.fits .'],shell=True)
+                # Darks and Flats
                 elif d=='darkcorr' or d=='flatcorr':
-                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
-                    subprocess.run(['ln -s '+srcdir+'/*.tab .'],shell=True)
+                    darkfiles = glob(srcdir+'/*.fits')
+                    if len(darkfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    else:
+                        logger.info('No '+os.path.basename(srcdir)+' files ')
+                    tabfiles = glob(srcdir+'/*.tab')
+                    if len(tabfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.tab .'],shell=True)
+                    else:
+                        logger.info('No '+os,path.basename(srcdir)+' .tab files')
+                # Detector
                 elif d=='detector':
-                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
-                    subprocess.run(['ln -s '+srcdir+'/*.dat .'],shell=True)                    
+                    detfiles = glob(srcdir+'/*.fits')
+                    if len(detfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    else:
+                        logger.info('No Detector files')
+                    detdatfiles = glob(srcdir+'/*.dat')
+                    if len(detdatfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.dat .'],shell=True)
+                    else:
+                        logger.info('No Detector .dat files')
+                # LSF
                 elif d=='lsf':
-                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
-                    subprocess.run(['ln -s '+srcdir+'/*.sav .'],shell=True)
-                elif d=='fpi':
-                    subprocess.run(['ln -s '+srcdir+'/fpi_peaks.fits .'],shell=True)
+                    lsffiles = glob(srcdir+'/*.fits')
+                    if len(lsffiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    else:
+                        logger.info('No LSF files')
+                    lsfsavfiles = glob(srcdir+'/*.sav')
+                    if len(lsfsavfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.sav .'],shell=True)
+                    else:
+                        logger.info('No LSF .sav files')
+                ## FPI
+                # fpi_peaks.fits is now in the repo (apogee_drp/data/arclines/fpi_peaks.fits)
+                #elif d=='fpi':
+                #    fpifiles = glob(srcdir+'/fpi_peaks.fits')
+                #    if len(fpifiles)>0:
+                #        subprocess.run(['ln -s '+srcdir+'/fpi_peaks.fits .'],shell=True)
+                #    else:
+                #        logger.info('No fpi_peaks.fits files')
+                # Fiber
                 elif d=='fiber':
                     # Create symlinks for all the fiber cal files, PSF, EPSF, ETrace
                     caldict = mkcal.readcal(caldir+obs+'.par')
                     fiberdict = caldict['fiber']
                     for f in fiberdict['name']:
-                        subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'EPSF-?-'+f+'.fits .'],shell=True)
-                        subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'PSF-?-'+f+'.fits .'],shell=True)
+                        epsffiles = glob(srcdir+'/'+prefix+'EPSF-?-'+f+'.fits')
+                        if len(epsffiles)>0:
+                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+f+'.fits .'],shell=True)
+                        else:
+                            logger.info('No EPSF files found for fiber '+prefix+'EPSF-?-'+f+'.fits')
+                        psffiles = glob(srcdir+'/'+prefix+'PSF-?-'+f+'.fits')
+                        if len(psffiles)>0:
+                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSF-?-'+f+'.fits .'],shell=True)
+                        else:
+                            logger.info('No PSF files found for fiber '+prefix+'PSF-?-'+f+'.fits')                            
                         tsrcdir = apogee_redux+linkvers+'/cal/'+obs+'/trace'
                         tdestdir = apogee_redux+apred+'/cal/'+obs+'/trace'
                         os.chdir(tdestdir)
-                        subprocess.run(['ln -s '+tsrcdir+'/'+load.prefix+'ETrace-?-'+f+'.fits .'],shell=True)
+                        tracefiles = glob(tsrcdir+'/'+prefix+'ETrace-?-'+f+'.fits')
+                        if len(tracefiles)>0:
+                            subprocess.run(['ln -s '+tsrcdir+'/'+prefix+'ETrace-?-'+f+'.fits .'],shell=True)
+                        else:
+                            logger.info('No ETrace files found for fiber '+prefix+'ETrace-?-'+f+'.fits')                            
                         os.chdir(destdir)
                 else:
-                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
-                    
+                    cfiles = glob(srcdir+'/*.fits')
+                    if len(cfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    else:
+                        logger.info('No '+os.path.basename(srcdir)+' .fits files')
+                        
         # Link all of the PSF files in the PSF library
         psflibrary = False
         if psflibrary:
             for obs in ['apogee-n','apogee-s']:
                 logger.info('Creating symlinks for PSF library files '+obs)
-                sload = apload.ApLoad(apred=linkvers,telescope=load.telescope)
+                tscope = {'apogee-n':'apo25m','apogee-s':'lco25m'}
+                sload = apload.ApLoad(apred=linkvers,telescope=tscope)
+                dload = apload.ApLoad(apred=apred,telescope=tscope)
                 dpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+obs+'DomeFlatTrace-all.fits'
                 qpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+obs+'QuartzFlatTrace-all.fits'
                 psfid = []
@@ -1326,7 +1389,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 psfid = np.unique(psfid)
                 for i in range(len(psfid)):
                     srcfile = sload.filename('PSF',num=psfid[i],chips=True)
-                    destfile = load.filename('PSF',num=psfid[i],chips=True)
+                    destfile = dload.filename('PSF',num=psfid[i],chips=True)
                     for ch in chips:
                         srcfile1 = srcfile.replace('PSF-','PSF-'+ch+'-')
                         destfile1 = destfile.replace('PSF-','PSF-'+ch+'-')
