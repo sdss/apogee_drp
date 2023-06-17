@@ -1277,12 +1277,17 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                         subprocess.run(['ln -s '+srcdir+'/'+prefix+'Sparse*.fits .'],shell=True)
                     else:
                         logger.info('No Sparse files')
-                    # Need to link apEPSF files as well
+                    # Need to link apEPSF, apPSF and apETrace files as well
+                    #   otherwise the daily cal PSF stage will try to remake them
                     sfiles = glob(srcdir+'/'+prefix+'Sparse*.fits')
                     if len(sfiles)>0:
                         snum = [os.path.basename(s)[9:-5] for s in sfiles]
                         for num in snum:
                             subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+num+'.fits .'],shell=True)
+                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSF-?-'+num+'.fits .'],shell=True)                            
+                            trcdir = apogee_redux+linkvers+'/cal/'+obs+'/trace'
+                            dtrcdir = apogee_redux+apred+'/cal/'+obs+'/trace'                            
+                            subprocess.run(['ln -s '+trcdir+'/'+prefix+'ETrace-?-'+num+'.fits '+dtrcdir],shell=True)
                 # Darks and Flats
                 elif d=='darkcorr' or d=='flatcorr':
                     darkfiles = glob(srcdir+'/*.fits')
@@ -3279,19 +3284,24 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('1) Setting up the directory structure')
         rootLogger.info('=====================================')
         rootLogger.info('')
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkvers', nodes=1, alloc=alloc, ppn=ppn, cpus=1, shared=shared, walltime=walltime, notification=False)
+
+        tasks = np.zeros(1,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        cmd = 'mkvers {0}'.format(apred)        
         mkvoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkvers.'+logtime+'.log'
         mkverrfile = mkvoutfile.replace('-mkvers.log','-mkvers.'+logtime+'.err')
         if os.path.exists(os.path.dirname(mkvoutfile))==False:
-            os.makedirs(os.path.dirname(mkvoutfile))
-        cmd = 'mkvers {0}'.format(apred)
+            os.makedirs(os.path.dirname(mkvoutfile))        
         rootLogger.info('Command : '+cmd)
-        rootLogger.info('Logfile : '+mkvoutfile)
-        queue.append(cmd,outfile=mkvoutfile, errfile=mkverrfile)
-        queue.commit(hard=True,submit=True)
-        queue_wait(queue,sleeptime=10,logger=rootLogger,verbose=True)  # wait for jobs to complete 
-        del queue    
+        rootLogger.info('Logfile : '+mkvoutfile)        
+        tasks['cmd'][0] = cmd
+        tasks['outfile'][0] = mkvoutfile
+        tasks['errfile'][0] = mkverrfile
+        tasks['dir'][0] = os.path.dirname(mkvoutfile)
+        slurmpars1 = {'nodes':1, 'alloc':alloc, 'cpus':1, 'shared':shared, 'walltime':walltime, 'notification':False}
+        key,jobid = slrm.submit(tasks,label='mkvers',verbose=True,logger=rootLogger,**slurmpars1)
+        rootLogger.info('PBS key is '+key)
+        slrm.queue_wait('mkvers',key,jobid,sleeptime=60,verbose=True,logger=rootLogger) # wait for jobs to complete 
 
     # 2) Master calibration products, make sure to do them in the right order
     #------------------------------------------------------------------------
