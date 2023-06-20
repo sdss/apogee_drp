@@ -12,8 +12,8 @@ from astropy.io import fits
 from astropy.table import Table
 
 import subprocess
-from slurm import queue as pbsqueue
-from slurm.models import Job,Member
+#from slurm import queue as pbsqueue
+#from slurm.models import Job,Member
 from os import getlogin, getuid, getgid, makedirs, chdir
 from pwd import getpwuid
 from grp import getgrgid
@@ -43,7 +43,8 @@ def slurmstatus(label,jobid):
     try:
         res = subprocess.check_output(['sacct','-u',username,'-j',str(jobid)])
     except:
-        traceback.print_exc()
+        print('Failed to get Slurm status')
+        #traceback.print_exc()
         return []
     if type(res)==bytes: res=res.decode()
     lines = res.split('\n')

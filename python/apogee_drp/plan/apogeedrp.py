@@ -18,8 +18,8 @@ from collections import OrderedDict
 #from astropy.time import Time
 from datetime import datetime
 import logging
-import slurm
-from slurm import queue as pbsqueue
+#import slurm
+#from slurm import queue as pbsqueue
 import time
 import traceback
 import subprocess
@@ -1503,7 +1503,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Detector files to run')        
             key,jobid = slrm.submit(tasks,label='mkdet',verbose=True,logger=logger,**slurmpars1)
-            logger.info('PBS key is '+key)
             slrm.queue_wait('mkdet',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Detector',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
@@ -1582,7 +1581,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Dark files to run')        
             key,jobid = slrm.submit(tasks,label='mkdark',verbose=True,logger=logger,**slurmpars1)
-            logger.info('PBS key is '+key)
             slrm.queue_wait('mkdark',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Dark',logfiles,key,apred,telescope,verbose=True,logger=logger)
@@ -1661,7 +1659,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Flat files to run')        
             key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars1)
-            logger.info('PBS key is '+key)
             slrm.queue_wait('mkflat',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
@@ -1736,7 +1733,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' BPM files to run')        
             key,jobid = slrm.submit(tasks,label='mkbpm',verbose=True,logger=logger,**slurmpars1)
-            logger.info('PBS key is '+key)
             slrm.queue_wait('mkbpm',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'BPM',logfiles,key,apred,telescope,verbose=True,logger=logger)
@@ -1808,7 +1804,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Littrow files to run')        
             key,jobid = slrm.submit(tasks,label='mklittrow',verbose=True,logger=logger,**slurmpars1)
-            logger.info('PBS key is '+key)
             slrm.queue_wait('mklittrow',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Littrow',logfiles,key,apred,telescope,verbose=True,logger=logger)
@@ -1879,7 +1874,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Response files to run')        
             key,jobid = slrm.submit(tasks,label='mkresponse',verbose=True,logger=logger,**slurmpars1)
-            logger.info('PBS key is '+key)
             slrm.queue_wait('mkresponse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Response',logfiles,key,apred,telescope,verbose=True,logger=logger)                            
@@ -1950,7 +1944,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Sparse files to run')        
             key,jobid = slrm.submit(tasks,label='mksparse',verbose=True,logger=logger,**slurmpars1)
-            logger.info('PBS key is '+key)
             slrm.queue_wait('mksparse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Sparse',logfiles,key,apred,telescope,verbose=True,logger=logger)
@@ -2021,7 +2014,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' PSFModel files to run')        
             key,jobid = slrm.submit(tasks,label='mkpsfmodel',verbose=True,logger=logger,**slurmpars1)
-            logger.info('PBS key is '+key)
             slrm.queue_wait('mkpsfmodel',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'PSFModel',logfiles,key,apred,telescope,verbose=True,logger=logger)                            
@@ -2133,7 +2125,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' LSF files to run')        
             key,jobid = slrm.submit(tasks,label='mklsf',verbose=True,logger=logger,**slurmpars1)
-            logger.info('PBS key is '+key)
             slrm.queue_wait('mklsf',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'LSF',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
@@ -2246,7 +2237,6 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
             #queue.append(cmd1,outfile=logfile1,errfile=logfile1.replace('.log','.err'))
         logger.info('Running AP3D on '+str(ntorun)+' exposures')
         key,jobid = slrm.submit(tasks,label='ap3d',verbose=True,logger=logger,**slurmpars1)
-        logger.info('PBS key is '+key)
         slrm.queue_wait('ap3d',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
         #queue.commit(hard=True,submit=True)
         #logger.info('PBS key is '+queue.key)
@@ -2507,7 +2497,6 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 logger.info('Creating '+str(ntorun)+' '+calnames[i]+' files')
                 label = 'makecal-'+calnames[i]
                 key,jobid = slrm.submit(tasks,label=label,verbose=True,logger=logger,**slurmpars1)
-                logger.info('PBS key is '+key)
                 slrm.queue_wait(label,key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete   
                 #queue.commit(hard=True,submit=True)
                 #logger.info('PBS key is '+queue.key)
@@ -2775,7 +2764,6 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
         logger.info('Running APRED on '+str(ntorun)+' planfiles')
         key,jobid = slrm.submit(tasks,label='apred',verbose=True,logger=logger,**slurmpars1)
         #queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+key)
         slrm.queue_wait('apred',key,jobid,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
         #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete        
         # This also loads the status into the database using the correct APRED version
@@ -2967,7 +2955,6 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             tasks['dir'][i] = os.path.dirname(logfile) 
         logger.info('Running RV on '+str(ntorun)+' stars')
         key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=logger,**slurmpars1)
-        logger.info('PBS key is '+key)
         slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
         # This checks the status and puts it into the database
         chkrv = check_rv(vcat[torun],key,logger=logger,verbose=False)
@@ -3082,7 +3069,6 @@ def rununified(load,mjds,slurmpars,clobber=False,logger=None):
         #queue.append(cmd,outfile=logfile, errfile=errfile)
     logger.info('Making unified directory structure for '+str(len(MJDS)))
     key,jobid = slrm.submit(tasks,label='unidir',verbose=True,logger=logger,**slurmpars1)
-    logger.info('PBS key is '+key)
     slrm.queue_wait('unidir',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete   
     #queue.commit(hard=True,submit=True)
     #logger.info('PBS key is '+queue.key)        
@@ -3180,7 +3166,6 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         #queue.append(cmd, outfile=logfile, errfile=errfile)
     logger.info('Running APQA on '+str(len(planfiles))+' planfiles')
     key,jobid = slrm.submit(tasks,label='apqa',verbose=True,logger=logger,**slurmpars1)
-    logger.info('PBS key is '+key)
     slrm.queue_wait('apqa',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete 
     #queue.commit(hard=True,submit=True)
     #logger.info('PBS key is '+queue.key)
@@ -3477,7 +3462,6 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         tasks['dir'][0] = os.path.dirname(mkvoutfile)
         slurmpars1 = {'nodes':1, 'alloc':alloc, 'cpus':1, 'shared':shared, 'walltime':walltime, 'notification':False}
         key,jobid = slrm.submit(tasks,label='mkvers',verbose=True,logger=rootLogger,**slurmpars1)
-        rootLogger.info('PBS key is '+key)
         slrm.queue_wait('mkvers',key,jobid,sleeptime=60,verbose=True,logger=rootLogger) # wait for jobs to complete 
 
     # 2) Master calibration products, make sure to do them in the right order
