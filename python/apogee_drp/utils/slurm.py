@@ -351,6 +351,9 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
 
     # Write the inventory file
     dln.writelines(jobdir+label+'_inventory.txt',inventory)
+
+    # Write the tasks list
+    tasks.write(jobdir+label+'_tasks.fits',overwrite=True)
     
     # Now submit the job
     if verbose:
@@ -371,6 +374,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     if verbose:
         logger.info('key = '+key)
         logger.info('job directory = '+jobdir)
+        logger.info('jobid = '+jobid)
         
     return key,jobid
 
