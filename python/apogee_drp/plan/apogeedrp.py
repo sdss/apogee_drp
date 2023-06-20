@@ -1460,8 +1460,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Detector/Linearity in parallel')
         logger.info('============================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkdet', **slurmpars)
+        tasks = np.zeros(len(detdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkdet', **slurmpars)
         docal = np.zeros(len(detdict),bool)
         donames = []
         logfiles = []
@@ -1490,14 +1492,27 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Detector file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Detector files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Detector',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)        
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Detector files to run')        
+            key,jobid = slrm.submit(tasks,label='mkdet',verbose=True,logger=logger,**slurmpars1)
+            logger.info('PBS key is '+key)
+            slrm.queue_wait('mkdet',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Detector',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
+            #logger.info(str(np.sum(docal))+' Detector files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Detector',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)        
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1524,8 +1539,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         slurmpars1['cpus'] = 4
         slurmpars1['mem_per_cpu'] = 20000  # in MB
         logger.info('Slurm settings: '+str(slurmpars1))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkdark', **slurmpars1)
+        tasks = np.zeros(len(darkdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkdark', **slurmpars1)
         docal = np.zeros(len(darkdict),bool)
         donames = []
         logfiles = []
@@ -1554,14 +1571,27 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Dark file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Dark files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Dark',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Dark files to run')        
+            key,jobid = slrm.submit(tasks,label='mkdark',verbose=True,logger=logger,**slurmpars1)
+            logger.info('PBS key is '+key)
+            slrm.queue_wait('mkdark',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Dark',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            #logger.info(str(np.sum(docal))+' Dark files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Dark',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1588,8 +1618,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Flats in parallel')
         logger.info('===============================')
         logger.info('Slurm settings: '+str(slurmpars1))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkflat', **slurmpars1)
+        tasks = np.zeros(len(flatdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkflat', **slurmpars1)
         docal = np.zeros(len(flatdict),bool)
         donames = []
         logfiles = []
@@ -1618,14 +1650,27 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Flat file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Flat files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Flat',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Flat files to run')        
+            key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars1)
+            logger.info('PBS key is '+key)
+            slrm.queue_wait('mkflat',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
+            #logger.info(str(np.sum(docal))+' Flat files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Flat',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1648,8 +1693,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master BPMs in parallel')
         logger.info('==============================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkbpm', **slurmpars)
+        tasks = np.zeros(len(bpmdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkbpm', **slurmpars)
         docal = np.zeros(len(bpmdict),bool)
         donames = []
         logfiles = []
@@ -1678,14 +1725,27 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('BPM file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' BPM files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'BPM',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' BPM files to run')        
+            key,jobid = slrm.submit(tasks,label='mkbpm',verbose=True,logger=logger,**slurmpars1)
+            logger.info('PBS key is '+key)
+            slrm.queue_wait('mkbpm',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'BPM',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            #logger.info(str(np.sum(docal))+' BPM files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'BPM',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1705,8 +1765,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Littrows in parallel')
         logger.info('==================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mklittrow', **slurmpars)
+        tasks = np.zeros(len(littdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)        
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mklittrow', **slurmpars)
         docal = np.zeros(len(littdict),bool)
         donames = []
         logfiles = []
@@ -1735,14 +1797,27 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Littrow file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Littrow files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Littrow',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Littrow files to run')        
+            key,jobid = slrm.submit(tasks,label='mklittrow',verbose=True,logger=logger,**slurmpars1)
+            logger.info('PBS key is '+key)
+            slrm.queue_wait('mklittrow',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Littrow',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            #logger.info(str(np.sum(docal))+' Littrow files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Littrow',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1761,8 +1836,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Responses in parallel')
         logger.info('===================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkresponse', **slurmpars)
+        tasks = np.zeros(len(responsedict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)        
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkresponse', **slurmpars)
         docal = np.zeros(len(responsedict),bool)
         donames = []
         logfiles = []
@@ -1791,14 +1868,27 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Response file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Response files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Response',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Response files to run')        
+            key,jobid = slrm.submit(tasks,label='mkresponse',verbose=True,logger=logger,**slurmpars1)
+            logger.info('PBS key is '+key)
+            slrm.queue_wait('mkresponse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Response',logfiles,key,apred,telescope,verbose=True,logger=logger)                            
+            #logger.info(str(np.sum(docal))+' Response files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Response',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1817,8 +1907,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Sparses in parallel')
         logger.info('=================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mksparse', **slurmpars)
+        tasks = np.zeros(len(sparsedict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mksparse', **slurmpars)
         docal = np.zeros(len(sparsedict),bool)
         donames = []
         logfiles = []
@@ -1847,14 +1939,27 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Sparse file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Sparse files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Sparse',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Sparse files to run')        
+            key,jobid = slrm.submit(tasks,label='mksparse',verbose=True,logger=logger,**slurmpars1)
+            logger.info('PBS key is '+key)
+            slrm.queue_wait('mksparse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Sparse',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            #logger.info(str(np.sum(docal))+' Sparse files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Sparse',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1873,8 +1978,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master PSF Models in parallel')
         logger.info('====================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkpsfmodel', **slurmpars)
+        tasks = np.zeros(len(modelpsfdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkpsfmodel', **slurmpars)
         docal = np.zeros(len(modelpsfdict),bool)    
         donames = []
         logfiles = []
@@ -1903,14 +2010,26 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('PSFModel file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' PSFModel files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' PSFModel files to run')        
+            key,jobid = slrm.submit(tasks,label='mkpsfmodel',verbose=True,logger=logger,**slurmpars1)
+            logger.info('PBS key is '+key)
+            slrm.queue_wait('mkpsfmodel',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'PSFModel',logfiles,key,apred,telescope,verbose=True,logger=logger)                            
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
             # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'PSFModel',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            #chkmaster1 = check_mastercals(donames,'PSFModel',logfiles,key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1971,8 +2090,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master LSFs in parallel')
         logger.info('================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mklsf', **slurmpars)
+        tasks = np.zeros(len(lsfdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mklsf', **slurmpars)
         docal = np.zeros(len(lsfdict),bool)
         donames = []
         logfiles = []
@@ -2001,14 +2122,27 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('LSF file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' LSF files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'LSF',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' LSF files to run')        
+            key,jobid = slrm.submit(tasks,label='mklsf',verbose=True,logger=logger,**slurmpars1)
+            logger.info('PBS key is '+key)
+            slrm.queue_wait('mklsf',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'LSF',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
+            #logger.info(str(np.sum(docal))+' LSF files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'LSF',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -2087,8 +2221,10 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='ap3d', **slurmpars1)
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='ap3d', **slurmpars1)
         for i in range(ntorun):
             num = expinfo['num'][torun[i]]
             mjd = int(load.cmjd(num))
@@ -2103,10 +2239,18 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
             logger.info('Exposure %d : %d' % (i+1,num))
             logger.info('Command : '+cmd1)
             logger.info('Logfile : '+logfile1)
-            queue.append(cmd1,outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+            tasks['cmd'][i] = cmd1
+            tasks['outfile'][i] = logfile1
+            tasks['errfile'][i] = logfile1.replace('.log','.err')
+            tasks['dir'][i] = os.path.dirname(logfile1)
+            #queue.append(cmd1,outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+        logger.info('Running AP3D on '+str(ntorun)+' exposures')
+        key,jobid = slrm.submit(tasks,label='ap3d',verbose=True,logger=logger,**slurmpars1)
+        logger.info('PBS key is '+key)
+        slrm.queue_wait('ap3d',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
+        #queue.commit(hard=True,submit=True)
+        #logger.info('PBS key is '+queue.key)
+        #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This should check if the ap3d ran okay and puts the status in the database
         chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=logger)
         del queue
@@ -2312,8 +2456,10 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     slurmpars1['cpus'] = ntorun
                 slurmpars1['numpy_num_threads'] = 2
                 logger.info('Slurm settings: '+str(slurmpars1))
-                queue = pbsqueue(verbose=True)
-                queue.create(label='makecal-'+calnames[i], **slurmpars1)
+                tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+                tasks = Table(tasks)
+                #queue = pbsqueue(verbose=True)
+                #queue.create(label='makecal-'+calnames[i], **slurmpars1)
                 for j in range(ntorun):
                     num1 = calinfo['num'][torun[j]]
                     mjd1 = calinfo['mjd'][torun[j]]
@@ -2353,11 +2499,19 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     logger.info('Calibration file %d : %s %s' % (j+1,ctype,str(num1)))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-
-                queue.commit(hard=True,submit=True)
-                logger.info('PBS key is '+queue.key)
-                queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+                    tasks['cmd'][i] = cmd1
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = logfile1.replace('.log','.err')
+                    tasks['dir'][i] = os.path.dirname(logfile1)
+                    #queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+                logger.info('Creating '+str(ntorun)+' '+calnames[i]+' files')
+                label = 'makecal-'+calnames[i]
+                key,jobid = slrm.submit(tasks,label=label,verbose=True,logger=logger,**slurmpars1)
+                logger.info('PBS key is '+key)
+                slrm.queue_wait(label,key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete   
+                #queue.commit(hard=True,submit=True)
+                #logger.info('PBS key is '+queue.key)
+                #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
             else:
                 logger.info('No '+str(calnames[i])+' calibration files need to be run')
             # Checks the status and updates the database
@@ -2595,8 +2749,10 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='apred', **slurmpars1)
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='apred', **slurmpars1)
         for i in range(ntorun):
             pf = planfiles[torun[i]]
             pfbase = os.path.basename(pf)
@@ -2611,10 +2767,17 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
             logger.info('planfile %d : %s' % (i+1,pf))
             logger.info('Command : '+cmd1)
             logger.info('Logfile : '+logfile1)
-            queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            tasks['cmd'][i] = cmd1
+            tasks['outfile'][i] = logfile1
+            tasks['errfile'][i] = errfile1
+            tasks['dir'][i] = os.path.dirname(logfile1)
+            #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+        logger.info('Running APRED on '+str(ntorun)+' planfiles')
+        key,jobid = slrm.submit(tasks,label='apred',verbose=True,logger=logger,**slurmpars1)
+        #queue.commit(hard=True,submit=True)
+        logger.info('PBS key is '+key)
+        slrm.queue_wait('apred',key,jobid,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete        
         # This also loads the status into the database using the correct APRED version
         chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
         del queue
@@ -2803,17 +2966,12 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             tasks['outfile'][i] = logfile
             tasks['errfile'][i] = errfile
             tasks['dir'][i] = os.path.dirname(logfile) 
-            #queue.append(cmd,outfile=logfile,errfile=errfile)
         logger.info('Running RV on '+str(ntorun)+' stars')
         key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=logger,**slurmpars1)
         logger.info('PBS key is '+key)
         slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
-        #queue.commit(hard=True,submit=True)
-        #logger.info('PBS key is '+queue.key)
-        #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This checks the status and puts it into the database
         chkrv = check_rv(vcat[torun],key,logger=logger,verbose=False)
-        #del queue
     else:
         logger.info('No RVs need to be run')
         chkrv = None
@@ -2907,20 +3065,30 @@ def rununified(load,mjds,slurmpars,clobber=False,logger=None):
         slurmpars1['cpus'] = len(mjds)
     slurmpars1['numpy_num_threads'] = 2    
     logger.info('Slurm settings: '+str(slurmpars1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='unidir', **slurmpars1)
+    tasks = np.zeros(len(mjds),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+    tasks = Table(tasks)
+    #queue = pbsqueue(verbose=True)
+    #queue.create(label='unidir', **slurmpars1)
     # Loop over all MJDs
     for m in mjds:
-        outfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-unidir.'+logtime+'.log'
-        errfile = outfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile))==False:
-            os.makedirs(os.path.dirname(outfile))
-        queue.append('sas_mwm_healpix --spectro apogee --mjd {0} --telescope {1} --drpver {2} -v'.format(mjd5,telescope,apred),
-                     outfile=outfile, errfile=errfile)
-    queue.commit(hard=True,submit=True)
-    logger.info('PBS key is '+queue.key)        
-    queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
-    del queue    
+        logfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-unidir.'+logtime+'.log'
+        errfile = logfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(logfile))==False:
+            os.makedirs(os.path.dirname(logfile))
+        cmd = 'sas_mwm_healpix --spectro apogee --mjd {0} --telescope {1} --drpver {2} -v'.format(mjd5,telescope,apred)
+        tasks['cmd'][i] = cmd
+        tasks['outfile'][i] = logfile
+        tasks['errfile'][i] = errfile
+        tasks['dir'][i] = os.path.dirname(logfile)
+        #queue.append(cmd,outfile=logfile, errfile=errfile)
+    logger.info('Making unified directory structure for '+str(len(MJDS)))
+    key,jobid = slrm.submit(tasks,label='unidir',verbose=True,logger=logger,**slurmpars1)
+    logger.info('PBS key is '+key)
+    slrm.queue_wait('unidir',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete   
+    #queue.commit(hard=True,submit=True)
+    #logger.info('PBS key is '+queue.key)        
+    #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+    #del queue    
     #  sas_mwm_healpix --spectro apogee --mjd 59219 --telescope apo25m --drpver daily -v
 
 
@@ -2983,8 +3151,10 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         slurmpars1['cpus'] = nplans
     slurmpars1['numpy_num_threads'] = 2    
     logger.info('Slurm settings: '+str(slurmpars1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='apqa', **slurmpars1)
+    tasks = np.zeros(len(planfiles),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+    tasks = Table(tasks)
+    #queue = pbsqueue(verbose=True)
+    #queue.create(label='apqa', **slurmpars1)
     plates = np.zeros(nplans).astype(str)
     mjds = np.zeros(nplans).astype(str)
     fields = np.zeros(nplans).astype(str)
@@ -3004,11 +3174,19 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         cmd += ' --masterqa False --starhtml True --starplots True --nightqa False --monitor False'
         logger.info('Command : '+cmd)
         logger.info('Logfile : '+logfile)
-        queue.append(cmd, outfile=logfile, errfile=errfile)
-    queue.commit(hard=True,submit=True)
-    logger.info('PBS key is '+queue.key)
-    queue_wait(queue,sleeptime=60,logger=logger,verbose=True)  # wait for jobs to complete 
-    del queue
+        tasks['cmd'][i] = cmd
+        tasks['outfile'][i] = logfile
+        tasks['errfile'][i] = errfile
+        tasks['dir'][i] = os.path.dirname(logfile)
+        #queue.append(cmd, outfile=logfile, errfile=errfile)
+    logger.info('Running APQA on '+str(len(planfiles))+' planfiles')
+    key,jobid = slrm.submit(tasks,label='apqa',verbose=True,logger=logger,**slurmpars1)
+    logger.info('PBS key is '+key)
+    slrm.queue_wait('apqa',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete 
+    #queue.commit(hard=True,submit=True)
+    #logger.info('PBS key is '+queue.key)
+    #queue_wait(queue,sleeptime=60,logger=logger,verbose=True)  # wait for jobs to complete 
+    #del queue
 
     # Make nightly QA/summary pages
     # we should parallelize this
