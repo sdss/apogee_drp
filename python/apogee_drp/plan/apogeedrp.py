@@ -2499,10 +2499,10 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     logger.info('Calibration file %d : %s %s' % (j+1,ctype,str(num1)))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    tasks['cmd'][i] = cmd1
-                    tasks['outfile'][i] = logfile1
-                    tasks['errfile'][i] = logfile1.replace('.log','.err')
-                    tasks['dir'][i] = os.path.dirname(logfile1)
+                    tasks['cmd'][j] = cmd1
+                    tasks['outfile'][j] = logfile1
+                    tasks['errfile'][j] = logfile1.replace('.log','.err')
+                    tasks['dir'][j] = os.path.dirname(logfile1)
                     #queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
                 logger.info('Creating '+str(ntorun)+' '+calnames[i]+' files')
                 label = 'makecal-'+calnames[i]
