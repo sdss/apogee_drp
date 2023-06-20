@@ -2931,7 +2931,6 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
         if ntorun<64:
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
-        del slurmpars1['ppn']
         logger.info('Slurm settings: '+str(slurmpars1))
         tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
@@ -3391,10 +3390,10 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     # Slurm settings
     alloc = 'sdss-np'
     shared = True
-    ppn = 64
+    #ppn = 64
     walltime = '336:00:00'
     # Only set cpus if you want to use less than 64 cpus
-    slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn,
+    slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared,
                  'walltime':walltime, 'notification':False}
     
     # Get software version (git hash)
