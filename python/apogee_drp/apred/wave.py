@@ -355,7 +355,33 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         print(str(len(bdframe))+' frames were bad')
         gdframe, = np.where(frameinfo['okay']==True)        
         frameinfo = frameinfo[gdframe]
-    
+
+    # Multiple groups, we need two exposures per group
+    if len(np.unique(frameinfo['group'])) > 1:
+        framegroupindex = dln.create_index(frameinfo['group'])
+        badgroup, = np.where(framegroupindex['num']<2)
+        nbadgroup = len(badgroup)
+        if nbadgroup>0:
+            print(str(nbadgroup)+' groups have only one exposure.  Removing them')
+        toremframe = np.array([],int)
+        toremlinestr = np.array([],int)
+        for k in range(nbadgroup):
+            ik = badgroup[k]
+            # Get exposures to remove
+            frind = framegroupindex['index'][framegroupindex['lo'][k]:framegroupindex['hi'][k]+1]
+            frind = frind[0]  # should be one exposures
+            toremframe = np.append(toremframe,frind)
+            # Get lines to remove
+            lind, = np.where(linestr['frameid']==frameinfo['num'][frind])
+            if len(lind)>0:
+                toremlinestr = np.append(toremlinestr,lind)
+        if len(toremframe)>0:
+            print('Removing '+str(len(toremframe))+' exposures: '+','.join(np.char.array(frameinfo['num'][toremframe]).astype(str)))
+            frameinfo = np.delete(frameinfo,toremframe)
+        if len(toremlinestr)>0:
+            print('Removing '+str(len(toremlinestr))+' linestr from these exposures')
+            linestr = np.delete(linestr,toremlinestr)
+        
     # Do the wavecal fit
     # initial parameter guess for first row, subsequent rows will use guess from previous row
     npars = npoly+3*maxgroup
@@ -508,7 +534,8 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         # if we have more than one group, get starting polynomial guess from first group, to help
         #   to avoid local minima
         if ngroup > 1 :
-            if abs(nums[1]-nums[0]) > 1 : 
+            if abs(frameinfo['num'][1]-frameinfo['num'][0]) > 1 :
+                import pdb; pdb.set_trace()
                 raise Exception('for multiple groups, first two frames must be from same group!')
             # Run all exposures of first group
             group0, = np.where(np.array(frameinfo['group'])==np.min(groups))
