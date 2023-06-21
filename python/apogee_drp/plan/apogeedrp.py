@@ -773,7 +773,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkap1['designid'] = planstr['designid']
             chkap1['fieldid'] = planstr['fieldid']
         if platetype=='normal' and fiberdata is not None:
-            chkap1['nobj'] = np.sum((fiberdata['FIBERID']>-1) & (fiberdata['OBJTYPE']!='SKY'))  # stars and tellurics
+            chkap1['nobj'] = np.sum((fiberdata['FIBERID']>-1) & (np.char.array(fiberdata['OBJTYPE']).astype(str)!='SKY'))  # stars and tellurics
         chkap1['pbskey'] = pbskey
         chkap1['checktime'] = str(datetime.now())
         # ap3D, ap2D, apCframe success
