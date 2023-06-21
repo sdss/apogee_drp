@@ -209,6 +209,11 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
 
     telescope = {'apogee-n':'apo25m','apogee-s':'lco25m'}[inst]
     load = apload.ApLoad(apred=vers,instrument=inst,telescope=telescope)
+
+    #if nums[0]==42550003 and len(nums)==61:
+    #    print('TRIMMING OFF FIRST ONE!!!!')
+    #    nums = nums[1:]
+
     
     nums = np.array(nums)
     if name is None : name = nums[0]
@@ -381,7 +386,16 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         if len(toremlinestr)>0:
             print('Removing '+str(len(toremlinestr))+' linestr from these exposures')
             linestr = np.delete(linestr,toremlinestr)
-        
+    # Groups must start with 0 and have no gaps,
+    # reassign group names
+    oldgroup = np.unique(frameinfo['group'])
+    newgroup = np.arange(len(oldgroup))
+    old2newgroup = np.zeros(np.max(oldgroup)+1,int)
+    old2newgroup[oldgroup] = newgroup
+    frameinfo['group'] = old2newgroup[frameinfo['group']]
+    linestr['group'] = old2newgroup[linestr['group']]
+
+            
     # Do the wavecal fit
     # initial parameter guess for first row, subsequent rows will use guess from previous row
     npars = npoly+3*maxgroup
@@ -404,7 +418,6 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     if plot : 
         fig,ax = plots.multi(1,3,hspace=0.001,wspace=0.001)
         fig2,ax2 = plots.multi(1,3,hspace=0.001,wspace=0.001)
-
 
     # Get improved initial guesses and prune out bad lines
     print(' ')
@@ -722,6 +735,16 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             rms[row,igroup] = res[gd[j]].std()
             sig[row,igroup] = np.median(np.abs(res[gd[j]]))
 
+
+        #newwaves = np.zeros((3,2048),float)
+        #x = np.zeros([3,2048])
+        #for ichip,chip in enumerate(chips): 
+        #    x[0,:] = np.arange(2048)
+        #    x[1,:] = ichip+1
+        #    x[2,:] = 0
+        #    newwaves[ichip,:] = func_multi_poly(x,*allpars[:,row],npoly=npoly)
+
+            
     # Now refine the solution by averaging zeropoint across all groups and
     # by fitting across different rows to require a smooth solution
     if ngroup > 1:
@@ -1120,7 +1143,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                         nline1 = rowind[bd1[k]]
                         pix0 = np.poly1d(np.flip(coef1))(linestr['xpix0'][nline1])
                         sig0 = np.poly1d(np.flip(sigcoef1))(linestr['xpix0'][nline1])
-                        if ~np.isfinite(pix0) or ~np.isfinite(sig0):
+                        if ~np.isfinite(pix0) or ~np.isfinite(sig0) or round(pix0)<0 or round(pix0)>2047:
                             print('problems with pix0/sig0')
                             #import pdb; pdb.set_trace()
                             continue
@@ -1659,7 +1682,8 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
                 print('fact : {:f} nuse: {:d}  ngd: {:d}'.format(fact,nuse,len(gd)))
                 fact *= 1.15
                 niter += 1
-
+                import pdb; pdb.set_trace()
+                
             # Not enough lines to use
             if nuse < 0.9*len(gd):
                 print('Not enough lines to use for frame ',name)
