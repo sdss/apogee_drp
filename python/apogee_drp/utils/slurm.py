@@ -182,6 +182,13 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
             percent = 100*ncomplete/ntasks
             if verbose:
                 logger.info('percent complete = %2d   %d / %d tasks' % (percent,ntasks-taskrunning,ntasks))
+        else:
+            # It claims to not be running, but let's check anyway
+            tstatus = taskstatus(label,key)
+            ncomplete = len(tstatus)
+            percent = 100*ncomplete/ntasks
+            if verbose:
+                logger.info('NOT Running  percent complete = %2d   %d / %d tasks' % (percent,ncomplete,ntasks))                
                 
         # Are we done
         if noderunning==0 and taskrunning==0:
