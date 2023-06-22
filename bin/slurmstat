@@ -17,26 +17,68 @@ import argparse
 import os
 import sys
 import pdb
-import slurm as slurm
 import numpy as np
 import subprocess
-from slurm import queue as pbsqueue
-from slurm.models import Job,Member
+from dlnpyutils import utils as dln
+from apogee_drp.utils import slurm
 from os import getlogin, getuid, getgid, makedirs, chdir
 from pwd import getpwuid
 from grp import getgrgid
+from glob import glob
 from datetime import datetime,timezone
+from astropy.table import Table
+
+SLURMDIR = '/scratch/general/nfs1/'
+
+""" This is a more efficient version, since it does not read the entire
+file
+"""
+
+
+def tail(filename,nlines=10,verbose=False):
+    """ https://gist.github.com/amitsaha/5990310 """
+
+    bufsize = 8192
+    fsize = os.stat(filename).st_size
+
+    iter = 0
+    with open(filename) as f:
+        if bufsize > fsize:
+            bufsize = fsize-1
+        data = []
+        while True:
+            iter +=1
+            f.seek(fsize-bufsize*iter)
+            data.extend(f.readlines())
+            if len(data) >= nlines or f.tell() == 0:
+                if verbose:
+                    print(''.join(data[-nlines:]))
+                break
+    out = data[-nlines:]
+    return out
 
 if __name__ == '__main__' :
 
     parser = argparse.ArgumentParser(
         prog=os.path.basename(sys.argv[0]),
-        description='Check status of slurm jobs')
+        description='Check status of apogee_drp slurm jobs')
     parser.add_argument('-u','--user', type=str, nargs=1, help='Username')
     parser.add_argument('-l','--latest', action='store_true', help='Show results of latest job')
     parser.add_argument('-k','--key', type=str, nargs=1, default='', help='Job key')
+    parser.add_argument('--label', type=str, nargs=1, default='', help='Job label')
+    parser.add_argument('-t','--tail', action='store_true', help='Show tail of running tasks')
+    parser.add_argument('-v','--verbose', action='store_true', help='Verbose output')
     parser.add_argument('--clear', type=int, nargs='?', const='3600', help='Clear dormant jobs after this delay.')    
     args = parser.parse_args()
+    latest = args.latest
+    verbose = args.verbose
+    dotail = args.tail
+    key = args.key
+    if key != '':
+        key = key[0]
+    label = args.label
+    if label != '':
+        label = label[0]
     
     # Get the username
     curuser = os.getlogin()
@@ -49,22 +91,89 @@ if __name__ == '__main__' :
     username = getpwuid(getuid())[0]
     groupname = getgrgid(getgid())[0]
     unid = getlogin()
-    member = Member.query.filter(Member.username==username).filter(Member.groupname==groupname).filter(Member.unid==unid).first()
+    slurmdir = SLURMDIR+user+'/slurm/'
+
+    # No key or label, check all directories for active jobs
+    #if args.key != '' and args.label != '':
+    #    dirs = glob(slurmdir+'*/*')
+    #    dirs = [d for d in dirs if os.path.isdir(d)]
+
+    # Key input
+    if key != '':
+        # Only key input, get the label
+        if label == '':        
+            # Find the label
+            dirs = glob(slurmdir+'*/*')
+            dirs = [d for d in dirs if os.path.isdir(d)]
+            jobdir = [d for d in dirs if os.path.basename(d) == key]
+            if len(jobdir)==0:
+                print('key ',key,' not found')
+                sys.exit()
+            jobdir = jobdir[0]
+            label = jobdir.split('/')[-2]
+        # Get the information
+        jobdir = slurmdir+label+'/'+key+'/'
+        if os.path.exists(jobdir) == False:
+            print(jobdir,' NOT FOUND')
+            sys.exit()
+        # Get JobID from the output filename
+        outfile = glob(jobdir+'*'+label+'*.out*')
+        if len(outfile)>0:
+            outfile = outfile[0]
+            jobid = os.path.basename(outfile)
+            # apred_7986385[1].out
+            jobid = jobid.split('_')[1].split('[')[0]
+        else:
+            jobid = None
+            print('No output file found')
+        # Get tasks status
+        ntasks = dln.readlines(jobdir+label+'.ntasks')
+        ntasks = int(ntasks[0])
+        tasks = Table.read(jobdir+label+'_tasks.fits')
+        tasks['task'] = np.arange(len(tasks))+1
+        tasks['done'] = False
+        # This only returns the ones that have completed already
+        tstatus = slurm.taskstatus(label,key,username=user)
+        if len(tstatus)>0:
+            ind1,ind2 = dln.match(tstatus['task'],tasks['task'])
+            if len(ind1)>0:
+                tasks['done'][ind2] = tstatus['done'][ind1]
+        # Is the slurm job still running
+        stat = slurm.slurmstatus(label,jobid,user)
+        complete = (tasks['done']==True)
+        ncomplete = np.sum(complete)
+        percent = 100*ncomplete/ntasks
+        print('key =',key)
+        print('label =',label)
+        print('jobid =',jobid)
+        print('jobdir =',jobdir)
+        print('Ntasks =',ntasks)
+        print('Job status =',stat['State'][0])
+        print('Percent complete = %2d   %d / %d tasks' % (percent,ncomplete,ntasks))
+        if verbose or dotail:
+            if ncomplete < ntasks:
+                notcomplete, = np.where(tasks['done']==False)                
+                print(str(len(notcomplete))+' tasks not completed:')
+                for i in range(len(notcomplete)):
+                    task1 = tasks[notcomplete[i]]
+                    mtime = os.path.getmtime(task1['outfile'])
+                    mdate = datetime.fromtimestamp(mtime)
+                    deltatime = datetime.now()-mdate
+                    print(str(i+1)+' Task '+str(task1['task']))
+                    print('Last modified: ',str(mdate)[0:21])
+                    print('Time since modified:',str(deltatime)[0:9])
+                    print(task1['outfile'])
+                    if dotail:
+                        print('========================================== LOG TAIL =================================================')
+                        tail(task1['outfile'],verbose=True)
+                        print('========================================== ERR TAIL =================================================')
+                        tail(task1['outfile'].replace('.log','.err'),verbose=True)
+                        print('=====================================================================================================')
 
 
-    #job = Job.query.get(job_id)
-    #job = Job.query.filter(Job.identifier==identifier).filter(Job.member_id==self.member.id).first()
-    #job = Job.query.filter(Job.member_id==member.id).first()
-    # job.tasks
-    # job.status
-    # job.ntask
-    # In [73]: job.key
-    # Out[73]: 'b10824c0-e065-11ec-9744-2cea7ff4461c'
+    sys.exit()
 
-    #job = Job.query.filter(Job.member_id==member.id).all()
-
-    # status
-    # status = ['created','uncommitted', 'committed', 'submitted', 'running', 'complete']
+    ################# OLD SLURM CODE ################################3
 
     # I'm looking for 4, which means it's still running
     job0 = Job.query.filter(Job.member_id==member.id).filter(Job.status==4).all()
@@ -87,16 +196,6 @@ if __name__ == '__main__' :
             print('{:5d}   {:20s} {:40s} {:25s} {:6d} {:6d} {:7.1f}'.format(i+1,job1.label,job1.key,job1.created.ctime(),job1.ntask,nrunning,pcomplete))
         sys.exit()
 
-    # Selecting job with key input
-    if args.key != '':
-        keys = [j.key for j in job]
-        ind, = np.where(np.array(keys)==args.key[0])
-        if len(ind)==0:
-            print('key '+args.key[0]+' not found in active jobs')
-            sys.exit()
-        job1 = job[ind[0]]
-    else:
-        job1 = job[-1]  # last job
         
     print('Job: ',job1.key)
     print('Label: ',job1.label)
@@ -128,38 +227,3 @@ if __name__ == '__main__' :
     print(str(ntodo)+' of '+str(job1.ntask)+' tasks left to finish')
 
     
-    #import pdb; pdb.set_trace()
-    
-    # Get the tasks
-    #tasks = queue.client.job.tasks
-
-    ## Gather the information on all the tasks
-    #dt = np.dtype([('task_number',int),('node_number',int),('proc_number',int),('status',int),('complete',bool)])
-    #data = np.zeros(len(tasks),dtype=dt)
-    #nodeproc = []
-    #for i,t in enumerate(tasks):
-    #    # Make sure we have the most up-to-date information
-    #    #  redo the query to update the task
-    #    slurm.db.session.refresh(t)
-    #    data['task_number'][i] = t.task_number
-    #    data['node_number'][i] = t.node_number
-    #    data['proc_number'][i] = t.proc_number
-    #    data['status'][i] = t.status
-    #    if t.status==5:
-    #        data['complete'][i] = True
-    #    nodeproc.append(str(t.node_number)+'-'+str(t.proc_number))
-
-    #index = dln.create_index(nodeproc)
-    #for i,unp in enumerate(index['value']):
-    #    ind = index['index'][index['lo'][i]:index['hi'][i]+1]
-    #    data1 = data[ind]
-    #    node,proc = unp.split('-')
-    #    # Order by task number
-    #    si = np.argsort(data1['task_number'])
-    #    data1 = data1[si]
-    #    # If last task in this group is complete,
-    #    #   then they should all be done!
-    #    if data1['status'][-1]==5:
-    #        data['complete'][ind] = True
-
-    #import pdb; pdb.set_trace()
