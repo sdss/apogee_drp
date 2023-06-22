@@ -1682,7 +1682,6 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
                 print('fact : {:f} nuse: {:d}  ngd: {:d}'.format(fact,nuse,len(gd)))
                 fact *= 1.15
                 niter += 1
-                import pdb; pdb.set_trace()
                 
             # Not enough lines to use
             if nuse < 0.9*len(gd):
