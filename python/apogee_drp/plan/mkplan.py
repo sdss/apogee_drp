@@ -1238,14 +1238,32 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     # "extra" frames information
     if len(extra)>0:
         extraplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
-                     'plate':0, 'psfid':calpsfid, 'fluxid':calpsfid, 'ims':extra, 'fps':fps,
+                     'plate':0, 'psfid':calpsfid, 'fluxid':str(calfluxid), 'ims':extra, 'fps':fps,
                      'extra':True}
+        # Pick a good PSF quartz
+        # Try to use ones that exist
+        if len(psfquartz)>0 or len(psfdome)>0:
+            if len(psfquartz)>0:
+                psfid = int(psfquartz[0])
+            elif len(psfdome)>0:
+                psfid = int(psfdome[0])
+            extraplan['psfid'] = psfid
+        # Pick a good apFlux ID
+        if len(flux)>0:
+            if calpsfid in flux:
+                calfluxid = calpsfid
+            else:
+                calfluxid = flux[0]
+        else:
+            calfluxid = calpsfid
+        extraplan['fluxid'] = str(calfluxid)
         if waveid:
             extraplan['waveid'] = str(waveid)
         if fps:
             # Use PSF library during FPS era
-            #   quartzflat PSFID is a "backup" 
-            extraplan['psflibrary'] = 1  
+            #   quartzflat PSFID is a "backup"
+            # We have switched to using modelpsf as the default
+            extraplan['modelpsf'] = True
             extraplan['configid'] = str(expinfo['configid'][i])
             extraplan['designid'] = str(expinfo['designid'][i])
             extraplan['fieldid'] = str(expinfo['fieldid'][i])
