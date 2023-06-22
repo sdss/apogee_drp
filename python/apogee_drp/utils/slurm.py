@@ -29,12 +29,13 @@ def genkey(n=20):
     key =  ''.join(random.choice(characters) for i in range(n))
     return key
 
-def slurmstatus(label,jobid):
+def slurmstatus(label,jobid,username=None):
     """
     Get status of the job from the slurm queue
     """
 
-    username = getpwuid(getuid())[0]
+    if username is None:
+        username = getpwuid(getuid())[0]
     slurmdir = SLURMDIR+username+'/slurm/'
     
     # Check if the slurm job is still running
@@ -118,12 +119,13 @@ def taskstatus(label,key,username=None):
     
     return tstatus
     
-def status(label,key,jobid):
+def status(label,key,jobid,username=None):
     """
     Return the status of a job.
     """
 
-    username = getpwuid(getuid())[0]
+    if username is None:
+        username = getpwuid(getuid())[0]
     slurmdir = SLURMDIR+username+'/slurm/'
     jobdir = slurmdir+label+'/'+key+'/'
     
