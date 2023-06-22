@@ -362,6 +362,8 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
 
     # Write the tasks list
     tasks.write(jobdir+label+'_tasks.fits',overwrite=True)
+    # Write the list of logfiles
+    dln.writelines(jobdir+label+'_logs.txt',list(tasks['outfile']))
     
     # Now submit the job
     if verbose:
