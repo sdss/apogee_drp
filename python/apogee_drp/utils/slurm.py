@@ -70,12 +70,13 @@ def slurmstatus(label,jobid):
     
     return out
 
-def taskstatus(label,key):
+def taskstatus(label,key,username=None):
     """
     Return tasks that completed
     """
 
-    username = getpwuid(getuid())[0]
+    if username is None:
+        username = getpwuid(getuid())[0]
     slurmdir = SLURMDIR+username+'/slurm/'
     jobdir = slurmdir+label+'/'+key+'/'
     
