@@ -16,7 +16,6 @@ from __future__ import unicode_literals
 import argparse
 import os
 import sys
-import pdb
 import numpy as np
 import subprocess
 from dlnpyutils import utils as dln
