@@ -25,7 +25,7 @@ from os import getlogin, getuid, getgid, makedirs, chdir
 from pwd import getpwuid
 from grp import getgrgid
 from glob import glob
-from datetime import datetime,timezone
+from datetime import datetime,timezone,timedelta
 from astropy.table import Table
 
 SLURMDIR = '/scratch/general/nfs1/'
@@ -94,10 +94,64 @@ if __name__ == '__main__' :
     slurmdir = SLURMDIR+user+'/slurm/'
 
     # No key or label, check all directories for active jobs
-    #if args.key != '' and args.label != '':
-    #    dirs = glob(slurmdir+'*/*')
-    #    dirs = [d for d in dirs if os.path.isdir(d)]
+    if key == '' and label == '':
+        dirs = glob(slurmdir+'*/*')
+        dirs = [d for d in dirs if os.path.isdir(d)]
+        # get modification times
+        dt = [('dir',str,200),('key',str,100),('label',str,100),('jobid',int),('dirmtime',float),
+              ('starttime',float),('endtime',float),('deltatime',float),('ntasks',int)]
+        jtab = np.zeros(len(dirs),dtype=np.dtype(dt))
+        jtab['dir'] = dirs
+        for i in range(len(dirs)):
+            dir1 = jtab['dir'][i]
+            key = os.path.basename(dir1)
+            label = os.path.basename(os.path.dirname(dir1))
+            jtab['key'][i] = key
+            jtab['label'][i] = label
+            ntaskfile = dir1+'/'+label+'.ntasks'
+            if os.path.exists(ntaskfile):
+                ntasks = dln.readlines(ntaskfile)
+                ntasks = int(ntasks[0])
+                jtab['ntasks'][i] = ntasks
+            # Get JobID from the output filename
+            outfile = glob(dir1+'/'+label+'*.out')
+            if len(outfile)>0:
+                outfile = outfile[0]
+                jobid = os.path.basename(outfile)
+                # apred_7986385[1].out
+                jobid = jobid.split('_')[1].split('[')[0]
+                jtab['jobid'][i] = int(jobid)
+            # Modification times
+            jtab['dirmtime'][i] = os.path.getmtime(dir1)
+            files = glob(dir1+'/*')
+            mtimes = [os.path.getctime(f) for f in files]
+            jtab['starttime'][i] = min(mtimes)
+            jtab['endtime'][i] = max(mtimes)            
+            jtab['deltatime'][i] = jtab['endtime'][i]-jtab['starttime'][i]
+                              
+        # Sort jobs by latest modification time
+        si = np.argsort(jtab['endtime'])[::-1]
+        jtab = jtab[si]
 
+        # Showing latest 10 jobs
+        print('Latest 10 slurm jobs at '+str(datetime.now())[0:21])
+        print('NUM       LABEL                KEY              JOBID   NTASKS   LAST MODIFIED TIME     DURATION         STATUS')
+        for i in range(10):
+            jtab1 = jtab[i]
+            dendtime = datetime.fromtimestamp(jtab1['endtime'])
+            deltatime = timedelta(seconds=jtab1['deltatime'])
+            sdeltatime = str(deltatime)
+            if jtab1['deltatime'] < 24*3600:
+                sdeltatime = sdeltatime[0:9]
+            stat = slurm.slurmstatus(jtab1['label'],jtab1['jobid'],username=user)
+            if len(stat)>0:
+                status = stat['State'][0]
+            else:
+                status = 'N/A'
+            print('{:3d} {:18s} {:21s} {:9d} {:7d}  {:22s} {:15s} {:10s}'.format(i+1,jtab1['label'],jtab1['key'],jtab1['jobid'],
+                                                                                 jtab1['ntasks'],str(dendtime)[0:21],sdeltatime,status))
+        sys.exit()
+        
     # Key input
     if key != '':
         # Only key input, get the label
