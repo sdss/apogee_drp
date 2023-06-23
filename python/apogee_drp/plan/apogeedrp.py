@@ -2242,7 +2242,7 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
         #logger.info('PBS key is '+queue.key)
         #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This should check if the ap3d ran okay and puts the status in the database
-        chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=logger)
+        chk3d = check_ap3d(expinfo,key,apred,telescope,verbose=True,logger=logger)
         del queue
     else:
         chk3d = None
@@ -2505,7 +2505,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 logger.info('No '+str(calnames[i])+' calibration files need to be run')
             # Checks the status and updates the database
             if ntorun>0:
-                chkcal1 = check_calib(calinfo[torun],logfiles,queue.key,apred,verbose=True,logger=logger)
+                chkcal1 = check_calib(calinfo[torun],logfiles,key,apred,verbose=True,logger=logger)
                 # Summary
                 indcal, = np.where(chkcal1['success']==True)
                 logger.info('%d/%d calibrations successfully processed' % (len(indcal),len(chkcal1)))
@@ -2767,7 +2767,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
         slrm.queue_wait('apred',key,jobid,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
         #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete        
         # This also loads the status into the database using the correct APRED version
-        chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
+        chkexp,chkvisit = check_apred(expinfo,planfiles,key,verbose=True,logger=logger)
         del queue
     else:
         logger.info('No planfiles need to be run')
