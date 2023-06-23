@@ -42,7 +42,9 @@ def slurmstatus(label,jobid,username=None):
     #  this will throw an exception if the job finished already
     #  slurm_load_jobs error: Invalid job id specified
     try:
-        res = subprocess.check_output(['sacct','-u',username,'-j',str(jobid)])
+        # previously long jobnames got truncated, make sure to get the full name
+        form = 'jobid,jobname%30,partition%30,account,alloccpus,state,exitcode'
+        res = subprocess.check_output(['sacct','-u',username,'-j',str(jobid),'--format='+form])
     except:
         print('Failed to get Slurm status')
         #traceback.print_exc()
@@ -52,7 +54,7 @@ def slurmstatus(label,jobid,username=None):
     # remove first two lines
     lines = lines[2:]
     # only keep lines with the label in it
-    lines = [l for l in lines if l.find(label)>-1]
+    lines = [l for l in lines if ((l.find(jobid)>-1) and (l.find(jobid)>-1))]
     # JobID    JobName  Partition    Account  AllocCPUS      State ExitCode
     out = np.zeros(len(lines),dtype=np.dtype([('JobID',str,30),('JobName',str,30),('Partition',str,30),
                                               ('Account',str,30),('AllocCPUS',int),('State',str,30),
