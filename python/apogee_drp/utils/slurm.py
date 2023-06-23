@@ -54,7 +54,7 @@ def slurmstatus(label,jobid,username=None):
     # remove first two lines
     lines = lines[2:]
     # only keep lines with the label in it
-    lines = [l for l in lines if ((l.find(jobid)>-1) and (l.find(jobid)>-1))]
+    lines = [l for l in lines if ((l.find(label)>-1) and (l.find(str(jobid))>-1))]
     # JobID    JobName  Partition    Account  AllocCPUS      State ExitCode
     out = np.zeros(len(lines),dtype=np.dtype([('JobID',str,30),('JobName',str,30),('Partition',str,30),
                                               ('Account',str,30),('AllocCPUS',int),('State',str,30),
@@ -65,7 +65,7 @@ def slurmstatus(label,jobid,username=None):
         out['JobName'][i] = dum[1]
         out['Partition'][i] = dum[2]
         out['Account'][i] = dum[3]
-        out['AllocCPUS'][i] = dum[4]
+        out['AllocCPUS'][i] = int(dum[4])
         out['State'][i] = dum[5]
         out['ExitCode'][i] = dum[6]
         if dum[5] == 'COMPLETED':
