@@ -251,6 +251,8 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
         ncycle = int(np.ceil(ntasks / (nodes * ppn)))
 
     # Add column to tasks table
+    if isinstance(tasks,Table)==False:
+        tasks = Table(tasks)
     tasks['task'] = -1
     tasks['node'] = -1
     tasks['proc'] = -1
