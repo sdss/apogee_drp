@@ -249,7 +249,12 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
         ncycle = 1
     else:
         ncycle = int(np.ceil(ntasks / (nodes * ppn)))
-    
+
+    # Add column to tasks table
+    tasks['task'] = -1
+    tasks['node'] = -1
+    tasks['proc'] = -1
+        
     # Node loop
     tasknum = 0
     inventory = []
@@ -318,7 +323,12 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
                 lines += [cmd]
                 lines += ['echo "Task '+str(tasknum+1)+' '+nodename+' '+procname+' Completed" `date`']
                 lines += ['echo "Done"']
+                if os.path.exists(os.path.dirname(tasks['outfile'][tasknum]))==False:  # make sure output directory exists
+                    os.makedirs(os.path.makedirs(tasks['outfile'][tasknum]))
                 inventory += [str(tasknum+1)+' '+str(node)+' '+str(proc)]
+                tasks['task'][tasknum] = tasknum+1
+                tasks['node'][tasknum] = node
+                tasks['proc'][tasknum] = proc
                 tasknum += 1
             lines += ['cd '+jobdir]                            
             if verbose:

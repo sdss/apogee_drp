@@ -2213,7 +2213,7 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
             logfile1 = load.filename('2D',num=num,mjd=mjd,chips=True).replace('2D','3D')
             logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
             logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
-            if os.path.dirname(logfile1)==False:
+            if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
             cmd1 = 'ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope)
             if clobber:
