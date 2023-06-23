@@ -1518,7 +1518,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Detector calibration files need to be run')
-        del queue    
 
 
     # Make darks in parallel
@@ -1596,7 +1595,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Dark calibration files need to be run')
-        del queue    
         # Make the dark plots
         if np.sum(docal)>0:
             cal.darkplot(apred=apred,telescope=telescope)
@@ -1674,7 +1672,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Flat calibration files need to be run')
-        del queue    
         # Make the flat plots
         if np.sum(docal)>0:
             cal.flatplot(apred=apred,telescope=telescope)
@@ -1748,7 +1745,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master BPM calibration files need to be run')
-        del queue    
 
 
     # Make Littrow in parallel
@@ -1819,7 +1815,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Littrow calibration files need to be run')
-        del queue    
 
     
     # Make Response in parallel
@@ -1889,7 +1884,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Response calibration files need to be run')
-        del queue    
     
 
     # Make Sparse in parallel
@@ -1959,7 +1953,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Sparse calibration files need to be run')
-        del queue    
 
 
     # Make Model PSFs in parallel
@@ -2028,7 +2021,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master PSF Model calibration files need to be run')
-        del queue    
     
 
     # Make multiwave cals in parallel
@@ -2140,7 +2132,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))        
         else:
             logger.info('No master LSF calibration files need to be run')
-        del queue
         
     return chkmaster
     
@@ -2243,7 +2234,6 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
         #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This should check if the ap3d ran okay and puts the status in the database
         chk3d = check_ap3d(expinfo,key,apred,telescope,verbose=True,logger=logger)
-        del queue
     else:
         chk3d = None
         logger.info('No exposures need AP3D processing')
@@ -2513,7 +2503,6 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     chkcal = chkcal1
                 else:
                     chkcal = np.hstack((chkcal,chkcal1))
-                del queue
 
     # make sure to run mkwave on all arclamps needed for daily cals
 
@@ -2768,7 +2757,6 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
         #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete        
         # This also loads the status into the database using the correct APRED version
         chkexp,chkvisit = check_apred(expinfo,planfiles,key,verbose=True,logger=logger)
-        del queue
     else:
         logger.info('No planfiles need to be run')
         chkexp,chkvisit = None,None
