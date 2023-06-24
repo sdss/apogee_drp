@@ -2348,7 +2348,17 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 if len(ind)>0:
                     calinfo = expinfo[ind]
             elif ctype=='flux':
-                ind, = np.where(expinfo['exptype']=='DOMEFLAT')
+                # Make sure there is at least ONE flux calibration file per MJD
+                #  if no dome flat was taken, then use quartz flat
+                ind = np.array([],int)
+                for m in mjds:
+                    ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='DOMEFLAT'))
+                    if len(ind1)==0:
+                        ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='QUARTZFLAT'))
+                        # pick two
+                        if len(ind1)>2: ind1=ind1[0:2]
+                        if len(ind1)>0:
+                            ind = np.append(ind,ind1)
                 ncal = len(ind)
                 if len(ind)>=0:
                     calinfo = expinfo[ind]
