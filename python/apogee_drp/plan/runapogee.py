@@ -91,7 +91,7 @@ def writeNewMJD(observatory,mjd,apred='daily'):
     f.close()
 
 
-def summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=None,debug=False):
+def summary_email(observatory,apred,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=None,debug=False):
     """ Send a summary email."""
 
     if debug:
@@ -99,12 +99,12 @@ def summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=None,de
     else:
         address = 'apogee-pipeline-log@sdss.org'
 
-    subject = 'Daily APOGEE Reduction %s %s' % (observatory,mjd5)
+    subject = 'Daily APOGEE Reduction %s %s %s' % (observatory,apred,mjd5)
     message = """\
               <html>
                 <body>
               """
-    message += '<b>Daily APOGEE Reduction %s %s</b><br>\n' % (observatory,mjd5)
+    message += '<b>Daily APOGEE Reduction %s %s %s</b><br>\n' % (observatory,apred,mjd5)
     message += '<p>\n'
     message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/daily/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
 
@@ -422,4 +422,4 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     db.close()    # close db session
 
     # Summary email
-    summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfile,debug=debug)
+    summary_email(observatory,apred,mjd5,chkcal,chkexp,chkvisit,chkrv,logfile,debug=debug)
