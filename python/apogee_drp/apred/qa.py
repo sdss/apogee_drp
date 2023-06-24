@@ -3677,7 +3677,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         html = open(mjdfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE MJD Summary</title></head>\n')
-        html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
+        html.write('<H1>APOGEE Observation Summary by MJD - APRED='+apred+'</H1>\n')
         html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
         html.write('<HR>\n')
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
