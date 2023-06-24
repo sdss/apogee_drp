@@ -53,22 +53,25 @@ chips=['a','b','c']
 outfile=cal_dir+'telluric/'+dirs.prefix+'Telluric-'+chips+'-'+waveid+'-'+lsfid+'.fits'
 
 ; wait if another process is already working on this frame
-lockfile = cal_dir+'telluric/'+dirs.prefix+'Telluric-'+waveid+'-'+lsfid+'.lock'
-if not keyword_set(unlock) then begin
-  while file_test(lockfile) do begin
-    if keyword_set(nowait) then return,1
-    apwait,lockfile,10
-  endwhile
-endif else begin
-  if file_test(lockfile) then file_delete,lockfile,/allow
-endelse
+;;lockfile = cal_dir+'telluric/'+dirs.prefix+'Telluric-'+waveid+'-'+lsfid+'.lock'
+;;if not keyword_set(unlock) then begin
+;;  while file_test(lockfile) do begin
+;;    if keyword_set(nowait) then return,1
+;;    apwait,lockfile,10
+;;  endwhile
+;;endif else begin
+;;  if file_test(lockfile) then file_delete,lockfile,/allow
+;;endelse
+tellfile = cal_dir+'telluric/'+dirs.prefix+'Telluric-'+waveid+'-'+lsfid
+aplock,tellfile,waittime=10,unlock=unlock
 
 ; does convolved telluric file already exist? If not, make it!
 if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
 
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,tellfile,/lock
+   
   ; we'll make the convolved spectrum on a subsampling of the wavecal grid
   for k=0,2 do begin
     if tag_exist(frame.(k),'wcoef') then begin
@@ -127,15 +130,17 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
   for j=j1,j2 do begin
 
     ;; wait if another process is already working on this frame
-    lockfile1 = outfile[j]+'.lock'
-    if not keyword_set(unlock) then begin
-      while file_test(lockfile1) do begin
-        apwait,lockfile1,10
-      endwhile
-    endif else begin
-       if file_test(lockfile1) then file_delete,lockfile1,/allow
-    endelse
-    
+    ;;lockfile1 = outfile[j]+'.lock'
+    ;;if not keyword_set(unlock) then begin
+    ;;  while file_test(lockfile1) do begin
+    ;;    apwait,lockfile1,10
+    ;;  endwhile
+    ;;endif else begin
+    ;;   if file_test(lockfile1) then file_delete,lockfile1,/allow
+    ;;endelse
+    outfile1 = outfile[j]
+    aplock,outfile1,waittime=10,unlock=unlock
+     
     ; Does the output file already exist?
     if not keyword_set(nowrite) and file_test(outfile[j]) eq 1 and not keyword_set(clobber) then begin
       error = outfile[j]+' already exists and CLOBBER=0'
@@ -144,9 +149,10 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
     endif
 
     ; open lock file to prevent multiple processes from working on same frame
-    openw,lock,/get_lun,lockfile1
-    free_lun,lock
- 
+    ;;openw,lock,/get_lun,lockfile1
+    ;;free_lun,lock
+    aplock,outfile1,/lock
+    
     ; get frame size 
     sz = size(frame.chipa.flux)
     npix = sz[1]
@@ -257,12 +263,14 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
 
     endfor  ; end airmass
     ; remove lock file
-    file_delete,lockfile1
-
+    ;;file_delete,lockfile1
+    aplock,outfile1,/clear
+    
     nextchip:
   endfor
 
-  file_delete,lockfile
+  ;;file_delete,lockfile
+  aplock,tellfile,/clear
 endif
 
 ; now get the convolved telluric at the desired wavelengths for this frame

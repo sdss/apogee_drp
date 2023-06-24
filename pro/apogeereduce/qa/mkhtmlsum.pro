@@ -14,11 +14,14 @@ if not keyword_set(mjdmax) then mjdmax=99999L
 
 if keyword_set(nomjd) then goto,dofield
 ; don't collide with another process....
-while file_test(spectrodir+'index.html.lock') do $
-   apwait,spectrodir+'index.html.lock',10
+;;while file_test(spectrodir+'index.html.lock') do $
+;;   apwait,spectrodir+'index.html.lock',10
+outfile = spectrodir+'index.html'
+aplock,outfile,waittime=10
 
-openw,lock,/get_lun,spectrodir+'index.html.lock'
-free_lun,lock
+;;openw,lock,/get_lun,spectrodir+'index.html.lock'
+;;free_lun,lock
+aplock,outfile,/lock
 
 ; find all .log.html files, get all MJDs with data
 logs=[file_search(getenv('APOGEE_DATA_N')+'/*/*.log.html'),$
@@ -359,6 +362,7 @@ free_lun,html
 file_move,spectrodir+'/'+fieldfile+'.html.tmp',spectrodir+'/'+fieldfile+'.html',/overwrite
 ;close,2
 
-file_delete,spectrodir+'index.html.lock',/allow_nonexistent
+;;file_delete,spectrodir+'index.html.lock',/allow_nonexistent
+aplock,outfile,/clear
 
 end

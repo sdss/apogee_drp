@@ -12,14 +12,17 @@ platedir=dirs.spectrodir+'/visit/'+dirs.telescope+'/*/*/'+cmjd+'/'
 reddir=dirs.expdir+'/'+cmjd+'/'
 outdir=dirs.expdir+'/'+cmjd+'/html/'
 datadir=dirs.datadir
+outfile = outdir+cmjd+'.html'
 
 if file_test(outdir,/directory) eq 0 then file_mkdir,outdir
 
 ; open plate summary page
-while file_test(outdir+cmjd+'.html.lock') do apwait,outdir+cmjd+'.html.lock',10
+;;while file_test(outdir+cmjd+'.html.lock') do apwait,outdir+cmjd+'.html.lock',10
+aplock,outfile,waittime=10
 
-openw,lock,/get_lun,outdir+cmjd+'.html.lock'
-free_lun,lock
+;;openw,lock,/get_lun,outdir+cmjd+'.html.lock'
+;;free_lun,lock
+aplock,outfile,/lock
 
 ; get all apR file numbers for the night
 print,'looking for apR files and missing frames ....'
@@ -397,7 +400,8 @@ mwrfits,allstr,reddir+cmjd+'exp.fits',/create
 printf,html,'</TABLE></BODY></HTML>'
 free_lun,html
 
-file_delete,outdir+cmjd+'.html.lock',/allow_nonexistent
+;;file_delete,outdir+cmjd+'.html.lock',/allow_nonexistent
+aplock,outfile,/clear
 
 end 
 
