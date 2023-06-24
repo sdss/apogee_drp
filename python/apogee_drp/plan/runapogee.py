@@ -213,7 +213,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     if mjd5 is None:
         # Could get information on which MJDs were processed from database
         # or from $APOGEE_REDUX/daily/log/apo/MJD5.done
-        mjd5 = getNextMJD(observatory)
+        mjd5 = getNextMJD(observatory,apred)
         if len(mjd5)==0:
             print('No more MJDs to reduce')
             return
