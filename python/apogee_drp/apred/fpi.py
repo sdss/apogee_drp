@@ -52,6 +52,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
     telescope = observatory+'25m'
+    obstag = {'apo':'n','lco':'s'}[observatory]
     load = apload.ApLoad(apred=apred,telescope=telescope)
 
     # Make daily wavelength solution if it doesn't exist
@@ -189,9 +190,11 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     print('Determine median wavelength per FPI lines')
     print('-----------------------------------------')
     # Load initial guesses
-    fpipeaksfile = os.environ['APOGEE_DRP_DIR']+'/data/arclines/fpi_peaks.fits'
+    #fpipeaksfile = os.environ['APOGEE_DRP_DIR']+'/data/arclines/fpi_peaks.fits'
+    fpipeaksfile = os.environ['APOGEE_DRP_DIR']+'/data/arclines/fpi_peaks-'+obstag+'.fits'    
     if os.path.exists(fpipeaksfile):
         fpipeaks = Table.read(fpipeaksfile)
+        for c in fpipeaks.colnames: fpipeaks[c].name = c.lower()  # lower case column names
     else:
         print('No initial FPI peaks file found')
         fpipeaks = None
@@ -338,7 +341,7 @@ def getfpiwave(fpilines,wcoef,fpipeaks,verbose=True):
     # chip loop
     #  not entirely necessary, but speeds up the where statements a bit
     for ichip,chip in enumerate(['a','b','c']):
-        ind, = np.where(fpipeaks['CHIP']==chip)
+        ind, = np.where(fpipeaks['chip']==chip)
         fpipeaks1 = fpipeaks[ind]
         fpilinestr1 = fpilinestr[ind]
         #wavecal1 = wavecal[chip]
@@ -348,7 +351,7 @@ def getfpiwave(fpilines,wcoef,fpipeaks,verbose=True):
         if verbose:
             print('CHIP   NUM         X       HEIGHT       FLUX        WAVE       WSIG   NFIBER')
         for i in range(len(ind)):
-            ind1, = np.where(np.abs(fpipeaks1['WAVE'][i]-fpilines1['wave']) < 1.0)
+            ind1, = np.where(np.abs(fpipeaks1['wave'][i]-fpilines1['wave']) < 1.0)
             wave1 = np.median(fpilines1['wave'][ind1])
             wsig1 = dln.mad(fpilines1['wave'][ind1].data)
             # outlier rejection
