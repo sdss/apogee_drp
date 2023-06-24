@@ -33,16 +33,17 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
 
   litdir = apogee_filename('Littrow',num=littrowid,chip='b',/dir)
   if file_test(litdir,/directory) eq 0 then file_mkdir,litdir
-  file = apogee_filename('Littrow',num=littrowid,chip='b',/base)
-  lockfile = litdir+file+'.lock'
+  litfile = apogee_filename('Littrow',num=littrowid,chip='b',/base)
+  ;;lockfile = litdir+file+'.lock'
 
   ;; If another process is alreadying making this file, wait!
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do apwait,lockfile,10
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
-
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do apwait,lockfile,10
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,litfile,waittime=10,unlock=unlock
+  
   ;; Does product already exist?
   ;;  we only use the b detector file
   if file_test(litdir+file) and not keyword_set(clobber) then begin
@@ -52,8 +53,9 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
   allfiles = litdir+file
   file_delete,allfiles,/allow  ;; delete any existing files to start fresh
   ;; Open .lock file
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,litfile,/lock
 
   ;; Make empirical PSF with broader smoothing in columns so that Littrow ghost is not incorporated as much
   MKPSF,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,average=200,/clobber,unlock=unlock
@@ -102,7 +104,7 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
   file_move,files,outdir,/over
 
   file = apogee_filename('Littrow',num=littrowid,chip='b',/base,/nochip)
-  file_delete,lockfile,/allow
-
+  ;;file_delete,lockfile,/allow
+  aplock,litfile,/clear
 end
 

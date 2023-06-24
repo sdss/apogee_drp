@@ -292,8 +292,10 @@ datadir=dirs.datadir
 dir=datadir+cmjd+'/'
 time0=systime(/seconds)
 file=dirs.prefix+string(format='("R-",a,"-",i8.8)',chip,num)
+outfile = dir+file+'.fits'
 ; if another process is uncompressing, wait
-while file_test(dir+file+'.apz.lock') do apwait,dir+file+'.apz.lock',10
+;;while file_test(dir+file+'.apz.lock') do apwait,dir+file+'.apz.lock',10
+aplock,outfile,waittime=10
 
 fitsdir=getenv('APOGEE_LOCALDIR')+'/'
 if fitsdir eq '' then fitsdir=dir+'/'

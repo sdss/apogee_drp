@@ -30,12 +30,13 @@ pro mkbpm,bpmid,darkid=darkid,flatid=flatid,badrow=badrow,clobber=clobber,unlock
  lockfile = file+'.lock'
 
  ;; If another process is alreadying make this file, wait!
- if not keyword_set(unlock) then begin
-   while file_test(lockfile) do apwait,file,10
- endif else begin
-   if file_test(lockfile) then file_delete,lockfile,/allow
- endelse
-
+ ;;if not keyword_set(unlock) then begin
+ ;;  while file_test(lockfile) do apwait,file,10
+ ;;endif else begin
+ ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+ ;;endelse
+ aplock,file,waittime=10,unlock=unlock
+ 
  ;; Does product already exist?
  ;; check all three chip files
  sbpmid = string(bpmid,format='(i08)')
@@ -50,9 +51,10 @@ pro mkbpm,bpmid,darkid=darkid,flatid=flatid,badrow=badrow,clobber=clobber,unlock
 
  print,'Making BPM: ', bpmid
  ;; Open .lock file
- openw,lock,/get_lun,lockfile
- free_lun,lock
-
+ ;;openw,lock,/get_lun,lockfile
+ ;;free_lun,lock
+ aplock,file,/lock
+ 
  for ichip=0,2 do begin
    chip = chips[ichip]
 
@@ -84,6 +86,7 @@ pro mkbpm,bpmid,darkid=darkid,flatid=flatid,badrow=badrow,clobber=clobber,unlock
    MWRFITS,mask,file,/create
  endfor
 
- file_delete,lockfile
-
+ ;;file_delete,lockfile
+ aplock,file,/clear
+ 
 end

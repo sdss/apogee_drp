@@ -9,8 +9,9 @@ file_mkdir,outdir
 file=apogee_filename('Hist',mjd=cmjd,chip='c')
 
 ; Is file already being created?
-lockfile=file+'.lock'
-while file_test(lockfile) do apwait,lockfile,10
+aplock,file,waittime=10
+;;lockfile=file+'.lock'
+;;while file_test(lockfile) do apwait,lockfile,10
 
 ; does file already exist?
 if file_test(file) and not keyword_set(clobber) then begin
@@ -19,8 +20,9 @@ if file_test(file) and not keyword_set(clobber) then begin
 endif
 
 ; create lock file
-openw,lock,/get_lun,lockfile
-free_lun,lock
+;;openw,lock,/get_lun,lockfile
+;;free_lun,lock
+aplock,file,/lock
 
 ; call python script to make apHist file
 if keyword_set(dark) then  $
@@ -28,7 +30,7 @@ spawn,'makehist '+cmjd+' --apred ' +apred_vers + ' --darkid '+ string(dark) else
 spawn,'makehist '+cmjd+' --apred ' +apred_vers
 
 ; remove lock file
-file_delete,lockfile,/allow_non
-
+;;file_delete,lockfile,/allow_non
+aplock,file,/clear
 
 end

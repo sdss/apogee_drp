@@ -30,18 +30,20 @@ pro mkmodelpsf,modelpsf,sparseid=sparseid,psfid=psfid,$
   dirs = getdir(apodir,caldir,spectrodir,vers)
   psfdir = apogee_filename('PSFModel',num=name,chip='a',/dir)
   file = dirs.prefix+string(format='("PSFModel-",i8.8)',name)
-  lockfile = psfdir+file+'.lock'
+  psffile = psfdir+file
+  ;;lockfile = psfdir+file+'.lock'
 
   ;; If another process is alreadying make this file, wait!
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do begin
-      if keyword_set(nowait) then return
-      apwait,file,10
-    endwhile
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
-
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do begin
+  ;;    if keyword_set(nowait) then return
+  ;;    apwait,file,10
+  ;;  endwhile
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,psffile,waittime=10,unlock=unlock
+  
   ;; Does product already exist?
   ;; check all three chip files
   smodelpsf = string(modelpsf,format='(i08)')
@@ -57,9 +59,10 @@ pro mkmodelpsf,modelpsf,sparseid=sparseid,psfid=psfid,$
 
   print,'Making modelpsf: ', modelpsf
   ;; Open .lock file
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,psffile,/lock
+  
   ;; New Python version! 
   cmd = ['mkmodelpsf',strtrim(modelpsf,2),strtrim(sparseid,2),strtrim(psfid,2),dirs.apred,dirs.telescope,'--verbose']
   print,'Running: ',cmd
@@ -72,6 +75,7 @@ pro mkmodelpsf,modelpsf,sparseid=sparseid,psfid=psfid,$
     free_lun,lock
   endif
 
-  file_delete,lockfile,/allow
-
+  ;;file_delete,lockfile,/allow
+  aplock,psffile,/clear
+ 
 end

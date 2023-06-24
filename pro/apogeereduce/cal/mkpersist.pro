@@ -39,15 +39,17 @@ pro mkpersist,persistid,dark,flat,cmjd=cmjd,darkid=darkid,flatid=flatid,$
 
   perdir = apogee_filename('Persist',num=persistid,chip='c',/dir)
   file = apogee_filename('Persist',num=persistid,chip='c',/base)
-  lockfile = perdir+file+'.lock'
+  perfile = perdir+file
+  ;;lockfile = perdir+file+'.lock'
 
   ;; If another process is alreadying making this file, wait!
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do apwait,lockfile,10
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
-
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do apwait,lockfile,10
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,perfile,waittime=10,unlock=unlock
+  
   ;; Does product already exist?
   ;; check all three chip files
   spersistid = string(persistid,format='(i08)')
@@ -60,9 +62,10 @@ pro mkpersist,persistid,dark,flat,cmjd=cmjd,darkid=darkid,flatid=flatid,$
   file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
   ;; Open .lock file
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,perfile,/lock
+  
   if keyword_set(cmjd) then begin
     d = approcess([dark,flat],cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,nfs=1,/doap3dproc,unlock=unlock) 
   endif else begin
@@ -92,5 +95,7 @@ pro mkpersist,persistid,dark,flat,cmjd=cmjd,darkid=darkid,flatid=flatid,$
   endfor
 
   file = apogee_filename('Persist',num=persistid,chip='c',/base)
-  file_delete,lockfile,/allow
+  ;;file_delete,lockfile,/allow
+  aplock,perfile,/clear
+  
 end

@@ -5,6 +5,14 @@
 ; Procedure to handle using lock files.  The default behavior is to
 ; check for a lock file and wait until it no longer exists.
 ;
+; This is generally used for APOGEE calibration files.
+; The standard usage is:
+;   aplock,calfile          ;; wait on lock file
+;     check if the calibration already exists. if it does, then return
+;   aplock,calfile,/lock    ;; create the lock file
+;     make the calibration file
+;   aplock,calfile,/clear   ;; clear the lock file
+;
 ; INPUTS:
 ;  file          Original file to be locked.  The lock file is file+'.lock'.
 ;  =waittime     Time to wait before checking the lock file again.
@@ -31,7 +39,9 @@ pro aplock,file,waittime=waittime,clear=clear,unlock=unlock,$
   if n_elements(waittime) eq 0 then waittime=10
   if n_elements(maxduration) eq 0 then maxduration=5*3600 ; default, 5 hours
   lockfile = file+'.lock'
-
+  dir = file_expand_path(file_dirname(file))
+  if file_test(dir,/directory) eq 0 then file_mkdir,dir  ;; make directory if necessary
+  
   ;; Clear or unlock the lock file
   if keyword_set(clear) or keyword_set(unlock) then begin
     file_delete,lockfile,/allow

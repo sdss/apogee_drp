@@ -43,22 +43,23 @@ pro mklsf,lsfid,waveid,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,$
   dirs = getdir(apodir,caldir,spectrodir,vers)
   caldir = dirs.caldir
   file = apogee_filename('LSF',num=lsfid[0],/nochip)
-  file = file_dirname(file)+'/'+file_basename(file,'.fits')
-  lockfile = file+'.lock'
+  lsffile = file_dirname(file)+'/'+file_basename(file,'.fits')
+  ;;lockfile = file+'.lock'
 
   ;; If another process is alreadying make this file, wait!
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do begin
-      if keyword_set(nowait) then begin
-        print,' LSF file: ', file, ' already being made (.lock file exists)'
-        return
-      endif
-      apwait,file,10
-    endwhile
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
-
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do begin
+  ;;    if keyword_set(nowait) then begin
+  ;;      print,' LSF file: ', file, ' already being made (.lock file exists)'
+  ;;      return
+  ;;    endif
+  ;;    apwait,file,10
+  ;;  endwhile
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,lsffile,waittime=10,unlock=unlock
+  
   ; does product already exist?
   ;; check all three chip files and .sav file exist
   slsfid = string(lsfid[0],format='(i08)')
@@ -73,9 +74,10 @@ pro mklsf,lsfid,waveid,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,$
   file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
   ;; Open .lock file
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,lsffile,/lock
+  
   cmjd = getcmjd(psfid)
 
   lsffile = apogee_filename('1D',num=lsfid[0],chip='c')
@@ -93,5 +95,6 @@ pro mklsf,lsfid,waveid,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,$
   APLSF,lsffile,wavefile,psf=psffile,/gauss,pl=pl
   if keyword_set(full) then APLSF,lsffile,wavefile,psf=psffile,/clobber,pl=pl,fibers=fibers
 
-  file_delete,lockfile,/allow
+  ;;file_delete,lockfile,/allow
+  aplock,lsffile,/clear
 end

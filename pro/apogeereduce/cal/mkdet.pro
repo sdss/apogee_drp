@@ -25,14 +25,15 @@ pro mkdet,detid,linid,unlock=unlock
  dirs = getdir()
  caldir = dirs.caldir
  detfile = apogee_filename('Detector',num=detid,chip='c')
- lockfile = detfile+'.lock'
+ ;;lockfile = detfile+'.lock'
  ;; If another process is already making this file, wait!
- if not keyword_set(unlock) then begin
-   while file_test(lockfile) do apwait,lockfile,10
- endif else begin
-   if file_test(lockfile) then file_delete,lockfile,/allow
- endelse
-
+ ;;if not keyword_set(unlock) then begin
+ ;;  while file_test(lockfile) do apwait,lockfile,10
+ ;;endif else begin
+ ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+ ;;endelse
+ aplock,detfile,waitttime=10,unlock=unlock
+ 
  ;; Does product already exist?
  print,'testing detector file: ',detfile
  ;; check all three chip files
@@ -48,9 +49,10 @@ pro mkdet,detid,linid,unlock=unlock
 
  print,'Making Detector: ', detid
  ; open .lock file
- openw,lock,/get_lun,lockfile
- free_lun,lock
-
+ ;;openw,lock,/get_lun,lockfile
+ ;;free_lun,lock
+ aplock,detfile,/lock
+ 
  lincorr = fltarr(4,3)
  for iquad=0,3 do lincorr[iquad,*]=[1.,0.,0.]
  if n_elements(linid) gt 0 then if linid gt 0 then begin
@@ -91,5 +93,6 @@ pro mkdet,detid,linid,unlock=unlock
    MWRFITS,lincorr,file
  endfor
 
- file_delete,lockfile,/allow
+ ;;file_delete,lockfile,/allow
+ aplock,detfile,/clear
 end

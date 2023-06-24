@@ -89,14 +89,15 @@ FOR i=0,nflatframe-1 do begin
 
     ;; Does the output file already exist?
     outfile = apogee_filename('PSF',chip=chiptag[j],num=flatframeid)
-    lockfile = outfile+'.lock'
-    ;; if another process is creating file, wait
-    if not keyword_set(unlock) then begin
-      while file_test(lockfile) do apwait,lockfile,10
-    endif else begin
-      if file_test(lockfile) then file_delete,lockfile,/allow  
-    endelse
-
+    ;;lockfile = outfile+'.lock'
+    ;;;; if another process is creating file, wait
+    ;;if not keyword_set(unlock) then begin
+    ;;  while file_test(lockfile) do apwait,lockfile,10
+    ;;endif else begin
+    ;;  if file_test(lockfile) then file_delete,lockfile,/allow  
+    ;;endelse
+    aplock,outfile,waittime=10,unlock=unlock
+    
     ;; check all three chips and the EPSF and ETrace files
     psfdir = apogee_filename('PSF',chip=chiptag[j],num=flatframeid,/dir)
     tracedir = apogee_filename('ETrace',num=flatframeid,chip=chiptag[j],/dir)
@@ -109,9 +110,10 @@ FOR i=0,nflatframe-1 do begin
     endif
 
     ;; Create a lock file
-    openw,lock,/get_lun,lockfile
-    free_lun,lock
-
+    ;;openw,lock,/get_lun,lockfile
+    ;;free_lun,lock
+    aplock,outfile,/lock
+    
     ;; Kludge for 379 c
     ;;  1842 is a bad row
     if j eq 2 then $
@@ -338,8 +340,9 @@ FOR i=0,nflatframe-1 do begin
       APMKPSF_EPSF,str.(j),strmid(outdir,0,strlen(outdir)-4),flatid,j,sparseid=sparseid,fiberid=fiberid,/scat,average=average
 
     outfile = apogee_filename('PSF',chip=chiptag[j],num=flatframeid)
-    file_delete,lockfile
-
+    ;;file_delete,lockfile
+    aplock,outfile,/clear
+    
     BOMB1:
 
     print,''

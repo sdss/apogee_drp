@@ -34,14 +34,15 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
 
   flatdir = apogee_filename('Flat',num=i1,chip='c',/dir)
   flatfile = flatdir+dirs.prefix+string(format='("Flat-",i8.8)',i1)+'.tab'
-  lockfile = flatfile+'.lock'
+  ;;lockfile = flatfile+'.lock'
   ;; Is another process already creating file?
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do apwait,flatfile,10
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
-
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do apwait,flatfile,10
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,flatfile,waittime=10,unlock=unlock
+  
   ;: Does file already exist?
   ;; check all three chip files
   sflatid = string(ims[0],format='(i08)')
@@ -55,9 +56,10 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
   file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
   ;; Open lock file
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,flatfile,/lock
+  
   sum = {name: '',num: i1, nframes: 0}
   flatlog = REPLICATE(sum,3)
 
@@ -242,9 +244,10 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
   file = dirs.prefix+string(format='("Flat-",i8.8)',i1)+'.tab'
   MWRFITS,flatlog,flatdir+file,/create
 
-  ;; Wemove lock file
-  file_delete,lockfile,/allow_non
-
+  ;; Remove lock file
+  ;;file_delete,lockfile,/allow_non
+  aplock,flatfile,/clear
+  
   ;; Compile summary web page
   FLATHTML,flatdir
 
