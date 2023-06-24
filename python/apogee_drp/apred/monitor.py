@@ -111,7 +111,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     if os.path.exists(specdir5 + 'monitor/' + instrument + 'Cal.fits'):
         allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
     else: print(specdir5 + 'monitor/' + instrument + 'Cal.fits not found')
-    if os.path.exits(specdir5 + 'monitor/' + instrument + 'Cal.fits'):
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Cal.fits'):
         alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
     else: print(specdir5 + 'monitor/' + instrument + 'Cal.fits not found')
     if os.path.exists(specdir5 + 'monitor/' + instrument + 'Exp.fits'):
