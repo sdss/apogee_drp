@@ -8,6 +8,7 @@
 ; INPUTS:
 ;  file          Original file to be locked.  The lock file is file+'.lock'.
 ;  =waittime     Time to wait before checking the lock file again.
+;  /clear        Clear/delete a lock file.  Normally at the end of processing.
 ;  /unlock       If the lock file exits, then unlock/delete it.
 ;  /lock         Relock the file at the end of the wait.
 ;  =maxduration  Maximum duration of the original file being unmodified.
@@ -24,26 +25,19 @@
 ;-
 
 pro aplock,file,waittime=waittime,unlock=unlock,silent=silent,maxduration=maxduration,lock=lock
-
-
   
   ;; Defaults
   if n_elements(time) eq 0 then time=10
   if n_elements(maxduration) eq 0 then maxduration=5*3600 ; default, 5 hours
   lockfile = file+'.lock'
 
-  ;; Clear the lock file
-  if keyword_set(clear) then begin
+  ;; Clear or unlock the lock file
+  if keyword_set(clear) or keyword_set(unlock) then begin
     file_delete,lockfile,/allow
     return
   endif
-  
-  ;; Unlock
-  if keyword_set(unlock) then begin
-    if file_test(lockfile) eq 0 then filetouch,lockfile
-    return
-  endif
-  
+
+  ;; Wait for the lockfile
   while file_test(lockfile) do begin
     if not keyword_set(silent) then print,'waiting for file lock: ', lockfile
     ;; How long has it been since the file has been modified
@@ -51,11 +45,15 @@ pro aplock,file,waittime=waittime,unlock=unlock,silent=silent,maxduration=maxdur
     curtime = systime(1)
     if curtime gt info.mtime+maxduration then begin
       if not keyword_set(silent) then $
-         print,'lock file still exists but original file has not changed in more than '+strtrim(string(maxduration/3600,format='(F8.2)'),2)+' hours')
+         print,'lock file exists but original file unchanged in over '+strtrim(string(maxduration/3600,format='(F8.2)'),2)+' hours'
       file_delete,lockfile,/allow
+      if keyword_set(lock) then file_touch,lockfile  ;; Lock it again
       return
     endif
-    wait,time
+    wait,waittime
   endwhile
 
+  ;; Lock it
+  if keyword_set(lock) then file_touch,lockfile
+  
 end
