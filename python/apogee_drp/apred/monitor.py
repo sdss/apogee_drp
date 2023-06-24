@@ -372,7 +372,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         print("----> monitor: Making " + os.path.basename(outfile))
 
         if allv5 is None:
-            allv5path = specdir5 + 'summary/allVisit-daily-'+telescope+'.fits'
+            allv5path = specdir5 + 'summary/allVisit-'+apred+'-'+telescope+'.fits'
             allv5 = fits.getdata(allv5path)
 
         #gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])) & ((allv5['mjd'] < 59558) | (allv5['mjd'] >= 59595)))
@@ -3604,6 +3604,10 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         jj+=1
 
     return outstr
+
+
+######## DOES THE CODE BELOW EVERY GET RUN?????  ##########
+
 
     if makecomplots is True:
         ###########################################################################################
