@@ -187,12 +187,12 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     #alloc = 'sdss-kp'
     alloc = 'sdss-np'
     shared = True
-    ppn = 64
+    #ppn = 64
     cpus = 32
     walltime = '23:00:00'
     chips = ['a','b','c']
 
-    slurm = {'nodes':nodes, 'alloc':alloc, 'ppn':ppn, 'cpus':cpus, 'qos':qos, 'shared':shared,
+    slurm = {'nodes':nodes, 'alloc':alloc, 'cpus':cpus, 'qos':qos, 'shared':shared,
              'numpy_num_threads':2,'walltime':walltime,'notification':False}
 
     # No version input, use 'daily'
