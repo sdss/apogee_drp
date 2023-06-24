@@ -108,11 +108,18 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
 
     # Read in the master summary files
-    
-    allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
-    alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
-    allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
-    allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Cal.fits'):
+        allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
+    else: print(specdir5 + 'monitor/' + instrument + 'Cal.fits not found')
+    if os.path.exits(specdir5 + 'monitor/' + instrument + 'Cal.fits'):
+        alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
+    else: print(specdir5 + 'monitor/' + instrument + 'Cal.fits not found')
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Exp.fits'):
+        allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
+    else: print(specdir5 + 'monitor/' + instrument + 'Exp.fits not found')
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Sci.fits'):
+        allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
+    else: print(specdir5 + 'monitor/' + instrument + 'Sci.fits not found')
     allsnrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
 
     if os.path.exists(allsnrfile): allsnr = fits.getdata(allsnrfile)

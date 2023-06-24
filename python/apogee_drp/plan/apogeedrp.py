@@ -1176,6 +1176,12 @@ def mkvers(apred,logger=None):
                 os.makedirs(apogee_redux+apred+'/'+d+'/'+obs)
             else:
                 logger.info(apogee_redux+apred+'/'+d+'/'+obs+' already exists')
+            # Make cron directory
+            if os.path.exists(apogee_redux+apred+'/'+d+'/'+obs+'/cron')==False:
+                logger.info('Creating '+apogee_redux+apred+'/'+d+'/'+obs+'/cron')
+                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs+'/cron')
+            else:
+                logger.info(apogee_redux+apred+'/'+d+'/'+obs+'/cron already exists')            
     # Cal subdirectories
     for d in ['bpm','darkcorr','detector','flatcorr','flux','fpi','html','littrow','lsf','persist','plans','psf','qa','telluric','trace','wave']:
         for obs in ['apogee-n','apogee-s']:
