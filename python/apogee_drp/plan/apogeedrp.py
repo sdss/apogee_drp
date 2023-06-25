@@ -337,7 +337,6 @@ def getplanfiles(load,mjds,exist=False,logger=None):
         return []
     plans = plans[ind]
     planfiles = plans['planfile']
-
     # Make sure they are unique
     planfiles = list(np.unique(np.array(planfiles)))
     # Check that they exist
@@ -3119,7 +3118,8 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         logger = dln.basiclogger()
         
     # Get plan files for these MJDs
-    planfiles = getplanfiles(load,mjds,logger=logger)
+    logger.info('Getting plan files')
+    planfiles = getplanfiles(load,mjds,exist=True,logger=logger)
     nplans = len(planfiles)
     # Only want apPlan files
     if nplans>0:
