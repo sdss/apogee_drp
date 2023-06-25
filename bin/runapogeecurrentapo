@@ -1,5 +1,5 @@
 #!/bin/csh
-set running=`ps -C runapogeecurrentapo --no-headers | wc -l`
+set running=`ps aux | grep runapogeecurrentapo | grep cron | wc -l`
 if ( $running > 1 ) then
   echo "One process of runapogeeacurrentapo already running.  Will try again when it is finished."
   exit
