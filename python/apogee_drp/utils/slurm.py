@@ -328,7 +328,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
                 lines += ['echo "Task '+str(tasknum+1)+' '+nodename+' '+procname+' Completed" `date`']
                 lines += ['echo "Done"']
                 if os.path.exists(os.path.dirname(tasks['outfile'][tasknum]))==False:  # make sure output directory exists
-                    os.makedirs(os.path.makedirs(tasks['outfile'][tasknum]))
+                    os.makedirs(os.path.dirname(tasks['outfile'][tasknum]))
                 inventory += [str(tasknum+1)+' '+str(node)+' '+str(proc)]
                 tasks['task'][tasknum] = tasknum+1
                 tasks['node'][tasknum] = node
