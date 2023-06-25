@@ -62,7 +62,18 @@ pro aplock,file,waittime=waittime,clear=clear,unlock=unlock,$
         if keyword_set(lock) then touchzero,lockfile  ;; Lock it again
         return
       endif
-    endif
+      
+    ;; Original file doesn't exist, check how long we have been waiting for it      
+    endif else begin
+      linfo = file_info(lockfile)
+      if curtime gt linfo.ctime+maxduration then begin
+        if not keyword_set(silent) then $
+           print,'lock file exists but waiting for over '+strtrim(string(maxduration/3600,format='(F8.2)'),2)+' hours'
+        file_delete,lockfile,/allow
+        if keyword_set(lock) then touchzero,lockfile  ;; Lock it again
+        return
+      endif
+    endelse
     wait,waittime
   endwhile
 
