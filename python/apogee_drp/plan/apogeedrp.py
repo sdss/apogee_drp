@@ -3129,53 +3129,42 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         #    planfiles = [p for p in planfiles if os.path.basename(p).startswith('apPlan')]
         #else:
         #    planfiles = [p for p in planfiles if os.path.basename(p).startswith('asPlan')]
-    if nplans==0:
-        logger.info('No plan files')
-        return
     logger.info(str(nplans)+' plan file(s)')
 
     # Run apqa on each plate visit
-    slurmpars1 = slurmpars.copy()
-    if nplans<64:
-        slurmpars1['cpus'] = nplans
-    slurmpars1['numpy_num_threads'] = 2    
-    logger.info('Slurm settings: '+str(slurmpars1))
-    tasks = np.zeros(len(planfiles),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
-    tasks = Table(tasks)
-    #queue = pbsqueue(verbose=True)
-    #queue.create(label='apqa', **slurmpars1)
-    plates = np.zeros(nplans).astype(str)
-    mjds = np.zeros(nplans).astype(str)
-    fields = np.zeros(nplans).astype(str)
-    for i,pf in enumerate(planfiles):
-        logger.info('planfile %d : %s' % (i+1,pf))
-        fdir = os.path.dirname(pf)
-        # apPlan-1491-59587.yaml
-        base = os.path.basename(pf)
-        dum = base.split('-')
-        plates[i] = dum[1]
-        mjds[i] = dum[2].split('.')[0]
-        fields[i] = os.path.dirname(os.path.dirname(fdir)).split('/')[-1]
-        logfile = fdir+'/apqa-'+plates[i]+'-'+mjds[i]+'_pbs.'+logtime+'.log'
-        errfile = logfile.replace('.log','.err')
-        cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjds[i],observatory,apred,telescope,plates[i])
-        #cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
-        cmd += ' --masterqa False --starhtml True --starplots True --nightqa False --monitor False'
-        logger.info('Command : '+cmd)
-        logger.info('Logfile : '+logfile)
-        tasks['cmd'][i] = cmd
-        tasks['outfile'][i] = logfile
-        tasks['errfile'][i] = errfile
-        tasks['dir'][i] = os.path.dirname(logfile)
-        #queue.append(cmd, outfile=logfile, errfile=errfile)
-    logger.info('Running APQA on '+str(len(planfiles))+' planfiles')
-    key,jobid = slrm.submit(tasks,label='apqa',verbose=True,logger=logger,**slurmpars1)
-    slrm.queue_wait('apqa',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete 
-    #queue.commit(hard=True,submit=True)
-    #logger.info('PBS key is '+queue.key)
-    #queue_wait(queue,sleeptime=60,logger=logger,verbose=True)  # wait for jobs to complete 
-    #del queue
+    if nplans>0:
+        slurmpars1 = slurmpars.copy()
+        if nplans<64:
+            slurmpars1['cpus'] = nplans
+        slurmpars1['numpy_num_threads'] = 2    
+        logger.info('Slurm settings: '+str(slurmpars1))
+        tasks = np.zeros(len(planfiles),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        for i,pf in enumerate(planfiles):
+            logger.info('planfile %d : %s' % (i+1,pf))
+            fdir = os.path.dirname(pf)
+            # apPlan-1491-59587.yaml
+            base = os.path.basename(pf)
+            dum = base.split('-')
+            plate = dum[1]
+            mjd = dum[2].split('.')[0]
+            field = os.path.dirname(os.path.dirname(fdir)).split('/')[-1]
+            logfile = fdir+'/apqa-'+plate+'-'+mjd+'_pbs.'+logtime+'.log'
+            errfile = logfile.replace('.log','.err')
+            cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjd,observatory,apred,telescope,plate)
+            #cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
+            cmd += ' --masterqa False --starhtml True --starplots True --nightqa False --monitor False'
+            logger.info('Command : '+cmd)
+            logger.info('Logfile : '+logfile)
+            tasks['cmd'][i] = cmd
+            tasks['outfile'][i] = logfile
+            tasks['errfile'][i] = errfile
+            tasks['dir'][i] = os.path.dirname(logfile)
+        logger.info('Running APQA on '+str(len(planfiles))+' planfiles')
+        key,jobid = slrm.submit(tasks,label='apqa',verbose=True,logger=logger,**slurmpars1)
+        slrm.queue_wait('apqa',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete 
 
+    
     # Make nightly QA/summary pages
     # we should parallelize this
     for m in mjds:
@@ -3184,12 +3173,14 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
             qa.makeNightQA(load=load,mjd=str(m),telescope=telescope,apred=apred)
             # Run makeCalFits, makeDarkFits, makeExpFits
             # makeCalFits
-            expinfo = getexpinfo(load,m,logger=logger,verbose=False)
+            expinfo = getexpinfo(load,int(m),logger=logger,verbose=False)
             calind, = np.where((expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='QUARTZFLAT') |
-                               (expinfo['exptype']=='DOMEFLAT'))
+                               (expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='FPI'))
             if len(calind)>0:
                 all_ims = expinfo['num'][calind]
-                qa.makeCalFits(load=load, ims=all_ims, mjd=str(m), instrument=instrument, clobber=clobber)
+                all_types = np.full(len(all_ims), 'cal')
+                all_types[expinfo['exptype'][calind]=='FPI'] = 'fpi'
+                qa.makeCalFits(load=load, ims=all_ims, types=all_types, mjd=str(m), instrument=instrument, clobber=clobber)
             # makeDarkFits
             darkind, = np.where(expinfo['exptype']=='DARK')
             if len(darkind)>0:

@@ -103,6 +103,8 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
     #allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
+    allcal4 =  fits.getdata(specdir4 + instrument + 'Cal.fits')
+    alldark4 = fits.getdata(specdir4 + instrument + 'Cal.fits',2)
     allexp4 =  fits.getdata(specdir4 + instrument + 'Exp.fits')
     allsci4 =  fits.getdata(specdir4 + instrument + 'Sci.fits')
     #allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
@@ -149,7 +151,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
-            outstr = getQAcalStruct(allcal)
+            outstr = getQAcalStruct(allcal4)
 
             files.sort()
             files = np.array(files)
@@ -188,7 +190,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Adding QAdarkflat info to " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
-            outstr = getQAdarkflatStruct(alldark)
+            outstr = getQAdarkflatStruct(alldark4)
 
             files.sort()
             files = np.array(files)
@@ -232,7 +234,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
-            outstr = getExpStruct(allexp)
+            outstr = getExpStruct(allexp4)
 
             files.sort()
             files = np.array(files)
@@ -460,7 +462,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits',2)
     allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits')
     allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits')
-    allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits')
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Trace.fits'):
+        allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits')
+    else:
+        print(specdir5 + 'monitor/' + instrument + 'Trace.fits not found')
+        allepsf = []
     # Read in the APOGEE2 Trace.fits file since the columns don't match between APOGEE2 and SDSS-V
     #allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits',1)
 
@@ -484,7 +490,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     current_time = now.strftime("%H:%M:%S")
     current_date = today.strftime("%B %d, %Y")
 
-    tit = instrument.upper() + ' Instrument Monitor'
+    tit = instrument.upper() + ' Instrument Monitor ('+load.apred+')'
     html = open(outfile, 'w')
     html.write('<HTML><HEAD><title>' + tit + '</title></head><BODY STYLE="background-color:LightGray;"></BODY>\n')
     html.write('<H1>' + tit + '</H1>\n')
@@ -2299,7 +2305,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # trace.png
         plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
+        if (len(allepsf)>0) & ((os.path.exists(plotfile) == False) | (clobber == True)):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(35,17))
