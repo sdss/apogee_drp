@@ -32,7 +32,7 @@ pro mkdet,detid,linid,unlock=unlock
  ;;endif else begin
  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
  ;;endelse
- aplock,detfile,waitttime=10,unlock=unlock
+ aplock,detfile,waittime=10,unlock=unlock
  
  ;; Does product already exist?
  print,'testing detector file: ',detfile
