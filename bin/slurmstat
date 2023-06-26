@@ -123,10 +123,11 @@ if __name__ == '__main__' :
             # Modification times
             jtab['dirmtime'][i] = os.path.getmtime(dir1)
             files = glob(dir1+'/*')
-            mtimes = [os.path.getctime(f) for f in files]
-            jtab['starttime'][i] = min(mtimes)
-            jtab['endtime'][i] = max(mtimes)            
-            jtab['deltatime'][i] = jtab['endtime'][i]-jtab['starttime'][i]
+            if len(files)>0:
+                mtimes = [os.path.getctime(f) for f in files]
+                jtab['starttime'][i] = min(mtimes)
+                jtab['endtime'][i] = max(mtimes)            
+                jtab['deltatime'][i] = jtab['endtime'][i]-jtab['starttime'][i]
                               
         # Sort jobs by latest modification time
         si = np.argsort(jtab['endtime'])[::-1]
