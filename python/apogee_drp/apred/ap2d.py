@@ -4,7 +4,7 @@ import os
 import sys
 import time
 import numpy as np
-from ..utils import plan,apload,platedata,utils
+from ..utils import plan,apload,platedata,utils,lock
 from . import psf,wave
 from dlnpyutils import utils as dln
 from astropy.io import fits
@@ -289,24 +289,28 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             return [],[]
          
     # Wait if another process is working on this
-    lockfile = outdir+load.prefix+'1D-'+str(framenum) # lock file
+    lockfile = outdir+load.prefix+'1D-'+str(framenum)
     if localdir: 
-        lockfile = localdir+'/'+load.prefix+'1D-'+str(framenum)+'.lock' 
-    else: 
-        lockfile = outdir+load.prefix+'1D-'+str(framenum)+'.lock' 
-    
-    if not unlock and not clobber:
-        while os.path.exists(lockfile):
-            print('Waiting for lockfile '+lockfile)
-            time.sleep(10)
-    else: 
-        if os.path.exists(lockfile): 
-            os.remove(lockfile)
+        lockfile = localdir+'/'+load.prefix+'1D-'+str(framenum)
+    lock.lock(lockfile,unlock=unlock)
+    #lockfile = outdir+load.prefix+'1D-'+str(framenum) # lock file
+    #if localdir: 
+    #    lockfile = localdir+'/'+load.prefix+'1D-'+str(framenum)+'.lock' 
+    #else: 
+    #    lockfile = outdir+load.prefix+'1D-'+str(framenum)+'.lock' 
+    #if not unlock and not clobber:
+    #    while os.path.exists(lockfile):
+    #        print('Waiting for lockfile '+lockfile)
+    #        time.sleep(10)
+    #else: 
+    #    if os.path.exists(lockfile): 
+    #        os.remove(lockfile)
+    #
+    #if os.path.exists(os.path.dirname(lockfile))==False:
+    #    os.makedirs(os.path.dirname(lockfile))
+    #open(lockfile,'w').close()
 
-    if os.path.exists(os.path.dirname(lockfile))==False:
-        os.makedirs(os.path.dirname(lockfile))
-    open(lockfile,'w').close()
-                         
+    
     # Since final ap1dwavecal requires simultaneous fit of all three chips, and
     #  this required final output to be put off until after all chips are done,
     #  all 3 need to be done here if any at all, so that data from all chips is loaded
@@ -317,7 +321,11 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         print(outdir+load.prefix+'1D-'+str(framenum)+'.fits already exists and clobber not set')
         if os.path.exists(lockfile): os.remove(lockfile)
         return [],[]
-         
+
+    # Lock the file
+    lock.lock(lockfile,lock=True)
+
+    
     #--------------------------------
     # Looping through the three chips
     #--------------------------------
@@ -925,8 +933,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             hdu.close()
 
     # Remove the lock file
-    if os.path.exists(lockfile):
-        os.remove(lockfile)
+    lock.lock(lockfile,clear=True)
+    #if os.path.exists(lockfile):
+    #    os.remove(lockfile)
  
     if not silent:
         print('AP2DPROC finished')
