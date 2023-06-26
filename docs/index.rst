@@ -13,6 +13,7 @@ Introduction
 
 - `Installation <install.html>`_
 - `Overview <overview.html>`_
+- `Log Files <logs.html>`_
 - `Data <data.html>`_
 - `Calibration Files <cal.html>`_    
 - `Radial Velocities <rv.html>`_

@@ -12,8 +12,8 @@ from astropy.io import fits
 from astropy.table import Table
 
 import subprocess
-from slurm import queue as pbsqueue
-from slurm.models import Job,Member
+#from slurm import queue as pbsqueue
+#from slurm.models import Job,Member
 from os import getlogin, getuid, getgid, makedirs, chdir
 from pwd import getpwuid
 from grp import getgrgid
@@ -29,28 +29,32 @@ def genkey(n=20):
     key =  ''.join(random.choice(characters) for i in range(n))
     return key
 
-def slurmstatus(label,jobid):
+def slurmstatus(label,jobid,username=None):
     """
     Get status of the job from the slurm queue
     """
 
-    username = getpwuid(getuid())[0]
+    if username is None:
+        username = getpwuid(getuid())[0]
     slurmdir = SLURMDIR+username+'/slurm/'
     
     # Check if the slurm job is still running
     #  this will throw an exception if the job finished already
     #  slurm_load_jobs error: Invalid job id specified
     try:
-        res = subprocess.check_output(['sacct','-u',username,'-j',str(jobid)])
+        # previously long jobnames got truncated, make sure to get the full name
+        form = 'jobid,jobname%30,partition%30,account,alloccpus,state,exitcode'
+        res = subprocess.check_output(['sacct','-u',username,'-j',str(jobid),'--format='+form])
     except:
-        traceback.print_exc()
+        print('Failed to get Slurm status')
+        #traceback.print_exc()
         return []
     if type(res)==bytes: res=res.decode()
     lines = res.split('\n')
     # remove first two lines
     lines = lines[2:]
     # only keep lines with the label in it
-    lines = [l for l in lines if l.find(label)>-1]
+    lines = [l for l in lines if ((l.find(label)>-1) and (l.find(str(jobid))>-1))]
     # JobID    JobName  Partition    Account  AllocCPUS      State ExitCode
     out = np.zeros(len(lines),dtype=np.dtype([('JobID',str,30),('JobName',str,30),('Partition',str,30),
                                               ('Account',str,30),('AllocCPUS',int),('State',str,30),
@@ -61,7 +65,7 @@ def slurmstatus(label,jobid):
         out['JobName'][i] = dum[1]
         out['Partition'][i] = dum[2]
         out['Account'][i] = dum[3]
-        out['AllocCPUS'][i] = dum[4]
+        out['AllocCPUS'][i] = int(dum[4])
         out['State'][i] = dum[5]
         out['ExitCode'][i] = dum[6]
         if dum[5] == 'COMPLETED':
@@ -69,12 +73,13 @@ def slurmstatus(label,jobid):
     
     return out
 
-def taskstatus(label,key):
+def taskstatus(label,key,username=None):
     """
     Return tasks that completed
     """
 
-    username = getpwuid(getuid())[0]
+    if username is None:
+        username = getpwuid(getuid())[0]
     slurmdir = SLURMDIR+username+'/slurm/'
     jobdir = slurmdir+label+'/'+key+'/'
     
@@ -116,12 +121,13 @@ def taskstatus(label,key):
     
     return tstatus
     
-def status(label,key,jobid):
+def status(label,key,jobid,username=None):
     """
     Return the status of a job.
     """
 
-    username = getpwuid(getuid())[0]
+    if username is None:
+        username = getpwuid(getuid())[0]
     slurmdir = SLURMDIR+username+'/slurm/'
     jobdir = slurmdir+label+'/'+key+'/'
     
@@ -181,6 +187,13 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
             percent = 100*ncomplete/ntasks
             if verbose:
                 logger.info('percent complete = %2d   %d / %d tasks' % (percent,ntasks-taskrunning,ntasks))
+        else:
+            # It claims to not be running, but let's check anyway
+            tstatus = taskstatus(label,key)
+            ncomplete = len(tstatus)
+            percent = 100*ncomplete/ntasks
+            if verbose:
+                logger.info('NOT Running  percent complete = %2d   %d / %d tasks' % (percent,ncomplete,ntasks))                
                 
         # Are we done
         if noderunning==0 and taskrunning==0:
@@ -238,7 +251,14 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
         ncycle = 1
     else:
         ncycle = int(np.ceil(ntasks / (nodes * ppn)))
-    
+
+    # Add column to tasks table
+    if isinstance(tasks,Table)==False:
+        tasks = Table(tasks)
+    tasks['task'] = -1
+    tasks['node'] = -1
+    tasks['proc'] = -1
+        
     # Node loop
     tasknum = 0
     inventory = []
@@ -307,7 +327,15 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
                 lines += [cmd]
                 lines += ['echo "Task '+str(tasknum+1)+' '+nodename+' '+procname+' Completed" `date`']
                 lines += ['echo "Done"']
+                if os.path.exists(os.path.dirname(tasks['outfile'][tasknum]))==False:  # make sure output directory exists
+                    try:
+                        os.makedirs(os.path.dirname(tasks['outfile'][tasknum]))
+                    except:
+                        logger.info('Problems making directory '+os.path.dirname(tasks['outfile'][tasknum]))
                 inventory += [str(tasknum+1)+' '+str(node)+' '+str(proc)]
+                tasks['task'][tasknum] = tasknum+1
+                tasks['node'][tasknum] = node
+                tasks['proc'][tasknum] = proc
                 tasknum += 1
             lines += ['cd '+jobdir]                            
             if verbose:
@@ -351,6 +379,11 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
 
     # Write the inventory file
     dln.writelines(jobdir+label+'_inventory.txt',inventory)
+
+    # Write the tasks list
+    tasks.write(jobdir+label+'_tasks.fits',overwrite=True)
+    # Write the list of logfiles
+    dln.writelines(jobdir+label+'_logs.txt',list(tasks['outfile']))
     
     # Now submit the job
     if verbose:
@@ -371,6 +404,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     if verbose:
         logger.info('key = '+key)
         logger.info('job directory = '+jobdir)
+        logger.info('jobid = '+jobid)
         
     return key,jobid
 

@@ -1,0 +1,647 @@
+2023-01-18 09:29:09,984 [INFO ]  Start: 2023-01-18 09:29:09
+Starting APQA for plate 7980, MJD 59935
+
+apPlan-7980-59935.yaml
+----> makePlateSum: Making apPlateSum-7980-59935.fits
+Querying targetdb/catalogdb
+FiberID 300 is UNASSIGNED, NOT on target
+FiberID 298 is UNASSIGNED, NOT on target
+FiberID 297 is UNASSIGNED, NOT on target
+FiberID 296 is UNASSIGNED, NOT on target
+FiberID 293 is UNASSIGNED, NOT on target
+FiberID 288 is UNASSIGNED, NOT on target
+FiberID 285 is UNASSIGNED, NOT on target
+FiberID 281 is UNASSIGNED, NOT on target
+FiberID 280 is UNASSIGNED, NOT on target
+FiberID 279 is UNASSIGNED, NOT on target
+FiberID 277 is UNASSIGNED, NOT on target
+FiberID 276 is UNASSIGNED, NOT on target
+FiberID 271 is UNASSIGNED, NOT on target
+FiberID 269 is UNASSIGNED, NOT on target
+FiberID 268 is UNASSIGNED, NOT on target
+FiberID 267 is UNASSIGNED, NOT on target
+FiberID 265 is UNASSIGNED, NOT on target
+FiberID 264 is UNASSIGNED, NOT on target
+FiberID 263 is UNASSIGNED, NOT on target
+FiberID 262 is UNASSIGNED, NOT on target
+FiberID 261 is UNASSIGNED, NOT on target
+FiberID 254 is UNASSIGNED, NOT on target
+FiberID 251 is UNASSIGNED, NOT on target
+FiberID 250 is UNASSIGNED, NOT on target
+FiberID 248 is UNASSIGNED, NOT on target
+FiberID 246 is UNASSIGNED, NOT on target
+FiberID 245 is UNASSIGNED, NOT on target
+FiberID 242 is UNASSIGNED, NOT on target
+FiberID 240 is UNASSIGNED, NOT on target
+FiberID 237 is UNASSIGNED, NOT on target
+FiberID 236 is UNASSIGNED, NOT on target
+FiberID 235 is UNASSIGNED, NOT on target
+FiberID 232 is UNASSIGNED, NOT on target
+FiberID 231 is UNASSIGNED, NOT on target
+FiberID 230 is UNASSIGNED, NOT on target
+no match for fiber index 75
+FiberID 219 is UNASSIGNED, NOT on target
+FiberID 218 is UNASSIGNED, NOT on target
+FiberID 217 is UNASSIGNED, NOT on target
+FiberID 216 is UNASSIGNED, NOT on target
+FiberID 215 is UNASSIGNED, NOT on target
+FiberID 214 is UNASSIGNED, NOT on target
+FiberID 211 is UNASSIGNED, NOT on target
+FiberID 210 is UNASSIGNED, NOT on target
+FiberID 208 is UNASSIGNED, NOT on target
+FiberID 207 is UNASSIGNED, NOT on target
+FiberID 206 is UNASSIGNED, NOT on target
+FiberID 205 is UNASSIGNED, NOT on target
+FiberID 195 is UNASSIGNED, NOT on target
+FiberID 194 is UNASSIGNED, NOT on target
+FiberID 192 is UNASSIGNED, NOT on target
+FiberID 191 is UNASSIGNED, NOT on target
+FiberID 190 is UNASSIGNED, NOT on target
+FiberID 185 is UNASSIGNED, NOT on target
+FiberID 182 is UNASSIGNED, NOT on target
+FiberID 181 is UNASSIGNED, NOT on target
+FiberID 180 is UNASSIGNED, NOT on target
+FiberID 175 is UNASSIGNED, NOT on target
+FiberID 173 is UNASSIGNED, NOT on target
+FiberID 172 is UNASSIGNED, NOT on target
+FiberID 169 is UNASSIGNED, NOT on target
+FiberID 164 is UNASSIGNED, NOT on target
+FiberID 163 is UNASSIGNED, NOT on target
+FiberID 162 is UNASSIGNED, NOT on target
+FiberID 158 is UNASSIGNED, NOT on target
+FiberID 153 is UNASSIGNED, NOT on target
+FiberID 152 is UNASSIGNED, NOT on target
+FiberID 150 is UNASSIGNED, NOT on target
+FiberID 147 is UNASSIGNED, NOT on target
+FiberID 146 is NOT on target
+FiberID 145 is UNASSIGNED, NOT on target
+FiberID 142 is UNASSIGNED, NOT on target
+FiberID 141 is UNASSIGNED, NOT on target
+FiberID 140 is UNASSIGNED, NOT on target
+FiberID 139 is UNASSIGNED, NOT on target
+FiberID 138 is UNASSIGNED, NOT on target
+FiberID 136 is UNASSIGNED, NOT on target
+FiberID 135 is UNASSIGNED, NOT on target
+FiberID 134 is UNASSIGNED, NOT on target
+FiberID 133 is UNASSIGNED, NOT on target
+FiberID 132 is UNASSIGNED, NOT on target
+FiberID 131 is UNASSIGNED, NOT on target
+FiberID 129 is UNASSIGNED, NOT on target
+FiberID 127 is UNASSIGNED, NOT on target
+FiberID 126 is UNASSIGNED, NOT on target
+FiberID 125 is UNASSIGNED, NOT on target
+FiberID 124 is UNASSIGNED, NOT on target
+FiberID 123 is UNASSIGNED, NOT on target
+FiberID 121 is UNASSIGNED, NOT on target
+FiberID 119 is UNASSIGNED, NOT on target
+FiberID 118 is UNASSIGNED, NOT on target
+FiberID 117 is UNASSIGNED, NOT on target
+FiberID 115 is NOT on target
+FiberID 113 is UNASSIGNED, NOT on target
+FiberID 111 is UNASSIGNED, NOT on target
+FiberID 109 is UNASSIGNED, NOT on target
+FiberID 107 is UNASSIGNED, NOT on target
+FiberID 104 is UNASSIGNED, NOT on target
+FiberID 101 is UNASSIGNED, NOT on target
+FiberID 98 is UNASSIGNED, NOT on target
+FiberID 97 is UNASSIGNED, NOT on target
+FiberID 96 is UNASSIGNED, NOT on target
+FiberID 92 is UNASSIGNED, NOT on target
+FiberID 91 is UNASSIGNED, NOT on target
+FiberID 90 is UNASSIGNED, NOT on target
+FiberID 87 is UNASSIGNED, NOT on target
+FiberID 86 is UNASSIGNED, NOT on target
+FiberID 85 is UNASSIGNED, NOT on target
+FiberID 84 is UNASSIGNED, NOT on target
+FiberID 82 is UNASSIGNED, NOT on target
+FiberID 78 is UNASSIGNED, NOT on target
+FiberID 77 is UNASSIGNED, NOT on target
+FiberID 76 is UNASSIGNED, NOT on target
+no match for fiber index 225
+FiberID 74 is UNASSIGNED, NOT on target
+FiberID 73 is UNASSIGNED, NOT on target
+FiberID 71 is UNASSIGNED, NOT on target
+FiberID 69 is UNASSIGNED, NOT on target
+FiberID 68 is UNASSIGNED, NOT on target
+FiberID 65 is UNASSIGNED, NOT on target
+FiberID 64 is UNASSIGNED, NOT on target
+FiberID 63 is UNASSIGNED, NOT on target
+FiberID 62 is UNASSIGNED, NOT on target
+FiberID 61 is UNASSIGNED, NOT on target
+FiberID 60 is UNASSIGNED, NOT on target
+FiberID 58 is UNASSIGNED, NOT on target
+FiberID 56 is UNASSIGNED, NOT on target
+FiberID 55 is NOT on target
+FiberID 54 is UNASSIGNED, NOT on target
+FiberID 53 is UNASSIGNED, NOT on target
+FiberID 51 is UNASSIGNED, NOT on target
+FiberID 50 is UNASSIGNED, NOT on target
+FiberID 47 is UNASSIGNED, NOT on target
+FiberID 46 is UNASSIGNED, NOT on target
+FiberID 45 is UNASSIGNED, NOT on target
+FiberID 42 is UNASSIGNED, NOT on target
+FiberID 41 is UNASSIGNED, NOT on target
+FiberID 38 is UNASSIGNED, NOT on target
+FiberID 37 is UNASSIGNED, NOT on target
+FiberID 36 is UNASSIGNED, NOT on target
+FiberID 35 is UNASSIGNED, NOT on target
+FiberID 34 is UNASSIGNED, NOT on target
+FiberID 30 is UNASSIGNED, NOT on target
+FiberID 29 is UNASSIGNED, NOT on target
+FiberID 28 is UNASSIGNED, NOT on target
+FiberID 26 is UNASSIGNED, NOT on target
+fiber index  275  declared as bad
+no match for fiber index 275
+FiberID 24 is UNASSIGNED, NOT on target
+FiberID 21 is UNASSIGNED, NOT on target
+FiberID 19 is UNASSIGNED, NOT on target
+FiberID 17 is UNASSIGNED, NOT on target
+FiberID 15 is UNASSIGNED, NOT on target
+FiberID 14 is UNASSIGNED, NOT on target
+FiberID 9 is UNASSIGNED, NOT on target
+FiberID 4 is UNASSIGNED, NOT on target
+FiberID 3 is UNASSIGNED, NOT on target
+----> makePlateSum: Problem! No matching mjd range in gcam.
+----> makePlateSum: making sn-7980-59935.dat and altsn-7980-59935.dat
+----> makePlateSum: done making sn-7980-59935.dat and altsn-7980-59935.dat
+----> makePlateSum: Done with plate 7980, MJD 59935
+
+----> makePlateSum: Making apPlateSum-7980-59935.fits
+Querying targetdb/catalogdb
+FiberID 300 is UNASSIGNED, NOT on target
+FiberID 298 is UNASSIGNED, NOT on target
+FiberID 297 is UNASSIGNED, NOT on target
+FiberID 296 is UNASSIGNED, NOT on target
+FiberID 293 is UNASSIGNED, NOT on target
+FiberID 288 is UNASSIGNED, NOT on target
+FiberID 285 is UNASSIGNED, NOT on target
+FiberID 281 is UNASSIGNED, NOT on target
+FiberID 280 is UNASSIGNED, NOT on target
+FiberID 279 is UNASSIGNED, NOT on target
+FiberID 277 is UNASSIGNED, NOT on target
+FiberID 276 is UNASSIGNED, NOT on target
+FiberID 271 is UNASSIGNED, NOT on target
+FiberID 269 is UNASSIGNED, NOT on target
+FiberID 268 is UNASSIGNED, NOT on target
+FiberID 267 is UNASSIGNED, NOT on target
+FiberID 265 is UNASSIGNED, NOT on target
+FiberID 264 is UNASSIGNED, NOT on target
+FiberID 263 is UNASSIGNED, NOT on target
+FiberID 262 is UNASSIGNED, NOT on target
+FiberID 261 is UNASSIGNED, NOT on target
+FiberID 254 is UNASSIGNED, NOT on target
+FiberID 251 is UNASSIGNED, NOT on target
+FiberID 250 is UNASSIGNED, NOT on target
+FiberID 248 is UNASSIGNED, NOT on target
+FiberID 246 is UNASSIGNED, NOT on target
+FiberID 245 is UNASSIGNED, NOT on target
+FiberID 242 is UNASSIGNED, NOT on target
+FiberID 240 is UNASSIGNED, NOT on target
+FiberID 237 is UNASSIGNED, NOT on target
+FiberID 236 is UNASSIGNED, NOT on target
+FiberID 235 is UNASSIGNED, NOT on target
+FiberID 232 is UNASSIGNED, NOT on target
+FiberID 231 is UNASSIGNED, NOT on target
+FiberID 230 is UNASSIGNED, NOT on target
+no match for fiber index 75
+FiberID 219 is UNASSIGNED, NOT on target
+FiberID 218 is UNASSIGNED, NOT on target
+FiberID 217 is UNASSIGNED, NOT on target
+FiberID 216 is UNASSIGNED, NOT on target
+FiberID 215 is UNASSIGNED, NOT on target
+FiberID 214 is UNASSIGNED, NOT on target
+FiberID 211 is UNASSIGNED, NOT on target
+FiberID 210 is UNASSIGNED, NOT on target
+FiberID 208 is UNASSIGNED, NOT on target
+FiberID 207 is UNASSIGNED, NOT on target
+FiberID 206 is UNASSIGNED, NOT on target
+FiberID 205 is UNASSIGNED, NOT on target
+FiberID 195 is UNASSIGNED, NOT on target
+FiberID 194 is UNASSIGNED, NOT on target
+FiberID 192 is UNASSIGNED, NOT on target
+FiberID 191 is UNASSIGNED, NOT on target
+FiberID 190 is UNASSIGNED, NOT on target
+FiberID 185 is UNASSIGNED, NOT on target
+FiberID 182 is UNASSIGNED, NOT on target
+FiberID 181 is UNASSIGNED, NOT on target
+FiberID 180 is UNASSIGNED, NOT on target
+FiberID 175 is UNASSIGNED, NOT on target
+FiberID 173 is UNASSIGNED, NOT on target
+FiberID 172 is UNASSIGNED, NOT on target
+FiberID 169 is UNASSIGNED, NOT on target
+FiberID 164 is UNASSIGNED, NOT on target
+FiberID 163 is UNASSIGNED, NOT on target
+FiberID 162 is UNASSIGNED, NOT on target
+FiberID 158 is UNASSIGNED, NOT on target
+FiberID 153 is UNASSIGNED, NOT on target
+FiberID 152 is UNASSIGNED, NOT on target
+FiberID 150 is UNASSIGNED, NOT on target
+FiberID 147 is UNASSIGNED, NOT on target
+FiberID 146 is NOT on target
+FiberID 145 is UNASSIGNED, NOT on target
+FiberID 142 is UNASSIGNED, NOT on target
+FiberID 141 is UNASSIGNED, NOT on target
+FiberID 140 is UNASSIGNED, NOT on target
+FiberID 139 is UNASSIGNED, NOT on target
+FiberID 138 is UNASSIGNED, NOT on target
+FiberID 136 is UNASSIGNED, NOT on target
+FiberID 135 is UNASSIGNED, NOT on target
+FiberID 134 is UNASSIGNED, NOT on target
+FiberID 133 is UNASSIGNED, NOT on target
+FiberID 132 is UNASSIGNED, NOT on target
+FiberID 131 is UNASSIGNED, NOT on target
+FiberID 129 is UNASSIGNED, NOT on target
+FiberID 127 is UNASSIGNED, NOT on target
+FiberID 126 is UNASSIGNED, NOT on target
+FiberID 125 is UNASSIGNED, NOT on target
+FiberID 124 is UNASSIGNED, NOT on target
+FiberID 123 is UNASSIGNED, NOT on target
+FiberID 121 is UNASSIGNED, NOT on target
+FiberID 119 is UNASSIGNED, NOT on target
+FiberID 118 is UNASSIGNED, NOT on target
+FiberID 117 is UNASSIGNED, NOT on target
+FiberID 115 is NOT on target
+FiberID 113 is UNASSIGNED, NOT on target
+FiberID 111 is UNASSIGNED, NOT on target
+FiberID 109 is UNASSIGNED, NOT on target
+FiberID 107 is UNASSIGNED, NOT on target
+FiberID 104 is UNASSIGNED, NOT on target
+FiberID 101 is UNASSIGNED, NOT on target
+FiberID 98 is UNASSIGNED, NOT on target
+FiberID 97 is UNASSIGNED, NOT on target
+FiberID 96 is UNASSIGNED, NOT on target
+FiberID 92 is UNASSIGNED, NOT on target
+FiberID 91 is UNASSIGNED, NOT on target
+FiberID 90 is UNASSIGNED, NOT on target
+FiberID 87 is UNASSIGNED, NOT on target
+FiberID 86 is UNASSIGNED, NOT on target
+FiberID 85 is UNASSIGNED, NOT on target
+FiberID 84 is UNASSIGNED, NOT on target
+FiberID 82 is UNASSIGNED, NOT on target
+FiberID 78 is UNASSIGNED, NOT on target
+FiberID 77 is UNASSIGNED, NOT on target
+FiberID 76 is UNASSIGNED, NOT on target
+no match for fiber index 225
+FiberID 74 is UNASSIGNED, NOT on target
+FiberID 73 is UNASSIGNED, NOT on target
+FiberID 71 is UNASSIGNED, NOT on target
+FiberID 69 is UNASSIGNED, NOT on target
+FiberID 68 is UNASSIGNED, NOT on target
+FiberID 65 is UNASSIGNED, NOT on target
+FiberID 64 is UNASSIGNED, NOT on target
+FiberID 63 is UNASSIGNED, NOT on target
+FiberID 62 is UNASSIGNED, NOT on target
+FiberID 61 is UNASSIGNED, NOT on target
+FiberID 60 is UNASSIGNED, NOT on target
+FiberID 58 is UNASSIGNED, NOT on target
+FiberID 56 is UNASSIGNED, NOT on target
+FiberID 55 is NOT on target
+FiberID 54 is UNASSIGNED, NOT on target
+FiberID 53 is UNASSIGNED, NOT on target
+FiberID 51 is UNASSIGNED, NOT on target
+FiberID 50 is UNASSIGNED, NOT on target
+FiberID 47 is UNASSIGNED, NOT on target
+FiberID 46 is UNASSIGNED, NOT on target
+FiberID 45 is UNASSIGNED, NOT on target
+FiberID 42 is UNASSIGNED, NOT on target
+FiberID 41 is UNASSIGNED, NOT on target
+FiberID 38 is UNASSIGNED, NOT on target
+FiberID 37 is UNASSIGNED, NOT on target
+FiberID 36 is UNASSIGNED, NOT on target
+FiberID 35 is UNASSIGNED, NOT on target
+FiberID 34 is UNASSIGNED, NOT on target
+FiberID 30 is UNASSIGNED, NOT on target
+FiberID 29 is UNASSIGNED, NOT on target
+FiberID 28 is UNASSIGNED, NOT on target
+FiberID 26 is UNASSIGNED, NOT on target
+fiber index  275  declared as bad
+no match for fiber index 275
+FiberID 24 is UNASSIGNED, NOT on target
+FiberID 21 is UNASSIGNED, NOT on target
+FiberID 19 is UNASSIGNED, NOT on target
+FiberID 17 is UNASSIGNED, NOT on target
+FiberID 15 is UNASSIGNED, NOT on target
+FiberID 14 is UNASSIGNED, NOT on target
+FiberID 9 is UNASSIGNED, NOT on target
+FiberID 4 is UNASSIGNED, NOT on target
+FiberID 3 is UNASSIGNED, NOT on target
+----> makePlateSum: Problem! No matching mjd range in gcam.
+----> makePlateSum: Done with plate 7980, MJD 59935
+
+----> makeObsHTML: Running plate 7980, MJD 59935
+----> makeObsHTML: Creating apQA-7980-59935.html
+----> makeObsHTML: Done with plate 7980, MJD 59935
+
+----> makeObsPlots: Running plate 7980, MJD 59935
+----> makeObsPlots: Done with plate 7980, MJD 59935
+
+----> makeVisHTML: Running plate 7980, MJD 59935
+----> makeVisHTML: Done with plate 7980, MJD 59935 in 17.94 seconds.
+
+----> apVisitPlots: Running plate 7980, MJD 59935
+----> apVisitPlots:    making apPlate-7980-59935-001.png (2M23053775+0130398, 1/300)
+----> apVisitPlots:    making apPlate-7980-59935-002.png (2M23042837+0126181, 2/300)
+----> apVisitPlots:    making apPlate-7980-59935-003.png (, 3/300)
+----> apVisitPlots:    making apPlate-7980-59935-004.png (, 4/300)
+----> apVisitPlots:    making apPlate-7980-59935-005.png (2M23040226+0050463, 5/300)
+----> apVisitPlots:    making apPlate-7980-59935-006.png (2M23045133+0112159, 6/300)
+----> apVisitPlots:    making apPlate-7980-59935-007.png (2M23034825+0111318, 7/300)
+----> apVisitPlots:    making apPlate-7980-59935-008.png (2M23041870+0059499, 8/300)
+----> apVisitPlots:    making apPlate-7980-59935-009.png (, 9/300)
+----> apVisitPlots:    making apPlate-7980-59935-010.png (2M23045723+0122208, 10/300)
+----> apVisitPlots:    making apPlate-7980-59935-011.png (2M23061303+0134152, 11/300)
+----> apVisitPlots:    making apPlate-7980-59935-012.png (2M23063071+0124553, 12/300)
+----> apVisitPlots:    making apPlate-7980-59935-013.png (2M23035808+0039275, 13/300)
+----> apVisitPlots:    making apPlate-7980-59935-014.png (, 14/300)
+----> apVisitPlots:    making apPlate-7980-59935-015.png (, 15/300)
+----> apVisitPlots:    making apPlate-7980-59935-016.png (, 16/300)
+----> apVisitPlots:    making apPlate-7980-59935-017.png (, 17/300)
+----> apVisitPlots:    making apPlate-7980-59935-018.png (2M23051352+0134122, 18/300)
+----> apVisitPlots:    making apPlate-7980-59935-019.png (, 19/300)
+----> apVisitPlots:    making apPlate-7980-59935-020.png (2M23040173+0101425, 20/300)
+----> apVisitPlots: Problem with fiber 021. Not Plotting.
+----> apVisitPlots:    making apPlate-7980-59935-022.png (, 22/300)
+----> apVisitPlots:    making apPlate-7980-59935-023.png (2M23040970+0115499, 23/300)
+----> apVisitPlots:    making apPlate-7980-59935-024.png (, 24/300)
+----> apVisitPlots:    making apPlate-7980-59935-026.png (, 26/300)
+----> apVisitPlots:    making apPlate-7980-59935-027.png (2M23034763+0124427, 27/300)
+----> apVisitPlots:    making apPlate-7980-59935-028.png (, 28/300)
+----> apVisitPlots:    making apPlate-7980-59935-029.png (, 29/300)
+----> apVisitPlots:    making apPlate-7980-59935-030.png (, 30/300)
+----> apVisitPlots:    making apPlate-7980-59935-031.png (2M23073140+0035380, 31/300)
+----> apVisitPlots:    making apPlate-7980-59935-032.png (, 32/300)
+----> apVisitPlots:    making apPlate-7980-59935-033.png (2M23075216+0038582, 33/300)
+----> apVisitPlots:    making apPlate-7980-59935-034.png (, 34/300)
+----> apVisitPlots:    making apPlate-7980-59935-035.png (, 35/300)
+----> apVisitPlots:    making apPlate-7980-59935-036.png (, 36/300)
+----> apVisitPlots:    making apPlate-7980-59935-037.png (, 37/300)
+----> apVisitPlots:    making apPlate-7980-59935-038.png (, 38/300)
+----> apVisitPlots:    making apPlate-7980-59935-039.png (, 39/300)
+----> apVisitPlots:    making apPlate-7980-59935-040.png (, 40/300)
+----> apVisitPlots:    making apPlate-7980-59935-041.png (, 41/300)
+----> apVisitPlots:    making apPlate-7980-59935-042.png (, 42/300)
+----> apVisitPlots:    making apPlate-7980-59935-043.png (2M23060401+0110458, 43/300)
+----> apVisitPlots:    making apPlate-7980-59935-044.png (, 44/300)
+----> apVisitPlots:    making apPlate-7980-59935-045.png (, 45/300)
+----> apVisitPlots:    making apPlate-7980-59935-046.png (, 46/300)
+----> apVisitPlots:    making apPlate-7980-59935-047.png (, 47/300)
+----> apVisitPlots:    making apPlate-7980-59935-048.png (2M23052825+0107273, 48/300)
+----> apVisitPlots:    making apPlate-7980-59935-049.png (, 49/300)
+----> apVisitPlots:    making apPlate-7980-59935-050.png (, 50/300)
+----> apVisitPlots:    making apPlate-7980-59935-051.png (, 51/300)
+----> apVisitPlots:    making apPlate-7980-59935-052.png (, 52/300)
+----> apVisitPlots:    making apPlate-7980-59935-053.png (, 53/300)
+----> apVisitPlots:    making apPlate-7980-59935-054.png (, 54/300)
+----> apVisitPlots:    making apPlate-7980-59935-055.png (, 55/300)
+----> apVisitPlots:    making apPlate-7980-59935-056.png (, 56/300)
+----> apVisitPlots:    making apPlate-7980-59935-057.png (2M23083001+0022392, 57/300)
+----> apVisitPlots:    making apPlate-7980-59935-058.png (, 58/300)
+----> apVisitPlots:    making apPlate-7980-59935-059.png (2M23073851+0024248, 59/300)
+----> apVisitPlots:    making apPlate-7980-59935-060.png (, 60/300)
+----> apVisitPlots:    making apPlate-7980-59935-061.png (, 61/300)
+----> apVisitPlots:    making apPlate-7980-59935-062.png (, 62/300)
+----> apVisitPlots:    making apPlate-7980-59935-063.png (, 63/300)
+----> apVisitPlots:    making apPlate-7980-59935-064.png (, 64/300)
+----> apVisitPlots:    making apPlate-7980-59935-065.png (, 65/300)
+----> apVisitPlots:    making apPlate-7980-59935-066.png (2M23065581+0105391, 66/300)
+----> apVisitPlots:    making apPlate-7980-59935-067.png (2M23081744+0056153, 67/300)
+----> apVisitPlots:    making apPlate-7980-59935-068.png (, 68/300)
+----> apVisitPlots:    making apPlate-7980-59935-069.png (, 69/300)
+----> apVisitPlots:    making apPlate-7980-59935-070.png (2M23064838+0057082, 70/300)
+----> apVisitPlots:    making apPlate-7980-59935-071.png (, 71/300)
+----> apVisitPlots:    making apPlate-7980-59935-072.png (2M23055550+0037384, 72/300)
+----> apVisitPlots:    making apPlate-7980-59935-073.png (, 73/300)
+----> apVisitPlots:    making apPlate-7980-59935-074.png (, 74/300)
+----> apVisitPlots:    making apPlate-7980-59935-076.png (, 76/300)
+----> apVisitPlots:    making apPlate-7980-59935-077.png (, 77/300)
+----> apVisitPlots:    making apPlate-7980-59935-078.png (, 78/300)
+----> apVisitPlots:    making apPlate-7980-59935-079.png (2M23061166+0057471, 79/300)
+----> apVisitPlots:    making apPlate-7980-59935-080.png (2M23064355+0033377, 80/300)
+----> apVisitPlots:    making apPlate-7980-59935-081.png (, 81/300)
+----> apVisitPlots:    making apPlate-7980-59935-082.png (, 82/300)
+----> apVisitPlots:    making apPlate-7980-59935-083.png (, 83/300)
+----> apVisitPlots:    making apPlate-7980-59935-084.png (, 84/300)
+----> apVisitPlots:    making apPlate-7980-59935-085.png (, 85/300)
+----> apVisitPlots:    making apPlate-7980-59935-086.png (, 86/300)
+----> apVisitPlots:    making apPlate-7980-59935-087.png (, 87/300)
+----> apVisitPlots:    making apPlate-7980-59935-088.png (, 88/300)
+----> apVisitPlots:    making apPlate-7980-59935-089.png (2M23072220+0019499, 89/300)
+----> apVisitPlots:    making apPlate-7980-59935-090.png (, 90/300)
+----> apVisitPlots:    making apPlate-7980-59935-091.png (, 91/300)
+----> apVisitPlots:    making apPlate-7980-59935-092.png (, 92/300)
+----> apVisitPlots:    making apPlate-7980-59935-093.png (2M23071651+0135468, 93/300)
+----> apVisitPlots:    making apPlate-7980-59935-094.png (2M23012252+0135551, 94/300)
+----> apVisitPlots:    making apPlate-7980-59935-095.png (2M23021809+0116174, 95/300)
+----> apVisitPlots:    making apPlate-7980-59935-096.png (, 96/300)
+----> apVisitPlots:    making apPlate-7980-59935-097.png (, 97/300)
+----> apVisitPlots:    making apPlate-7980-59935-098.png (, 98/300)
+----> apVisitPlots:    making apPlate-7980-59935-099.png (, 99/300)
+----> apVisitPlots:    making apPlate-7980-59935-100.png (2M23030314+0122223, 100/300)
+----> apVisitPlots:    making apPlate-7980-59935-101.png (, 101/300)
+----> apVisitPlots:    making apPlate-7980-59935-102.png (, 102/300)
+----> apVisitPlots:    making apPlate-7980-59935-103.png (2M23072438+0140106, 103/300)
+----> apVisitPlots:    making apPlate-7980-59935-104.png (, 104/300)
+----> apVisitPlots:    making apPlate-7980-59935-105.png (2M23043612+0143467, 105/300)
+----> apVisitPlots:    making apPlate-7980-59935-106.png (2M23035363+0155472, 106/300)
+----> apVisitPlots:    making apPlate-7980-59935-107.png (, 107/300)
+----> apVisitPlots:    making apPlate-7980-59935-108.png (, 108/300)
+----> apVisitPlots:    making apPlate-7980-59935-109.png (, 109/300)
+----> apVisitPlots:    making apPlate-7980-59935-110.png (2M23005128+0105070, 110/300)
+----> apVisitPlots:    making apPlate-7980-59935-111.png (, 111/300)
+----> apVisitPlots:    making apPlate-7980-59935-112.png (2M23031188+0130315, 112/300)
+----> apVisitPlots:    making apPlate-7980-59935-113.png (, 113/300)
+----> apVisitPlots:    making apPlate-7980-59935-114.png (2M23034686+0146578, 114/300)
+----> apVisitPlots:    making apPlate-7980-59935-115.png (2M23015373+0143373, 115/300)
+----> apVisitPlots:    making apPlate-7980-59935-116.png (2M23001705+0115400, 116/300)
+----> apVisitPlots:    making apPlate-7980-59935-117.png (, 117/300)
+----> apVisitPlots:    making apPlate-7980-59935-118.png (, 118/300)
+----> apVisitPlots:    making apPlate-7980-59935-119.png (, 119/300)
+----> apVisitPlots:    making apPlate-7980-59935-120.png (, 120/300)
+----> apVisitPlots:    making apPlate-7980-59935-121.png (, 121/300)
+----> apVisitPlots:    making apPlate-7980-59935-122.png (, 122/300)
+----> apVisitPlots:    making apPlate-7980-59935-123.png (, 123/300)
+----> apVisitPlots:    making apPlate-7980-59935-124.png (, 124/300)
+----> apVisitPlots:    making apPlate-7980-59935-125.png (, 125/300)
+----> apVisitPlots:    making apPlate-7980-59935-126.png (, 126/300)
+----> apVisitPlots:    making apPlate-7980-59935-127.png (, 127/300)
+----> apVisitPlots:    making apPlate-7980-59935-128.png (2M23015228+0122314, 128/300)
+----> apVisitPlots:    making apPlate-7980-59935-129.png (, 129/300)
+----> apVisitPlots:    making apPlate-7980-59935-130.png (2M23004478+0124306, 130/300)
+----> apVisitPlots:    making apPlate-7980-59935-131.png (, 131/300)
+----> apVisitPlots:    making apPlate-7980-59935-132.png (, 132/300)
+----> apVisitPlots:    making apPlate-7980-59935-133.png (, 133/300)
+----> apVisitPlots:    making apPlate-7980-59935-134.png (, 134/300)
+----> apVisitPlots:    making apPlate-7980-59935-135.png (, 135/300)
+----> apVisitPlots:    making apPlate-7980-59935-136.png (, 136/300)
+----> apVisitPlots:    making apPlate-7980-59935-137.png (, 137/300)
+----> apVisitPlots:    making apPlate-7980-59935-138.png (, 138/300)
+----> apVisitPlots:    making apPlate-7980-59935-139.png (, 139/300)
+----> apVisitPlots:    making apPlate-7980-59935-140.png (, 140/300)
+----> apVisitPlots:    making apPlate-7980-59935-141.png (, 141/300)
+----> apVisitPlots:    making apPlate-7980-59935-142.png (, 142/300)
+----> apVisitPlots:    making apPlate-7980-59935-143.png (2M22594894+0115431, 143/300)
+----> apVisitPlots:    making apPlate-7980-59935-144.png (2M22593640+0122128, 144/300)
+----> apVisitPlots:    making apPlate-7980-59935-145.png (, 145/300)
+----> apVisitPlots:    making apPlate-7980-59935-146.png (, 146/300)
+----> apVisitPlots:    making apPlate-7980-59935-147.png (, 147/300)
+----> apVisitPlots:    making apPlate-7980-59935-148.png (2M23011946+0106070, 148/300)
+----> apVisitPlots:    making apPlate-7980-59935-149.png (2M23004975+0115129, 149/300)
+----> apVisitPlots:    making apPlate-7980-59935-150.png (, 150/300)
+----> apVisitPlots:    making apPlate-7980-59935-151.png (2M23032375+0000368, 151/300)
+----> apVisitPlots:    making apPlate-7980-59935-152.png (, 152/300)
+----> apVisitPlots:    making apPlate-7980-59935-153.png (, 153/300)
+----> apVisitPlots:    making apPlate-7980-59935-154.png (2M23031772+0029408, 154/300)
+----> apVisitPlots:    making apPlate-7980-59935-155.png (2M23033512+0010547, 155/300)
+----> apVisitPlots:    making apPlate-7980-59935-156.png (2M23033305-0023284, 156/300)
+----> apVisitPlots:    making apPlate-7980-59935-157.png (, 157/300)
+----> apVisitPlots:    making apPlate-7980-59935-158.png (, 158/300)
+----> apVisitPlots:    making apPlate-7980-59935-159.png (2M23032221+0019032, 159/300)
+----> apVisitPlots:    making apPlate-7980-59935-160.png (2M23025379+0021391, 160/300)
+----> apVisitPlots:    making apPlate-7980-59935-161.png (2M23032538+0005585, 161/300)
+----> apVisitPlots:    making apPlate-7980-59935-162.png (, 162/300)
+----> apVisitPlots:    making apPlate-7980-59935-163.png (, 163/300)
+----> apVisitPlots:    making apPlate-7980-59935-164.png (, 164/300)
+----> apVisitPlots: Problem with fiber 165. Not Plotting.
+----> apVisitPlots:    making apPlate-7980-59935-166.png (2M23040493-0020236, 166/300)
+----> apVisitPlots:    making apPlate-7980-59935-167.png (2M23025132-0006323, 167/300)
+----> apVisitPlots:    making apPlate-7980-59935-168.png (2M23025119-0018310, 168/300)
+----> apVisitPlots:    making apPlate-7980-59935-169.png (, 169/300)
+----> apVisitPlots:    making apPlate-7980-59935-170.png (2M23030303+0010280, 170/300)
+----> apVisitPlots:    making apPlate-7980-59935-171.png (2M23022433+0004551, 171/300)
+----> apVisitPlots:    making apPlate-7980-59935-172.png (, 172/300)
+----> apVisitPlots:    making apPlate-7980-59935-173.png (, 173/300)
+----> apVisitPlots:    making apPlate-7980-59935-174.png (, 174/300)
+----> apVisitPlots:    making apPlate-7980-59935-175.png (, 175/300)
+----> apVisitPlots:    making apPlate-7980-59935-176.png (2M23042200-0038278, 176/300)
+----> apVisitPlots:    making apPlate-7980-59935-177.png (2M23015004-0008252, 177/300)
+----> apVisitPlots:    making apPlate-7980-59935-178.png (, 178/300)
+----> apVisitPlots:    making apPlate-7980-59935-179.png (2M23033103-0007104, 179/300)
+----> apVisitPlots:    making apPlate-7980-59935-180.png (, 180/300)
+----> apVisitPlots:    making apPlate-7980-59935-181.png (, 181/300)
+----> apVisitPlots:    making apPlate-7980-59935-182.png (, 182/300)
+----> apVisitPlots:    making apPlate-7980-59935-183.png (2M23042008+0002252, 183/300)
+----> apVisitPlots:    making apPlate-7980-59935-184.png (, 184/300)
+----> apVisitPlots:    making apPlate-7980-59935-185.png (, 185/300)
+----> apVisitPlots:    making apPlate-7980-59935-186.png (2M23044176-0003279, 186/300)
+----> apVisitPlots:    making apPlate-7980-59935-187.png (, 187/300)
+----> apVisitPlots:    making apPlate-7980-59935-188.png (, 188/300)
+----> apVisitPlots:    making apPlate-7980-59935-189.png (2M23033681-0036492, 189/300)
+----> apVisitPlots:    making apPlate-7980-59935-190.png (, 190/300)
+----> apVisitPlots:    making apPlate-7980-59935-191.png (, 191/300)
+----> apVisitPlots:    making apPlate-7980-59935-192.png (, 192/300)
+----> apVisitPlots:    making apPlate-7980-59935-193.png (2M23050902-0014148, 193/300)
+----> apVisitPlots:    making apPlate-7980-59935-194.png (, 194/300)
+----> apVisitPlots:    making apPlate-7980-59935-195.png (, 195/300)
+----> apVisitPlots:    making apPlate-7980-59935-196.png (2M23065720+0020516, 196/300)
+----> apVisitPlots:    making apPlate-7980-59935-197.png (2M23070337+0011294, 197/300)
+----> apVisitPlots:    making apPlate-7980-59935-198.png (2M23003122-0021039, 198/300)
+----> apVisitPlots:    making apPlate-7980-59935-199.png (2M22592621-0013284, 199/300)
+----> apVisitPlots:    making apPlate-7980-59935-200.png (, 200/300)
+----> apVisitPlots:    making apPlate-7980-59935-201.png (2M23053633+0011174, 201/300)
+----> apVisitPlots:    making apPlate-7980-59935-202.png (2M23044993+0004499, 202/300)
+----> apVisitPlots:    making apPlate-7980-59935-203.png (, 203/300)
+----> apVisitPlots:    making apPlate-7980-59935-204.png (, 204/300)
+----> apVisitPlots:    making apPlate-7980-59935-205.png (, 205/300)
+----> apVisitPlots:    making apPlate-7980-59935-206.png (, 206/300)
+----> apVisitPlots:    making apPlate-7980-59935-207.png (, 207/300)
+----> apVisitPlots:    making apPlate-7980-59935-208.png (, 208/300)
+----> apVisitPlots:    making apPlate-7980-59935-209.png (, 209/300)
+----> apVisitPlots:    making apPlate-7980-59935-210.png (, 210/300)
+----> apVisitPlots:    making apPlate-7980-59935-211.png (, 211/300)
+----> apVisitPlots:    making apPlate-7980-59935-212.png (2M23055817+0014315, 212/300)
+----> apVisitPlots:    making apPlate-7980-59935-213.png (, 213/300)
+----> apVisitPlots:    making apPlate-7980-59935-214.png (, 214/300)
+----> apVisitPlots:    making apPlate-7980-59935-215.png (, 215/300)
+----> apVisitPlots:    making apPlate-7980-59935-216.png (, 216/300)
+----> apVisitPlots:    making apPlate-7980-59935-217.png (, 217/300)
+----> apVisitPlots:    making apPlate-7980-59935-218.png (, 218/300)
+----> apVisitPlots:    making apPlate-7980-59935-219.png (, 219/300)
+----> apVisitPlots:    making apPlate-7980-59935-220.png (2M23051894+0004580, 220/300)
+----> apVisitPlots:    making apPlate-7980-59935-221.png (2M23074401+0002167, 221/300)
+----> apVisitPlots:    making apPlate-7980-59935-222.png (2M23080012+0007100, 222/300)
+----> apVisitPlots:    making apPlate-7980-59935-223.png (2M23055441+0009185, 223/300)
+----> apVisitPlots:    making apPlate-7980-59935-224.png (2M23051759+0011408, 224/300)
+----> apVisitPlots:    making apPlate-7980-59935-226.png (, 226/300)
+----> apVisitPlots:    making apPlate-7980-59935-227.png (2M23062602+0022013, 227/300)
+----> apVisitPlots:    making apPlate-7980-59935-228.png (2M23064331+0010190, 228/300)
+----> apVisitPlots:    making apPlate-7980-59935-229.png (, 229/300)
+----> apVisitPlots:    making apPlate-7980-59935-230.png (, 230/300)
+----> apVisitPlots:    making apPlate-7980-59935-231.png (, 231/300)
+----> apVisitPlots:    making apPlate-7980-59935-232.png (, 232/300)
+----> apVisitPlots:    making apPlate-7980-59935-233.png (, 233/300)
+----> apVisitPlots:    making apPlate-7980-59935-234.png (2M23053370-0010307, 234/300)
+----> apVisitPlots:    making apPlate-7980-59935-235.png (, 235/300)
+----> apVisitPlots:    making apPlate-7980-59935-236.png (, 236/300)
+----> apVisitPlots:    making apPlate-7980-59935-237.png (, 237/300)
+----> apVisitPlots:    making apPlate-7980-59935-238.png (2M23044351+0020511, 238/300)
+----> apVisitPlots:    making apPlate-7980-59935-239.png (, 239/300)
+----> apVisitPlots:    making apPlate-7980-59935-240.png (, 240/300)
+----> apVisitPlots:    making apPlate-7980-59935-241.png (2M22585390+0040282, 241/300)
+----> apVisitPlots:    making apPlate-7980-59935-242.png (, 242/300)
+----> apVisitPlots:    making apPlate-7980-59935-243.png (2M23000093+0056131, 243/300)
+----> apVisitPlots:    making apPlate-7980-59935-244.png (2M23013838+0048327, 244/300)
+----> apVisitPlots:    making apPlate-7980-59935-245.png (, 245/300)
+----> apVisitPlots:    making apPlate-7980-59935-246.png (, 246/300)
+----> apVisitPlots:    making apPlate-7980-59935-247.png (2M23004544+0047519, 247/300)
+----> apVisitPlots:    making apPlate-7980-59935-248.png (, 248/300)
+----> apVisitPlots:    making apPlate-7980-59935-249.png (, 249/300)
+----> apVisitPlots:    making apPlate-7980-59935-250.png (, 250/300)
+----> apVisitPlots:    making apPlate-7980-59935-251.png (, 251/300)
+----> apVisitPlots:    making apPlate-7980-59935-252.png (2M23001690+0035198, 252/300)
+----> apVisitPlots:    making apPlate-7980-59935-253.png (2M23005535+0013118, 253/300)
+----> apVisitPlots:    making apPlate-7980-59935-254.png (, 254/300)
+----> apVisitPlots:    making apPlate-7980-59935-255.png (2M23005781+0046003, 255/300)
+----> apVisitPlots:    making apPlate-7980-59935-256.png (2M23003074+0008395, 256/300)
+----> apVisitPlots:    making apPlate-7980-59935-257.png (, 257/300)
+----> apVisitPlots:    making apPlate-7980-59935-258.png (2M23015589+0041180, 258/300)
+----> apVisitPlots:    making apPlate-7980-59935-259.png (2M23012855+0033049, 259/300)
+----> apVisitPlots:    making apPlate-7980-59935-260.png (2M22593578+0023507, 260/300)
+----> apVisitPlots:    making apPlate-7980-59935-261.png (, 261/300)
+----> apVisitPlots:    making apPlate-7980-59935-262.png (, 262/300)
+----> apVisitPlots:    making apPlate-7980-59935-263.png (, 263/300)
+----> apVisitPlots:    making apPlate-7980-59935-264.png (, 264/300)
+----> apVisitPlots:    making apPlate-7980-59935-265.png (, 265/300)
+----> apVisitPlots:    making apPlate-7980-59935-266.png (2M23001563+0048362, 266/300)
+----> apVisitPlots:    making apPlate-7980-59935-267.png (, 267/300)
+----> apVisitPlots:    making apPlate-7980-59935-268.png (, 268/300)
+----> apVisitPlots:    making apPlate-7980-59935-269.png (, 269/300)
+----> apVisitPlots:    making apPlate-7980-59935-270.png (2M23020317+0023550, 270/300)
+----> apVisitPlots:    making apPlate-7980-59935-271.png (, 271/300)
+----> apVisitPlots:    making apPlate-7980-59935-272.png (2M22591923+0016046, 272/300)
+----> apVisitPlots:    making apPlate-7980-59935-273.png (2M23025146-0026032, 273/300)
+----> apVisitPlots:    making apPlate-7980-59935-274.png (2M23012712-0022446, 274/300)
+----> apVisitPlots:    making apPlate-7980-59935-275.png (2M22590714+0051233, 275/300)
+----> apVisitPlots:    making apPlate-7980-59935-276.png (, 276/300)
+----> apVisitPlots:    making apPlate-7980-59935-277.png (, 277/300)
+----> apVisitPlots:    making apPlate-7980-59935-278.png (2M22592850+0048323, 278/300)
+----> apVisitPlots:    making apPlate-7980-59935-279.png (, 279/300)
+----> apVisitPlots:    making apPlate-7980-59935-280.png (, 280/300)
+----> apVisitPlots:    making apPlate-7980-59935-281.png (, 281/300)
+----> apVisitPlots:    making apPlate-7980-59935-282.png (2M23024140+0034503, 282/300)
+----> apVisitPlots:    making apPlate-7980-59935-283.png (2M23010970-0016452, 283/300)
+----> apVisitPlots:    making apPlate-7980-59935-284.png (2M23022963+0024145, 284/300)
+----> apVisitPlots:    making apPlate-7980-59935-285.png (, 285/300)
+----> apVisitPlots:    making apPlate-7980-59935-286.png (, 286/300)
+----> apVisitPlots:    making apPlate-7980-59935-287.png (2M23011630+0004464, 287/300)
+----> apVisitPlots:    making apPlate-7980-59935-288.png (, 288/300)
+----> apVisitPlots:    making apPlate-7980-59935-289.png (2M23024391+0015487, 289/300)
+----> apVisitPlots:    making apPlate-7980-59935-290.png (2M22595166+0029266, 290/300)
+----> apVisitPlots:    making apPlate-7980-59935-291.png (2M22591835+0010377, 291/300)
+----> apVisitPlots:    making apPlate-7980-59935-292.png (, 292/300)
+----> apVisitPlots:    making apPlate-7980-59935-293.png (, 293/300)
+----> apVisitPlots:    making apPlate-7980-59935-294.png (2M23015720+0015225, 294/300)
+----> apVisitPlots:    making apPlate-7980-59935-295.png (2M22592453+0107577, 295/300)
+----> apVisitPlots:    making apPlate-7980-59935-296.png (, 296/300)
+----> apVisitPlots:    making apPlate-7980-59935-297.png (, 297/300)
+----> apVisitPlots:    making apPlate-7980-59935-298.png (, 298/300)
+----> apVisitPlots:    making apPlate-7980-59935-299.png (2M23020995-0025012, 299/300)
+----> apVisitPlots:    making apPlate-7980-59935-300.png (, 300/300)
+----> apVisitPlots: Done with plate 7980, MJD 59935.
+
+----> makeStarHTML: Running plate 7980, MJD 59935
+----> makeStarHTML:   making html for 2M23053775+0130398 (1/300)
+> /uufs/chpc.utah.edu/common/home/u0955897/projects/apogee_drp/python/apogee_drp/apred/qa.py(2524)makeStarHTML()
+-> vcat = db.query('visit_latest', where="apogee_id='" + objid + "' and telescope='"+ telescope + "'", fmt='table')
+(Pdb) 
+2023-01-18 09:35:57,136 [INFO ]  End: 2023-01-18 09:35:57
+2023-01-18 09:35:57,136 [INFO ]  elapsed: 407.2 sec.

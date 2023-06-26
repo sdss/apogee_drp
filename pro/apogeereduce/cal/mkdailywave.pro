@@ -38,34 +38,37 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
   name = strtrim(mjd,2)
   dirs = getdir(apodir,caldir,spectrodir,vers)
   wavedir = apogee_filename('Wave',num=0,chip='a',/dir)
-  file = dirs.prefix+'Wave-'+name
-  lockfile = wavedir+file+'.lock'
+  wavebase = dirs.prefix+'Wave-'+name
+  wavefile = wavedir+wavebase
+  ;;lockfile = wavedir+file+'.lock'
   
   ;; If another process is alreadying make this file, wait!
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do begin
-      if keyword_set(nowait) then return
-      apwait,file,10
-    endwhile
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
-
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do begin
+  ;;    if keyword_set(nowait) then return
+  ;;    apwait,file,10
+  ;;  endwhile
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,wavefile,waittime=10,unlock=unlock
+  
   ;; Does product already exist?
   ;; check all three chips and .dat file
   chips = ['a','b','c']
   allfiles = wavedir+dirs.prefix+'Wave-'+chips+'-'+name+'.fits'
   if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
-    print,' Wavecal file: ', wavedir+file, ' already made'
+    print,' Wavecal file: ', wavefile, ' already made'
     return
   endif
   file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
   print,'Making dailywave: ', name
   ;; Open .lock file
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,wavefile,/lock
+  
   ;; Get the arclamps that we need for the daily cal
   expinfo = dbquery("select * from apogee_drp.exposure where mjd>="+strtrim(long(mjd)-10,2)+$
                     " and mjd<="+strtrim(long(mjd)+10,2)+" and exptype='ARCLAMP' and "+$
@@ -173,6 +176,7 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
     free_lun,lock
   endif
 
-  file_delete,lockfile,/allow
-
+  ;;file_delete,lockfile,/allow
+  aplock,wavefile,/clear
+  
 end

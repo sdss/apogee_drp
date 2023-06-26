@@ -67,20 +67,22 @@ if n_elements(lindata) gt 0 then $
   linfile = lindir+dirs.prefix+'Linearity-'+cframeid+'.dat'
 
 ;; Make sure file construction isn't already in process
-lockfile = linfile+'.lock'
-if not keyword_set(unlock) then begin
-  while file_test(lockfile) do apwait,lockfile,10
-endif else begin
-  if file_test(lockfile) then file_delete,lockfile,/allow
-endelse
+;;lockfile = linfile+'.lock'
+;;if not keyword_set(unlock) then begin
+;;  while file_test(lockfile) do apwait,lockfile,10
+;;endif else begin
+;;  if file_test(lockfile) then file_delete,lockfile,/allow
+;;endelse
+aplock,linfile,waittime=10,unlock=unlock
 
 ;; Does file already exist? 
 if file_test(linfile) and ~keyword_set(clobber) then goto, havefile
 
 print,'Making Linearity: ', frameid
 ;; Open .lock file
-openw,lock,/get_lun,lockfile
-free_lun,lock
+;;openw,lock,/get_lun,lockfile
+;;free_lun,lock
+aplock,linfile,/lock
 
 ;; Loop over the chips
 openw,lun,linfile,/get_lun
@@ -248,7 +250,8 @@ device,/close
 ps2jpg,file,/eps
 set_plot,'X'
 
-file_delete,lockfile,/allow
+;;file_delete,lockfile,/allow
+aplock,linfile,/clear
 
 if keyword_set(stp) then stop
 

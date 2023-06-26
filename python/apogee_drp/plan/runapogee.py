@@ -91,7 +91,7 @@ def writeNewMJD(observatory,mjd,apred='daily'):
     f.close()
 
 
-def summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=None,debug=False):
+def summary_email(observatory,apred,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=None,debug=False):
     """ Send a summary email."""
 
     if debug:
@@ -99,12 +99,12 @@ def summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=None,de
     else:
         address = 'apogee-pipeline-log@sdss.org'
 
-    subject = 'Daily APOGEE Reduction %s %s' % (observatory,mjd5)
+    subject = 'Daily APOGEE Reduction %s %s %s' % (observatory,apred,mjd5)
     message = """\
               <html>
                 <body>
               """
-    message += '<b>Daily APOGEE Reduction %s %s</b><br>\n' % (observatory,mjd5)
+    message += '<b>Daily APOGEE Reduction %s %s %s</b><br>\n' % (observatory,apred,mjd5)
     message += '<p>\n'
     message += '<a href="https://data.sdss.org/sas/sdss5/mwm/apogee/spectro/redux/daily/qa/mjd.html">QA Webpage (MJD List)</a><br> \n'
 
@@ -187,12 +187,12 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     #alloc = 'sdss-kp'
     alloc = 'sdss-np'
     shared = True
-    ppn = 64
+    #ppn = 64
     cpus = 32
     walltime = '23:00:00'
     chips = ['a','b','c']
 
-    slurm = {'nodes':nodes, 'alloc':alloc, 'ppn':ppn, 'cpus':cpus, 'qos':qos, 'shared':shared,
+    slurm = {'nodes':nodes, 'alloc':alloc, 'cpus':cpus, 'qos':qos, 'shared':shared,
              'numpy_num_threads':2,'walltime':walltime,'notification':False}
 
     # No version input, use 'daily'
@@ -213,7 +213,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     if mjd5 is None:
         # Could get information on which MJDs were processed from database
         # or from $APOGEE_REDUX/daily/log/apo/MJD5.done
-        mjd5 = getNextMJD(observatory)
+        mjd5 = getNextMJD(observatory,apred)
         if len(mjd5)==0:
             print('No more MJDs to reduce')
             return
@@ -236,10 +236,6 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     if len(mjdfiles)==0:
         print('No data for MJD5='+str(mjd5))
         return
-
-    # Update the currentmjd file
-    if updatemjdfile is True:
-        writeNewMJD(observatory,mjd5,apred=apred)
 
     # Set up logging to screen and logfile
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
@@ -286,6 +282,11 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     si = np.argsort(expinfo['num'])
     expinfo = expinfo[si]
 
+    # Update the currentmjd file
+    if len(expinfo)>0:
+        if updatemjdfile is True:
+            writeNewMJD(observatory,mjd5,apred=apred)
+    
 
     # Process all exposures through ap3D first
     #-----------------------------------------
@@ -421,4 +422,4 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     db.close()    # close db session
 
     # Summary email
-    summary_email(observatory,mjd5,chkcal,chkexp,chkvisit,chkrv,logfile,debug=debug)
+    summary_email(observatory,apred,mjd5,chkcal,chkexp,chkvisit,chkrv,logfile,debug=debug)

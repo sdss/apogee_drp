@@ -35,21 +35,23 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,$
   wavedir = apogee_filename('Wave',num=name,chip='a',/dir)
   if file_test(wavedir,/directory) eq 0 then file_mkdir,wavedir
   file = dirs.prefix+string(format='("Wave-",i8.8)',name)
-  lockfile = wavedir+file+'.lock'
+  wavefile = wavedir+file
+  ;;lockfile = wavedir+file+'.lock'
 
   ;; If another process is alreadying make this file, wait!
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do begin
-      if keyword_set(nowait) then begin
-        print,' Wavecal file: ', wavedir+file, ' already being made (.lock file exists)'
-        return
-      endif
-      apwait,file,10
-    endwhile
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
-
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do begin
+  ;;    if keyword_set(nowait) then begin
+  ;;      print,' Wavecal file: ', wavedir+file, ' already being made (.lock file exists)'
+  ;;      return
+  ;;    endif
+  ;;    apwait,file,10
+  ;;  endwhile
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,wavefile,waittime=10,unlock=unlock
+  
   ;; Does product already exist?
   chips = ['a','b','c']
   swaveid = string(name,format='(i08)')
@@ -62,9 +64,10 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,$
 
   print,'Making wave: ', waveid
   ;; Open .lock file
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,wavefile,/lock
+  
   ;; Process the frames and find lines
   print,''
   print,'***** Processing the frames and finding the lines *****'
@@ -90,6 +93,7 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,$
     close,1
   endif else stop,'HALT:  failed to make wavecal',waveid
 
-  file_delete,lockfile,/allow
-
+  ;;file_delete,lockfile,/allow
+  aplock,wavefile,/clear
+  
 end

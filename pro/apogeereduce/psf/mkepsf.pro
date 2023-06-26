@@ -12,22 +12,24 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
 
   ;file=dirs.prefix+string(format='("EPSF-c-",i8.8)',outid)
   file = apogee_filename('EPSF',num=outid,chip='c')
-  lockfile = file+'.lock'
+  ;;lockfile = file+'.lock'
 
   ;if another process is alreadying make this file, wait!
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do apwait,lockfile,10
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
-  
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do apwait,lockfile,10
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,file,waittime=10,unlock=unlock
+ 
   ;; does product already exist?
   info = file_info(file)
   if info.exists eq 0 or info.size eq 0 or keyword_set(clobber) then begin
     ; open .lock filea
-    openw,lock,/get_lun,lockfile
-    free_lun,lock
-
+    ;;openw,lock,/get_lun,lockfile
+    ;;free_lun,lock
+    aplock,file,/lock
+     
     if keyword_set(cmjd) then $
       d = approcess(ims,cmjd=cmjd,darkid=darkid,flatid=flatid,nfs=1,/nocr,/doap3dproc,maxread=maxread,unlock=unlock) $
     else $
@@ -87,7 +89,8 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
     sparse = dirs.prefix+string(format='("Sparse-",i8.8)',outid)
     mwrfits,red,file_dirname(file)+'/'+sparse+'.fits',/create
   
-    file_delete,lockfile,/allow
+    ;;file_delete,lockfile,/allow
+    aplock,file,/clear    
   endif
   
 end

@@ -1,0 +1,3696 @@
+makecal fpi:     43740011
+Multiple cal products found for mjd        59936 will use last:     39870034
+  dark:     39860002
+  flat:     39870003
+  bpm:     39860002
+  sparse:     39870034
+  modelpsf:     39870034
+  fiber:     13400051
+  badfiber:           25
+  fixfiber:            0
+  wave:     13400053
+  multiwave:     39880000
+  lsf:     40030031
+  flux:            0
+  det:     13390003
+  littrow:     13400052
+  persist:     13400061
+  persistmodel:            0
+  response:            0
+makecal modelpsf:     39870034
+ modelpsf file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSFModel-c-39870034.fits
+ already made
+makecal fiber:     13400051
+ psf file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-c-13400051.fits
+ already made
+makecal modelpsf:     39870034
+ modelpsf file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSFModel-c-39870034.fits
+ already made
+Making fpi:     43740011
+Using detector:        0 dark:     39860002 flat:     39870003 trace:        0
+ psf:        0
+Calling ap3dproc...
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59936/apR-a-43740011.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2D-a-43740011.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+Calling ap3dproc...
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59936/apR-b-43740011.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2D-b-43740011.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+Calling ap3dproc...
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59936/apR-c-43740011.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2D-c-43740011.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+Multiple cal products found for mjd 59936 will use last: 39870034
+
+Running AP2D
+
+1 plan files
+
+=====================================================================
+1/1  processing plan file /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/logs/ap2DPlan-43740011.yaml
+=====================================================================
+
+Plan file information:
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apSparse-39870034.fits already made
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/trace/apETrace-13400051.fits already made
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-43740005.fits already made
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSFModel-39870034.fits exists already
+Using Model PSF: 39870034
+
+-------------------------------------------
+1/1  processing frame number >>43740011<<
+-------------------------------------------
+
+Extracting file  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/43740011
+--------------------------------------------------
+file:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2D-43740011.fits
+mjd5 =  59936
+ processing chip a - ap2D-a-43740011.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-a-43740005.fits
+Using Model PSF extraction
+Median offset = -0.024 pixels
+Offset coefficients =  [-5.75001388e-01  4.27529477e-04 -3.93262751e-07  5.12083715e-04]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2Dmodel-a-43740011.fits
+
+ processing chip b - ap2D-b-43740011.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-b-43740005.fits
+Using Model PSF extraction
+Median offset = 0.018 pixels
+Offset coefficients =  [ 6.69618311e-02 -1.53530979e-05  5.29944130e-08 -9.57776103e-05]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2Dmodel-b-43740011.fits
+
+ processing chip c - ap2D-c-43740011.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-c-43740005.fits
+Using Model PSF extraction
+Median offset = -0.050 pixels
+Offset coefficients =  [-1.51897337e-02 -4.80320713e-05  2.40057732e-08 -1.15289920e-05]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2Dmodel-c-43740011.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap1D-a-43740011.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap1D-b-43740011.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap1D-c-43740011.fits
+AP2DPROC finished
+AP2D finished
+dt = 174.6 sec
+makecal dailywave:        59936
+ dailywave file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-59936.fits
+ already made
+Running:  mkfpi 59936 daily apo --num 43740011 --verbose
+Getting daily FPI wavelengths for MJD=59936
+Getting exposure information
+68  exposures
+FPI full-frame exposure  43740011
+Using  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-59936.fits  wavelength calibration file
+Wavelength group  23  is associated with the FPI
+ 
+Fit peaks to the full-frame FPI data
+------------------------------------
+a 0 123  lines
+a 1 124  lines
+a 2 126  lines
+a 3 126  lines
+a 4 126  lines
+a 5 126  lines
+a 6 128  lines
+a 7 126  lines
+a 8 127  lines
+a 9 126  lines
+a 10 128  lines
+a 11 129  lines
+a 12 130  lines
+a 13 129  lines
+a 14 129  lines
+a 15 129  lines
+a 16 131  lines
+a 17 130  lines
+a 18 128  lines
+a 19 130  lines
+a 20 128  lines
+a 21 131  lines
+a 22 130  lines
+a 23 129  lines
+a 24 129  lines
+a 25 129  lines
+a 26 129  lines
+a 27 128  lines
+a 28 129  lines
+a 29 131  lines
+a 30 129  lines
+a 31 130  lines
+a 32 129  lines
+a 33 128  lines
+a 34 128  lines
+a 35 129  lines
+a 36 130  lines
+a 37 130  lines
+a 38 130  lines
+a 39 129  lines
+a 40 129  lines
+a 41 130  lines
+a 42 131  lines
+a 43 129  lines
+a 44 129  lines
+a 45 131  lines
+a 46 129  lines
+a 47 129  lines
+a 48 131  lines
+a 49 129  lines
+a 50 129  lines
+a 51 129  lines
+a 52 129  lines
+a 53 129  lines
+a 54 130  lines
+a 55 130  lines
+a 56 129  lines
+a 57 131  lines
+a 58 130  lines
+a 59 131  lines
+a 60 130  lines
+a 61 131  lines
+a 62 129  lines
+a 63 129  lines
+a 64 130  lines
+a 65 129  lines
+a 66 129  lines
+a 67 130  lines
+a 68 129  lines
+a 69 129  lines
+a 70 131  lines
+a 71 129  lines
+a 72 129  lines
+a 73 130  lines
+a 74 129  lines
+a 75 130  lines
+a 76 129  lines
+a 77 129  lines
+a 78 130  lines
+a 79 131  lines
+a 80 129  lines
+a 81 131  lines
+a 82 130  lines
+a 83 130  lines
+a 84 130  lines
+a 85 130  lines
+a 86 129  lines
+a 87 130  lines
+a 88 131  lines
+a 89 130  lines
+a 90 129  lines
+a 91 129  lines
+a 92 129  lines
+a 93 129  lines
+a 94 129  lines
+a 95 131  lines
+a 96 129  lines
+a 97 129  lines
+a 98 129  lines
+a 99 130  lines
+a 100 129  lines
+a 101 130  lines
+a 102 129  lines
+a 103 129  lines
+a 104 131  lines
+a 105 130  lines
+a 106 129  lines
+a 107 130  lines
+a 108 131  lines
+a 109 129  lines
+a 110 129  lines
+a 111 129  lines
+a 112 130  lines
+a 113 129  lines
+a 114 129  lines
+a 115 130  lines
+a 116 130  lines
+a 117 129  lines
+a 118 129  lines
+a 119 129  lines
+a 120 129  lines
+a 121 129  lines
+a 122 130  lines
+a 123 129  lines
+a 124 132  lines
+a 125 130  lines
+a 126 129  lines
+a 127 128  lines
+a 128 129  lines
+a 129 129  lines
+a 130 129  lines
+a 131 129  lines
+a 132 129  lines
+a 133 129  lines
+a 134 130  lines
+No peaks found
+a 135 0  lines
+a 136 131  lines
+a 137 128  lines
+a 138 130  lines
+a 139 130  lines
+a 140 130  lines
+a 141 130  lines
+a 142 129  lines
+a 143 130  lines
+a 144 129  lines
+a 145 129  lines
+a 146 129  lines
+a 147 129  lines
+a 148 130  lines
+a 149 130  lines
+a 150 129  lines
+a 151 131  lines
+a 152 131  lines
+a 153 129  lines
+a 154 130  lines
+a 155 131  lines
+a 156 129  lines
+a 157 130  lines
+a 158 129  lines
+a 159 131  lines
+a 160 129  lines
+a 161 129  lines
+a 162 131  lines
+a 163 131  lines
+a 164 129  lines
+a 165 129  lines
+a 166 131  lines
+a 167 130  lines
+a 168 129  lines
+a 169 130  lines
+a 170 131  lines
+a 171 130  lines
+a 172 129  lines
+a 173 129  lines
+a 174 129  lines
+a 175 129  lines
+a 176 131  lines
+a 177 130  lines
+a 178 130  lines
+a 179 129  lines
+a 180 128  lines
+a 181 130  lines
+a 182 128  lines
+a 183 129  lines
+a 184 130  lines
+a 185 130  lines
+a 186 130  lines
+a 187 128  lines
+a 188 130  lines
+a 189 131  lines
+a 190 129  lines
+a 191 130  lines
+a 192 129  lines
+a 193 130  lines
+a 194 130  lines
+a 195 129  lines
+a 196 130  lines
+a 197 129  lines
+a 198 129  lines
+a 199 129  lines
+a 200 130  lines
+a 201 131  lines
+a 202 129  lines
+a 203 130  lines
+a 204 129  lines
+a 205 129  lines
+a 206 129  lines
+a 207 129  lines
+a 208 130  lines
+a 209 132  lines
+a 210 130  lines
+a 211 131  lines
+a 212 130  lines
+a 213 129  lines
+a 214 129  lines
+a 215 131  lines
+a 216 131  lines
+a 217 129  lines
+a 218 129  lines
+a 219 130  lines
+a 220 130  lines
+a 221 133  lines
+a 222 133  lines
+a 223 130  lines
+a 224 130  lines
+a 225 130  lines
+a 226 133  lines
+a 227 132  lines
+a 228 130  lines
+a 229 129  lines
+a 230 130  lines
+a 231 130  lines
+a 232 130  lines
+a 233 130  lines
+a 234 130  lines
+a 235 129  lines
+a 236 129  lines
+a 237 131  lines
+a 238 131  lines
+a 239 129  lines
+a 240 129  lines
+a 241 130  lines
+a 242 131  lines
+a 243 130  lines
+a 244 131  lines
+a 245 130  lines
+a 246 129  lines
+a 247 132  lines
+a 248 130  lines
+a 249 129  lines
+a 250 133  lines
+a 251 130  lines
+a 252 130  lines
+a 253 130  lines
+a 254 130  lines
+a 255 130  lines
+a 256 131  lines
+a 257 130  lines
+a 258 131  lines
+a 259 130  lines
+a 260 130  lines
+a 261 131  lines
+a 262 130  lines
+a 263 130  lines
+a 264 130  lines
+a 265 131  lines
+a 266 130  lines
+a 267 130  lines
+a 268 129  lines
+a 269 130  lines
+a 270 130  lines
+a 271 132  lines
+a 272 133  lines
+a 273 129  lines
+a 274 131  lines
+No peaks found
+a 275 0  lines
+a 276 129  lines
+a 277 134  lines
+a 278 129  lines
+No peaks found
+a 279 0  lines
+a 280 130  lines
+a 281 130  lines
+a 282 131  lines
+a 283 131  lines
+a 284 131  lines
+a 285 130  lines
+a 286 130  lines
+a 287 130  lines
+a 288 132  lines
+a 289 134  lines
+a 290 130  lines
+a 291 132  lines
+a 292 130  lines
+a 293 131  lines
+a 294 132  lines
+a 295 130  lines
+a 296 133  lines
+a 297 132  lines
+a 298 131  lines
+a 299 132  lines
+b 0 163  lines
+b 1 165  lines
+b 2 164  lines
+b 3 164  lines
+b 4 165  lines
+b 5 165  lines
+b 6 163  lines
+b 7 165  lines
+b 8 164  lines
+b 9 164  lines
+b 10 165  lines
+b 11 164  lines
+b 12 165  lines
+b 13 164  lines
+b 14 166  lines
+b 15 164  lines
+b 16 165  lines
+b 17 164  lines
+b 18 165  lines
+b 19 165  lines
+b 20 165  lines
+b 21 167  lines
+b 22 168  lines
+b 23 165  lines
+b 24 165  lines
+b 25 165  lines
+b 26 165  lines
+b 27 168  lines
+b 28 168  lines
+b 29 165  lines
+b 30 167  lines
+b 31 165  lines
+b 32 166  lines
+b 33 166  lines
+b 34 165  lines
+b 35 163  lines
+b 36 165  lines
+b 37 166  lines
+b 38 167  lines
+b 39 167  lines
+b 40 167  lines
+b 41 165  lines
+b 42 166  lines
+b 43 166  lines
+b 44 167  lines
+b 45 167  lines
+b 46 168  lines
+b 47 166  lines
+b 48 168  lines
+b 49 166  lines
+b 50 167  lines
+b 51 166  lines
+b 52 166  lines
+b 53 166  lines
+b 54 168  lines
+b 55 169  lines
+b 56 166  lines
+b 57 167  lines
+b 58 167  lines
+b 59 168  lines
+b 60 166  lines
+b 61 165  lines
+b 62 167  lines
+b 63 165  lines
+b 64 168  lines
+b 65 166  lines
+b 66 166  lines
+b 67 167  lines
+b 68 165  lines
+b 69 165  lines
+b 70 167  lines
+b 71 167  lines
+b 72 166  lines
+b 73 166  lines
+b 74 166  lines
+b 75 167  lines
+b 76 166  lines
+b 77 168  lines
+b 78 165  lines
+b 79 165  lines
+b 80 166  lines
+b 81 167  lines
+b 82 167  lines
+b 83 167  lines
+b 84 167  lines
+b 85 166  lines
+b 86 168  lines
+b 87 166  lines
+b 88 167  lines
+b 89 167  lines
+b 90 165  lines
+b 91 168  lines
+b 92 165  lines
+b 93 167  lines
+b 94 167  lines
+b 95 168  lines
+b 96 165  lines
+b 97 166  lines
+b 98 165  lines
+b 99 165  lines
+b 100 166  lines
+b 101 166  lines
+b 102 166  lines
+b 103 165  lines
+b 104 165  lines
+b 105 165  lines
+b 106 166  lines
+b 107 165  lines
+b 108 166  lines
+b 109 166  lines
+b 110 168  lines
+b 111 166  lines
+b 112 164  lines
+b 113 165  lines
+b 114 165  lines
+b 115 166  lines
+b 116 164  lines
+b 117 166  lines
+b 118 166  lines
+b 119 167  lines
+b 120 165  lines
+b 121 165  lines
+b 122 164  lines
+b 123 166  lines
+b 124 165  lines
+b 125 166  lines
+b 126 167  lines
+b 127 167  lines
+b 128 165  lines
+b 129 166  lines
+b 130 167  lines
+b 131 165  lines
+b 132 165  lines
+b 133 166  lines
+b 134 166  lines
+No peaks found
+b 135 0  lines
+b 136 166  lines
+b 137 166  lines
+b 138 166  lines
+b 139 165  lines
+b 140 166  lines
+b 141 168  lines
+b 142 165  lines
+b 143 167  lines
+b 144 163  lines
+b 145 164  lines
+b 146 165  lines
+b 147 164  lines
+b 148 164  lines
+b 149 163  lines
+b 150 167  lines
+b 151 164  lines
+b 152 164  lines
+b 153 164  lines
+b 154 164  lines
+b 155 164  lines
+b 156 167  lines
+b 157 165  lines
+b 158 167  lines
+b 159 164  lines
+b 160 165  lines
+b 161 166  lines
+b 162 165  lines
+b 163 166  lines
+b 164 165  lines
+b 165 164  lines
+b 166 167  lines
+b 167 165  lines
+b 168 166  lines
+b 169 164  lines
+b 170 168  lines
+b 171 164  lines
+b 172 164  lines
+b 173 164  lines
+b 174 164  lines
+b 175 165  lines
+b 176 166  lines
+b 177 165  lines
+b 178 164  lines
+b 179 166  lines
+b 180 166  lines
+b 181 164  lines
+b 182 164  lines
+b 183 164  lines
+b 184 162  lines
+b 185 163  lines
+b 186 164  lines
+b 187 165  lines
+b 188 169  lines
+b 189 165  lines
+b 190 164  lines
+b 191 163  lines
+b 192 166  lines
+b 193 165  lines
+b 194 164  lines
+b 195 163  lines
+b 196 163  lines
+b 197 165  lines
+b 198 163  lines
+b 199 164  lines
+b 200 165  lines
+b 201 164  lines
+b 202 166  lines
+b 203 167  lines
+b 204 165  lines
+b 205 164  lines
+b 206 163  lines
+b 207 164  lines
+b 208 166  lines
+b 209 167  lines
+b 210 163  lines
+b 211 164  lines
+b 212 165  lines
+b 213 166  lines
+b 214 166  lines
+b 215 164  lines
+b 216 164  lines
+b 217 164  lines
+b 218 164  lines
+b 219 165  lines
+b 220 165  lines
+b 221 165  lines
+b 222 164  lines
+b 223 166  lines
+b 224 164  lines
+b 225 165  lines
+b 226 164  lines
+b 227 162  lines
+b 228 163  lines
+b 229 163  lines
+b 230 163  lines
+b 231 164  lines
+b 232 164  lines
+b 233 166  lines
+b 234 166  lines
+b 235 164  lines
+b 236 164  lines
+b 237 164  lines
+b 238 164  lines
+b 239 164  lines
+b 240 166  lines
+b 241 166  lines
+b 242 166  lines
+b 243 164  lines
+b 244 166  lines
+b 245 166  lines
+b 246 164  lines
+b 247 166  lines
+b 248 165  lines
+b 249 165  lines
+b 250 165  lines
+b 251 164  lines
+b 252 166  lines
+b 253 166  lines
+b 254 164  lines
+b 255 164  lines
+b 256 162  lines
+b 257 163  lines
+b 258 162  lines
+b 259 166  lines
+b 260 165  lines
+b 261 166  lines
+b 262 165  lines
+b 263 165  lines
+b 264 167  lines
+b 265 167  lines
+b 266 167  lines
+b 267 165  lines
+b 268 166  lines
+b 269 164  lines
+b 270 165  lines
+b 271 165  lines
+b 272 166  lines
+b 273 164  lines
+b 274 165  lines
+No peaks found
+b 275 0  lines
+b 276 165  lines
+b 277 165  lines
+b 278 167  lines
+No peaks found
+b 279 0  lines
+b 280 167  lines
+b 281 167  lines
+b 282 167  lines
+b 283 166  lines
+b 284 165  lines
+b 285 165  lines
+b 286 166  lines
+b 287 164  lines
+b 288 165  lines
+b 289 168  lines
+b 290 167  lines
+b 291 166  lines
+b 292 166  lines
+b 293 166  lines
+b 294 165  lines
+b 295 165  lines
+b 296 167  lines
+b 297 166  lines
+b 298 166  lines
+b 299 168  lines
+c 0 206  lines
+c 1 207  lines
+c 2 207  lines
+c 3 208  lines
+c 4 208  lines
+c 5 208  lines
+c 6 208  lines
+c 7 208  lines
+c 8 207  lines
+c 9 208  lines
+c 10 207  lines
+c 11 209  lines
+c 12 208  lines
+c 13 208  lines
+c 14 208  lines
+c 15 209  lines
+c 16 207  lines
+c 17 208  lines
+c 18 209  lines
+c 19 209  lines
+c 20 208  lines
+c 21 208  lines
+c 22 208  lines
+c 23 208  lines
+c 24 208  lines
+c 25 209  lines
+c 26 209  lines
+c 27 208  lines
+c 28 208  lines
+c 29 208  lines
+c 30 209  lines
+c 31 208  lines
+c 32 208  lines
+c 33 208  lines
+c 34 208  lines
+c 35 207  lines
+c 36 210  lines
+c 37 208  lines
+c 38 208  lines
+c 39 209  lines
+c 40 209  lines
+c 41 208  lines
+c 42 208  lines
+c 43 209  lines
+c 44 208  lines
+c 45 208  lines
+c 46 209  lines
+c 47 210  lines
+c 48 209  lines
+c 49 209  lines
+c 50 209  lines
+c 51 208  lines
+c 52 207  lines
+c 53 210  lines
+c 54 208  lines
+c 55 208  lines
+c 56 208  lines
+c 57 210  lines
+c 58 208  lines
+c 59 208  lines
+c 60 208  lines
+c 61 208  lines
+c 62 208  lines
+c 63 208  lines
+c 64 208  lines
+c 65 208  lines
+c 66 207  lines
+c 67 209  lines
+c 68 208  lines
+c 69 209  lines
+c 70 209  lines
+c 71 208  lines
+c 72 208  lines
+c 73 209  lines
+c 74 208  lines
+c 75 208  lines
+c 76 208  lines
+c 77 208  lines
+c 78 209  lines
+c 79 206  lines
+c 80 207  lines
+c 81 206  lines
+c 82 208  lines
+c 83 208  lines
+c 84 208  lines
+c 85 208  lines
+c 86 206  lines
+c 87 208  lines
+c 88 208  lines
+c 89 208  lines
+c 90 207  lines
+c 91 207  lines
+c 92 208  lines
+c 93 207  lines
+c 94 207  lines
+c 95 207  lines
+c 96 206  lines
+c 97 206  lines
+c 98 207  lines
+c 99 209  lines
+c 100 210  lines
+c 101 208  lines
+c 102 208  lines
+c 103 208  lines
+c 104 208  lines
+c 105 208  lines
+c 106 208  lines
+c 107 208  lines
+c 108 208  lines
+c 109 208  lines
+c 110 208  lines
+c 111 208  lines
+c 112 208  lines
+c 113 208  lines
+c 114 209  lines
+c 115 208  lines
+c 116 208  lines
+c 117 209  lines
+c 118 208  lines
+c 119 208  lines
+c 120 209  lines
+c 121 207  lines
+c 122 207  lines
+c 123 206  lines
+c 124 209  lines
+c 125 208  lines
+c 126 207  lines
+c 127 208  lines
+c 128 209  lines
+c 129 209  lines
+c 130 209  lines
+c 131 209  lines
+c 132 208  lines
+c 133 207  lines
+c 134 206  lines
+No peaks found
+c 135 0  lines
+c 136 207  lines
+c 137 209  lines
+c 138 208  lines
+c 139 208  lines
+c 140 208  lines
+c 141 208  lines
+c 142 208  lines
+c 143 208  lines
+c 144 208  lines
+c 145 208  lines
+c 146 209  lines
+c 147 208  lines
+c 148 210  lines
+c 149 207  lines
+c 150 209  lines
+c 151 208  lines
+c 152 208  lines
+c 153 209  lines
+c 154 210  lines
+c 155 208  lines
+c 156 209  lines
+c 157 209  lines
+c 158 208  lines
+c 159 208  lines
+c 160 209  lines
+c 161 209  lines
+c 162 207  lines
+c 163 208  lines
+c 164 208  lines
+c 165 208  lines
+c 166 207  lines
+c 167 207  lines
+c 168 208  lines
+c 169 208  lines
+c 170 210  lines
+c 171 209  lines
+c 172 207  lines
+c 173 208  lines
+c 174 210  lines
+c 175 208  lines
+c 176 209  lines
+c 177 208  lines
+c 178 208  lines
+c 179 208  lines
+c 180 208  lines
+c 181 207  lines
+c 182 208  lines
+c 183 209  lines
+c 184 207  lines
+c 185 208  lines
+c 186 207  lines
+c 187 207  lines
+c 188 207  lines
+c 189 208  lines
+c 190 209  lines
+c 191 210  lines
+c 192 208  lines
+c 193 207  lines
+c 194 208  lines
+c 195 207  lines
+c 196 209  lines
+c 197 207  lines
+c 198 209  lines
+c 199 208  lines
+c 200 207  lines
+c 201 208  lines
+c 202 207  lines
+c 203 207  lines
+c 204 207  lines
+c 205 207  lines
+c 206 207  lines
+c 207 208  lines
+c 208 207  lines
+c 209 206  lines
+c 210 208  lines
+c 211 208  lines
+c 212 208  lines
+c 213 210  lines
+c 214 209  lines
+c 215 207  lines
+c 216 207  lines
+c 217 209  lines
+c 218 207  lines
+c 219 208  lines
+c 220 208  lines
+c 221 209  lines
+c 222 209  lines
+c 223 207  lines
+c 224 208  lines
+c 225 208  lines
+c 226 208  lines
+c 227 208  lines
+c 228 209  lines
+c 229 209  lines
+c 230 209  lines
+c 231 209  lines
+c 232 210  lines
+c 233 209  lines
+c 234 211  lines
+c 235 208  lines
+c 236 208  lines
+c 237 207  lines
+c 238 208  lines
+c 239 208  lines
+c 240 208  lines
+c 241 208  lines
+c 242 209  lines
+c 243 209  lines
+c 244 209  lines
+c 245 208  lines
+c 246 209  lines
+c 247 207  lines
+c 248 207  lines
+c 249 207  lines
+c 250 207  lines
+c 251 207  lines
+c 252 209  lines
+c 253 207  lines
+c 254 208  lines
+c 255 209  lines
+c 256 207  lines
+c 257 207  lines
+c 258 208  lines
+c 259 207  lines
+c 260 207  lines
+c 261 208  lines
+c 262 208  lines
+c 263 208  lines
+c 264 208  lines
+c 265 209  lines
+c 266 208  lines
+c 267 208  lines
+c 268 208  lines
+c 269 211  lines
+c 270 208  lines
+c 271 207  lines
+c 272 208  lines
+c 273 209  lines
+c 274 208  lines
+No peaks found
+c 275 0  lines
+c 276 208  lines
+c 277 209  lines
+c 278 209  lines
+No peaks found
+c 279 0  lines
+c 280 207  lines
+c 281 210  lines
+c 282 209  lines
+c 283 208  lines
+c 284 209  lines
+c 285 209  lines
+c 286 209  lines
+c 287 210  lines
+c 288 207  lines
+c 289 207  lines
+c 290 206  lines
+c 291 208  lines
+c 292 207  lines
+c 293 207  lines
+c 294 206  lines
+c 295 205  lines
+c 296 207  lines
+c 297 208  lines
+c 298 208  lines
+c 299 206  lines
+Writing FPI lines to  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/fpi/apFPILines-43740011.fits
+ 
+Determine median wavelength per FPI lines
+-----------------------------------------
+Pruning  148  FPI lines with unsuccessful Gaussian fits
+Calculating initial wavelengths using the wavelength solution
+CHIP   NUM         X       HEIGHT       FLUX        WAVE       WSIG   NFIBER
+  a    1/136  2008.7234  16942.7381  18361.0986  16476.8270   0.0065   296
+  a    2/136  1994.6016  16873.6946  18187.6211  16480.4601   0.0057   297
+  a    3/136  1980.4542  17152.6246  18465.7246  16484.0960   0.0057   294
+  a    4/136  1966.2878  17386.4959  18605.9326  16487.7334   0.0056   296
+  a    5/136  1952.0968  17471.3242  18839.2725  16491.3714   0.0054   296
+  a    6/136  1937.8859  17669.0839  18893.1914  16495.0127   0.0053   297
+  a    7/136  1923.6474  17659.9804  18936.4492  16498.6542   0.0051   294
+  a    8/136  1909.3808  17698.7654  18859.2617  16502.2980   0.0055   295
+  a    9/136  1895.0970  17970.3139  19343.9688  16505.9435   0.0053   295
+  a   10/136  1880.7893  18012.4828  19229.2041  16509.5899   0.0048   296
+  a   11/136  1866.4581  17983.8310  18843.5361  16513.2389   0.0050   296
+  a   12/136  1852.0991  17745.7637  18910.9805  16516.8887   0.0046   297
+  a   13/136  1837.7215  18331.5333  19727.6191  16520.5404   0.0051   296
+  a   14/136  1823.3131  18606.9104  19518.1211  16524.1941   0.0049   296
+  a   15/136  1808.8970  18405.1175  19418.9805  16527.8481   0.0050   296
+  a   16/136  1794.4398  18551.9365  19354.9297  16531.5045   0.0055   297
+  a   17/136  1779.9613  18567.6881  19579.5117  16535.1623   0.0050   297
+  a   18/136  1765.4466  18829.0848  19373.1758  16538.8218   0.0047   295
+  a   19/136  1750.9384  18654.3855  19761.0967  16542.4830   0.0052   296
+  a   20/136  1736.3797  18820.9418  19213.1191  16546.1463   0.0052   296
+  a   21/136  1721.8045  19148.2299  19903.5938  16549.8102   0.0054   297
+  a   22/136  1707.1994  19354.8222  20119.3379  16553.4764   0.0053   296
+  a   23/136  1692.5938  19277.7307  19873.5703  16557.1439   0.0061   298
+  a   24/136  1677.9299  19304.7741  20160.1094  16560.8136   0.0055   295
+  a   25/136  1663.2538  19591.0097  20220.0996  16564.4845   0.0057   293
+  a   26/136  1648.5624  19413.2759  19821.2227  16568.1563   0.0056   294
+  a   27/136  1633.8267  19540.6452  20359.8066  16571.8308   0.0059   297
+  a   28/136  1619.0724  19638.2417  20507.0195  16575.5072   0.0062   297
+  a   29/136  1604.2997  19848.5715  20263.4023  16579.1842   0.0063   297
+  a   30/136  1589.5071  19749.4514  20006.7900  16582.8634   0.0064   298
+  a   31/136  1574.6798  19826.3974  20439.7812  16586.5436   0.0060   298
+  a   32/136  1559.8158  19754.4720  20668.8984  16590.2264   0.0065   298
+  a   33/136  1544.9457  20213.9464  21189.3086  16593.9104   0.0070   297
+  a   34/136  1530.0361  20136.0025  20954.7637  16597.5961   0.0066   297
+  a   35/136  1530.0361  20136.0025  20954.7637  16597.5961   0.0066   297
+  a   36/136  1515.0961  20423.3132  20893.4609  16601.2827   0.0068   297
+  a   37/136  1500.1386  20322.8478  20669.3750  16604.9710   0.0069   295
+  a   38/136  1485.1528  20116.8442  20831.2842  16608.6617   0.0068   298
+  a   39/136  1485.1528  20116.8442  20831.2842  16608.6617   0.0068   298
+  a   40/136  1470.1507  20458.9496  20841.9551  16612.3538   0.0072   297
+  a   41/136  1455.0991  20228.6787  20897.1055  16616.0471   0.0073   298
+  a   42/136  1440.0505  20312.6186  20895.8564  16619.7424   0.0070   296
+  a   43/136  1424.9650  20460.3613  20847.0117  16623.4384   0.0075   296
+  a   44/136  1409.8286  20619.6740  21114.4082  16627.1384   0.0068   297
+  a   45/136  1394.6964  20812.4901  20790.2959  16630.8372   0.0066   296
+  a   46/136  1379.5205  20633.2899  20596.4600  16634.5405   0.0072   296
+  a   47/136  1364.3103  20647.8300  20696.7148  16638.2435   0.0064   297
+  a   48/136  1349.0822  20811.4874  21424.1934  16641.9487   0.0069   297
+  a   49/136  1333.8421  20704.2155  21056.0527  16645.6550   0.0061   297
+  a   50/136  1333.8421  20704.2155  21056.0527  16645.6550   0.0061   297
+  a   51/136  1318.5313  20753.5150  20374.1025  16649.3641   0.0069   294
+  a   52/136  1303.2349  20875.4654  20766.5547  16653.0751   0.0063   296
+  a   53/136  1287.9077  21099.8210  21460.1328  16656.7864   0.0056   297
+  a   54/136  1272.5233  21076.8027  20476.6270  16660.4993   0.0066   296
+  a   55/136  1257.1396  20566.4766  21224.6582  16664.2145   0.0061   298
+  a   56/136  1241.7131  20967.4346  20698.2207  16667.9307   0.0058   296
+  a   57/136  1226.2414  20851.7831  20950.8945  16671.6494   0.0058   297
+  a   58/136  1210.7759  20967.5064  20665.1016  16675.3694   0.0057   297
+  a   59/136  1195.2616  21076.5840  21368.3633  16679.0909   0.0061   297
+  a   60/136  1179.7043  20891.7507  20771.4844  16682.8147   0.0058   297
+  a   61/136  1164.1507  20890.2603  21391.7148  16686.5398   0.0057   297
+  a   62/136  1148.5480  20865.0419  20454.7285  16690.2662   0.0054   294
+  a   63/136  1132.9223  20878.8008  21141.5254  16693.9945   0.0055   296
+  a   64/136  1117.2475  20754.1680  20872.3926  16697.7256   0.0060   297
+  a   65/136  1117.2475  20754.1680  20872.3926  16697.7256   0.0060   297
+  a   66/136  1101.5886  21096.9668  20836.4434  16701.4571   0.0058   297
+  a   67/136  1085.8618  21033.3987  21378.6406  16705.1906   0.0054   297
+  a   68/136  1070.1318  21167.2493  21739.8477  16708.9255   0.0056   297
+  a   69/136  1054.3274  20882.5074  21283.2461  16712.6620   0.0057   298
+  a   70/136  1038.5152  21167.6659  20694.0508  16716.4006   0.0065   295
+  a   71/136  1022.6810  20840.9302  20531.9355  16720.1416   0.0058   297
+  a   72/136  1006.8267  20948.6239  21570.3594  16723.8826   0.0059   296
+  a   73/136   990.9119  20954.5142  22821.6875  16727.6264   0.0053   297
+  a   74/136   974.9829  20763.5705  22850.5645  16731.3715   0.0050   295
+  a   75/136   959.0321  20826.4707  22152.8320  16735.1184   0.0052   297
+  a   76/136   943.0133  20689.4451  22752.5732  16738.8673   0.0051   296
+  a   77/136   926.9977  20554.9169  23579.1250  16742.6178   0.0050   297
+  a   78/136   910.9133  20340.7296  22605.0625  16746.3707   0.0059   296
+  a   79/136   894.8449  20913.4855  23331.6367  16750.1233   0.0052   297
+  a   80/136   878.7076  20841.7023  21796.1875  16753.8788   0.0051   296
+  a   81/136   878.7076  20841.7023  21796.1875  16753.8788   0.0051   296
+  a   82/136   862.5386  20905.4206  21594.0986  16757.6355   0.0050   296
+  a   83/136   846.3547  20654.3181  22367.2070  16761.3951   0.0045   293
+  a   84/136   830.1416  20704.3278  23300.7031  16765.1556   0.0048   295
+  a   85/136   813.8977  20696.0688  23591.8379  16768.9179   0.0049   296
+  a   86/136   797.6178  20341.6689  22811.6133  16772.6814   0.0048   297
+  a   87/136   781.2947  20653.4643  22846.0977  16776.4466   0.0046   295
+  a   88/136   764.9296  20365.5164  23154.0615  16780.2139   0.0053   296
+  a   89/136   748.5499  20069.8088  22099.6289  16783.9828   0.0046   295
+  a   90/136   732.1282  20205.4815  22870.0273  16787.7531   0.0050   296
+  a   91/136   715.6626  20184.3860  23083.8818  16791.5256   0.0050   296
+  a   92/136   699.1787  20546.4568  22995.2090  16795.3009   0.0053   293
+  a   93/136   682.6594  20379.9408  23323.4590  16799.0756   0.0054   296
+  a   94/136   666.1083  20202.9935  22730.6553  16802.8533   0.0054   296
+  a   95/136   666.1083  20202.9935  22730.6553  16802.8533   0.0054   296
+  a   96/136   649.5040  20319.5094  22850.2520  16806.6327   0.0052   296
+  a   97/136   632.8930  20423.3545  22969.7422  16810.4140   0.0059   297
+  a   98/136   616.2371  20317.7825  22904.6855  16814.1964   0.0059   298
+  a   99/136   599.5405  20106.1137  22769.8770  16817.9804   0.0060   296
+  a  100/136   582.8161  20023.7667  23494.1621  16821.7668   0.0058   296
+  a  101/136   582.8161  20023.7667  23494.1621  16821.7668   0.0058   296
+  a  102/136   566.0323  19769.2434  22503.0898  16825.5546   0.0057   296
+  a  103/136   549.2340  20082.3499  22636.6152  16829.3440   0.0053   295
+  a  104/136   549.2340  20082.3499  22636.6152  16829.3440   0.0053   295
+  a  105/136   532.3931  19827.2356  22608.2500  16833.1354   0.0063   297
+  a  106/136   515.5092  19659.9238  22322.4541  16836.9294   0.0068   296
+  a  107/136   498.6005  20001.7977  23169.6953  16840.7240   0.0058   295
+  a  108/136   481.6448  19948.0000  23125.6914  16844.5195   0.0055   298
+  a  109/136   464.6558  19951.0652  23242.9873  16848.3178   0.0051   294
+  a  110/136   447.6640  19577.7946  22571.7998  16852.1173   0.0052   296
+  a  111/136   430.5936  19403.5775  22193.8242  16855.9192   0.0056   297
+  a  112/136   413.4956  19416.7201  22197.5078  16859.7227   0.0058   295
+  a  113/136   396.3367  19370.6578  21976.8047  16863.5260   0.0054   297
+  a  114/136   379.0819  18952.5640  22305.6094  16867.3333   0.0053   277
+  a  115/136   361.9594  18864.2715  23027.1533  16871.1415   0.0050   294
+  a  116/136   344.7184  18602.7201  22193.7188  16874.9516   0.0052   296
+  a  117/136   327.4211  18642.5197  21922.0781  16878.7630   0.0054   293
+  a  118/136   310.1249  18751.9790  22674.6602  16882.5763   0.0058   296
+  a  119/136   292.7374  18661.2833  22775.1602  16886.3912   0.0054   296
+  a  120/136   275.3206  18605.6625  22196.7188  16890.2074   0.0055   297
+  a  121/136   257.9073  18358.5823  22716.3203  16894.0259   0.0056   296
+  a  122/136   240.4525  18113.2154  22194.7422  16897.8465   0.0059   297
+  a  123/136   222.9233  17782.5563  21511.7422  16901.6683   0.0061   294
+  a  124/136   205.3583  17471.1220  21945.4766  16905.4910   0.0064   295
+  a  125/136   187.7627  17367.8085  21874.3438  16909.3170   0.0069   297
+  a  126/136   170.1019  17188.1574  21988.8984  16913.1442   0.0065   297
+  a  127/136   152.4000  16892.6345  21370.8789  16916.9725   0.0064   297
+  a  128/136   134.6772  16731.3882  21034.0820  16920.8030   0.0059   295
+  a  129/136   116.9291  16338.7488  20423.0586  16924.6334   0.0067   296
+  a  130/136    99.1446  16259.4628  20536.9863  16928.4678   0.0079   294
+  a  131/136    81.3023  15973.1634  20061.4043  16932.3022   0.0080   291
+  a  132/136    63.4451  15921.1860  20319.8789  16936.1390   0.0079   288
+  a  133/136    45.5356  15632.9557  19844.1484  16939.9766   0.0087   284
+  a  134/136    27.5893  15210.2828  19452.9609  16943.8156   0.0088   280
+  a  135/136     9.6781  14951.7346  19111.0762  16947.6553   0.0088   267
+  a  136/136        nan         nan         nan         nan      nan     0
+CHIP   NUM         X       HEIGHT       FLUX        WAVE       WSIG   NFIBER
+  b    1/169  2011.0740  14406.3304  15853.4731  15861.2879   0.0062   296
+  b    2/169  1999.9453  14355.1486  15634.0264  15864.6554   0.0066   297
+  b    3/169  1988.8123  14163.2122  15831.6953  15868.0249   0.0063   297
+  b    4/169  1977.6671  14244.9471  15883.4785  15871.3956   0.0067   295
+  b    5/169  1966.5052  14195.4244  15572.8916  15874.7671   0.0066   297
+  b    6/169  1955.3277  14245.6792  15673.3086  15878.1404   0.0070   293
+  b    7/169  1944.1375  14054.1462  15590.8447  15881.5154   0.0068   297
+  b    8/169  1932.9474  13832.7081  15230.7778  15884.8923   0.0064   296
+  b    9/169  1921.7274  13800.4829  15140.5972  15888.2694   0.0063   296
+  b   10/169  1910.5102  13811.1471  15015.7773  15891.6498   0.0066   296
+  b   11/169  1899.2645  13657.9236  14903.5312  15895.0296   0.0061   297
+  b   12/169  1888.0216  13514.3606  14914.3320  15898.4120   0.0061   297
+  b   13/169  1876.7469  13620.0597  14984.3428  15901.7963   0.0062   295
+  b   14/169  1865.4745  13515.4163  14619.0527  15905.1801   0.0060   297
+  b   15/169  1854.1704  13462.7014  14916.5928  15908.5679   0.0064   297
+  b   16/169  1842.8800  13595.3834  14918.8711  15911.9562   0.0059   293
+  b   17/169  1831.5662  13566.2344  14934.2236  15915.3458   0.0062   294
+  b   18/169  1820.2141  13322.1755  14672.8760  15918.7361   0.0067   295
+  b   19/169  1808.8605  13226.9738  14519.0254  15922.1285   0.0064   293
+  b   20/169  1797.5115  13238.0863  14546.1699  15925.5228   0.0065   294
+  b   21/169  1786.1370  13438.2597  14716.7812  15928.9172   0.0066   297
+  b   22/169  1774.7501  13352.3582  14568.5859  15932.3138   0.0066   297
+  b   23/169  1763.3654  13201.9654  14446.1396  15935.7116   0.0066   298
+  b   24/169  1751.9605  13238.7913  14520.8916  15939.1109   0.0058   295
+  b   25/169  1740.5267  13106.6150  14030.8789  15942.5105   0.0065   297
+  b   26/169  1729.0855  13000.1339  14282.2031  15945.9142   0.0064   295
+  b   27/169  1717.6383  12959.3114  14057.6680  15949.3173   0.0058   295
+  b   28/169  1706.1660  12923.4889  14013.7979  15952.7225   0.0059   297
+  b   29/169  1694.6745  12802.3307  13896.4600  15956.1299   0.0061   296
+  b   30/169  1683.1813  12827.9880  13979.7510  15959.5374   0.0065   297
+  b   31/169  1671.6864  12601.8582  13726.3970  15962.9466   0.0065   296
+  b   32/169  1660.1530  12590.4568  13711.9048  15966.3583   0.0057   296
+  b   33/169  1648.6175  12733.0802  13709.9194  15969.7708   0.0059   296
+  b   34/169  1637.0730  12621.0674  13902.5996  15973.1844   0.0061   297
+  b   35/169  1625.4992  12720.2927  13760.7070  15976.6003   0.0057   297
+  b   36/169  1613.9269  12520.3421  13657.3491  15980.0167   0.0063   296
+  b   37/169  1602.3260  12391.8835  13534.9600  15983.4351   0.0064   297
+  b   38/169  1590.7070  12331.7802  13401.1797  15986.8558   0.0063   293
+  b   39/169  1579.0995  12166.4813  13658.8594  15990.2763   0.0061   294
+  b   40/169  1567.4649  12421.7327  13406.6816  15993.7004   0.0056   295
+  b   41/169  1555.8142  12232.4053  13558.0933  15997.1236   0.0061   296
+  b   42/169  1544.1532  12370.9642  13535.9131  16000.5488   0.0056   296
+  b   43/169  1532.4723  12333.0930  13404.9731  16003.9761   0.0056   296
+  b   44/169  1520.7726  12021.4267  13053.7920  16007.4043   0.0057   294
+  b   45/169  1509.0706  11912.1386  13312.7607  16010.8346   0.0058   297
+  b   46/169  1497.3471  11830.5648  13143.4473  16014.2662   0.0060   295
+  b   47/169  1485.6104  11845.6267  12849.6074  16017.6992   0.0056   295
+  b   48/169  1473.8407  11812.2112  13125.1055  16021.1337   0.0054   296
+  b   49/169  1462.0818  11755.1502  13070.8828  16024.5698   0.0063   297
+  b   50/169  1450.3144  11676.0595  12701.5059  16028.0075   0.0062   296
+  b   51/169  1438.5092  11793.8876  12797.0220  16031.4457   0.0057   296
+  b   52/169  1426.7023  11734.5242  12644.8857  16034.8868   0.0056   296
+  b   53/169  1414.8605  11731.5065  13000.9043  16038.3286   0.0056   296
+  b   54/169  1403.0467  11709.8106  12833.2051  16041.7714   0.0053   296
+  b   55/169  1391.1774  11597.4967  12932.1465  16045.2168   0.0060   297
+  b   56/169  1379.2984  11389.2008  12442.8018  16048.6628   0.0057   294
+  b   57/169  1367.4196  11554.1566  12718.3730  16052.1106   0.0060   297
+  b   58/169  1355.5282  11580.6478  12624.5850  16055.5595   0.0056   294
+  b   59/169  1355.5282  11580.6478  12624.5850  16055.5595   0.0056   294
+  b   60/169  1343.6092  11613.2898  12631.0610  16059.0102   0.0057   296
+  b   61/169  1331.6938  11663.5169  12765.9316  16062.4619   0.0054   297
+  b   62/169  1319.7242  11586.8389  12498.5527  16065.9162   0.0055   297
+  b   63/169  1307.7769  11451.7206  12290.1123  16069.3709   0.0057   296
+  b   64/169  1295.8071  11422.5697  12300.7852  16072.8282   0.0053   297
+  b   65/169  1283.8072  11508.4548  12409.4688  16076.2860   0.0054   296
+  b   66/169  1271.8049  11467.8844  12370.9497  16079.7457   0.0059   296
+  b   67/169  1259.7797  11366.1876  12060.0176  16083.2069   0.0053   297
+  b   68/169  1247.7403  11488.2256  12246.2744  16086.6690   0.0055   296
+  b   69/169  1235.7064  11628.0938  12529.4238  16090.1332   0.0055   295
+  b   70/169  1223.6210  11586.0644  12441.4355  16093.5988   0.0059   297
+  b   71/169  1211.5366  11717.9774  12665.7754  16097.0662   0.0057   295
+  b   72/169  1199.4511  11622.8031  12567.4551  16100.5343   0.0060   296
+  b   73/169  1187.3276  11702.9410  12869.1860  16104.0042   0.0054   296
+  b   74/169  1175.1947  11674.8234  12415.6455  16107.4749   0.0055   297
+  b   75/169  1163.0508  11581.7662  12803.8936  16110.9480   0.0057   297
+  b   76/169  1150.8747  11684.0173  12644.3115  16114.4231   0.0062   296
+  b   77/169  1138.7079  11716.8460  12791.4375  16117.8988   0.0061   297
+  b   78/169  1126.5214  11642.7446  12587.3262  16121.3758   0.0060   297
+  b   79/169  1114.3052  11780.9183  12845.1211  16124.8546   0.0055   297
+  b   80/169  1102.0766  11726.3995  12872.6064  16128.3354   0.0051   297
+  b   81/169  1102.0766  11726.3995  12872.6064  16128.3354   0.0051   297
+  b   82/169  1089.8265  11809.5445  12560.2676  16131.8165   0.0055   296
+  b   83/169  1077.5695  11771.1456  12773.2549  16135.3002   0.0054   296
+  b   84/169  1065.2968  11894.8429  13074.0513  16138.7852   0.0055   296
+  b   85/169  1053.0171  11980.8238  13023.7969  16142.2713   0.0059   296
+  b   86/169  1040.7003  11879.7365  12406.4434  16145.7595   0.0059   292
+  b   87/169  1028.3550  11806.6958  12589.7617  16149.2484   0.0054   290
+  b   88/169  1016.0298  11878.8231  12983.2168  16152.7387   0.0054   293
+  b   89/169  1003.6855  11868.6014  13104.4453  16156.2316   0.0058   296
+  b   90/169   991.3113  12034.6410  13114.1040  16159.7259   0.0054   296
+  b   91/169   978.9149  12091.2095  13046.4053  16163.2206   0.0055   296
+  b   92/169   966.5141  12149.6971  12999.4351  16166.7179   0.0053   296
+  b   93/169   954.0801  12093.5743  13404.1777  16170.2159   0.0057   292
+  b   94/169   941.6551  12253.0975  13175.7998  16173.7160   0.0056   296
+  b   95/169   929.1849  12284.6966  13459.0605  16177.2175   0.0057   296
+  b   96/169   916.7312  12321.7245  13289.5508  16180.7205   0.0051   297
+  b   97/169   904.2368  12272.4899  13178.5713  16184.2251   0.0053   298
+  b   98/169   891.7153  12551.2507  13241.3818  16187.7308   0.0053   297
+  b   99/169   879.1972  12353.4125  13704.2368  16191.2381   0.0053   296
+  b  100/169   866.6668  12465.6063  13520.1807  16194.7476   0.0056   297
+  b  101/169   854.1032  12554.8354  13590.4517  16198.2577   0.0057   296
+  b  102/169   841.5299  12566.9400  13366.1460  16201.7698   0.0053   296
+  b  103/169   828.9302  12335.3909  12928.2500  16205.2832   0.0054   291
+  b  104/169   816.3253  12608.2386  13548.4883  16208.7978   0.0050   292
+  b  105/169   803.6608  12253.3788  13047.2822  16212.3145   0.0057   290
+  b  106/169   791.0379  12815.6484  13989.5654  16215.8329   0.0054   295
+  b  107/169   778.3671  12665.9136  13624.3760  16219.3524   0.0057   293
+  b  108/169   765.7198  12752.2490  13586.1772  16222.8735   0.0055   296
+  b  109/169   753.0132  12686.5046  13553.8301  16226.3957   0.0058   297
+  b  110/169   740.2994  12755.3555  13669.4619  16229.9200   0.0052   295
+  b  111/169   727.5651  12844.8310  13626.7524  16233.4455   0.0060   296
+  b  112/169   714.8279  12869.3439  13393.1182  16236.9729   0.0058   294
+  b  113/169   702.0491  12822.7099  13681.0127  16240.5016   0.0056   297
+  b  114/169   689.2597  12975.2288  13572.3496  16244.0320   0.0057   297
+  b  115/169   676.4655  13171.1791  13881.7051  16247.5634   0.0051   295
+  b  116/169   676.4655  13171.1791  13881.7051  16247.5634   0.0051   295
+  b  117/169   663.6396  13032.9226  13809.0498  16251.0965   0.0057   297
+  b  118/169   650.8101  12940.3310  13526.1602  16254.6312   0.0063   297
+  b  119/169   637.9441  12844.5120  13711.6484  16258.1670   0.0059   295
+  b  120/169   625.0820  12981.2295  13737.1963  16261.7057   0.0052   297
+  b  121/169   612.1850  13019.1850  13825.3486  16265.2449   0.0059   298
+  b  122/169   599.2587  13183.4980  14073.2500  16268.7850   0.0067   296
+  b  123/169   586.3497  12986.6285  13964.1123  16272.3278   0.0052   297
+  b  124/169   573.3949  13115.1193  13949.9844  16275.8718   0.0058   297
+  b  125/169   560.4249  13191.0092  13937.8086  16279.4168   0.0054   295
+  b  126/169   547.4412  13032.9843  13782.6113  16282.9641   0.0053   295
+  b  127/169   534.4358  13153.1161  13659.4746  16286.5123   0.0060   296
+  b  128/169   521.4097  13412.6081  13979.5918  16290.0621   0.0058   295
+  b  129/169   508.3791  13308.3107  13978.4277  16293.6132   0.0059   297
+  b  130/169   495.2975  13130.7742  14200.5498  16297.1663   0.0059   296
+  b  131/169   482.2377  13145.1407  13983.7070  16300.7210   0.0064   297
+  b  132/169   469.1417  13296.7423  14537.0547  16304.2777   0.0060   297
+  b  133/169   456.0246  13439.9753  14443.6318  16307.8350   0.0063   297
+  b  134/169   442.8798  13302.3551  14303.2197  16311.3941   0.0067   297
+  b  135/169   429.7418  13212.6821  14231.4268  16314.9548   0.0066   297
+  b  136/169   416.5577  13360.5865  13903.9160  16318.5167   0.0070   297
+  b  137/169   403.3661  13470.2506  14556.9878  16322.0807   0.0062   296
+  b  138/169   390.1626  13385.3205  14527.6973  16325.6458   0.0070   295
+  b  139/169   376.9158  13573.3107  14408.3906  16329.2133   0.0070   297
+  b  140/169   363.6602  13520.2874  14251.8589  16332.7815   0.0067   296
+  b  141/169   350.4052  13585.3748  14634.8926  16336.3518   0.0067   295
+  b  142/169   337.1158  13636.7755  15111.8032  16339.9234   0.0072   296
+  b  143/169   323.7986  13588.8435  14810.6836  16343.4966   0.0070   297
+  b  144/169   310.4642  13798.6608  14581.9619  16347.0714   0.0068   297
+  b  145/169   297.1137  13799.2654  15062.8125  16350.6489   0.0065   295
+  b  146/169   283.7483  13838.3685  15089.0137  16354.2258   0.0067   297
+  b  147/169   270.3620  13770.6598  14960.0273  16357.8055   0.0061   296
+  b  148/169   256.9539  13906.6999  15191.1182  16361.3859   0.0071   297
+  b  149/169   243.5318  13929.4313  14691.0000  16364.9689   0.0066   297
+  b  150/169   230.0669  13958.5644  15712.8428  16368.5524   0.0068   298
+  b  151/169   216.5973  14192.6152  15138.3262  16372.1388   0.0072   296
+  b  152/169   216.5973  14192.6152  15138.3262  16372.1388   0.0072   296
+  b  153/169   203.1079  13904.0041  15382.9834  16375.7253   0.0063   297
+  b  154/169   189.6012  14237.9313  15259.3599  16379.3144   0.0063   296
+  b  155/169   176.0562  14226.9963  15817.1562  16382.9046   0.0068   297
+  b  156/169   162.5121  14189.7258  15253.9438  16386.4970   0.0075   298
+  b  157/169   148.9362  14295.7860  16028.2793  16390.0901   0.0061   297
+  b  158/169   135.3418  14413.2510  15749.4990  16393.6854   0.0062   297
+  b  159/169   121.7366  14362.1523  15320.5000  16397.2817   0.0064   296
+  b  160/169   108.1000  14715.9153  16675.3848  16400.8800   0.0064   296
+  b  161/169    94.4372  14973.3325  16330.6719  16404.4796   0.0066   297
+  b  162/169    80.7435  14848.1014  16094.2559  16408.0807   0.0060   295
+  b  163/169    67.0676  14836.3420  16853.0488  16411.6829   0.0068   297
+  b  164/169    53.3427  14924.5375  16752.4355  16415.2872   0.0069   294
+  b  165/169    53.3427  14924.5375  16752.4355  16415.2872   0.0069   294
+  b  166/169    39.5976  14958.5526  16317.1318  16418.8930   0.0069   297
+  b  167/169    25.8501  15130.8349  16849.4590  16422.4991   0.0067   297
+  b  168/169    11.4324  14358.9536  17400.6992  16426.1105   0.0161   131
+  b  169/169        nan         nan         nan         nan      nan     0
+CHIP   NUM         X       HEIGHT       FLUX        WAVE       WSIG   NFIBER
+  c    1/209  2019.3312  38111.2391  45165.6250  15144.4648   0.0060   295
+  c    2/209  2010.4276  38234.0058  45417.5918  15147.5360   0.0071   296
+  c    3/209  2001.5390  38113.7592  45568.6406  15150.6057   0.0067   295
+  c    4/209  1992.6265  37991.9290  45708.7188  15153.6775   0.0065   295
+  c    5/209  1983.7020  37703.6299  45174.4082  15156.7517   0.0058   296
+  c    6/209  1974.7705  37450.9926  44995.3633  15159.8265   0.0067   295
+  c    7/209  1965.8479  37558.9603  45209.0156  15162.9006   0.0061   297
+  c    8/209  1956.9103  37356.2312  45072.9609  15165.9773   0.0068   297
+  c    9/209  1947.9521  37615.9146  45127.7461  15169.0551   0.0066   296
+  c   10/209  1938.9968  37368.4594  44414.6445  15172.1344   0.0066   297
+  c   11/209  1930.0239  36887.6246  43894.7656  15175.2156   0.0066   297
+  c   12/209  1921.0654  37345.8919  44145.6875  15178.2963   0.0063   297
+  c   13/209  1912.0694  37029.6577  43506.6914  15181.3799   0.0060   297
+  c   14/209  1903.0785  36935.9737  43720.3203  15184.4647   0.0066   297
+  c   15/209  1894.0785  36416.9797  42740.6289  15187.5510   0.0066   296
+  c   16/209  1885.0742  36957.7361  43469.7031  15190.6377   0.0066   297
+  c   17/209  1876.0543  36597.8502  42973.0703  15193.7269   0.0067   297
+  c   18/209  1867.0504  36347.4291  42879.6758  15196.8161   0.0062   297
+  c   19/209  1858.0032  36852.6772  43879.3594  15199.9064   0.0069   297
+  c   20/209  1848.9484  36589.4830  43528.1836  15202.9982   0.0056   293
+  c   21/209  1839.9090  36308.1818  43561.0352  15206.0925   0.0056   297
+  c   22/209  1830.8558  36630.0278  44088.9453  15209.1866   0.0057   296
+  c   23/209  1821.7776  36538.3103  43992.2461  15212.2821   0.0054   292
+  c   24/209  1812.7225  36858.3175  43702.3359  15215.3794   0.0057   297
+  c   25/209  1803.6536  36946.3340  44451.9258  15218.4771   0.0064   297
+  c   26/209  1794.5675  37025.8288  44363.7266  15221.5765   0.0061   297
+  c   27/209  1785.4751  36535.0944  43250.0547  15224.6777   0.0057   297
+  c   28/209  1776.3695  36338.7432  42949.7344  15227.7804   0.0053   297
+  c   29/209  1767.2604  36406.0627  43278.6289  15230.8835   0.0055   297
+  c   30/209  1758.1147  36700.6965  43388.4258  15233.9918   0.0065   297
+  c   31/209  1748.9938  36633.0254  43441.1367  15237.0942   0.0048   296
+  c   32/209  1739.8625  36876.3261  43934.2461  15240.2017   0.0052   296
+  c   33/209  1730.7202  36366.7514  43653.6289  15243.3094   0.0051   296
+  c   34/209  1721.5659  36403.3927  43695.2500  15246.4185   0.0049   297
+  c   35/209  1712.4141  35439.2767  42072.7012  15249.5304   0.0047   294
+  c   36/209  1703.2307  35521.1067  42064.0977  15252.6430   0.0056   297
+  c   37/209  1694.0625  35637.2385  41738.5977  15255.7564   0.0052   294
+  c   38/209  1684.8636  36184.6205  43217.8906  15258.8711   0.0049   297
+  c   39/209  1675.6636  36327.2753  43364.5078  15261.9869   0.0050   297
+  c   40/209  1666.4667  36012.8749  42382.0117  15265.1039   0.0050   295
+  c   41/209  1657.2683  35556.0941  41724.5312  15268.2230   0.0049   296
+  c   42/209  1648.0331  35842.3822  42204.6797  15271.3434   0.0044   295
+  c   43/209  1638.8097  36533.3181  43533.0977  15274.4649   0.0051   297
+  c   44/209  1629.5777  36200.9846  43319.8867  15277.5865   0.0046   297
+  c   45/209  1620.3317  35978.8329  42788.8828  15280.7104   0.0048   297
+  c   46/209  1611.0721  36173.4402  42098.9062  15283.8357   0.0050   297
+  c   47/209  1601.8039  35886.9114  42885.3379  15286.9621   0.0049   296
+  c   48/209  1592.5446  35966.2007  43028.5039  15290.0888   0.0046   297
+  c   49/209  1583.2640  36209.8643  42754.6582  15293.2190   0.0043   296
+  c   50/209  1573.9574  35811.5403  42625.1816  15296.3484   0.0039   296
+  c   51/209  1564.6726  36288.7854  43431.6113  15299.4798   0.0046   296
+  c   52/209  1555.3613  36357.8904  43234.8672  15302.6137   0.0041   296
+  c   53/209  1546.0276  36439.0863  42464.1973  15305.7483   0.0042   296
+  c   54/209  1536.7192  36345.8075  43440.4766  15308.8815   0.0041   295
+  c   55/209  1527.3859  36078.4443  42806.4043  15312.0183   0.0039   296
+  c   56/209  1518.0352  36379.7993  42299.4609  15315.1563   0.0044   295
+  c   57/209  1508.6938  35562.2865  42310.1289  15318.2951   0.0050   296
+  c   58/209  1499.3528  35937.8497  42514.0684  15321.4359   0.0046   296
+  c   59/209  1489.9673  35708.4182  42319.4531  15324.5775   0.0046   296
+  c   60/209  1480.5973  35758.6356  42949.5098  15327.7203   0.0042   296
+  c   61/209  1471.2150  35397.3766  41644.9219  15330.8654   0.0042   295
+  c   62/209  1461.8120  35873.6864  42976.8379  15334.0101   0.0047   296
+  c   63/209  1452.4114  36046.5793  42796.6504  15337.1570   0.0043   296
+  c   64/209  1443.0008  35847.9435  42031.2930  15340.3058   0.0044   296
+  c   65/209  1433.5772  35826.1579  42723.8594  15343.4552   0.0048   297
+  c   66/209  1424.1504  35635.6215  41696.7617  15346.6064   0.0042   296
+  c   67/209  1414.7084  35831.3434  42674.8594  15349.7589   0.0044   295
+  c   68/209  1405.2737  36163.0206  42305.6328  15352.9124   0.0045   297
+  c   69/209  1395.8096  35916.0437  42929.8359  15356.0673   0.0045   296
+  c   70/209  1386.3484  35835.2968  42288.1172  15359.2232   0.0042   297
+  c   71/209  1376.8860  35616.1981  42496.2246  15362.3815   0.0044   296
+  c   72/209  1367.3983  35473.6773  41931.1836  15365.5403   0.0041   298
+  c   73/209  1357.9020  35639.8611  42371.7305  15368.7001   0.0042   296
+  c   74/209  1348.4009  35784.6110  42298.9922  15371.8620   0.0035   295
+  c   75/209  1338.8942  35700.9151  42476.9297  15375.0255   0.0039   295
+  c   76/209  1329.3798  35173.8744  41492.3633  15378.1893   0.0042   296
+  c   77/209  1319.8493  35834.9692  42751.0195  15381.3546   0.0037   295
+  c   78/209  1310.3216  35418.0223  41935.2910  15384.5210   0.0040   296
+  c   79/209  1300.7737  35701.4323  42792.0312  15387.6890   0.0046   296
+  c   80/209  1291.2160  35491.0108  41543.6152  15390.8574   0.0037   296
+  c   81/209  1281.6584  34952.7261  41717.2500  15394.0279   0.0040   295
+  c   82/209  1272.0781  34598.8584  40585.9805  15397.2010   0.0034   296
+  c   83/209  1262.5052  35278.7222  41950.2637  15400.3739   0.0037   296
+  c   84/209  1252.9107  34479.0127  41014.7695  15403.5476   0.0036   294
+  c   85/209  1243.3132  34848.8121  41087.2031  15406.7233   0.0035   294
+  c   86/209  1233.7055  35298.0716  42078.0586  15409.9007   0.0041   297
+  c   87/209  1224.0847  35232.7931  41395.0781  15413.0796   0.0038   297
+  c   88/209  1214.4667  35267.1291  41752.3828  15416.2589   0.0038   296
+  c   89/209  1204.8129  34769.9179  41268.7344  15419.4401   0.0039   297
+  c   90/209  1195.1696  34597.8649  40396.8906  15422.6227   0.0039   295
+  c   91/209  1185.5079  34751.1812  41362.3164  15425.8066   0.0038   295
+  c   92/209  1175.8548  35073.0414  41534.1934  15428.9911   0.0040   296
+  c   93/209  1166.1741  34398.9631  40376.7695  15432.1782   0.0037   297
+  c   94/209  1156.5036  34332.9736  40728.4062  15435.3654   0.0036   294
+  c   95/209  1146.7862  34525.3122  41037.3672  15438.5543   0.0036   294
+  c   96/209  1137.1004  34430.8447  40154.2852  15441.7447   0.0036   295
+  c   97/209  1127.3808  34395.1058  40571.7383  15444.9364   0.0038   296
+  c   98/209  1117.6543  34862.3563  41313.0000  15448.1293   0.0040   296
+  c   99/209  1107.9212  34219.4727  40347.6484  15451.3236   0.0037   297
+  c  100/209  1098.1826  34203.6088  39730.9062  15454.5195   0.0041   297
+  c  101/209  1088.4212  33755.4559  39586.5801  15457.7165   0.0032   294
+  c  102/209  1078.6829  33682.6324  40086.4336  15460.9149   0.0035   294
+  c  103/209  1068.8969  33951.4784  40300.0254  15464.1146   0.0034   296
+  c  104/209  1059.1388  33587.3472  39215.0547  15467.3156   0.0033   295
+  c  105/209  1049.3360  33599.0770  39385.0586  15470.5174   0.0032   297
+  c  106/209  1039.5309  33948.3770  40266.0645  15473.7213   0.0036   296
+  c  107/209  1029.7199  33565.7194  39708.7852  15476.9264   0.0036   297
+  c  108/209  1029.7199  33565.7194  39708.7852  15476.9264   0.0036   297
+  c  109/209  1019.8942  33743.1203  39678.0938  15480.1327   0.0039   295
+  c  110/209  1010.0761  33466.9207  38620.9727  15483.3396   0.0035   296
+  c  111/209  1000.2469  33212.9382  38519.9258  15486.5483   0.0033   295
+  c  112/209   990.4059  33093.6964  38894.8945  15489.7592   0.0037   297
+  c  113/209   980.5539  32902.8224  38818.7266  15492.9705   0.0038   297
+  c  114/209   970.6770  32765.3448  38673.0977  15496.1834   0.0035   296
+  c  115/209   960.7974  33184.4956  39261.2617  15499.3980   0.0031   294
+  c  116/209   950.9160  33031.7952  38445.2656  15502.6132   0.0041   297
+  c  117/209   941.0266  32373.4686  37361.9258  15505.8302   0.0034   295
+  c  118/209   931.1074  32572.1942  37788.4922  15509.0483   0.0038   296
+  c  119/209   921.2028  32284.4153  37438.9844  15512.2678   0.0035   296
+  c  120/209   911.2784  32508.5152  38038.4375  15515.4896   0.0034   295
+  c  121/209   901.3413  32095.5854  37465.1133  15518.7112   0.0033   294
+  c  122/209   891.3904  32162.5238  37681.8672  15521.9350   0.0033   292
+  c  123/209   881.4340  32260.1801  38071.2676  15525.1597   0.0040   296
+  c  124/209   871.4643  31895.4163  37743.2441  15528.3856   0.0037   296
+  c  125/209   861.4917  31450.8804  37078.4180  15531.6133   0.0039   295
+  c  126/209   851.5091  32074.1502  37809.1133  15534.8430   0.0041   292
+  c  127/209   841.5122  32027.1392  37572.0469  15538.0735   0.0041   297
+  c  128/209   831.4958  31497.2650  36898.8438  15541.3048   0.0040   297
+  c  129/209   821.4944  31349.2310  36796.8770  15544.5374   0.0044   292
+  c  130/209   811.4593  31352.4347  36716.3672  15547.7724   0.0036   293
+  c  131/209   801.4182  31279.6579  36770.5781  15551.0083   0.0042   296
+  c  132/209   791.3765  31100.1919  36415.4922  15554.2454   0.0045   296
+  c  133/209   781.3276  31190.7820  36239.3672  15557.4839   0.0044   291
+  c  134/209   771.2622  30790.7424  35834.1230  15560.7241   0.0043   292
+  c  135/209   761.1773  30368.0964  34952.3203  15563.9660   0.0037   295
+  c  136/209   751.0908  30512.9704  35201.6289  15567.2081   0.0044   295
+  c  137/209   740.9828  30287.6944  34656.9824  15570.4519   0.0043   296
+  c  138/209   730.8839  29847.8668  34945.4922  15573.6968   0.0038   295
+  c  139/209   720.7564  30047.4719  35314.1836  15576.9437   0.0041   296
+  c  140/209   710.6167  29879.5608  34922.7227  15580.1916   0.0047   294
+  c  141/209   700.4810  29996.0337  34771.9844  15583.4403   0.0038   296
+  c  142/209   690.3196  29581.7151  34426.1094  15586.6911   0.0044   295
+  c  143/209   680.1613  29465.5083  33907.7109  15589.9436   0.0047   295
+  c  144/209   669.9831  29278.1712  33474.0078  15593.1973   0.0044   297
+  c  145/209   659.8109  29087.4993  34089.2617  15596.4519   0.0047   296
+  c  146/209   649.6010  28941.4824  33681.4453  15599.7078   0.0047   293
+  c  147/209   639.4112  29111.8369  34029.1309  15602.9653   0.0042   296
+  c  148/209   629.1990  29098.3094  33538.9648  15606.2241   0.0047   297
+  c  149/209   618.9725  28808.5999  32963.5039  15609.4844   0.0043   295
+  c  150/209   608.7463  28504.5036  33282.7227  15612.7459   0.0047   296
+  c  151/209   598.4873  28246.0399  32886.1094  15616.0086   0.0045   297
+  c  152/209   588.2395  28387.4618  32669.2910  15619.2735   0.0043   297
+  c  153/209   577.9796  27912.5011  31933.5205  15622.5385   0.0045   296
+  c  154/209   567.7033  27883.5106  32597.7734  15625.8062   0.0049   295
+  c  155/209   557.4078  27522.8525  32159.6982  15629.0742   0.0047   296
+  c  156/209   547.1228  27289.0852  31332.5508  15632.3440   0.0048   297
+  c  157/209   536.7944  27871.6562  32281.3574  15635.6150   0.0046   296
+  c  158/209   526.4674  27715.2199  31858.8613  15638.8874   0.0044   296
+  c  159/209   516.1600  27380.7755  31221.2852  15642.1610   0.0044   295
+  c  160/209   505.8032  26853.8976  31113.9102  15645.4369   0.0051   296
+  c  161/209   495.4505  26728.4445  30635.2207  15648.7128   0.0056   297
+  c  162/209   485.0828  26613.2377  30291.8516  15651.9912   0.0055   297
+  c  163/209   474.7060  26355.7617  30417.6055  15655.2702   0.0046   297
+  c  164/209   464.3218  26234.5100  30213.3887  15658.5512   0.0048   297
+  c  165/209   453.9257  25696.6761  29358.4883  15661.8332   0.0050   297
+  c  166/209   443.5067  25703.8677  29882.8633  15665.1167   0.0047   297
+  c  167/209   433.0998  25596.3043  29062.2061  15668.4017   0.0047   296
+  c  168/209   422.6730  25551.5295  29589.7656  15671.6878   0.0047   297
+  c  169/209   412.2261  25084.1649  28752.5273  15674.9759   0.0052   296
+  c  170/209   401.7714  25123.5348  28859.5039  15678.2643   0.0052   297
+  c  171/209   391.3040  24922.6412  28548.9355  15681.5548   0.0050   296
+  c  172/209   380.8366  24737.3928  28482.3916  15684.8457   0.0045   296
+  c  173/209   370.3476  24689.1670  28069.9043  15688.1393   0.0048   296
+  c  174/209   359.8582  24331.3355  27930.4473  15691.4341   0.0053   296
+  c  175/209   349.3464  24026.0541  27632.0625  15694.7302   0.0046   297
+  c  176/209   338.8250  24065.8817  27335.4248  15698.0269   0.0053   296
+  c  177/209   328.2926  23889.0476  27428.6660  15701.3258   0.0052   297
+  c  178/209   317.7477  23740.6906  27225.8662  15704.6250   0.0047   296
+  c  179/209   307.1953  23254.3414  26616.3613  15707.9269   0.0055   296
+  c  180/209   296.6249  23634.7621  26923.3096  15711.2298   0.0049   292
+  c  181/209   286.0393  23423.6083  26469.3164  15714.5339   0.0047   296
+  c  182/209   275.4623  23209.8864  26466.0586  15717.8394   0.0050   294
+  c  183/209   264.8683  22936.2252  25763.9727  15721.1464   0.0052   295
+  c  184/209   254.2554  22700.2368  25539.2617  15724.4538   0.0052   296
+  c  185/209   243.6301  22507.9939  25566.2422  15727.7640   0.0057   295
+  c  186/209   232.9910  22064.8103  24819.5205  15731.0755   0.0056   296
+  c  187/209   222.3478  22446.8034  25198.9580  15734.3879   0.0053   294
+  c  188/209   211.7009  22251.5551  25469.3633  15737.7017   0.0058   297
+  c  189/209   201.0228  22097.3764  24668.4082  15741.0172   0.0055   296
+  c  190/209   190.3373  21759.7899  24353.4297  15744.3334   0.0055   297
+  c  191/209   179.6447  21397.2437  24366.5107  15747.6519   0.0050   296
+  c  192/209   168.9492  21605.3282  23874.7861  15750.9714   0.0051   296
+  c  193/209   158.2089  21310.1050  23975.7832  15754.2925   0.0054   296
+  c  194/209   147.4969  21413.5544  24033.4883  15757.6151   0.0052   296
+  c  195/209   136.7605  21136.0106  23802.3398  15760.9386   0.0059   295
+  c  196/209   126.0103  20944.7638  23300.7275  15764.2633   0.0053   294
+  c  197/209   115.2399  20533.9355  23100.1562  15767.5901   0.0053   296
+  c  198/209   104.4587  20472.7155  23099.3184  15770.9179   0.0054   296
+  c  199/209    93.6692  20303.8196  22991.1055  15774.2476   0.0054   296
+  c  200/209    82.8663  20221.9083  22423.7852  15777.5789   0.0060   297
+  c  201/209    72.0604  20288.5524  22504.6445  15780.9101   0.0053   297
+  c  202/209    61.2412  20134.6339  22232.9883  15784.2441   0.0055   297
+  c  203/209    50.4026  19710.3611  22153.1016  15787.5791   0.0056   295
+  c  204/209    39.5499  19769.7202  22377.3809  15790.9158   0.0050   297
+  c  205/209    28.6961  19520.4187  22025.5547  15794.2524   0.0057   297
+  c  206/209    17.8231  19609.4110  21500.5352  15797.5914   0.0062   296
+  c  207/209     6.9097  19197.7862  21159.9023  15800.9388   0.0129   297
+  c  208/209        nan         nan         nan         nan      nan     0
+  c  209/209        nan         nan         nan         nan      nan     0
+ 
+Refit wavelength solutions using FPI lines for each full-frame FPI exposure
+--------------------------------------------------------------------------
+2 full-frame FPI exposures
+1/2  43740011
+  1) Fit peaks to the FPI data
+  Loading previously measured FPI lines for  43740011
+2) Apply the daily wavelength solution for FPI-line identification
+  3) Refit the wavelength solution using FPI line wavelengths
+Pruning  1967  FPI lines with unsuccessful Gaussian fits or no mean line wavelength
+row:  0 nlines:  489
+[ 1.22504568e-10 -1.03256048e-05 -2.82761618e-01  1.61504995e+04
+ -1.44611613e+02  4.87637929e-01  1.54240977e+02]
+res:  489 -9.020451943797525e-05 0.002083311208480154 0.003106488699730639
+[ 1.22651040e-10 -1.03253414e-05 -2.82764991e-01  1.61504933e+04
+ -1.44608300e+02  4.87637929e-01  1.54223595e+02]
+chip res:  489 7.203096356533933e-05 0.0019044717191718519 0.0028560558556429277
+row:  1 nlines:  491
+[ 1.22942165e-10 -1.03248337e-05 -2.82770355e-01  1.61504830e+04
+ -1.44650213e+02  4.52123982e-01  1.54181719e+02]
+res:  491 0.0004929905408062041 0.002116085501256748 0.0029474879127689237
+[ 1.22851502e-10 -1.03246454e-05 -2.82767061e-01  1.61504784e+04
+ -1.44658709e+02  4.52123982e-01  1.54194822e+02]
+chip res:  491 0.00011968507351411972 0.0018966784173244378 0.00276080309681925
+row:  2 nlines:  493
+[ 1.22754774e-10 -1.03247324e-05 -2.82767330e-01  1.61505177e+04
+ -1.44623358e+02  4.70963963e-01  1.54236435e+02]
+res:  493 -0.0005024484216846758 0.0023956429395184387 0.0035895521278915695
+[ 1.22537354e-10 -1.03240675e-05 -2.82767526e-01  1.61505121e+04
+ -1.44606272e+02  4.70963963e-01  1.54231072e+02]
+chip res:  493 3.974469473178033e-05 0.0018615232802403625 0.002735018706840688
+row:  3 nlines:  493
+[ 1.22938147e-10 -1.03252994e-05 -2.82771821e-01  1.61505276e+04
+ -1.44625216e+02  4.76749583e-01  1.54185668e+02]
+res:  493 -0.003167162423778791 0.004015964845166309 0.004864831106282523
+[ 1.22659634e-10 -1.03252994e-05 -2.82771821e-01  1.61505276e+04
+ -1.44625216e+02  4.76749583e-01  1.54185668e+02]
+chip res:  493 -7.254408410517499e-05 0.0018662367656361312 0.0028061540477173023
+row:  4 nlines:  491
+[ 1.23264256e-10 -1.03238772e-05 -2.82774966e-01  1.61505519e+04
+ -1.44591494e+02  4.69034610e-01  1.54267825e+02]
+res:  491 0.00010579875015537255 0.002008424769883277 0.002975265500451243
+[ 1.22886540e-10 -1.03236852e-05 -2.82774456e-01  1.61505411e+04
+ -1.44596443e+02  4.69034610e-01  1.54224875e+02]
+chip res:  491 1.7137881513917819e-06 0.0016888702812138945 0.002506463691811202
+row:  5 nlines:  493
+[ 1.22975172e-10 -1.03245381e-05 -2.82774996e-01  1.61505944e+04
+ -1.44609461e+02  4.80745705e-01  1.54236996e+02]
+res:  493 0.0001457564012525836 0.0020666483105742373 0.0030648919761771818
+[ 1.22801159e-10 -1.03238750e-05 -2.82776196e-01  1.61505878e+04
+ -1.44555372e+02  4.80745705e-01  1.54232587e+02]
+chip res:  493 0.00011966752390435431 0.0017844398425950203 0.002709119051320916
+row:  6 nlines:  493
+[ 1.22341645e-10 -1.03221222e-05 -2.82770213e-01  1.61505589e+04
+ -1.44608770e+02  4.73131634e-01  1.54266398e+02]
+res:  493 -0.0007073005672282306 0.0024762334032857325 0.003530048844124601
+[ 1.22558466e-10 -1.03220274e-05 -2.82776715e-01  1.61505533e+04
+ -1.44583161e+02  4.73131634e-01  1.54232258e+02]
+chip res:  493 -7.29423736629542e-05 0.001672787069765036 0.002497819558303392
+row:  7 nlines:  493
+[ 1.22622002e-10 -1.03240724e-05 -2.82779525e-01  1.61505887e+04
+ -1.44636131e+02  4.42720729e-01  1.54194418e+02]
+res:  493 6.460507029260043e-05 0.002096647960570408 0.0030378515205439494
+[ 1.22450373e-10 -1.03239235e-05 -2.82778141e-01  1.61505855e+04
+ -1.44612032e+02  4.42720729e-01  1.54217537e+02]
+chip res:  493 -4.0588705815025605e-05 0.0016440687468275428 0.0024751806438834054
+row:  8 nlines:  494
+[ 1.23205419e-10 -1.03218585e-05 -2.82785328e-01  1.61505911e+04
+ -1.44519394e+02  4.76238785e-01  1.54247716e+02]
+res:  494 -3.7220078411337454e-05 0.0022418948592530796 0.0033132985539369502
+[ 1.22831098e-10 -1.03229674e-05 -2.82781874e-01  1.61505866e+04
+ -1.44558947e+02  4.76238785e-01  1.54239056e+02]
+chip res:  494 0.0001049497304848046 0.001912697415718867 0.0027600045119289206
+row:  9 nlines:  493
+[ 1.22720021e-10 -1.03230884e-05 -2.82781529e-01  1.61505947e+04
+ -1.44581046e+02  4.61285880e-01  1.54258233e+02]
+res:  493 0.00017898546502692625 0.0020864584075752646 0.0032261246957054337
+[ 1.22727453e-10 -1.03234157e-05 -2.82782417e-01  1.61505898e+04
+ -1.44572532e+02  4.61285880e-01  1.54240033e+02]
+chip res:  493 -0.00019251962839916814 0.001779295025698957 0.002717551345528579
+row:  10 nlines:  495
+[ 1.22914418e-10 -1.03229936e-05 -2.82787049e-01  1.61506168e+04
+ -1.44500232e+02  5.04097862e-01  1.54265476e+02]
+res:  495 0.0001850507796916645 0.0024762798711890355 0.0037074959444926493
+[ 1.22635920e-10 -1.03225500e-05 -2.82785087e-01  1.61506091e+04
+ -1.44525735e+02  5.04097862e-01  1.54263479e+02]
+chip res:  495 -1.3976823538541794e-06 0.0019706695802597096 0.002923791298593139
+row:  11 nlines:  497
+[ 1.22838704e-10 -1.03224978e-05 -2.82786439e-01  1.61506280e+04
+ -1.44537495e+02  4.89935093e-01  1.54270082e+02]
+res:  497 -0.0014077229734539287 0.003921634959624498 0.005080039258360134
+[ 1.21462961e-10 -1.03199484e-05 -2.82779180e-01  1.61506250e+04
+ -1.44500809e+02  4.89935093e-01  1.54302705e+02]
+chip res:  497 5.890330612601247e-05 0.0019143717418046435 0.0028472699763442844
+row:  12 nlines:  498
+[ 1.22776256e-10 -1.03228160e-05 -2.82790930e-01  1.61506325e+04
+ -1.44533087e+02  4.61991954e-01  1.54241348e+02]
+res:  498 -0.0006907301458340953 0.0028194177166369627 0.0038027782107662965
+[ 1.22214162e-10 -1.03209207e-05 -2.82790166e-01  1.61506266e+04
+ -1.44482800e+02  4.61991954e-01  1.54247113e+02]
+chip res:  498 -3.519512119964929e-05 0.001875251309684245 0.0028118168446494207
+row:  13 nlines:  496
+[ 1.23205032e-10 -1.03234918e-05 -2.82795711e-01  1.61506615e+04
+ -1.44487938e+02  5.02601740e-01  1.54240240e+02]
+res:  496 -0.0004446880075192894 0.002393558207586466 0.0034311262919002458
+[ 1.22794596e-10 -1.03228621e-05 -2.82791094e-01  1.61506634e+04
+ -1.44488231e+02  5.02601740e-01  1.54283210e+02]
+chip res:  496 5.5896100093377754e-05 0.0017973531339521287 0.0027015669294352808
+row:  14 nlines:  496
+[ 1.22506857e-10 -1.03228339e-05 -2.82787492e-01  1.61506459e+04
+ -1.44552018e+02  4.87269122e-01  1.54290242e+02]
+res:  496 -0.00037572703695332166 0.002309632485776092 0.0033938445329785446
+[ 1.21913258e-10 -1.03212751e-05 -2.82787663e-01  1.61506393e+04
+ -1.44495021e+02  4.87269122e-01  1.54297217e+02]
+chip res:  496 -1.8678055312193464e-05 0.0016264984406006988 0.0024060150314802456
+row:  15 nlines:  497
+[ 1.22556516e-10 -1.03207628e-05 -2.82796252e-01  1.61506515e+04
+ -1.44456490e+02  4.68023462e-01  1.54268183e+02]
+res:  497 0.00028795596699637827 0.002589069725217996 0.0037566489322744877
+[ 1.21683200e-10 -1.03195789e-05 -2.82789987e-01  1.61506428e+04
+ -1.44492385e+02  4.68023462e-01  1.54294458e+02]
+chip res:  497 -6.794789078412578e-05 0.001959794677532045 0.002931932345113839
+row:  16 nlines:  498
+[ 1.22792325e-10 -1.03228713e-05 -2.82796065e-01  1.61506616e+04
+ -1.44509702e+02  4.73035530e-01  1.54277679e+02]
+res:  498 0.0003052268803003244 0.0022117290764072095 0.0032351856821172557
+[ 1.22271079e-10 -1.03215114e-05 -2.82792456e-01  1.61506552e+04
+ -1.44494100e+02  4.73035530e-01  1.54291716e+02]
+chip res:  498 -8.2906899478985e-06 0.0019261479455963126 0.0028648704495212495
+row:  17 nlines:  497
+[ 1.22059432e-10 -1.03212712e-05 -2.82789298e-01  1.61506313e+04
+ -1.44542298e+02  4.74842207e-01  1.54336693e+02]
+res:  497 -0.0004819099576707231 0.0020969558790966403 0.0031107598758082517
+[ 1.22475076e-10 -1.03216555e-05 -2.82798929e-01  1.61506242e+04
+ -1.44480929e+02  4.74842207e-01  1.54273086e+02]
+chip res:  497 5.0763141189236194e-05 0.0016701294189260807 0.0024994552470172784
+row:  18 nlines:  497
+[ 1.22167591e-10 -1.03205782e-05 -2.82793952e-01  1.61506083e+04
+ -1.44499094e+02  4.78741066e-01  1.54321328e+02]
+res:  497 0.0009892775233311113 0.002581264847322018 0.0035733599609041153
+[ 1.22766098e-10 -1.03216718e-05 -2.82802569e-01  1.61506047e+04
+ -1.44461471e+02  4.78741066e-01  1.54274288e+02]
+chip res:  497 3.9719705455354415e-05 0.0018126721297448967 0.002663318087202184
+row:  19 nlines:  497
+[ 1.22819595e-10 -1.03219085e-05 -2.82804768e-01  1.61505881e+04
+ -1.44451141e+02  4.80167047e-01  1.54275984e+02]
+res:  497 -0.0001698065134405624 0.002556189410825027 0.003756282887793217
+[ 1.22092977e-10 -1.03202867e-05 -2.82800483e-01  1.61505829e+04
+ -1.44441349e+02  4.80167047e-01  1.54305535e+02]
+chip res:  497 0.00015677785268053412 0.0017586813155503478 0.002681209558608623
+row:  20 nlines:  495
+[ 1.21946376e-10 -1.03211490e-05 -2.82794719e-01  1.61505780e+04
+ -1.44485650e+02  4.66476879e-01  1.54340636e+02]
+res:  495 0.00014329322038975079 0.001973781061678892 0.002896818563252023
+[ 1.22367272e-10 -1.03219294e-05 -2.82802121e-01  1.61505718e+04
+ -1.44465392e+02  4.66476879e-01  1.54286185e+02]
+chip res:  495 9.200059139402583e-06 0.0018108079948433442 0.002680753488290412
+row:  21 nlines:  498
+[ 1.22567547e-10 -1.03221591e-05 -2.82805653e-01  1.61505562e+04
+ -1.44510560e+02  4.28623854e-01  1.54246382e+02]
+res:  498 0.0008270626240118872 0.002679363375136745 0.003809796759262757
+[ 1.22168993e-10 -1.03218873e-05 -2.82800424e-01  1.61505488e+04
+ -1.44536629e+02  4.28623854e-01  1.54263022e+02]
+chip res:  498 -5.182085169508355e-05 0.0017707382949083694 0.00265279561430933
+row:  22 nlines:  499
+[ 1.22301038e-10 -1.03221457e-05 -2.82803966e-01  1.61505362e+04
+ -1.44473574e+02  4.66731949e-01  1.54301542e+02]
+res:  499 -0.0005050935487815877 0.003339309972943738 0.0048892342973359685
+[ 1.23249872e-10 -1.03215686e-05 -2.82820986e-01  1.61505412e+04
+ -1.44325625e+02  4.66731949e-01  1.54249295e+02]
+chip res:  499 5.402170427259989e-05 0.0017066268173948629 0.002525387216046673
+row:  23 nlines:  496
+[ 1.22672422e-10 -1.03219682e-05 -2.82810434e-01  1.61505157e+04
+ -1.44471467e+02  4.48943775e-01  1.54277812e+02]
+res:  496 -0.00023803606654837495 0.0021578154464805266 0.003131021848697221
+[ 1.22236641e-10 -1.03213094e-05 -2.82806099e-01  1.61505105e+04
+ -1.44472133e+02  4.48943775e-01  1.54292233e+02]
+chip res:  496 7.523274962295545e-05 0.0016943615291893366 0.0025475430634544012
+row:  24 nlines:  496
+[ 1.22241552e-10 -1.03220627e-05 -2.82808987e-01  1.61504963e+04
+ -1.44465145e+02  4.36152675e-01  1.54261019e+02]
+res:  496 0.00023711212907073786 0.0018714788002398564 0.002702222561699895
+[ 1.22100311e-10 -1.03215985e-05 -2.82806972e-01  1.61504968e+04
+ -1.44471500e+02  4.36152675e-01  1.54286718e+02]
+chip res:  496 -3.0249424526118673e-05 0.001801047917069809 0.002652551751409616
+row:  25 nlines:  497
+[ 1.22475039e-10 -1.03219205e-05 -2.82811632e-01  1.61504848e+04
+ -1.44427723e+02  4.59172689e-01  1.54291114e+02]
+res:  497 -0.0012071508535882458 0.0023079359234543517 0.003229316260220732
+[ 1.22193142e-10 -1.03207349e-05 -2.82809524e-01  1.61504770e+04
+ -1.44439078e+02  4.59172689e-01  1.54306524e+02]
+chip res:  497 4.245757190801669e-05 0.0017804907711251872 0.002649843607192318
+row:  26 nlines:  497
+[ 1.22441953e-10 -1.03213775e-05 -2.82811787e-01  1.61504714e+04
+ -1.44403075e+02  4.91457428e-01  1.54363770e+02]
+res:  497 -0.0017493138293502852 0.0033115581318270415 0.004187976301027879
+[ 1.21493932e-10 -1.03189564e-05 -2.82808168e-01  1.61504673e+04
+ -1.44367219e+02  4.91457428e-01  1.54362233e+02]
+chip res:  497 6.274970837694127e-05 0.0016636243508401094 0.0025165015159964717
+row:  27 nlines:  497
+[ 1.22365727e-10 -1.03216797e-05 -2.82814032e-01  1.61504462e+04
+ -1.44387750e+02  5.03829458e-01  1.54352684e+02]
+res:  497 0.00034546590541140176 0.002149451500372379 0.00319273012631869
+[ 1.22033078e-10 -1.03212832e-05 -2.82810406e-01  1.61504443e+04
+ -1.44393335e+02  5.03829458e-01  1.54359872e+02]
+chip res:  497 -4.871961755270604e-05 0.001807068112611887 0.002677350925888337
+row:  28 nlines:  498
+[ 1.22405591e-10 -1.03209026e-05 -2.82817040e-01  1.61504121e+04
+ -1.44429398e+02  4.68610999e-01  1.54312445e+02]
+res:  498 0.0006391222996171564 0.0022011086857673945 0.003220716531494485
+[ 1.22331841e-10 -1.03208883e-05 -2.82815929e-01  1.61504128e+04
+ -1.44405899e+02  4.68610999e-01  1.54324326e+02]
+chip res:  498 -4.0117615753842983e-05 0.001878294958260085 0.0027958326025021556
+row:  29 nlines:  497
+[ 1.22554596e-10 -1.03215587e-05 -2.82818606e-01  1.61504306e+04
+ -1.44359669e+02  4.64186767e-01  1.54343689e+02]
+res:  497 -0.0007080681425577495 0.0023741563054500148 0.0035881191685599944
+[ 1.22325117e-10 -1.03210314e-05 -2.82817556e-01  1.61504207e+04
+ -1.44388951e+02  4.64186767e-01  1.54326689e+02]
+chip res:  497 0.00012369663090794347 0.0019332192314323038 0.0028407602928097607
+row:  30 nlines:  497
+[ 1.22338677e-10 -1.03208451e-05 -2.82823177e-01  1.61505038e+04
+ -1.44398776e+02  4.42563478e-01  1.54311052e+02]
+res:  497 0.00028089346596971154 0.0019794415529759135 0.003056466240678866
+[ 1.22039580e-10 -1.03206325e-05 -2.82819061e-01  1.61504983e+04
+ -1.44447190e+02  4.42563478e-01  1.54311841e+02]
+chip res:  497 0.00013988844875711948 0.0016762733521318296 0.0024879004785799976
+row:  31 nlines:  497
+[ 1.22177718e-10 -1.03208303e-05 -2.82819595e-01  1.61504883e+04
+ -1.44419881e+02  4.56980406e-01  1.54332495e+02]
+res:  497 0.00019302261716802604 0.002112909121933626 0.0030944646437734563
+[ 1.22455358e-10 -1.03207208e-05 -2.82821605e-01  1.61504824e+04
+ -1.44400464e+02  4.56980406e-01  1.54327250e+02]
+chip res:  497 0.0002191907296946738 0.001658537883486133 0.0024775910369895654
+row:  32 nlines:  496
+[ 1.21904574e-10 -1.03194866e-05 -2.82819372e-01  1.61504787e+04
+ -1.44422634e+02  4.49521253e-01  1.54347844e+02]
+res:  496 3.3943415473913774e-06 0.002098005802508851 0.0031105080572372485
+[ 1.22464111e-10 -1.03198605e-05 -2.82826810e-01  1.61504766e+04
+ -1.44396331e+02  4.49521253e-01  1.54315792e+02]
+chip res:  496 1.0537723028392065e-05 0.001855583676842798 0.0027404341363324682
+row:  33 nlines:  495
+[ 1.22909359e-10 -1.03199489e-05 -2.82833307e-01  1.61504942e+04
+ -1.44347753e+02  4.67119583e-01  1.54322095e+02]
+res:  495 5.2819657867075875e-05 0.0021102600258018356 0.0030646721596310437
+[ 1.22318182e-10 -1.03199688e-05 -2.82826346e-01  1.61504914e+04
+ -1.44386349e+02  4.67119583e-01  1.54341084e+02]
+chip res:  495 0.00015788608288858086 0.0017489204092271393 0.0025849567314513333
+row:  34 nlines:  494
+[ 1.21952738e-10 -1.03198637e-05 -2.82823026e-01  1.61505169e+04
+ -1.44395858e+02  4.71260465e-01  1.54365181e+02]
+res:  494 0.00035447616392048076 0.0020240286667103646 0.0028528089196554573
+[ 1.22373699e-10 -1.03197473e-05 -2.82829178e-01  1.61505167e+04
+ -1.44350982e+02  4.71260465e-01  1.54344577e+02]
+chip res:  494 -7.280710724444361e-05 0.0015488223889406072 0.0023107984426441372
+row:  35 nlines:  493
+[ 1.22218319e-10 -1.03203721e-05 -2.82829344e-01  1.61505469e+04
+ -1.44318482e+02  4.95609857e-01  1.54366722e+02]
+res:  493 0.0004511087536229752 0.0020800549973500893 0.002894372539525838
+[ 1.22067078e-10 -1.03196961e-05 -2.82829783e-01  1.61505494e+04
+ -1.44295135e+02  4.95609857e-01  1.54380317e+02]
+chip res:  493 -4.3710209865821525e-05 0.001795908390704426 0.0026492727405826614
+row:  36 nlines:  499
+[ 1.22438040e-10 -1.03204667e-05 -2.82831098e-01  1.61505351e+04
+ -1.44366739e+02  4.67819380e-01  1.54367658e+02]
+res:  499 -0.0007353704077104339 0.0018517934477131348 0.002543025392363454
+[ 1.22048077e-10 -1.03197778e-05 -2.82828401e-01  1.61505304e+04
+ -1.44354520e+02  4.67819380e-01  1.54367192e+02]
+chip res:  499 -5.6653114370419644e-05 0.001671903421083698 0.002479617257471267
+row:  37 nlines:  497
+[ 1.22136418e-10 -1.03204957e-05 -2.82831228e-01  1.61505918e+04
+ -1.44294962e+02  4.85233557e-01  1.54370684e+02]
+res:  497 -0.00034329137633903883 0.001856034079537494 0.002856741739684724
+[ 1.22367477e-10 -1.03203713e-05 -2.82831735e-01  1.61505912e+04
+ -1.44318755e+02  4.85233557e-01  1.54375161e+02]
+chip res:  497 -9.350084656034596e-05 0.001648950081289513 0.0024624636004138586
+row:  38 nlines:  497
+[ 1.22245897e-10 -1.03210202e-05 -2.82835426e-01  1.61506379e+04
+ -1.44273607e+02  4.99857465e-01  1.54378247e+02]
+res:  497 0.0003075937602261547 0.0017423824028810486 0.002552214354512685
+[ 1.22145949e-10 -1.03208501e-05 -2.82832749e-01  1.61506361e+04
+ -1.44282208e+02  4.99857465e-01  1.54399587e+02]
+chip res:  497 -4.5291460992302746e-05 0.001623237407329725 0.0023841987213357872
+row:  39 nlines:  497
+[ 1.21778324e-10 -1.03190433e-05 -2.82829648e-01  1.61505993e+04
+ -1.44345385e+02  4.40891366e-01  1.54374176e+02]
+res:  497 0.0007073313136061188 0.002196616907895077 0.003156550521825848
+[ 1.22212674e-10 -1.03193862e-05 -2.82835359e-01  1.61505931e+04
+ -1.44347275e+02  4.40891366e-01  1.54342378e+02]
+chip res:  497 -5.523528670892119e-06 0.001827606807637494 0.0027014247116978456
+row:  40 nlines:  497
+[ 1.22525282e-10 -1.03200881e-05 -2.82838284e-01  1.61506572e+04
+ -1.44304430e+02  4.89640616e-01  1.54365297e+02]
+res:  497 0.0006323274847090943 0.002153040897610481 0.0032421573986782005
+[ 1.22429229e-10 -1.03195057e-05 -2.82838150e-01  1.61506540e+04
+ -1.44294429e+02  4.89640616e-01  1.54381918e+02]
+chip res:  497 -0.00017923919949680567 0.0016922651066124672 0.002512017367946867
+row:  41 nlines:  496
+[ 1.21930958e-10 -1.03193012e-05 -2.82832916e-01  1.61506822e+04
+ -1.44300757e+02  4.97190194e-01  1.54442428e+02]
+res:  496 -0.00041625140693213325 0.0022380206573870964 0.003303382380056205
+[ 1.22268831e-10 -1.03206461e-05 -2.82836716e-01  1.61506832e+04
+ -1.44311710e+02  4.97190194e-01  1.54410406e+02]
+chip res:  496 -4.319767867855262e-06 0.001595152641129971 0.002371381342018677
+row:  42 nlines:  499
+[ 1.22233137e-10 -1.03199955e-05 -2.82840064e-01  1.61506978e+04
+ -1.44288374e+02  4.62709737e-01  1.54377091e+02]
+res:  499 -0.0011578715202631429 0.0031498602038482204 0.0050071007578437405
+[ 1.23096207e-10 -1.03199884e-05 -2.82853141e-01  1.61506987e+04
+ -1.44214501e+02  4.62709736e-01  1.54334492e+02]
+chip res:  499 1.5988985978765413e-05 0.0016688023315509781 0.002488120602565636
+row:  43 nlines:  497
+[ 1.22382213e-10 -1.03193105e-05 -2.82842884e-01  1.61506452e+04
+ -1.44293238e+02  4.56081961e-01  1.54386918e+02]
+res:  497 0.00037754167715320364 0.001923094503581524 0.003010782688784173
+[ 1.22314127e-10 -1.03189983e-05 -2.82841693e-01  1.61506365e+04
+ -1.44303110e+02  4.56081961e-01  1.54380625e+02]
+chip res:  497 -0.00010970588300551753 0.0015668810665374622 0.002305989871758293
+row:  44 nlines:  497
+[ 1.22033076e-10 -1.03205193e-05 -2.82842247e-01  1.61506909e+04
+ -1.44309985e+02  4.49138583e-01  1.54356311e+02]
+res:  497 0.00035510236193658784 0.0023064823253662325 0.003458587830427462
+[ 1.22376233e-10 -1.03206994e-05 -2.82847499e-01  1.61506929e+04
+ -1.44272740e+02  4.49138583e-01  1.54345127e+02]
+chip res:  497 3.846258550765924e-05 0.0014620801684941398 0.002135763980499655
+row:  45 nlines:  499
+[ 1.22162989e-10 -1.03200141e-05 -2.82843016e-01  1.61506984e+04
+ -1.44263040e+02  4.88882802e-01  1.54414447e+02]
+res:  499 0.00024686766300874297 0.0019186170866305474 0.0029737243736553502
+[ 1.22389249e-10 -1.03200517e-05 -2.82847831e-01  1.61506949e+04
+ -1.44216446e+02  4.88882802e-01  1.54395612e+02]
+chip res:  499 -4.767159225593787e-05 0.001540564027891378 0.002304664033517998
+row:  46 nlines:  496
+[ 1.22635552e-10 -1.03201897e-05 -2.82851888e-01  1.61506561e+04
+ -1.44251259e+02  4.46310517e-01  1.54347268e+02]
+res:  496 -0.0002496657716619666 0.0020720927359434427 0.003006148918829159
+[ 1.22053203e-10 -1.03196195e-05 -2.82843855e-01  1.61506519e+04
+ -1.44288327e+02  4.46310517e-01  1.54387833e+02]
+chip res:  496 6.0638002651103307e-05 0.001685945378994802 0.0024707084023723575
+row:  47 nlines:  497
+[ 1.21849343e-10 -1.03192810e-05 -2.82842046e-01  1.61507001e+04
+ -1.44249853e+02  4.86865689e-01  1.54438209e+02]
+res:  497 0.00013041475540376268 0.001953592050995212 0.0028131537682411847
+[ 1.22059583e-10 -1.03193033e-05 -2.82844736e-01  1.61506982e+04
+ -1.44241347e+02  4.86865689e-01  1.54434243e+02]
+chip res:  497 2.4320950615219772e-05 0.0017646491578489076 0.002584164254898451
+row:  48 nlines:  499
+[ 1.22322852e-10 -1.03191315e-05 -2.82848933e-01  1.61506337e+04
+ -1.44220589e+02  5.08410176e-01  1.54437031e+02]
+res:  499 0.0013060565997875528 0.002342350197068299 0.0031863856079138043
+[ 1.22112838e-10 -1.03187356e-05 -2.82846373e-01  1.61506281e+04
+ -1.44230478e+02  5.08410176e-01  1.54446870e+02]
+chip res:  499 5.821161903440952e-05 0.001706747718344559 0.0025897778412841805
+row:  49 nlines:  498
+[ 1.21831592e-10 -1.03191378e-05 -2.82844044e-01  1.61506103e+04
+ -1.44253735e+02  4.77753108e-01  1.54460996e+02]
+res:  498 0.0005940478113188874 0.0019137578728987137 0.002816309127710023
+[ 1.21898281e-10 -1.03186572e-05 -2.82845811e-01  1.61506018e+04
+ -1.44248801e+02  4.77753108e-01  1.54428866e+02]
+chip res:  498 -1.3028911780565977e-05 0.0017496444033895386 0.002597648117206763
+row:  50 nlines:  497
+[ 1.21973204e-10 -1.03196130e-05 -2.82849770e-01  1.61506661e+04
+ -1.44208985e+02  4.50520699e-01  1.54407198e+02]
+res:  497 0.0006429195545933908 0.0022962242110224906 0.00326585416118006
+[ 1.21657094e-10 -1.03193945e-05 -2.82845396e-01  1.61506605e+04
+ -1.44273046e+02  4.50520699e-01  1.54422182e+02]
+chip res:  497 2.006097201956436e-05 0.001618879387024208 0.002394215086783278
+row:  51 nlines:  496
+[ 1.22261042e-10 -1.03192822e-05 -2.82855544e-01  1.61506026e+04
+ -1.44201976e+02  4.79277696e-01  1.54408598e+02]
+res:  496 -0.00019351236278453143 0.0020431099947018083 0.0029887389313912336
+[ 1.21981919e-10 -1.03188412e-05 -2.82851633e-01  1.61505981e+04
+ -1.44207740e+02  4.79277696e-01  1.54430097e+02]
+chip res:  496 -0.00012996984060009709 0.0016115364351207973 0.00237907001154043
+row:  52 nlines:  496
+[ 1.22181113e-10 -1.03203104e-05 -2.82854406e-01  1.61506440e+04
+ -1.44212617e+02  4.51925756e-01  1.54405986e+02]
+res:  496 -0.00018125017231795937 0.002093375724143698 0.0032202910298318884
+[ 1.21930935e-10 -1.03199908e-05 -2.82851216e-01  1.61506392e+04
+ -1.44224624e+02  4.51925756e-01  1.54415136e+02]
+chip res:  496 3.841784018732142e-05 0.001953098007106746 0.002884535485470273
+row:  53 nlines:  497
+[ 1.22183008e-10 -1.03187606e-05 -2.82856803e-01  1.61505655e+04
+ -1.44184260e+02  4.70730996e-01  1.54430535e+02]
+res:  497 0.0006965916145418305 0.0028898573509650305 0.004215605568028992
+[ 1.21571863e-10 -1.03190532e-05 -2.82852066e-01  1.61505570e+04
+ -1.44221121e+02  4.70730996e-01  1.54419424e+02]
+chip res:  497 -0.000134643392811995 0.0018278262923558941 0.0026545645672594043
+row:  54 nlines:  499
+[ 1.21851827e-10 -1.03198553e-05 -2.82856459e-01  1.61505786e+04
+ -1.44164523e+02  4.72572003e-01  1.54420226e+02]
+res:  499 0.0015200838424789254 0.0031812093166081468 0.004761140953531044
+[ 1.21833587e-10 -1.03196265e-05 -2.82856949e-01  1.61505744e+04
+ -1.44181716e+02  4.72572003e-01  1.54414038e+02]
+chip res:  499 -8.237297151936218e-05 0.0017609666756470688 0.002565029508938672
+row:  55 nlines:  499
+[ 1.22090194e-10 -1.03181303e-05 -2.82857652e-01  1.61504908e+04
+ -1.44185827e+02  4.63252950e-01  1.54432278e+02]
+res:  499 0.0005495037039509043 0.0024845799052855 0.003646509669660629
+[ 1.21373337e-10 -1.03181718e-05 -2.82847057e-01  1.61504842e+04
+ -1.44284983e+02  4.63252950e-01  1.54460749e+02]
+chip res:  499 0.00012325389798206743 0.0016866289734025486 0.002452029902025241
+row:  56 nlines:  496
+[ 1.21247784e-10 -1.03175608e-05 -2.82854393e-01  1.61504611e+04
+ -1.44223180e+02  4.28142014e-01  1.54420173e+02]
+res:  496 0.00015156804056459805 0.0019481844519759761 0.0030346588638093725
+[ 1.21711219e-10 -1.03177106e-05 -2.82856682e-01  1.61504523e+04
+ -1.44245016e+02  4.28142014e-01  1.54406959e+02]
+chip res:  496 -1.7437629139749333e-05 0.0017135628268079017 0.002556833337706452
+row:  57 nlines:  499
+[ 1.21798887e-10 -1.03185973e-05 -2.82857707e-01  1.61504744e+04
+ -1.44166974e+02  4.89414739e-01  1.54459564e+02]
+res:  499 0.0008238637074100552 0.0020469019655138254 0.002643597647418935
+[ 1.21758397e-10 -1.03184014e-05 -2.82856687e-01  1.61504733e+04
+ -1.44157816e+02  4.89414739e-01  1.54478566e+02]
+chip res:  499 7.180879038060084e-05 0.001654609150136821 0.0024690014254500443
+row:  58 nlines:  498
+[ 1.21951928e-10 -1.03181301e-05 -2.82861445e-01  1.61504747e+04
+ -1.44145079e+02  4.99789345e-01  1.54466545e+02]
+res:  498 0.0004137117175559979 0.002019792814280663 0.0029630774619277644
+[ 1.21514541e-10 -1.03177351e-05 -2.82855362e-01  1.61504748e+04
+ -1.44150993e+02  4.99789345e-01  1.54500371e+02]
+chip res:  498 -8.072632226685528e-05 0.0017149981640613987 0.0025727765623003366
+row:  59 nlines:  498
+[ 1.21004426e-10 -1.03170213e-05 -2.82845957e-01  1.61504317e+04
+ -1.44242188e+02  4.80213918e-01  1.54559534e+02]
+res:  498 -0.0001884055782284122 0.0021000688393542077 0.0031840717656434606
+[ 1.21544314e-10 -1.03187082e-05 -2.82855769e-01  1.61504309e+04
+ -1.44199706e+02  4.80213918e-01  1.54485706e+02]
+chip res:  498 -4.5665215111512225e-05 0.0015345434121627477 0.0022310309287350235
+row:  60 nlines:  497
+[ 1.21925335e-10 -1.03194343e-05 -2.82865062e-01  1.61505636e+04
+ -1.44132621e+02  4.51392646e-01  1.54441278e+02]
+res:  497 -0.0003853069829347078 0.00265304883942008 0.003864246417241893
+[ 1.21642866e-10 -1.03189235e-05 -2.82863255e-01  1.61505593e+04
+ -1.44139178e+02  4.51392646e-01  1.54445793e+02]
+chip res:  497 -5.549054367293138e-05 0.001787701236025896 0.0026309290742138223
+row:  61 nlines:  497
+[ 1.21786086e-10 -1.03190316e-05 -2.82863430e-01  1.61505349e+04
+ -1.44113024e+02  5.05817262e-01  1.54482161e+02]
+res:  497 0.00044649068149738014 0.001915949158501462 0.002709094944288491
+[ 1.21697285e-10 -1.03188466e-05 -2.82862110e-01  1.61505401e+04
+ -1.44092630e+02  5.05817262e-01  1.54508964e+02]
+chip res:  497 0.00010238242430204991 0.00160058467372437 0.0023588049413333337
+row:  62 nlines:  496
+[ 1.21847196e-10 -1.03188489e-05 -2.82865568e-01  1.61505757e+04
+ -1.44094399e+02  5.01425455e-01  1.54484768e+02]
+res:  496 0.00017463085168856196 0.001942203658472863 0.002799645309424401
+[ 1.21664720e-10 -1.03184951e-05 -2.82863229e-01  1.61505714e+04
+ -1.44105178e+02  5.01425455e-01  1.54500312e+02]
+chip res:  496 -4.491817071539117e-05 0.0016287999915221008 0.002440212301131687
+row:  63 nlines:  495
+[ 1.21819189e-10 -1.03187439e-05 -2.82868321e-01  1.61505637e+04
+ -1.44101440e+02  4.80989630e-01  1.54436015e+02]
+res:  495 3.078673944401089e-05 0.0017496380023658276 0.0026133315796941247
+[ 1.21823008e-10 -1.03184694e-05 -2.82867439e-01  1.61505700e+04
+ -1.44099152e+02  4.80989630e-01  1.54475930e+02]
+chip res:  495 -8.136159885907546e-05 0.0016376677031075815 0.0023928886444513323
+row:  64 nlines:  497
+[ 1.21503784e-10 -1.03175973e-05 -2.82861708e-01  1.61505754e+04
+ -1.44144050e+02  5.10473116e-01  1.54535153e+02]
+res:  497 0.00023049233459460083 0.0018776391207211418 0.0028995853326762087
+[ 1.21700004e-10 -1.03172756e-05 -2.82866805e-01  1.61505789e+04
+ -1.44065858e+02  5.10473116e-01  1.54514267e+02]
+chip res:  497 -9.021599908010103e-05 0.0017432547610951588 0.002597844231246135
+row:  65 nlines:  496
+[ 1.21638616e-10 -1.03189516e-05 -2.82864612e-01  1.61506407e+04
+ -1.44084585e+02  5.19346303e-01  1.54524763e+02]
+res:  496 -0.0005602843348242459 0.002432834763567371 0.0036145934797464268
+[ 1.21986227e-10 -1.03183094e-05 -2.82872624e-01  1.61506426e+04
+ -1.44010543e+02  5.19346303e-01  1.54509052e+02]
+chip res:  496 0.00019551866444089683 0.001629701534511696 0.002409753495808337
+row:  66 nlines:  496
+[ 1.22365088e-10 -1.03182755e-05 -2.82880525e-01  1.61506049e+04
+ -1.44048880e+02  4.74008092e-01  1.54417703e+02]
+res:  496 0.00047630053632019553 0.0024063440923782764 0.0034702925214675586
+[ 1.21371445e-10 -1.03170362e-05 -2.82865770e-01  1.61506032e+04
+ -1.44111264e+02  4.74008092e-01  1.54496135e+02]
+chip res:  496 0.00014819906573393382 0.0017811344496294623 0.0026347394820819075
+row:  67 nlines:  497
+[ 1.21794254e-10 -1.03168238e-05 -2.82870259e-01  1.61506301e+04
+ -1.44078549e+02  4.83585950e-01  1.54525434e+02]
+res:  497 -9.569940084475093e-05 0.0021243094888632186 0.003126009616671631
+[ 1.21540554e-10 -1.03170179e-05 -2.82868133e-01  1.61506260e+04
+ -1.44072264e+02  4.83585950e-01  1.54509671e+02]
+chip res:  497 -0.0001083604474843014 0.0017825680388341425 0.002617752780854387
+row:  68 nlines:  495
+[ 1.21951174e-10 -1.03175120e-05 -2.82874944e-01  1.61506413e+04
+ -1.44065436e+02  4.95832659e-01  1.54489284e+02]
+res:  495 0.00023329229225055315 0.0017084795126720564 0.002568151894172645
+[ 1.21692797e-10 -1.03173403e-05 -2.82871173e-01  1.61506440e+04
+ -1.44065311e+02  4.95832659e-01  1.54516396e+02]
+chip res:  495 9.577009041095152e-05 0.0016612880754109938 0.0024923367253979283
+row:  69 nlines:  496
+[ 1.21384531e-10 -1.03175776e-05 -2.82870862e-01  1.61507026e+04
+ -1.44083243e+02  4.38524783e-01  1.54480842e+02]
+res:  496 0.0003177538283125614 0.0021357169143811916 0.003096381109701839
+[ 1.21725851e-10 -1.03171635e-05 -2.82871933e-01  1.61506948e+04
+ -1.44109113e+02  4.38524783e-01  1.54484619e+02]
+chip res:  496 -1.980705746973399e-05 0.0016005443430913147 0.0023898319353064796
+row:  70 nlines:  498
+[ 1.21846911e-10 -1.03175189e-05 -2.82876364e-01  1.61506672e+04
+ -1.44050248e+02  4.72750727e-01  1.54485755e+02]
+res:  498 0.00022522887047671247 0.002558056139605469 0.003692064130675514
+[ 1.21933583e-10 -1.03170827e-05 -2.82879698e-01  1.61506642e+04
+ -1.44037363e+02  4.72750727e-01  1.54469563e+02]
+chip res:  498 1.3263156688481104e-05 0.0017956395276996773 0.002654796690824501
+row:  71 nlines:  497
+[ 1.21929522e-10 -1.03169144e-05 -2.82878039e-01  1.61506797e+04
+ -1.44057794e+02  4.72863231e-01  1.54484603e+02]
+res:  497 -0.00034915793912659865 0.0022039811010472476 0.0032096676426197793
+[ 1.22034190e-10 -1.03167549e-05 -2.82880007e-01  1.61506809e+04
+ -1.44032765e+02  4.72863231e-01  1.54498205e+02]
+chip res:  497 -6.072107680665795e-05 0.0017496484761068132 0.0025785046200085654
+row:  72 nlines:  495
+[ 1.22331132e-10 -1.03178056e-05 -2.82883341e-01  1.61507476e+04
+ -1.44013365e+02  4.68517673e-01  1.54468309e+02]
+res:  495 0.00036060007550986484 0.0019705226877704263 0.0029244386717922205
+[ 1.21531477e-10 -1.03170986e-05 -2.82874982e-01  1.61507429e+04
+ -1.44025295e+02  4.68517673e-01  1.54502635e+02]
+chip res:  495 5.0836488298955373e-05 0.001735823725539376 0.002543976089688832
+row:  73 nlines:  497
+[ 1.21093538e-10 -1.03170102e-05 -2.82868428e-01  1.61506839e+04
+ -1.44092255e+02  4.97001327e-01  1.54555903e+02]
+res:  497 -0.00014086171722738072 0.002233315750345355 0.0032983074452050867
+[ 1.21658321e-10 -1.03167869e-05 -2.82877151e-01  1.61506841e+04
+ -1.43996791e+02  4.97001327e-01  1.54533420e+02]
+chip res:  497 -2.5906338123604655e-05 0.001645507843932137 0.002419199807742745
+row:  74 nlines:  496
+[ 1.22275547e-10 -1.03176274e-05 -2.82884338e-01  1.61507711e+04
+ -1.43961844e+02  4.81134271e-01  1.54492384e+02]
+res:  496 0.0007692385170230409 0.0020576468250510516 0.0029530218642334675
+[ 1.21778986e-10 -1.03177119e-05 -2.82877361e-01  1.61507675e+04
+ -1.44034346e+02  4.81134271e-01  1.54526199e+02]
+chip res:  496 -8.328761487064185e-05 0.0017449554998165695 0.0025354178019194886
+row:  75 nlines:  498
+[ 1.21604555e-10 -1.03161707e-05 -2.82879321e-01  1.61506812e+04
+ -1.44021861e+02  4.62390615e-01  1.54510369e+02]
+res:  498 0.0005024661249990459 0.002304566065504332 0.0034605289265747883
+[ 1.21487397e-10 -1.03165593e-05 -2.82875134e-01  1.61506787e+04
+ -1.44067951e+02  4.62390615e-01  1.54529326e+02]
+chip res:  498 -2.4939222385000903e-05 0.0016203940112973214 0.0023862214318831894
+row:  76 nlines:  496
+[ 1.21891463e-10 -1.03176323e-05 -2.82884420e-01  1.61507150e+04
+ -1.43938817e+02  4.82435352e-01  1.54530101e+02]
+res:  496 4.2111927541554905e-05 0.0022920028341104626 0.003406920119675229
+[ 1.21593936e-10 -1.03166135e-05 -2.82881351e-01  1.61507070e+04
+ -1.43962268e+02  4.82435352e-01  1.54539990e+02]
+chip res:  496 1.4503990314551629e-05 0.0017471309438406024 0.0025968983369887453
+row:  77 nlines:  496
+[ 1.22120632e-10 -1.03166825e-05 -2.82887937e-01  1.61506908e+04
+ -1.43986033e+02  4.60907479e-01  1.54469247e+02]
+res:  496 3.874958656524541e-05 0.002091626770379662 0.003108914329969946
+[ 1.21261468e-10 -1.03162817e-05 -2.82876514e-01  1.61506892e+04
+ -1.44022404e+02  4.60907479e-01  1.54530775e+02]
+chip res:  496 -3.532120717864018e-05 0.0016714134744688636 0.0025022990543079205
+row:  78 nlines:  497
+[ 1.21766407e-10 -1.03168258e-05 -2.82884469e-01  1.61506747e+04
+ -1.44023909e+02  4.33147926e-01  1.54499981e+02]
+res:  497 0.0003564878879842581 0.002433986806863686 0.003550241478618819
+[ 1.21732312e-10 -1.03163709e-05 -2.82885280e-01  1.61506714e+04
+ -1.44018464e+02  4.33147926e-01  1.54497942e+02]
+chip res:  497 -2.9194354283390567e-05 0.0016580893116042716 0.0024155179770068815
+row:  79 nlines:  495
+[ 1.21579128e-10 -1.03178334e-05 -2.82882812e-01  1.61506877e+04
+ -1.43994141e+02  4.39003054e-01  1.54497105e+02]
+res:  495 -0.0008555853364669019 0.0021648238980560564 0.0030926268971898513
+[ 1.21358637e-10 -1.03174815e-05 -2.82880453e-01  1.61506845e+04
+ -1.44039862e+02  4.39003054e-01  1.54513228e+02]
+chip res:  495 -2.5895724320434965e-05 0.0014346718271553982 0.0021211493449205454
+row:  80 nlines:  494
+[ 1.21879857e-10 -1.03173914e-05 -2.82886421e-01  1.61507235e+04
+ -1.43922011e+02  5.04740495e-01  1.54557895e+02]
+res:  494 0.00011117192480014637 0.0017439224029658362 0.002656299517131021
+[ 1.21436684e-10 -1.03174658e-05 -2.82881096e-01  1.61507226e+04
+ -1.43945662e+02  5.04740495e-01  1.54578355e+02]
+chip res:  494 7.958325568324653e-05 0.001506778244220186 0.0022372008983634066
+row:  81 nlines:  497
+[ 1.21922437e-10 -1.03161219e-05 -2.82888313e-01  1.61506989e+04
+ -1.43922565e+02  5.14483225e-01  1.54569095e+02]
+res:  497 0.0003481094117887551 0.0021463575940288138 0.00322143051254012
+[ 1.21199675e-10 -1.03157983e-05 -2.82879726e-01  1.61507001e+04
+ -1.43952677e+02  5.14483225e-01  1.54605114e+02]
+chip res:  497 7.744044705759734e-05 0.0015667675288568716 0.0023584962154410737
+row:  82 nlines:  498
+[ 1.22330507e-10 -1.03175292e-05 -2.82896061e-01  1.61506751e+04
+ -1.43926481e+02  4.60303950e-01  1.54494564e+02]
+res:  498 7.395602642645827e-05 0.0024711279993425705 0.0036287736062249384
+[ 1.21030833e-10 -1.03152912e-05 -2.82884815e-01  1.61506701e+04
+ -1.43946467e+02  4.60303950e-01  1.54543054e+02]
+chip res:  498 2.4159364329534583e-05 0.0018205775932074175 0.0026985102634398315
+row:  83 nlines:  497
+[ 1.21378961e-10 -1.03161111e-05 -2.82887967e-01  1.61506525e+04
+ -1.43953595e+02  4.89562051e-01  1.54546006e+02]
+res:  497 0.00036399254167918116 0.002098352468237863 0.0031196098427585953
+[ 1.21063868e-10 -1.03160943e-05 -2.82880218e-01  1.61506545e+04
+ -1.44006945e+02  4.89562051e-01  1.54592850e+02]
+chip res:  497 0.00012394265286275186 0.0016364010552933905 0.0024110093443675705
+row:  84 nlines:  498
+[ 1.21659478e-10 -1.03170279e-05 -2.82891250e-01  1.61506631e+04
+ -1.43844014e+02  5.15886149e-01  1.54557458e+02]
+res:  498 0.00020989502718293807 0.002328967432731588 0.0034031649565279434
+[ 1.21660999e-10 -1.03167052e-05 -2.82891300e-01  1.61506674e+04
+ -1.43856772e+02  5.15886149e-01  1.54580421e+02]
+chip res:  498 4.873962916462915e-05 0.0017100206177929067 0.002495002869064495
+row:  85 nlines:  497
+[ 1.21337962e-10 -1.03158621e-05 -2.82885185e-01  1.61506349e+04
+ -1.43918000e+02  4.85813803e-01  1.54607985e+02]
+res:  497 0.00036679582080978435 0.001876325437478954 0.002751616375742169
+[ 1.21404780e-10 -1.03163250e-05 -2.82887031e-01  1.61506334e+04
+ -1.43922655e+02  4.85813803e-01  1.54581648e+02]
+chip res:  497 1.5064486433402635e-05 0.0015008922273409553 0.0022298567323315944
+row:  86 nlines:  496
+[ 1.21667740e-10 -1.03185614e-05 -2.82893641e-01  1.61506387e+04
+ -1.43882031e+02  4.49491914e-01  1.54518006e+02]
+res:  496 -0.00019713057645276422 0.002256698807286739 0.0032283375656745107
+[ 1.21509240e-10 -1.03178809e-05 -2.82891993e-01  1.61506358e+04
+ -1.43904357e+02  4.49491914e-01  1.54530311e+02]
+chip res:  496 -1.7762815332389437e-05 0.0015870136576268123 0.002337507253309702
+row:  87 nlines:  496
+[ 1.21444709e-10 -1.03169408e-05 -2.82890336e-01  1.61505860e+04
+ -1.43913944e+02  4.77470944e-01  1.54566805e+02]
+res:  496 -0.0005333235558282468 0.0019733080016521853 0.0027675027226800116
+[ 1.21231305e-10 -1.03162830e-05 -2.82890194e-01  1.61505862e+04
+ -1.43897955e+02  4.77470944e-01  1.54579866e+02]
+chip res:  496 -4.880011056229705e-05 0.0016429083516413812 0.0023834312404233606
+row:  88 nlines:  498
+[ 1.21797012e-10 -1.03167743e-05 -2.82896804e-01  1.61505798e+04
+ -1.43893285e+02  4.58544154e-01  1.54525730e+02]
+res:  498 -0.00029941877073724754 0.002773162775156379 0.004075677778882082
+[ 1.22036703e-10 -1.03161266e-05 -2.82902530e-01  1.61505836e+04
+ -1.43817613e+02  4.58544154e-01  1.54526885e+02]
+chip res:  498 -5.2393203077372164e-05 0.0015593002717650961 0.0023191088815876088
+row:  89 nlines:  497
+[ 1.21401918e-10 -1.03153553e-05 -2.82889981e-01  1.61505213e+04
+ -1.43881044e+02  5.04986406e-01  1.54610791e+02]
+res:  497 -8.000297566468362e-05 0.0026535093566053547 0.0038807518408089854
+[ 1.21103677e-10 -1.03155684e-05 -2.82890865e-01  1.61505226e+04
+ -1.43866355e+02  5.04986406e-01  1.54605552e+02]
+chip res:  497 4.349992559582461e-05 0.0018476441473467276 0.002703727697847927
+row:  90 nlines:  494
+[ 1.21559956e-10 -1.03166601e-05 -2.82895063e-01  1.61503477e+04
+ -1.43872003e+02  4.55983696e-01  1.54580749e+02]
+res:  494 0.0006511625479106442 0.0021677820486729615 0.0030481682395509828
+[ 1.21430380e-10 -1.03165524e-05 -2.82893228e-01  1.61503410e+04
+ -1.43907913e+02  4.55983696e-01  1.54572786e+02]
+chip res:  494 -5.845849864272168e-05 0.0016703949686416308 0.0024987789623693653
+row:  91 nlines:  497
+[ 1.21546276e-10 -1.03165550e-05 -2.82891916e-01  1.61503776e+04
+ -1.43859477e+02  5.06764283e-01  1.54620251e+02]
+res:  497 -4.554763654596172e-05 0.002137884159310488 0.003194208462641828
+[ 1.21145206e-10 -1.03161259e-05 -2.82889219e-01  1.61503768e+04
+ -1.43856224e+02  5.06764283e-01  1.54636026e+02]
+chip res:  497 -2.8756556275766343e-05 0.001813566643249942 0.0026721615790451492
+row:  92 nlines:  495
+[ 1.21509012e-10 -1.03170681e-05 -2.82894087e-01  1.61503991e+04
+ -1.43871433e+02  4.70783805e-01  1.54582955e+02]
+res:  495 0.00023539303037978243 0.0017514061546535231 0.0026210627338489807
+[ 1.21342172e-10 -1.03162766e-05 -2.82891766e-01  1.61503947e+04
+ -1.43887494e+02  4.70783805e-01  1.54603901e+02]
+chip res:  495 5.5048030844773166e-05 0.0016561873599130195 0.002400068157752674
+row:  93 nlines:  496
+[ 1.21372431e-10 -1.03164324e-05 -2.82893552e-01  1.61504078e+04
+ -1.43841867e+02  4.46794091e-01  1.54605199e+02]
+res:  496 -0.00022071214698371477 0.00243877389584668 0.0035351777575312066
+[ 1.21621885e-10 -1.03165089e-05 -2.82898284e-01  1.61503971e+04
+ -1.43854667e+02  4.46794091e-01  1.54547873e+02]
+chip res:  496 -7.231573636090616e-05 0.0017884892758956994 0.0026100128282664525
+row:  94 nlines:  496
+[ 1.21580979e-10 -1.03166465e-05 -2.82896996e-01  1.61504361e+04
+ -1.43782778e+02  4.94491813e-01  1.54617800e+02]
+res:  496 0.0005588417079707142 0.0022017350311216433 0.0032141056720474464
+[ 1.21116176e-10 -1.03161436e-05 -2.82891000e-01  1.61504289e+04
+ -1.43845713e+02  4.94491813e-01  1.54629207e+02]
+chip res:  496 0.00014440587983699515 0.0017876722467917716 0.0026988480086544333
+row:  95 nlines:  498
+[ 1.21932351e-10 -1.03171205e-05 -2.82901267e-01  1.61504593e+04
+ -1.43829382e+02  4.67221282e-01  1.54586060e+02]
+res:  498 -0.00024138421576935798 0.0022647022597084288 0.003429061627996773
+[ 1.21723501e-10 -1.03164227e-05 -2.82900245e-01  1.61504551e+04
+ -1.43822121e+02  4.67221282e-01  1.54590472e+02]
+chip res:  498 -8.46074153741938e-05 0.0016228438880716567 0.0024429733721377596
+row:  96 nlines:  493
+[ 1.21601829e-10 -1.03171156e-05 -2.82899679e-01  1.61504658e+04
+ -1.43775509e+02  4.65850453e-01  1.54580155e+02]
+res:  493 3.3022261050064117e-06 0.002109682514856104 0.003132715864617427
+[ 1.21128257e-10 -1.03165651e-05 -2.82891780e-01  1.61504585e+04
+ -1.43840088e+02  4.65850453e-01  1.54609009e+02]
+chip res:  493 -2.8106891477364115e-05 0.0019831947192869848 0.002947486920332641
+row:  97 nlines:  494
+[ 1.21562911e-10 -1.03164111e-05 -2.82901188e-01  1.61504742e+04
+ -1.43848331e+02  4.24461593e-01  1.54563111e+02]
+res:  494 -0.0001981798341148533 0.0021496669978660066 0.0030797500593429963
+[ 1.21343770e-10 -1.03159197e-05 -2.82898792e-01  1.61504691e+04
+ -1.43875424e+02  4.24461593e-01  1.54569959e+02]
+chip res:  494 -0.00017783677685656585 0.0016379204571421724 0.0024481904680927207
+row:  98 nlines:  494
+[ 1.21336726e-10 -1.03167239e-05 -2.82900039e-01  1.61505210e+04
+ -1.43802784e+02  4.78337603e-01  1.54608051e+02]
+res:  494 1.2925056580570526e-05 0.0018209448380730464 0.002687627863842087
+[ 1.21372378e-10 -1.03165733e-05 -2.82899385e-01  1.61505183e+04
+ -1.43808299e+02  4.78337603e-01  1.54623009e+02]
+chip res:  494 -1.389596945955418e-05 0.0016247833700617775 0.0024070466528152415
+row:  99 nlines:  496
+[ 1.21859909e-10 -1.03166124e-05 -2.82904150e-01  1.61505008e+04
+ -1.43803090e+02  4.62295170e-01  1.54585123e+02]
+res:  496 5.573968337557744e-05 0.0031069494825715083 0.004655084550861709
+[ 1.22202094e-10 -1.03175590e-05 -2.82901877e-01  1.61504983e+04
+ -1.43879287e+02  4.62295170e-01  1.54595877e+02]
+chip res:  496 -3.0006508495716844e-05 0.0016914066836761776 0.0025069981888672975
+row:  100 nlines:  497
+[ 1.21575187e-10 -1.03153227e-05 -2.82900953e-01  1.61505306e+04
+ -1.43764374e+02  5.03726768e-01  1.54664265e+02]
+res:  497 0.0009711676593724405 0.0026633830057107843 0.004041231500764546
+[ 1.21671961e-10 -1.03146174e-05 -2.82902408e-01  1.61505240e+04
+ -1.43775351e+02  5.03726768e-01  1.54669671e+02]
+chip res:  497 -6.332540942821652e-05 0.0015783882408868521 0.002338064115241052
+row:  101 nlines:  496
+[ 1.21566945e-10 -1.03173230e-05 -2.82900128e-01  1.61505335e+04
+ -1.43769941e+02  4.84904412e-01  1.54617958e+02]
+res:  496 -0.0002454208552080672 0.002253134006423352 0.0033115857491483134
+[ 1.21166225e-10 -1.03161294e-05 -2.82896101e-01  1.61505301e+04
+ -1.43790841e+02  4.84904412e-01  1.54645750e+02]
+chip res:  496 -0.00012214242269692477 0.0017566788346812245 0.0026066975827278233
+row:  102 nlines:  495
+[ 1.21299772e-10 -1.03172991e-05 -2.82900861e-01  1.61505568e+04
+ -1.43780360e+02  4.70055048e-01  1.54594414e+02]
+res:  495 -0.0001727124436001759 0.002062959552858956 0.003154670329713287
+[ 1.20920081e-10 -1.03163706e-05 -2.82894919e-01  1.61505523e+04
+ -1.43796380e+02  4.70055048e-01  1.54640745e+02]
+chip res:  495 -9.502811371930875e-05 0.0017914662057592068 0.002637762510420411
+row:  103 nlines:  495
+[ 1.21587947e-10 -1.03158251e-05 -2.82906139e-01  1.61505524e+04
+ -1.43778245e+02  4.78909523e-01  1.54606868e+02]
+res:  495 0.00033283540324191563 0.001903917727759108 0.0027615578607933836
+[ 1.21290574e-10 -1.03156521e-05 -2.82900789e-01  1.61505508e+04
+ -1.43797699e+02  4.78909523e-01  1.54651116e+02]
+chip res:  495 -1.7730897525325418e-05 0.0015248554500431055 0.002261405680368576
+row:  104 nlines:  497
+[ 1.21118721e-10 -1.03156131e-05 -2.82898980e-01  1.61505641e+04
+ -1.43771625e+02  4.97631968e-01  1.54666139e+02]
+res:  497 -0.0008409583042521263 0.002730145166424336 0.004225763633421074
+[ 1.21564913e-10 -1.03153854e-05 -2.82907355e-01  1.61505674e+04
+ -1.43707388e+02  4.97631968e-01  1.54650246e+02]
+chip res:  497 6.819134796387516e-06 0.0018051349179586396 0.002676778543655879
+row:  105 nlines:  496
+[ 1.21336649e-10 -1.03156761e-05 -2.82902502e-01  1.61505508e+04
+ -1.43776055e+02  4.64808320e-01  1.54645284e+02]
+res:  496 -0.0003117407659374294 0.0024693198647582904 0.0036886811082111766
+[ 1.21368468e-10 -1.03155641e-05 -2.82904105e-01  1.61505460e+04
+ -1.43764793e+02  4.64808320e-01  1.54631512e+02]
+chip res:  496 -1.532156420580577e-05 0.0016324349116985104 0.002421038847460039
+row:  106 nlines:  496
+[ 1.21246490e-10 -1.03156890e-05 -2.82902429e-01  1.61505410e+04
+ -1.43780102e+02  4.69860330e-01  1.54641516e+02]
+res:  496 -0.000359951742211706 0.00229468200905103 0.0032805542217909513
+[ 1.21642354e-10 -1.03151766e-05 -2.82908604e-01  1.61505396e+04
+ -1.43741225e+02  4.69860330e-01  1.54631557e+02]
+chip res:  496 -7.796154022798873e-06 0.0015206826328721945 0.002251033362006582
+row:  107 nlines:  496
+[ 1.21467636e-10 -1.03149146e-05 -2.82905048e-01  1.61505403e+04
+ -1.43741670e+02  4.82425314e-01  1.54671874e+02]
+res:  496 0.00020551357374642976 0.0020389597957546357 0.0030771597224364643
+[ 1.21197502e-10 -1.03150636e-05 -2.82902253e-01  1.61505337e+04
+ -1.43752264e+02  4.82425314e-01  1.54668523e+02]
+chip res:  496 -9.546439923724392e-05 0.0016843534340296173 0.00255412119138197
+row:  108 nlines:  496
+[ 1.21367469e-10 -1.03159194e-05 -2.82905842e-01  1.61505575e+04
+ -1.43710846e+02  4.71076012e-01  1.54645896e+02]
+res:  496 9.781880999071291e-05 0.001997272120206617 0.0030410840810379263
+[ 1.21183044e-10 -1.03155909e-05 -2.82902235e-01  1.61505534e+04
+ -1.43758083e+02  4.71076012e-01  1.54668716e+02]
+chip res:  496 -1.6092138139356393e-05 0.0017538090551170171 0.0025929582975248886
+row:  109 nlines:  496
+[ 1.21544982e-10 -1.03150798e-05 -2.82908352e-01  1.61505267e+04
+ -1.43727824e+02  4.64066269e-01  1.54646625e+02]
+res:  496 -0.00011135482418467291 0.0018661390649867826 0.002769179554350233
+[ 1.21182308e-10 -1.03150068e-05 -2.82905235e-01  1.61505236e+04
+ -1.43746816e+02  4.64066269e-01  1.54653113e+02]
+chip res:  496 5.484370922204107e-05 0.0015411621288876631 0.0022510947582142326
+row:  110 nlines:  498
+[ 1.21063049e-10 -1.03156658e-05 -2.82900702e-01  1.61505313e+04
+ -1.43734174e+02  4.68345345e-01  1.54689463e+02]
+res:  498 -0.0006420519948733272 0.002444916092827043 0.003574087183422981
+[ 1.21201120e-10 -1.03156988e-05 -2.82903527e-01  1.61505268e+04
+ -1.43700934e+02  4.68345345e-01  1.54664011e+02]
+chip res:  498 -8.327919022121932e-05 0.0019870678979714285 0.0029829460915955903
+row:  111 nlines:  496
+[ 1.21355367e-10 -1.03153657e-05 -2.82905863e-01  1.61505020e+04
+ -1.43740607e+02  4.76705347e-01  1.54668838e+02]
+res:  496 -0.0004491894078455516 0.0021880285667066346 0.0030312842433429677
+[ 1.21204101e-10 -1.03149908e-05 -2.82904138e-01  1.61505035e+04
+ -1.43730292e+02  4.76705347e-01  1.54689903e+02]
+chip res:  496 -9.976214096241165e-05 0.0016029416838136967 0.002385323003318181
+row:  112 nlines:  496
+[ 1.21336110e-10 -1.03157429e-05 -2.82906507e-01  1.61505222e+04
+ -1.43698479e+02  4.87658810e-01  1.54694115e+02]
+res:  496 8.950663232099032e-05 0.001805690944820526 0.0027511454269702287
+[ 1.21174870e-10 -1.03153033e-05 -2.82905446e-01  1.61505174e+04
+ -1.43697181e+02  4.87658810e-01  1.54690711e+02]
+chip res:  496 4.966531923855655e-05 0.0016066294883785304 0.0023483663589715957
+row:  113 nlines:  496
+[ 1.21540324e-10 -1.03169633e-05 -2.82911064e-01  1.61504967e+04
+ -1.43695496e+02  4.60825359e-01  1.54634176e+02]
+res:  496 4.4819150389230344e-05 0.002208478456850571 0.0033204011898336806
+[ 1.20511556e-10 -1.03146698e-05 -2.82901805e-01  1.61504930e+04
+ -1.43709570e+02  4.60825359e-01  1.54687088e+02]
+chip res:  496 -5.629239240079187e-06 0.0016996298982121516 0.0025198750577277865
+row:  114 nlines:  495
+[ 1.21267706e-10 -1.03160733e-05 -2.82907118e-01  1.61505027e+04
+ -1.43685441e+02  5.03815426e-01  1.54713766e+02]
+res:  495 -0.00029764766622975003 0.0019181251172994962 0.002747751305670233
+[ 1.21073009e-10 -1.03158061e-05 -2.82906239e-01  1.61505055e+04
+ -1.43653410e+02  5.03815426e-01  1.54719420e+02]
+chip res:  495 -2.13727598747937e-05 0.0016940899949986488 0.0025144802037594303
+row:  115 nlines:  497
+[ 1.21116740e-10 -1.03156663e-05 -2.82908478e-01  1.61504784e+04
+ -1.43693143e+02  4.55840617e-01  1.54677554e+02]
+res:  497 -0.0006001148558425484 0.002641131795826368 0.0041804952192416
+[ 1.21138179e-10 -1.03158423e-05 -2.82909958e-01  1.61504768e+04
+ -1.43728183e+02  4.55840617e-01  1.54656139e+02]
+chip res:  497 0.00011278672536718659 0.0015739851296530105 0.0022969406705273298
+row:  116 nlines:  496
+[ 1.20876685e-10 -1.03157013e-05 -2.82905746e-01  1.61504535e+04
+ -1.43734243e+02  4.55038795e-01  1.54693856e+02]
+res:  496 -9.235528159479145e-05 0.0017321702089247992 0.002590146637888349
+[ 1.20873556e-10 -1.03155424e-05 -2.82905622e-01  1.61504530e+04
+ -1.43721220e+02  4.55038795e-01  1.54690075e+02]
+chip res:  496 8.808106395008508e-05 0.0016671960738676717 0.0024235359236727794
+row:  117 nlines:  496
+[ 1.21500858e-10 -1.03168200e-05 -2.82910550e-01  1.61504858e+04
+ -1.43701756e+02  4.75044516e-01  1.54686268e+02]
+res:  496 0.00038748024871892994 0.001777861265509273 0.002700456618420722
+[ 1.20973932e-10 -1.03164308e-05 -2.82905682e-01  1.61504964e+04
+ -1.43672522e+02  4.75044516e-01  1.54726911e+02]
+chip res:  496 1.243731276190374e-05 0.0014035379317647312 0.0020636104148294447
+row:  118 nlines:  496
+[ 1.20855898e-10 -1.03158367e-05 -2.82905795e-01  1.61504618e+04
+ -1.43643859e+02  4.74592990e-01  1.54719378e+02]
+res:  496 -0.000263026882748818 0.0020265729071979877 0.0030884534046198993
+[ 1.20878216e-10 -1.03163213e-05 -2.82906944e-01  1.61504651e+04
+ -1.43662917e+02  4.74592990e-01  1.54714081e+02]
+chip res:  496 -8.715202056919225e-05 0.0015759515508761979 0.0022947632842006214
+row:  119 nlines:  497
+[ 1.21206869e-10 -1.03156757e-05 -2.82906624e-01  1.61504045e+04
+ -1.43641929e+02  5.21362858e-01  1.54756005e+02]
+res:  497 0.000294461573503213 0.001840927630837541 0.002689623349812654
+[ 1.20680507e-10 -1.03153861e-05 -2.82902527e-01  1.61504078e+04
+ -1.43624563e+02  5.21362858e-01  1.54772831e+02]
+chip res:  497 5.361898183764424e-05 0.0017038791465893155 0.0024980756904663367
+row:  120 nlines:  496
+[ 1.21215372e-10 -1.03148224e-05 -2.82909249e-01  1.61505825e+04
+ -1.43577506e+02  5.07123587e-01  1.54766645e+02]
+res:  496 0.00052344588766573 0.0029058686404823675 0.004196850954830759
+[ 1.21057454e-10 -1.03151901e-05 -2.82908370e-01  1.61505819e+04
+ -1.43610889e+02  5.07123587e-01  1.54753038e+02]
+chip res:  496 -2.9485119739547372e-05 0.002393255161223351 0.003540262221658426
+row:  121 nlines:  495
+[ 1.20650400e-10 -1.03139417e-05 -2.82902436e-01  1.61505894e+04
+ -1.43625774e+02  5.04886534e-01  1.54818996e+02]
+res:  495 -6.00633993599331e-05 0.0026120074380742153 0.0038296860103002486
+[ 1.20922167e-10 -1.03147311e-05 -2.82907684e-01  1.61505895e+04
+ -1.43607308e+02  5.04886534e-01  1.54769659e+02]
+chip res:  495 -0.0002033803739323048 0.0024727134878048673 0.0037671975294343847
+row:  122 nlines:  495
+[ 1.21181752e-10 -1.03148546e-05 -2.82909683e-01  1.61506009e+04
+ -1.43630881e+02  5.09831894e-01  1.54741015e+02]
+res:  495 -0.00011900930621777661 0.0029856217006454244 0.004500840180641071
+[ 1.20746115e-10 -1.03141563e-05 -2.82906939e-01  1.61506062e+04
+ -1.43589182e+02  5.09831894e-01  1.54779870e+02]
+chip res:  495 5.249717287370004e-05 0.0026016938772954745 0.0038505915349692416
+row:  123 nlines:  494
+[ 1.20893465e-10 -1.03138062e-05 -2.82907501e-01  1.61506292e+04
+ -1.43611329e+02  4.75876933e-01  1.54752833e+02]
+res:  494 -0.0005158066805961425 0.0030580674911107053 0.00444771672902058
+[ 1.21347682e-10 -1.03152572e-05 -2.82913702e-01  1.61506311e+04
+ -1.43604704e+02  4.75876933e-01  1.54721629e+02]
+chip res:  494 -2.332299936824711e-05 0.0023771446622049552 0.0035352281128852104
+row:  124 nlines:  499
+[ 1.20882460e-10 -1.03144078e-05 -2.82905445e-01  1.61506466e+04
+ -1.43630531e+02  4.90150487e-01  1.54785644e+02]
+res:  499 -0.0005633269884128822 0.0031910251673252787 0.004392313284488452
+[ 1.21303543e-10 -1.03150138e-05 -2.82912121e-01  1.61506469e+04
+ -1.43573145e+02  4.90150487e-01  1.54748363e+02]
+chip res:  499 2.7784522899310105e-05 0.002550273737142561 0.0037727931602745397
+row:  125 nlines:  497
+[ 1.21427922e-10 -1.03152796e-05 -2.82916009e-01  1.61506696e+04
+ -1.43580859e+02  4.93894554e-01  1.54720152e+02]
+res:  497 0.00025835449014266487 0.00308957825654943 0.0045799930582642485
+[ 1.21665528e-10 -1.03160883e-05 -2.82915063e-01  1.61506692e+04
+ -1.43574072e+02  4.93894554e-01  1.54736874e+02]
+chip res:  497 1.55679172166856e-05 0.0027011304227926303 0.003995669284992782
+row:  126 nlines:  497
+[ 1.21577042e-10 -1.03154166e-05 -2.82916012e-01  1.61506908e+04
+ -1.43546729e+02  4.95842846e-01  1.54744987e+02]
+res:  497 0.001209554198794649 0.0036870485018880572 0.005246310153492892
+[ 1.21583008e-10 -1.03146354e-05 -2.82918848e-01  1.61506840e+04
+ -1.43555024e+02  4.95842846e-01  1.54723613e+02]
+chip res:  497 -9.271618182538077e-05 0.0025775024623726495 0.0038253179665083863
+row:  127 nlines:  496
+[ 1.21228450e-10 -1.03144647e-05 -2.82912049e-01  1.61506943e+04
+ -1.43605274e+02  4.71505233e-01  1.54752699e+02]
+res:  496 0.00028763884165528 0.0027382907592254924 0.004039115269278512
+[ 1.21270709e-10 -1.03152321e-05 -2.82912208e-01  1.61506948e+04
+ -1.43613552e+02  4.71505233e-01  1.54740259e+02]
+chip res:  496 0.0001594664208823815 0.002477663783793105 0.0035735014788121607
+row:  128 nlines:  497
+[ 1.20980239e-10 -1.03151475e-05 -2.82910149e-01  1.61507247e+04
+ -1.43602326e+02  4.93165544e-01  1.54767271e+02]
+res:  497 0.00024890705390134826 0.0026734224084066227 0.003978711477684649
+[ 1.20978801e-10 -1.03143538e-05 -2.82910302e-01  1.61507225e+04
+ -1.43571089e+02  4.93165544e-01  1.54778229e+02]
+chip res:  497 -2.988718006236013e-05 0.0025733826842042617 0.003779696191075463
+row:  129 nlines:  497
+[ 1.21077221e-10 -1.03155254e-05 -2.82913699e-01  1.61507252e+04
+ -1.43601971e+02  4.51578765e-01  1.54731986e+02]
+res:  497 -0.0009889448829198955 0.002925014039647067 0.004109049129844431
+[ 1.20847806e-10 -1.03141488e-05 -2.82909789e-01  1.61507213e+04
+ -1.43617343e+02  4.51578765e-01  1.54745591e+02]
+chip res:  497 -4.807748155144509e-05 0.0025083806740440195 0.0037439131242080494
+row:  130 nlines:  498
+[ 1.20571455e-10 -1.03146749e-05 -2.82905724e-01  1.61507470e+04
+ -1.43615186e+02  4.95331209e-01  1.54802991e+02]
+res:  498 0.0005805410510220099 0.0029024562581980717 0.004161085231326756
+[ 1.20774679e-10 -1.03145343e-05 -2.82907009e-01  1.61507432e+04
+ -1.43595645e+02  4.95331209e-01  1.54801547e+02]
+chip res:  498 -7.714247294643428e-05 0.002434802378047607 0.0036175269811629693
+row:  131 nlines:  497
+[ 1.20978001e-10 -1.03150187e-05 -2.82909372e-01  1.61507498e+04
+ -1.43608041e+02  4.98783474e-01  1.54785537e+02]
+res:  497 2.456481524859555e-06 0.004634107128367759 0.00687417949426914
+[ 1.21956957e-10 -1.03156044e-05 -2.82928527e-01  1.61507495e+04
+ -1.43479724e+02  4.98783474e-01  1.54676074e+02]
+chip res:  497 0.00020658126959460787 0.002637191329995403 0.0039036974881581535
+row:  132 nlines:  497
+[ 1.21094891e-10 -1.03148967e-05 -2.82915433e-01  1.61507580e+04
+ -1.43539281e+02  4.36869313e-01  1.54744760e+02]
+res:  497 -0.00020916176254104357 0.0036306384499766864 0.005398889718591143
+[ 1.21612270e-10 -1.03144742e-05 -2.82921617e-01  1.61507505e+04
+ -1.43538827e+02  4.36869313e-01  1.54714446e+02]
+chip res:  497 8.243763659265824e-05 0.002408224761893507 0.0035451202431092173
+row:  133 nlines:  496
+[ 1.20872992e-10 -1.03154300e-05 -2.82907329e-01  1.61507615e+04
+ -1.43493569e+02  5.41214732e-01  1.54826963e+02]
+res:  496 -0.0003966530957768555 0.0031679595904279267 0.004604891009818329
+[ 1.20848773e-10 -1.03150073e-05 -2.82907607e-01  1.61507670e+04
+ -1.43462979e+02  5.41214732e-01  1.54835341e+02]
+chip res:  496 -0.00015220877048705006 0.002803065765874635 0.00411651274960644
+row:  134 nlines:  496
+[ 1.20987445e-10 -1.03146395e-05 -2.82912406e-01  1.61507771e+04
+ -1.43505383e+02  5.07496500e-01  1.54809190e+02]
+res:  496 0.0005186046000744682 0.0027136720391354174 0.00390732281475
+[ 1.20857189e-10 -1.03144939e-05 -2.82909319e-01  1.61507726e+04
+ -1.43538891e+02  5.07496500e-01  1.54822650e+02]
+chip res:  496 -0.0001300904050367535 0.002364562780712731 0.0034252326173420597
+No lines for row  135
+row:  136 nlines:  497
+[ 1.21470226e-10 -1.03144330e-05 -2.82916156e-01  1.61507932e+04
+ -1.43446636e+02  5.10385749e-01  1.54825543e+02]
+res:  497 -0.0006023536807333585 0.0030040398432902293 0.004564609457163545
+[ 1.20993541e-10 -1.03146466e-05 -2.82911392e-01  1.61507882e+04
+ -1.43536200e+02  5.10385749e-01  1.54825861e+02]
+chip res:  497 1.9181647076038644e-05 0.0022822117844043532 0.003358238887019811
+row:  137 nlines:  497
+[ 1.20637224e-10 -1.03134959e-05 -2.82907989e-01  1.61507778e+04
+ -1.43536844e+02  4.57724198e-01  1.54835656e+02]
+res:  497 -0.00010756246774690226 0.002899473354773363 0.004276289322392357
+[ 1.20863398e-10 -1.03143954e-05 -2.82912913e-01  1.61507710e+04
+ -1.43550357e+02  4.57724198e-01  1.54758829e+02]
+chip res:  497 -0.00019508217519614846 0.002282924173414358 0.003315370777076567
+row:  138 nlines:  497
+[ 1.20639731e-10 -1.03146949e-05 -2.82906538e-01  1.61507794e+04
+ -1.43519165e+02  4.88818844e-01  1.54845543e+02]
+res:  497 -1.0958843631669879e-05 0.002663991568624624 0.003933392203842517
+[ 1.20801053e-10 -1.03144132e-05 -2.82908724e-01  1.61507749e+04
+ -1.43508148e+02  4.88818844e-01  1.54821905e+02]
+chip res:  497 0.00016850553765834775 0.002803786284857779 0.004080786621073918
+row:  139 nlines:  497
+[ 1.20936339e-10 -1.03148919e-05 -2.82912180e-01  1.61507718e+04
+ -1.43579185e+02  4.31563599e-01  1.54794584e+02]
+res:  497 -0.0007717669977864716 0.0024452278375974856 0.003814658861029026
+[ 1.20777031e-10 -1.03141351e-05 -2.82912010e-01  1.61507599e+04
+ -1.43571248e+02  4.31563599e-01  1.54757852e+02]
+chip res:  497 4.6515167923644185e-05 0.0021969436820654664 0.0032594109978448644
+row:  140 nlines:  497
+[ 1.20823090e-10 -1.03148366e-05 -2.82910716e-01  1.61507979e+04
+ -1.43464506e+02  4.88365475e-01  1.54825243e+02]
+res:  497 0.0006199404633662198 0.0027222954740864225 0.003977163581826066
+[ 1.21062631e-10 -1.03150850e-05 -2.82914399e-01  1.61508005e+04
+ -1.43483064e+02  4.88365475e-01  1.54811217e+02]
+chip res:  497 2.515917003620416e-05 0.0024228654001490213 0.003615437190822411
+row:  141 nlines:  498
+[ 1.21306412e-10 -1.03160055e-05 -2.82916918e-01  1.61507649e+04
+ -1.43495535e+02  4.58066420e-01  1.54777635e+02]
+res:  498 0.0009251660112568061 0.0029737388667854248 0.00433751616593681
+[ 1.20708884e-10 -1.03143069e-05 -2.82910084e-01  1.61507587e+04
+ -1.43521524e+02  4.58066420e-01  1.54803993e+02]
+chip res:  498 1.5219332453852985e-05 0.0023758313600410474 0.0035225791874913437
+row:  142 nlines:  495
+[ 1.21041898e-10 -1.03147907e-05 -2.82915831e-01  1.61507550e+04
+ -1.43452970e+02  4.64481845e-01  1.54796457e+02]
+res:  495 8.409036308876239e-05 0.002313037035492016 0.003390222756773563
+[ 1.20943137e-10 -1.03141853e-05 -2.82913763e-01  1.61507538e+04
+ -1.43495784e+02  4.64481845e-01  1.54806020e+02]
+chip res:  495 0.00013833111370331608 0.002035178915321012 0.0030990395053536214
+row:  143 nlines:  499
+[ 1.21045283e-10 -1.03153341e-05 -2.82913783e-01  1.61507447e+04
+ -1.43477446e+02  4.97710795e-01  1.54825506e+02]
+res:  499 0.00022489090770250186 0.0027213697067054454 0.004042126289947045
+[ 1.21270602e-10 -1.03148320e-05 -2.82918200e-01  1.61507469e+04
+ -1.43438712e+02  4.97710795e-01  1.54815375e+02]
+chip res:  499 0.00010443004430271685 0.0022133095935714664 0.0032669375833740805
+row:  144 nlines:  494
+[ 1.20559721e-10 -1.03150483e-05 -2.82906649e-01  1.61507395e+04
+ -1.43512661e+02  4.88784616e-01  1.54860751e+02]
+res:  494 0.00019684635117300786 0.002258009592878807 0.003403132357153522
+[ 1.20984714e-10 -1.03143462e-05 -2.82913232e-01  1.61507398e+04
+ -1.43457337e+02  4.88784616e-01  1.54833597e+02]
+chip res:  494 3.473730066616554e-05 0.0022078751972003374 0.0032884897719738333
+row:  145 nlines:  495
+[ 1.20700441e-10 -1.03139231e-05 -2.82910714e-01  1.61507231e+04
+ -1.43459524e+02  4.93120930e-01  1.54855549e+02]
+res:  495 3.666321572382003e-05 0.002127678621036466 0.0031375192184706917
+[ 1.21031036e-10 -1.03143861e-05 -2.82914564e-01  1.61507276e+04
+ -1.43442329e+02  4.93120930e-01  1.54844838e+02]
+chip res:  495 -2.2656138753518462e-05 0.002091105221552425 0.0031083291863013723
+row:  146 nlines:  497
+[ 1.20779227e-10 -1.03146752e-05 -2.82909528e-01  1.61507112e+04
+ -1.43509985e+02  4.91420536e-01  1.54876198e+02]
+res:  497 0.0009002656133816345 0.002961270551168127 0.004138906071105312
+[ 1.20718783e-10 -1.03141589e-05 -2.82908715e-01  1.61507051e+04
+ -1.43488438e+02  4.91420536e-01  1.54868000e+02]
+chip res:  497 -3.67334268958075e-05 0.0022849967717775144 0.0033825617015216963
+row:  147 nlines:  495
+[ 1.21193582e-10 -1.03150424e-05 -2.82916750e-01  1.61507010e+04
+ -1.43398224e+02  4.91572793e-01  1.54837575e+02]
+res:  495 -5.879387026652694e-05 0.00223726527292456 0.0033164296310789114
+[ 1.20800307e-10 -1.03145674e-05 -2.82911240e-01  1.61506987e+04
+ -1.43452006e+02  4.91572793e-01  1.54862505e+02]
+chip res:  495 5.32590966031421e-05 0.0021946349497738993 0.0032482739938427463
+row:  148 nlines:  496
+[ 1.20379909e-10 -1.03143070e-05 -2.82903509e-01  1.61506820e+04
+ -1.43489577e+02  4.69944677e-01  1.54882582e+02]
+res:  496 -0.0016001595140551217 0.0033368340100423666 0.005269833487754323
+[ 1.20623206e-10 -1.03139635e-05 -2.82910694e-01  1.61506856e+04
+ -1.43419643e+02  4.69944677e-01  1.54864945e+02]
+chip res:  496 -0.00012551950658235 0.0024385305086980225 0.0036022451223107024
+row:  149 nlines:  494
+[ 1.20283031e-10 -1.03139514e-05 -2.82904424e-01  1.61506899e+04
+ -1.43375381e+02  4.66009927e-01  1.54878884e+02]
+res:  494 2.114010749210138e-05 0.003331600603814877 0.004908096076123304
+[ 1.20417644e-10 -1.03147200e-05 -2.82907430e-01  1.61506848e+04
+ -1.43427285e+02  4.66009927e-01  1.54833368e+02]
+chip res:  494 -1.1899304809048772e-05 0.0029842944768461166 0.004435605627232143
+row:  150 nlines:  497
+[ 1.21028583e-10 -1.03142864e-05 -2.82912359e-01  1.61505978e+04
+ -1.43379911e+02  5.23353529e-01  1.54885057e+02]
+res:  497 -0.00016428369053755887 0.0021287573254085146 0.0030840743240196475
+[ 1.20998759e-10 -1.03135121e-05 -2.82911496e-01  1.61505974e+04
+ -1.43369849e+02  5.23353528e-01  1.54902459e+02]
+chip res:  497 0.00014936878324078862 0.0018752088999463012 0.002776871883480779
+row:  151 nlines:  496
+[ 1.20879479e-10 -1.03148093e-05 -2.82910921e-01  1.61506365e+04
+ -1.43407231e+02  4.97379868e-01  1.54890706e+02]
+res:  496 -4.6640952859888785e-06 0.0017786433463697904 0.002637020571258079
+[ 1.20626985e-10 -1.03145346e-05 -2.82910443e-01  1.61506366e+04
+ -1.43388935e+02  4.97379868e-01  1.54883762e+02]
+chip res:  496 -3.45318294421304e-05 0.0016809825519885635 0.0025282910077504164
+row:  152 nlines:  496
+[ 1.20708405e-10 -1.03140181e-05 -2.82908446e-01  1.61506647e+04
+ -1.43401919e+02  4.95348913e-01  1.54911855e+02]
+res:  496 0.0002049542772510904 0.0018964231430800282 0.002753095980927457
+[ 1.20613246e-10 -1.03142127e-05 -2.82910288e-01  1.61506634e+04
+ -1.43384544e+02  4.95348913e-01  1.54887586e+02]
+chip res:  496 0.00011737985732906964 0.0016793987233540975 0.002543575350390228
+row:  153 nlines:  496
+[ 1.20857547e-10 -1.03146774e-05 -2.82915776e-01  1.61506879e+04
+ -1.43352325e+02  4.94291115e-01  1.54845447e+02]
+res:  496 -0.0012021307220493327 0.0021618935006699758 0.003092009800039492
+[ 1.20616114e-10 -1.03138607e-05 -2.82909179e-01  1.61506920e+04
+ -1.43383951e+02  4.94291115e-01  1.54893330e+02]
+chip res:  496 -7.826525506970938e-05 0.0015536312730546342 0.002322822220827034
+row:  154 nlines:  497
+[ 1.20373616e-10 -1.03146965e-05 -2.82904231e-01  1.61507137e+04
+ -1.43426786e+02  4.74115243e-01  1.54908802e+02]
+res:  497 -0.00023905768284748774 0.00220975976480986 0.0032086993295503807
+[ 1.20499430e-10 -1.03138516e-05 -2.82911423e-01  1.61507152e+04
+ -1.43378034e+02  4.74115243e-01  1.54877268e+02]
+chip res:  497 5.860798410139978e-05 0.0017358362456434406 0.0025773939975092496
+row:  155 nlines:  497
+[ 1.20493842e-10 -1.03152541e-05 -2.82908714e-01  1.61507173e+04
+ -1.43395261e+02  4.77026897e-01  1.54873935e+02]
+res:  497 0.0005406232667155564 0.002285203579958761 0.0031598793230193027
+[ 1.20986848e-10 -1.03154062e-05 -2.82911281e-01  1.61507181e+04
+ -1.43399732e+02  4.77026897e-01  1.54870525e+02]
+chip res:  497 4.18468644056702e-05 0.0015173349074757425 0.0022033447193537644
+row:  156 nlines:  498
+[ 1.20453864e-10 -1.03145897e-05 -2.82906842e-01  1.61507620e+04
+ -1.43397022e+02  4.85381944e-01  1.54894718e+02]
+res:  498 0.0003510317001200747 0.0018038682546830387 0.0026445160096599885
+[ 1.20607362e-10 -1.03144587e-05 -2.82909438e-01  1.61507649e+04
+ -1.43375437e+02  4.85381944e-01  1.54889412e+02]
+chip res:  498 6.996367665124126e-05 0.0016487183629578794 0.002455435309591116
+row:  157 nlines:  496
+[ 1.20526337e-10 -1.03140801e-05 -2.82907144e-01  1.61507933e+04
+ -1.43359399e+02  5.01897109e-01  1.54928472e+02]
+res:  496 0.0008507264265062986 0.0022572650013898965 0.003358322483595615
+[ 1.20514470e-10 -1.03145640e-05 -2.82908700e-01  1.61507924e+04
+ -1.43357366e+02  5.01897109e-01  1.54916189e+02]
+chip res:  496 9.98136683847406e-05 0.0016917000493776868 0.0024720690109414425
+row:  158 nlines:  496
+[ 1.20508382e-10 -1.03140946e-05 -2.82905003e-01  1.61508073e+04
+ -1.43399069e+02  5.01436996e-01  1.54930090e+02]
+res:  496 0.0012203732003399637 0.0023629049937881064 0.0034134162394644143
+[ 1.20513220e-10 -1.03140531e-05 -2.82906645e-01  1.61508059e+04
+ -1.43382587e+02  5.01436996e-01  1.54919118e+02]
+chip res:  496 -7.650506086065434e-05 0.0015647518939658767 0.0023405170118581792
+row:  159 nlines:  497
+[ 1.20496982e-10 -1.03136816e-05 -2.82906134e-01  1.61508167e+04
+ -1.43359910e+02  5.12256951e-01  1.54939663e+02]
+res:  497 -0.0003008732237503864 0.0025594578164600534 0.0037512584579705967
+[ 1.19818271e-10 -1.03113735e-05 -2.82906175e-01  1.61508172e+04
+ -1.43300696e+02  5.12256951e-01  1.54952457e+02]
+chip res:  497 6.452444358728826e-05 0.0015298122070817044 0.00232171553166554
+row:  160 nlines:  495
+[ 1.20854958e-10 -1.03140972e-05 -2.82910708e-01  1.61508399e+04
+ -1.43277281e+02  5.19034898e-01  1.54938539e+02]
+res:  495 -9.991461411118507e-06 0.001851799732321524 0.002757344094997263
+[ 1.20881887e-10 -1.03140955e-05 -2.82911991e-01  1.61508415e+04
+ -1.43295775e+02  5.19034898e-01  1.54928013e+02]
+chip res:  495 -3.840397039311938e-05 0.001772416799212806 0.00259279884699439
+row:  161 nlines:  496
+[ 1.20414506e-10 -1.03140011e-05 -2.82902446e-01  1.61508568e+04
+ -1.43350386e+02  5.30573402e-01  1.54972065e+02]
+res:  496 0.0001358987765343045 0.0019399995899220812 0.002853165774662179
+[ 1.20607492e-10 -1.03140569e-05 -2.82906827e-01  1.61508590e+04
+ -1.43311982e+02  5.30573402e-01  1.54962583e+02]
+chip res:  496 5.528285782929743e-05 0.0017670459492364898 0.0026047899988344884
+row:  162 nlines:  497
+[ 1.20821964e-10 -1.03141495e-05 -2.82910128e-01  1.61508632e+04
+ -1.43341746e+02  4.58393126e-01  1.54915241e+02]
+res:  497 -0.00017683830083115026 0.0026439287648827303 0.003870774433879272
+[ 1.20018881e-10 -1.03116169e-05 -2.82911246e-01  1.61508562e+04
+ -1.43302261e+02  4.58393126e-01  1.54895408e+02]
+chip res:  497 0.00011643921061477158 0.0017192045306728687 0.002550461469321777
+row:  163 nlines:  500
+[ 1.20491102e-10 -1.03143910e-05 -2.82909782e-01  1.61508493e+04
+ -1.43330741e+02  4.54000638e-01  1.54860475e+02]
+res:  500 0.0007492876584365149 0.0021021729489802965 0.0028668544564020393
+[ 1.20784794e-10 -1.03138381e-05 -2.82909913e-01  1.61508459e+04
+ -1.43374511e+02  4.54000638e-01  1.54876565e+02]
+chip res:  500 3.355317130626645e-05 0.0017211477270393516 0.002542138034317308
+row:  164 nlines:  496
+[ 1.20568724e-10 -1.03141997e-05 -2.82906598e-01  1.61508814e+04
+ -1.43319502e+02  4.72588942e-01  1.54939303e+02]
+res:  496 0.0005773944612883497 0.0020690466508312966 0.003017287544979169
+[ 1.20333702e-10 -1.03137344e-05 -2.82903841e-01  1.61508755e+04
+ -1.43358175e+02  4.72588942e-01  1.54929235e+02]
+chip res:  496 5.0935249419126194e-05 0.0017449328779548523 0.00261215504243555
+row:  165 nlines:  495
+[ 1.20754425e-10 -1.03137832e-05 -2.82911361e-01  1.61508859e+04
+ -1.43254813e+02  5.07583470e-01  1.54936851e+02]
+res:  495 0.00011953320790780708 0.0017785694217309356 0.002593639205901082
+[ 1.20812371e-10 -1.03136932e-05 -2.82910234e-01  1.61508832e+04
+ -1.43278607e+02  5.07583470e-01  1.54943550e+02]
+chip res:  495 0.00010884565926971845 0.0015681577770010335 0.0023391760403129896
+row:  166 nlines:  499
+[ 1.20839452e-10 -1.03140791e-05 -2.82910460e-01  1.61508683e+04
+ -1.43318624e+02  4.83931904e-01  1.54897718e+02]
+res:  499 0.00027671336829371285 0.0024032621695369016 0.0033905316876254904
+[ 1.20705046e-10 -1.03129589e-05 -2.82912269e-01  1.61508703e+04
+ -1.43281231e+02  4.83931904e-01  1.54908136e+02]
+chip res:  499 -4.166655344306491e-05 0.0016982115521386731 0.002503247359538236
+row:  167 nlines:  496
+[ 1.20602178e-10 -1.03134532e-05 -2.82906854e-01  1.61508801e+04
+ -1.43255391e+02  5.00208689e-01  1.54959214e+02]
+res:  496 3.594716417865129e-05 0.0017685381280898582 0.002598020376550571
+[ 1.20552987e-10 -1.03136654e-05 -2.82907004e-01  1.61508807e+04
+ -1.43273795e+02  5.00208689e-01  1.54947846e+02]
+chip res:  496 -5.424220580607653e-05 0.001524013425296289 0.0022725220050190177
+row:  168 nlines:  497
+[ 1.20853206e-10 -1.03142013e-05 -2.82910057e-01  1.61508827e+04
+ -1.43284556e+02  4.84108942e-01  1.54920342e+02]
+res:  497 0.0009272979677916737 0.003156439845042769 0.0045874101521818245
+[ 1.20203953e-10 -1.03137229e-05 -2.82900940e-01  1.61508799e+04
+ -1.43347429e+02  4.84108942e-01  1.54957563e+02]
+chip res:  497 -7.1871661930345e-05 0.0015169809412327595 0.002252928173676451
+row:  169 nlines:  496
+[ 1.20634294e-10 -1.03128894e-05 -2.82906357e-01  1.61508699e+04
+ -1.43285915e+02  4.75878768e-01  1.54955492e+02]
+res:  496 -1.0928170013357885e-06 0.0023495446857850766 0.0034840461093493683
+[ 1.20831826e-10 -1.03130522e-05 -2.82911861e-01  1.61508681e+04
+ -1.43286746e+02  4.75878768e-01  1.54921728e+02]
+chip res:  496 5.7757818467507605e-05 0.0014118134013187955 0.0020916867662854675
+row:  170 nlines:  500
+[ 1.20582662e-10 -1.03136783e-05 -2.82905039e-01  1.61508710e+04
+ -1.43322437e+02  4.62866899e-01  1.54943538e+02]
+res:  500 0.0013976373475088621 0.002842100311681861 0.004119616626443106
+[ 1.20504356e-10 -1.03140019e-05 -2.82904472e-01  1.61508682e+04
+ -1.43342239e+02  4.62866998e-01  1.54916696e+02]
+chip res:  500 -8.183915542758768e-05 0.0015650260293114115 0.0022574526745089366
+row:  171 nlines:  496
+[ 1.21088731e-10 -1.03142508e-05 -2.82911430e-01  1.61508784e+04
+ -1.43209099e+02  4.70761580e-01  1.54921933e+02]
+res:  496 0.0006959531383472495 0.0021245903726594406 0.0031299126622639935
+[ 1.20673831e-10 -1.03143574e-05 -2.82908913e-01  1.61508758e+04
+ -1.43253295e+02  4.70761580e-01  1.54914798e+02]
+chip res:  496 3.2250654840026982e-06 0.0017621426186451572 0.002607775066485173
+row:  172 nlines:  495
+[ 1.19659176e-10 -1.03133511e-05 -2.82892715e-01  1.61508686e+04
+ -1.43299856e+02  4.88350404e-01  1.55023735e+02]
+res:  495 -7.785568413964938e-05 0.0015921497779345373 0.002362871769926
+[ 1.20539345e-10 -1.03142082e-05 -2.82905608e-01  1.61508699e+04
+ -1.43243939e+02  4.88350404e-01  1.54964299e+02]
+chip res:  495 1.1482297850307077e-06 0.001607726764632389 0.0023853216360214544
+row:  173 nlines:  495
+[ 1.20202053e-10 -1.03147844e-05 -2.82900098e-01  1.61508655e+04
+ -1.43286348e+02  4.84640910e-01  1.54971782e+02]
+res:  495 -4.3811294744955376e-05 0.0018200048034486827 0.002678739333460693
+[ 1.20740048e-10 -1.03146201e-05 -2.82908014e-01  1.61508686e+04
+ -1.43219361e+02  4.84640910e-01  1.54943367e+02]
+chip res:  495 6.713862239848822e-05 0.0015051850823510904 0.002212613073708785
+row:  174 nlines:  496
+[ 1.20769702e-10 -1.03142678e-05 -2.82906625e-01  1.61508536e+04
+ -1.43219521e+02  4.91323143e-01  1.54980532e+02]
+res:  496 0.00012448145571397617 0.0017730706003931118 0.0027430128067190015
+[ 1.20839871e-10 -1.03138751e-05 -2.82908461e-01  1.61508550e+04
+ -1.43214050e+02  4.91323143e-01  1.54967362e+02]
+chip res:  496 1.3826230315316934e-05 0.0015730629675090313 0.0023474869269315235
+row:  175 nlines:  495
+[ 1.20619797e-10 -1.03136897e-05 -2.82905635e-01  1.61508306e+04
+ -1.43234505e+02  4.64262553e-01  1.54967329e+02]
+res:  495 0.0015652979582228 0.002662460081410245 0.003244397499966207
+[ 1.20549577e-10 -1.03136961e-05 -2.82904943e-01  1.61508257e+04
+ -1.43261962e+02  4.64262553e-01  1.54939971e+02]
+chip res:  495 1.939531648531556e-05 0.001599658256964176 0.00238312042852712
+row:  176 nlines:  498
+[ 1.19498327e-10 -1.03134411e-05 -2.82893327e-01  1.61508104e+04
+ -1.43301290e+02  4.68289026e-01  1.54975194e+02]
+res:  498 0.000429692430770956 0.001957696561476041 0.002788608540138432
+[ 1.20520271e-10 -1.03138312e-05 -2.82904179e-01  1.61508190e+04
+ -1.43244958e+02  4.68289026e-01  1.54960454e+02]
+chip res:  498 2.20478023038595e-05 0.0016272133843813208 0.002401408490147323
+row:  177 nlines:  497
+[ 1.20267144e-10 -1.03142274e-05 -2.82900663e-01  1.61508066e+04
+ -1.43228040e+02  4.85181915e-01  1.54987801e+02]
+res:  497 0.00013220791333878879 0.0021762381365988404 0.0031948191480604964
+[ 1.20163418e-10 -1.03137148e-05 -2.82900544e-01  1.61508062e+04
+ -1.43222206e+02  4.85181916e-01  1.54985636e+02]
+chip res:  497 -2.1301020751707256e-05 0.0016292863201670116 0.0024321602003644196
+row:  178 nlines:  496
+[ 1.19960787e-10 -1.03128930e-05 -2.82895219e-01  1.61507940e+04
+ -1.43225664e+02  5.05582028e-01  1.55040263e+02]
+res:  496 -0.0004788935948454309 0.0018308444487047382 0.00271243718382433
+[ 1.20263192e-10 -1.03131169e-05 -2.82902967e-01  1.61507981e+04
+ -1.43167715e+02  5.05582028e-01  1.55000625e+02]
+chip res:  496 -5.5439729294448625e-05 0.0015937013322400162 0.0023557266547898424
+row:  179 nlines:  496
+[ 1.21274588e-10 -1.03136094e-05 -2.82913206e-01  1.61507656e+04
+ -1.43170620e+02  4.80803506e-01  1.54922488e+02]
+res:  496 0.00046765182833041763 0.0021612125556202955 0.0031615031982355343
+[ 1.21048536e-10 -1.03132581e-05 -2.82908922e-01  1.61507675e+04
+ -1.43207007e+02  4.80803506e-01  1.54949948e+02]
+chip res:  496 -5.8893856476061046e-05 0.0016457238198199775 0.0024572679375767185
+row:  180 nlines:  495
+[ 1.19877547e-10 -1.03131052e-05 -2.82893353e-01  1.61508974e+04
+ -1.43227263e+02  5.00509212e-01  1.55045714e+02]
+res:  495 5.7152583394781686e-05 0.0017106749219237827 0.0025156747006088356
+[ 1.20878705e-10 -1.03139686e-05 -2.82906087e-01  1.61509000e+04
+ -1.43180921e+02  5.00509212e-01  1.54988891e+02]
+chip res:  495 -0.00013309167843544856 0.0015113659137568902 0.0022029867545983184
+row:  181 nlines:  495
+[ 1.21037569e-10 -1.03139131e-05 -2.82909477e-01  1.61509173e+04
+ -1.43167750e+02  4.86740781e-01  1.54966803e+02]
+res:  495 -0.0005377025063353358 0.0018886188099713763 0.002906774967209533
+[ 1.20584827e-10 -1.03130653e-05 -2.82905555e-01  1.61509175e+04
+ -1.43146253e+02  4.86740781e-01  1.54990905e+02]
+chip res:  495 3.526125510688871e-05 0.0015701358806836652 0.0023408968034697533
+row:  182 nlines:  494
+[ 1.20753828e-10 -1.03139422e-05 -2.82903751e-01  1.61509579e+04
+ -1.43163235e+02  4.94976122e-01  1.55002775e+02]
+res:  494 0.0006445217231885181 0.002163026370908483 0.0031827061611824897
+[ 1.20693533e-10 -1.03135408e-05 -2.82903423e-01  1.61509531e+04
+ -1.43166396e+02  4.94976122e-01  1.54995922e+02]
+chip res:  494 3.845196079055313e-05 0.0018001825683313655 0.0026697855193800676
+row:  183 nlines:  495
+[ 1.20943074e-10 -1.03148552e-05 -2.82907479e-01  1.61509632e+04
+ -1.43192252e+02  4.60608111e-01  1.54936029e+02]
+res:  495 0.0011448736768215895 0.002484580676537007 0.003455354553923069
+[ 1.20581979e-10 -1.03137296e-05 -2.82900161e-01  1.61509606e+04
+ -1.43212161e+02  4.60608111e-01  1.54990133e+02]
+chip res:  495 7.938298949738964e-06 0.001799110737920273 0.0026770525450655904
+row:  184 nlines:  495
+[ 1.20425814e-10 -1.03136778e-05 -2.82898028e-01  1.61509914e+04
+ -1.43147563e+02  4.67777690e-01  1.55016299e+02]
+res:  495 -0.00016983320529107004 0.0018576854236016516 0.002829897821494386
+[ 1.20765553e-10 -1.03142797e-05 -2.82902101e-01  1.61509865e+04
+ -1.43175241e+02  4.67777690e-01  1.54978985e+02]
+chip res:  495 8.492816414218396e-05 0.0017595363460713997 0.002599782149170202
+row:  185 nlines:  496
+[ 1.20812542e-10 -1.03139399e-05 -2.82904438e-01  1.61510266e+04
+ -1.43103295e+02  4.98283081e-01  1.54998384e+02]
+res:  496 0.0018043639611278195 0.0026580739049677504 0.0035452726333185516
+[ 1.21038298e-10 -1.03144918e-05 -2.82906549e-01  1.61510283e+04
+ -1.43109205e+02  4.98283081e-01  1.54998752e+02]
+chip res:  496 -9.722670438350178e-05 0.0017146149666587007 0.0024788376866353187
+row:  186 nlines:  496
+[ 1.20792205e-10 -1.03144678e-05 -2.82901896e-01  1.61510504e+04
+ -1.43098215e+02  5.23473715e-01  1.55028398e+02]
+res:  496 0.00027218832474318333 0.001971518806385575 0.002881514729217553
+[ 1.20808472e-10 -1.03141863e-05 -2.82900988e-01  1.61510557e+04
+ -1.43078122e+02  5.23473715e-01  1.55050516e+02]
+chip res:  496 1.211492417496629e-06 0.0017869289376903907 0.0026511009686775154
+row:  187 nlines:  495
+[ 1.20677220e-10 -1.03147782e-05 -2.82901522e-01  1.61510535e+04
+ -1.43144680e+02  4.32187375e-01  1.54963823e+02]
+res:  495 -0.0004907008751615649 0.0023617563892912585 0.003556720968358172
+[ 1.21110940e-10 -1.03141191e-05 -2.82908352e-01  1.61510484e+04
+ -1.43124246e+02  4.32187375e-01  1.54940455e+02]
+chip res:  495 -9.122706251218915e-05 0.001725692691252334 0.0025266610997081934
+row:  188 nlines:  499
+[ 1.19983790e-10 -1.03136156e-05 -2.82893120e-01  1.61510799e+04
+ -1.43120397e+02  4.69613710e-01  1.55048129e+02]
+res:  499 0.001300045223615598 0.0032979993338813074 0.004743475096871852
+[ 1.20492506e-10 -1.03148011e-05 -2.82894779e-01  1.61510711e+04
+ -1.43192628e+02  4.69613710e-01  1.55012976e+02]
+chip res:  499 8.024560702324379e-05 0.0019255891238572076 0.0028420072512434333
+row:  189 nlines:  498
+[ 1.20808861e-10 -1.03146545e-05 -2.82899861e-01  1.61511172e+04
+ -1.43102238e+02  5.51230568e-01  1.55058996e+02]
+res:  498 0.00032964266483759275 0.0022150545910335495 0.003571025258593968
+[ 1.21188678e-10 -1.03150707e-05 -2.82900588e-01  1.61511233e+04
+ -1.43053291e+02  5.51230568e-01  1.55072389e+02]
+chip res:  498 -1.2852466170443222e-05 0.0017411604649169021 0.0025748315135427427
+row:  190 nlines:  494
+[ 1.20459967e-10 -1.03138690e-05 -2.82896061e-01  1.61511043e+04
+ -1.43106192e+02  4.86862009e-01  1.55033364e+02]
+res:  494 0.00024372621828661067 0.0017833570127550047 0.002702046522920549
+[ 1.20769076e-10 -1.03140739e-05 -2.82899054e-01  1.61511027e+04
+ -1.43095321e+02  4.86862009e-01  1.55016206e+02]
+chip res:  494 6.118803685239982e-05 0.0016675224451319082 0.002500470742611097
+row:  191 nlines:  496
+[ 1.20635533e-10 -1.03143420e-05 -2.82896241e-01  1.61511216e+04
+ -1.43089085e+02  4.96395287e-01  1.55062179e+02]
+res:  496 0.0007272154161910294 0.0021350019123929087 0.0032411640265926603
+[ 1.20475547e-10 -1.03144189e-05 -2.82897280e-01  1.61511148e+04
+ -1.43073480e+02  4.96395287e-01  1.55026726e+02]
+chip res:  496 5.7024278248718474e-05 0.0015749820640849066 0.0023197745878895453
+row:  192 nlines:  495
+[ 1.20485840e-10 -1.03149461e-05 -2.82893813e-01  1.61511590e+04
+ -1.43086916e+02  5.02781904e-01  1.55060061e+02]
+res:  495 0.0003119769462500699 0.0018797223074216163 0.002800203270317124
+[ 1.20913404e-10 -1.03144481e-05 -2.82899738e-01  1.61511578e+04
+ -1.43060180e+02  5.02781904e-01  1.55038579e+02]
+chip res:  495 5.284434155328199e-05 0.00161017195750901 0.0023552075917360475
+row:  193 nlines:  496
+[ 1.20412894e-10 -1.03142322e-05 -2.82890641e-01  1.61511911e+04
+ -1.43060908e+02  5.35145829e-01  1.55113587e+02]
+res:  496 -0.00010006137654272607 0.0019777205325226532 0.0028448036602626374
+[ 1.20826046e-10 -1.03148405e-05 -2.82897344e-01  1.61511962e+04
+ -1.43010750e+02  5.35145829e-01  1.55075071e+02]
+chip res:  496 3.7989512748026755e-05 0.0017151167057818384 0.0025569140109101616
+row:  194 nlines:  496
+[ 1.20457770e-10 -1.03146909e-05 -2.82894706e-01  1.61511671e+04
+ -1.43134776e+02  4.67012058e-01  1.55008905e+02]
+res:  496 0.0002870531843655044 0.002199980650402722 0.003187310265922527
+[ 1.21015987e-10 -1.03151773e-05 -2.82899485e-01  1.61511743e+04
+ -1.43079781e+02  4.67012058e-01  1.55010518e+02]
+chip res:  496 -0.00010674818622646853 0.0016865523775777547 0.002458055962998935
+row:  195 nlines:  494
+[ 1.21471425e-10 -1.03149113e-05 -2.82904788e-01  1.61511747e+04
+ -1.43008195e+02  5.16535848e-01  1.55037084e+02]
+res:  494 0.00013337977270566626 0.0019154703277308727 0.002855375935657761
+[ 1.20863437e-10 -1.03142410e-05 -2.82897151e-01  1.61511760e+04
+ -1.43024790e+02  5.16535848e-01  1.55069818e+02]
+chip res:  494 2.0369910998851992e-05 0.001677731066592969 0.0024936397281647856
+row:  196 nlines:  497
+[ 1.20931943e-10 -1.03142019e-05 -2.82894530e-01  1.61511987e+04
+ -1.43079831e+02  4.93609798e-01  1.55057603e+02]
+res:  497 0.00035869360726792365 0.0020807603650609963 0.0029584834892070603
+[ 1.21005699e-10 -1.03141515e-05 -2.82897869e-01  1.61512031e+04
+ -1.43024520e+02  4.93609798e-01  1.55048215e+02]
+chip res:  497 4.2195442802039906e-05 0.0015655382121622097 0.002306666168541976
+row:  197 nlines:  495
+[ 1.20802777e-10 -1.03153012e-05 -2.82898846e-01  1.61512503e+04
+ -1.42990275e+02  4.75674048e-01  1.55029227e+02]
+res:  495 -3.510127862682566e-05 0.0024386624063481577 0.003619969744412344
+[ 1.20815611e-10 -1.03154560e-05 -2.82897024e-01  1.61512514e+04
+ -1.43022860e+02  4.75674048e-01  1.55030816e+02]
+chip res:  495 -7.125876072677784e-05 0.0015764210038469173 0.0023759790377238608
+row:  198 nlines:  494
+[ 1.20667884e-10 -1.03154984e-05 -2.82891457e-01  1.61512656e+04
+ -1.43029645e+02  5.01265321e-01  1.55090806e+02]
+res:  494 -0.00033318747682642424 0.002001829097935115 0.0031481044171121943
+[ 1.20813481e-10 -1.03157177e-05 -2.82895421e-01  1.61512661e+04
+ -1.42986383e+02  5.01265321e-01  1.55062511e+02]
+chip res:  494 4.6723021114303265e-05 0.0016269922789433622 0.002411417595707658
+row:  199 nlines:  496
+[ 1.20708842e-10 -1.03145137e-05 -2.82893177e-01  1.61511760e+04
+ -1.43035347e+02  4.94525140e-01  1.55056776e+02]
+res:  496 0.00038514389962074347 0.0020123717140450026 0.0029322377997419383
+[ 1.20787514e-10 -1.03141214e-05 -2.82894276e-01  1.61511764e+04
+ -1.43024122e+02  4.94525140e-01  1.55055991e+02]
+chip res:  496 0.00014565429137292085 0.0015749903604955762 0.0023265439256570826
+row:  200 nlines:  496
+[ 1.21055173e-10 -1.03147392e-05 -2.82897939e-01  1.61512130e+04
+ -1.42978194e+02  4.94215225e-01  1.55027651e+02]
+res:  496 0.0004529126281340723 0.0019498712726999656 0.00274034957294034
+[ 1.20700987e-10 -1.03148149e-05 -2.82892363e-01  1.61512147e+04
+ -1.42987078e+02  4.94215225e-01  1.55061957e+02]
+chip res:  496 0.00016592370593571104 0.001681356107837928 0.002420557610252177
+row:  201 nlines:  497
+[ 1.20774006e-10 -1.03145801e-05 -2.82892411e-01  1.61511899e+04
+ -1.42959006e+02  5.09748297e-01  1.55083231e+02]
+res:  497 0.0008813406711851712 0.0019773113090195693 0.002833706956455065
+[ 1.20871931e-10 -1.03148226e-05 -2.82892164e-01  1.61511907e+04
+ -1.42988317e+02  5.09748297e-01  1.55086898e+02]
+chip res:  497 2.7040878194384277e-05 0.0014736640514456667 0.0021960280071299937
+row:  202 nlines:  497
+[ 1.21017291e-10 -1.03146516e-05 -2.82895035e-01  1.61511885e+04
+ -1.42977384e+02  4.88733210e-01  1.55060932e+02]
+res:  497 0.0006112751725595444 0.0017151418378489325 0.002578421090853705
+[ 1.20764987e-10 -1.03146573e-05 -2.82892792e-01  1.61511876e+04
+ -1.42987087e+02  4.88733310e-01  1.55054589e+02]
+chip res:  497 -8.264067946583964e-05 0.0014342462891363539 0.0020961764253229634
+row:  203 nlines:  498
+[ 1.21193044e-10 -1.03141664e-05 -2.82898643e-01  1.61511584e+04
+ -1.42959351e+02  4.55282637e-01  1.55021850e+02]
+res:  498 -0.0004929376664222218 0.0018629643509484595 0.002540019749189346
+[ 1.20866506e-10 -1.03142644e-05 -2.82893951e-01  1.61511587e+04
+ -1.42998523e+02  4.55282637e-01  1.55029649e+02]
+chip res:  498 -7.665456269023707e-05 0.0015751238934171852 0.0022599365132937033
+row:  204 nlines:  495
+[ 1.20521441e-10 -1.03146334e-05 -2.82889476e-01  1.61511726e+04
+ -1.42925807e+02  5.28623789e-01  1.55093773e+02]
+res:  495 -8.72880445967894e-05 0.0019097460535704158 0.002787733729129802
+[ 1.20734166e-10 -1.03152261e-05 -2.82891104e-01  1.61511812e+04
+ -1.42913870e+02  5.28623789e-01  1.55108394e+02]
+chip res:  495 -9.575332478561904e-05 0.001519730974905542 0.002262410643462659
+row:  205 nlines:  495
+[ 1.20586357e-10 -1.03150358e-05 -2.82889327e-01  1.61511516e+04
+ -1.42982973e+02  4.84883323e-01  1.55062004e+02]
+res:  495 0.00011726558659574948 0.0017398099298588932 0.002546181350530268
+[ 1.20546892e-10 -1.03146578e-05 -2.82888540e-01  1.61511543e+04
+ -1.42958729e+02  4.84883323e-01  1.55076522e+02]
+chip res:  495 1.8240756617160514e-05 0.0014271738291427027 0.0021292876433636025
+row:  206 nlines:  493
+[ 1.20108643e-10 -1.03142051e-05 -2.82881910e-01  1.61511296e+04
+ -1.42988342e+02  4.87359333e-01  1.55124227e+02]
+res:  493 4.217056994093582e-05 0.001910777446028078 0.0028541667100291197
+[ 1.20738319e-10 -1.03147624e-05 -2.82889701e-01  1.61511339e+04
+ -1.42951039e+02  4.87359333e-01  1.55082989e+02]
+chip res:  493 9.021662845043465e-05 0.0014206464256858453 0.0021617624427600008
+row:  207 nlines:  496
+[ 1.20155457e-10 -1.03143373e-05 -2.82881597e-01  1.61511024e+04
+ -1.42998721e+02  4.63880099e-01  1.55083756e+02]
+res:  496 6.835422755102627e-05 0.0018405880791760865 0.0026489049391116132
+[ 1.20756213e-10 -1.03142631e-05 -2.82889520e-01  1.61511061e+04
+ -1.42976800e+02  4.63880099e-01  1.55060267e+02]
+chip res:  496 3.469828789093299e-05 0.0015614017538609914 0.0023075794418502423
+row:  208 nlines:  497
+[ 1.20673147e-10 -1.03138862e-05 -2.82888822e-01  1.61510918e+04
+ -1.42945391e+02  4.66313814e-01  1.55073274e+02]
+res:  497 -0.00038646772009087726 0.0019593274610087974 0.002867196850964879
+[ 1.20734640e-10 -1.03145130e-05 -2.82888961e-01  1.61510898e+04
+ -1.42953366e+02  4.66313814e-01  1.55059013e+02]
+chip res:  497 3.152210410917178e-06 0.0016142490785568953 0.0023886157909406543
+row:  209 nlines:  496
+[ 1.20953969e-10 -1.03147570e-05 -2.82887878e-01  1.61511258e+04
+ -1.42920870e+02  5.06787601e-01  1.55107610e+02]
+res:  496 0.0005654194383168942 0.001878677338027046 0.0027237718849095647
+[ 1.20629812e-10 -1.03145152e-05 -2.82885409e-01  1.61511284e+04
+ -1.42916227e+02  5.06787601e-01  1.55111359e+02]
+chip res:  496 -0.00014347900741995545 0.001461220160308585 0.002191453241287568
+row:  210 nlines:  495
+[ 1.20171441e-10 -1.03144719e-05 -2.82883793e-01  1.61509497e+04
+ -1.42936403e+02  4.53439189e-01  1.55042850e+02]
+res:  495 9.509947631158866e-06 0.002022476041020127 0.002995478973410563
+[ 1.20467774e-10 -1.03140378e-05 -2.82884751e-01  1.61509494e+04
+ -1.42942493e+02  4.53439189e-01  1.55057343e+02]
+chip res:  495 3.534497591317631e-05 0.001691832758297096 0.0024821063874516497
+row:  211 nlines:  498
+[ 1.20469290e-10 -1.03143060e-05 -2.82878331e-01  1.61509880e+04
+ -1.42943093e+02  5.21010426e-01  1.55122225e+02]
+res:  498 0.0003603213517635595 0.0017446593237764318 0.0026687479650020765
+[ 1.20718060e-10 -1.03144575e-05 -2.82883422e-01  1.61509971e+04
+ -1.42881593e+02  5.21010426e-01  1.55132090e+02]
+chip res:  498 7.636582085979171e-05 0.0016195749494727352 0.0023902142417192326
+row:  212 nlines:  497
+[ 1.21198652e-10 -1.03158133e-05 -2.82890336e-01  1.61510278e+04
+ -1.42899949e+02  4.59287023e-01  1.55042483e+02]
+res:  497 0.0001328094003838487 0.0018023586453637108 0.0026993396516106576
+[ 1.20833296e-10 -1.03150296e-05 -2.82884688e-01  1.61510259e+04
+ -1.42935225e+02  4.59287023e-01  1.55061226e+02]
+chip res:  497 -5.358231646823697e-06 0.0015867323381826282 0.0023604370108909934
+row:  213 nlines:  497
+[ 1.20440862e-10 -1.03144098e-05 -2.82879802e-01  1.61510389e+04
+ -1.42952972e+02  4.82452960e-01  1.55099909e+02]
+res:  497 0.0006338034727377817 0.0020636409462895244 0.0030071392124744363
+[ 1.20539637e-10 -1.03148353e-05 -2.82881044e-01  1.61510440e+04
+ -1.42915132e+02  4.82452960e-01  1.55102027e+02]
+chip res:  497 -5.7513239880790934e-05 0.0017601968866074458 0.002626954917055905
+row:  214 nlines:  497
+[ 1.20608796e-10 -1.03140042e-05 -2.82879848e-01  1.61510542e+04
+ -1.42927422e+02  4.44008278e-01  1.55108227e+02]
+res:  497 -0.00026524972781771794 0.0028530026775115402 0.004191059808649207
+[ 1.21701512e-10 -1.03147630e-05 -2.82896904e-01  1.61510553e+04
+ -1.42828201e+02  4.44008279e-01  1.55014848e+02]
+chip res:  497 4.1922310629161075e-05 0.0016117435134219704 0.0023957781739287662
+row:  215 nlines:  497
+[ 1.20476814e-10 -1.03141873e-05 -2.82878620e-01  1.61510926e+04
+ -1.42880569e+02  4.86791218e-01  1.55131257e+02]
+res:  497 -0.0005447223666124046 0.0019098298416793114 0.002867998423951408
+[ 1.20480392e-10 -1.03137654e-05 -2.82880381e-01  1.61510909e+04
+ -1.42863686e+02  4.86791218e-01  1.55113912e+02]
+chip res:  497 -5.9058807892142795e-05 0.0015100537966645788 0.002199320894535463
+row:  216 nlines:  497
+[ 1.19968257e-10 -1.03137509e-05 -2.82867959e-01  1.61511249e+04
+ -1.42883282e+02  5.14929732e-01  1.55216796e+02]
+res:  497 -7.045250822557136e-05 0.0019214006097172387 0.0028564658477917668
+[ 1.20614096e-10 -1.03147056e-05 -2.82877408e-01  1.61511247e+04
+ -1.42846804e+02  5.14929732e-01  1.55151345e+02]
+chip res:  497 -1.0280298738507554e-05 0.001685690343947499 0.0024898306808513334
+row:  217 nlines:  496
+[ 1.20763230e-10 -1.03150388e-05 -2.82877109e-01  1.61511432e+04
+ -1.42886945e+02  4.74067557e-01  1.55135801e+02]
+res:  496 -0.001130324855694198 0.0027532081039680634 0.0041255323220297365
+[ 1.20871066e-10 -1.03146449e-05 -2.82879321e-01  1.61511414e+04
+ -1.42873492e+02  4.74067557e-01  1.55105724e+02]
+chip res:  496 -0.00012400235300447093 0.0018907259627667372 0.002693702010780839
+row:  218 nlines:  495
+[ 1.20699200e-10 -1.03147922e-05 -2.82879269e-01  1.61511701e+04
+ -1.42816447e+02  5.06666868e-01  1.55137616e+02]
+res:  495 0.0001750263836584054 0.0020948025539837545 0.0031311137758047577
+[ 1.20778439e-10 -1.03145157e-05 -2.82877062e-01  1.61511711e+04
+ -1.42829523e+02  5.06666868e-01  1.55152860e+02]
+chip res:  495 -0.00012029230128973722 0.0017969259060919285 0.002629396666294295
+row:  219 nlines:  496
+[ 1.20834262e-10 -1.03148251e-05 -2.82877902e-01  1.61511696e+04
+ -1.42855781e+02  4.54971190e-01  1.55114364e+02]
+res:  496 -7.922620716271922e-05 0.0021915889301453717 0.003313138864736313
+[ 1.20809281e-10 -1.03147717e-05 -2.82877429e-01  1.61511661e+04
+ -1.42881578e+02  4.54971190e-01  1.55098956e+02]
+chip res:  496 -1.594390323589323e-05 0.001907883704006963 0.002818025736388271
+row:  220 nlines:  496
+[ 1.20994237e-10 -1.03144589e-05 -2.82879453e-01  1.61511830e+04
+ -1.42779866e+02  4.85723052e-01  1.55114378e+02]
+res:  496 -5.4888413615117315e-05 0.0021199446000537137 0.0031846659720352094
+[ 1.20908480e-10 -1.03146847e-05 -2.82877029e-01  1.61511843e+04
+ -1.42834683e+02  4.85723052e-01  1.55123139e+02]
+chip res:  496 4.036716745758895e-06 0.0018904905400631833 0.002802845468761529
+row:  221 nlines:  501
+[ 1.20562340e-10 -1.03148153e-05 -2.82872223e-01  1.61511911e+04
+ -1.42859045e+02  4.78625557e-01  1.55134140e+02]
+res:  501 -0.002512600771297002 0.003271735637099482 0.004893010921917871
+[ 1.21429166e-10 -1.03138606e-05 -2.82879897e-01  1.61511959e+04
+ -1.42800219e+02  4.78625557e-01  1.55117740e+02]
+chip res:  501 -8.913775673136115e-05 0.001827358808441204 0.0027085025892758406
+row:  222 nlines:  498
+[ 1.20580640e-10 -1.03135549e-05 -2.82869403e-01  1.61512118e+04
+ -1.42800984e+02  5.05644178e-01  1.55187282e+02]
+res:  498 -0.00012497469106165227 0.0023524188254668843 0.0035105213644290047
+[ 1.20785352e-10 -1.03145391e-05 -2.82872646e-01  1.61512132e+04
+ -1.42803077e+02  5.05644178e-01  1.55160390e+02]
+chip res:  498 -1.2342061381787062e-06 0.0017135171974587138 0.0025406524394554326
+row:  223 nlines:  498
+[ 1.21122783e-10 -1.03142470e-05 -2.82876299e-01  1.61512201e+04
+ -1.42788020e+02  4.91558031e-01  1.55125841e+02]
+res:  498 0.0006962205934541998 0.002389540551121172 0.003209540621562925
+[ 1.20648770e-10 -1.03146723e-05 -2.82868268e-01  1.61512236e+04
+ -1.42837737e+02  4.91558031e-01  1.55162213e+02]
+chip res:  498 6.678568570350762e-05 0.0015460337090189569 0.00235028696050063
+row:  224 nlines:  495
+[ 1.19671729e-10 -1.03130130e-05 -2.82854483e-01  1.61512328e+04
+ -1.42845319e+02  5.08614634e-01  1.55260829e+02]
+res:  495 0.0004207438032608479 0.0020470254457904957 0.0029432983591819
+[ 1.20950585e-10 -1.03146689e-05 -2.82871063e-01  1.61512366e+04
+ -1.42777023e+02  5.08614634e-01  1.55176835e+02]
+chip res:  495 -9.886495899991132e-05 0.0017051604318112368 0.0025584743216612122
+row:  225 nlines:  496
+[ 1.20947671e-10 -1.03146088e-05 -2.82870808e-01  1.61512409e+04
+ -1.42778685e+02  4.78892301e-01  1.55146517e+02]
+res:  496 0.0006230220651559648 0.0021602578490274027 0.003001805952931303
+[ 1.20931440e-10 -1.03146683e-05 -2.82870741e-01  1.61512401e+04
+ -1.42799109e+02  4.78892202e-01  1.55141024e+02]
+chip res:  496 9.332648096460616e-05 0.0017016500742101925 0.0025485508420470693
+row:  226 nlines:  498
+[ 1.21183213e-10 -1.03143484e-05 -2.82873291e-01  1.61512365e+04
+ -1.42738079e+02  4.85361169e-01  1.55162589e+02]
+res:  498 -0.0008985223885247251 0.0023654665737922187 0.0035254358047611804
+[ 1.20879637e-10 -1.03141731e-05 -2.82870052e-01  1.61512328e+04
+ -1.42791936e+02  4.85361169e-01  1.55159654e+02]
+chip res:  498 -2.3328233510255814e-05 0.0016363595314032864 0.0023977261699354123
+row:  227 nlines:  494
+[ 1.20626905e-10 -1.03140809e-05 -2.82864474e-01  1.61512518e+04
+ -1.42786197e+02  5.09612900e-01  1.55187232e+02]
+res:  494 0.0007354138060691184 0.002419447770989791 0.0033826024466944668
+[ 1.21033355e-10 -1.03151705e-05 -2.82866981e-01  1.61512563e+04
+ -1.42769530e+02  5.09612900e-01  1.55186566e+02]
+chip res:  494 2.0508711713773664e-05 0.0018143190709452028 0.002718653100825455
+row:  228 nlines:  496
+[ 1.21296661e-10 -1.03139687e-05 -2.82870461e-01  1.61512468e+04
+ -1.42745273e+02  5.06987553e-01  1.55180923e+02]
+res:  496 0.0012614788320206571 0.003076295572100207 0.004352307844867319
+[ 1.20844280e-10 -1.03127558e-05 -2.82865210e-01  1.61512507e+04
+ -1.42735066e+02  5.06987553e-01  1.55237488e+02]
+chip res:  496 -0.00012353288457234157 0.001730353550556174 0.002586768341632125
+row:  229 nlines:  495
+[ 1.20677361e-10 -1.03144575e-05 -2.82864616e-01  1.61512425e+04
+ -1.42780589e+02  4.81077185e-01  1.55169422e+02]
+res:  495 0.0002818398133968003 0.0021606604495900683 0.0032978506548312033
+[ 1.21008879e-10 -1.03148207e-05 -2.82868074e-01  1.61512461e+04
+ -1.42762348e+02  4.81077185e-01  1.55156029e+02]
+chip res:  495 -0.00010807022044900805 0.0017749112957972102 0.0025799226361623057
+row:  230 nlines:  495
+[ 1.20047399e-10 -1.03136787e-05 -2.82853287e-01  1.61512504e+04
+ -1.42814178e+02  5.06373363e-01  1.55247871e+02]
+res:  495 0.0003330297622596845 0.0020134683727519587 0.0029713772834211124
+[ 1.21021795e-10 -1.03146734e-05 -2.82865867e-01  1.61512573e+04
+ -1.42722974e+02  5.06373363e-01  1.55191804e+02]
+chip res:  495 -0.00012610787052835803 0.001787340639566537 0.002623167046660689
+row:  231 nlines:  497
+[ 1.20086670e-10 -1.03138551e-05 -2.82854126e-01  1.61512442e+04
+ -1.42772312e+02  5.08599249e-01  1.55224682e+02]
+res:  497 0.0003432382218306884 0.002363702462389483 0.003553926634555598
+[ 1.20923141e-10 -1.03146962e-05 -2.82863444e-01  1.61512532e+04
+ -1.42712997e+02  5.08599249e-01  1.55199829e+02]
+chip res:  497 -6.230442522792146e-06 0.0018677215593925212 0.0027638797760474575
+row:  232 nlines:  497
+[ 1.20698505e-10 -1.03144856e-05 -2.82859957e-01  1.61512377e+04
+ -1.42753843e+02  4.77651166e-01  1.55188982e+02]
+res:  497 0.0009274134754377883 0.0023114645373425446 0.0033754481879300015
+[ 1.20826079e-10 -1.03151801e-05 -2.82862092e-01  1.61512388e+04
+ -1.42752002e+02  4.77651166e-01  1.55178565e+02]
+chip res:  497 0.00017266619397560135 0.0019435244830674492 0.002851085341000108
+row:  233 nlines:  499
+[ 1.21093706e-10 -1.03149470e-05 -2.82864996e-01  1.61512397e+04
+ -1.42712883e+02  4.95892098e-01  1.55169085e+02]
+res:  499 0.0007333867961278884 0.0024724698887439445 0.0034474029413746965
+[ 1.20855103e-10 -1.03151866e-05 -2.82858672e-01  1.61512425e+04
+ -1.42763211e+02  4.95892098e-01  1.55206253e+02]
+chip res:  499 2.0213698007864878e-05 0.0016185556924028788 0.002386250820672299
+row:  234 nlines:  498
+[ 1.21097963e-10 -1.03150780e-05 -2.82862132e-01  1.61512113e+04
+ -1.42709816e+02  4.85094460e-01  1.55177747e+02]
+res:  498 -0.0018590377794680535 0.003262832105065172 0.004532445783844982
+[ 1.21307493e-10 -1.03155381e-05 -2.82864220e-01  1.61512204e+04
+ -1.42697531e+02  4.85094460e-01  1.55178272e+02]
+chip res:  498 -3.96935356548056e-05 0.0017135244015662465 0.002560896412301005
+row:  235 nlines:  495
+[ 1.21142612e-10 -1.03146820e-05 -2.82865891e-01  1.61512101e+04
+ -1.42667194e+02  4.67630726e-01  1.55147092e+02]
+res:  495 0.00029156469281588215 0.002098931247019209 0.003090520310943941
+[ 1.20836321e-10 -1.03149597e-05 -2.82859654e-01  1.61512108e+04
+ -1.42724191e+02  4.67630726e-01  1.55172798e+02]
+chip res:  495 -1.4675939382868819e-05 0.0018247143962071277 0.002690301822944381
+row:  236 nlines:  495
+[ 1.20828784e-10 -1.03148282e-05 -2.82858940e-01  1.61512056e+04
+ -1.42668570e+02  5.20286485e-01  1.55211035e+02]
+res:  495 0.0004393824146973202 0.002331426812816062 0.0033531467072398595
+[ 1.20894319e-10 -1.03151123e-05 -2.82857624e-01  1.61512120e+04
+ -1.42659037e+02  5.20286485e-01  1.55230674e+02]
+chip res:  495 -9.605610466678627e-05 0.0016427291357103968 0.002428287719382415
+row:  237 nlines:  496
+[ 1.20781087e-10 -1.03154166e-05 -2.82855805e-01  1.61511803e+04
+ -1.42720281e+02  4.76831110e-01  1.55177535e+02]
+res:  496 6.661223778792191e-05 0.0020330936822574586 0.002981474773792632
+[ 1.20871264e-10 -1.03150758e-05 -2.82856636e-01  1.61511858e+04
+ -1.42697468e+02  4.76831110e-01  1.55193753e+02]
+chip res:  496 -0.00010442129132570699 0.0017710218307911418 0.002619182114287641
+row:  238 nlines:  497
+[ 1.20675244e-10 -1.03152056e-05 -2.82855318e-01  1.61511742e+04
+ -1.42684170e+02  4.78955375e-01  1.55185844e+02]
+res:  497 0.0001752030111674685 0.002128752972566872 0.003075541133022174
+[ 1.20759705e-10 -1.03150356e-05 -2.82855093e-01  1.61511781e+04
+ -1.42679825e+02  4.78955375e-01  1.55201787e+02]
+chip res:  497 3.472474418231286e-05 0.001643785224587191 0.0024615871200626767
+row:  239 nlines:  495
+[ 1.20686042e-10 -1.03143749e-05 -2.82854553e-01  1.61511554e+04
+ -1.42649632e+02  4.80583795e-01  1.55210555e+02]
+res:  495 0.0001987888135772664 0.0021569819018623093 0.003232049561888749
+[ 1.20883332e-10 -1.03149321e-05 -2.82855731e-01  1.61511588e+04
+ -1.42675735e+02  4.80583795e-01  1.55194214e+02]
+chip res:  495 -3.7042645999463275e-05 0.0018682142781472066 0.002763990335606837
+row:  240 nlines:  497
+[ 1.20890131e-10 -1.03155002e-05 -2.82853156e-01  1.61512521e+04
+ -1.42680447e+02  4.95151524e-01  1.55192732e+02]
+res:  497 0.0009657017471909057 0.0029723753141297493 0.004032401911120054
+[ 1.20594537e-10 -1.03156057e-05 -2.82847342e-01  1.61512563e+04
+ -1.42695272e+02  4.95151524e-01  1.55228528e+02]
+chip res:  497 3.8328584196278825e-05 0.0019076516964560142 0.0028315084538889685
+row:  241 nlines:  498
+[ 1.21195166e-10 -1.03165550e-05 -2.82856647e-01  1.61513294e+04
+ -1.42631753e+02  4.66747465e-01  1.55164093e+02]
+res:  498 -0.0010325091479899129 0.003305112649286457 0.005139503575518812
+[ 1.21795212e-10 -1.03165896e-05 -2.82864060e-01  1.61513358e+04
+ -1.42580908e+02  4.66747465e-01  1.55148547e+02]
+chip res:  498 1.2392269127303734e-05 0.0018730433585005812 0.0027754353670202446
+row:  242 nlines:  499
+[ 1.20755999e-10 -1.03158044e-05 -2.82850367e-01  1.61513103e+04
+ -1.42655555e+02  4.61977313e-01  1.55186331e+02]
+res:  499 -0.0019207364366593538 0.003320353393064579 0.004315158820253192
+[ 1.21050674e-10 -1.03165652e-05 -2.82854440e-01  1.61513146e+04
+ -1.42670807e+02  4.61977313e-01  1.55156909e+02]
+chip res:  499 -2.2222946427064016e-05 0.0018937183940579416 0.0028301673812123644
+row:  243 nlines:  496
+[ 1.20387046e-10 -1.03159627e-05 -2.82845034e-01  1.61513441e+04
+ -1.42650139e+02  4.67692241e-01  1.55206545e+02]
+res:  496 0.00021313737124728505 0.0022100840742496075 0.003148283353643676
+[ 1.20751472e-10 -1.03158172e-05 -2.82847489e-01  1.61513463e+04
+ -1.42648233e+02  4.67692241e-01  1.55207844e+02]
+chip res:  496 -2.206675253546564e-05 0.0016209207324209274 0.0024294039405168485
+row:  244 nlines:  500
+[ 1.21049520e-10 -1.03151122e-05 -2.82849309e-01  1.61513587e+04
+ -1.42582140e+02  5.06603711e-01  1.55235363e+02]
+res:  500 0.00037313017128326464 0.0022432596033468144 0.003341697592814136
+[ 1.21094896e-10 -1.03161271e-05 -2.82847266e-01  1.61513618e+04
+ -1.42626004e+02  5.06603711e-01  1.55244095e+02]
+chip res:  500 -8.287982564070262e-05 0.0017329034226349904 0.0026250569945837202
+row:  245 nlines:  499
+[ 1.20908581e-10 -1.03157052e-05 -2.82848680e-01  1.61513861e+04
+ -1.42613228e+02  4.76789558e-01  1.55201381e+02]
+res:  499 -0.00010033578109869268 0.003354609563757549 0.005027627713917068
+[ 1.21793304e-10 -1.03161845e-05 -2.82860294e-01  1.61513942e+04
+ -1.42542557e+02  4.76789558e-01  1.55171596e+02]
+chip res:  499 -5.801587940368336e-05 0.0016730847291910322 0.0025100928856683466
+row:  246 nlines:  495
+[ 1.20224718e-10 -1.03147897e-05 -2.82837615e-01  1.61514099e+04
+ -1.42613578e+02  4.89739668e-01  1.55293068e+02]
+res:  495 0.0001970928660739446 0.0023130690806283383 0.0034749466026558996
+[ 1.20924761e-10 -1.03158455e-05 -2.82846104e-01  1.61514117e+04
+ -1.42593312e+02  4.89739668e-01  1.55232860e+02]
+chip res:  495 -1.5653482478228398e-05 0.0019918393008993007 0.00297401689424972
+row:  247 nlines:  500
+[ 1.20940467e-10 -1.03153869e-05 -2.82846456e-01  1.61514142e+04
+ -1.42613240e+02  4.64279787e-01  1.55214827e+02]
+res:  500 -0.00010954259960271884 0.0025722505497469683 0.0038787876165813284
+[ 1.21015004e-10 -1.03152463e-05 -2.82846871e-01  1.61514163e+04
+ -1.42621065e+02  4.64279788e-01  1.55204380e+02]
+chip res:  500 0.00011520545467647025 0.0016785444531706162 0.0024677436702265393
+row:  248 nlines:  496
+[ 1.20744456e-10 -1.03149445e-05 -2.82842452e-01  1.61514449e+04
+ -1.42593694e+02  4.78285086e-01  1.55250940e+02]
+res:  496 6.293263959378237e-05 0.002221617924988095 0.0032423570388328982
+[ 1.21004284e-10 -1.03162363e-05 -2.82843377e-01  1.61514473e+04
+ -1.42601394e+02  4.78285086e-01  1.55226832e+02]
+chip res:  496 -7.243622349051293e-05 0.0018798595483531244 0.0027770568959876556
+row:  249 nlines:  496
+[ 1.20156522e-10 -1.03144810e-05 -2.82830345e-01  1.61514607e+04
+ -1.42647132e+02  4.96790207e-01  1.55300150e+02]
+res:  496 0.0009408224987055291 0.0024605883427284425 0.003486582458261481
+[ 1.21466052e-10 -1.03157783e-05 -2.82847531e-01  1.61514640e+04
+ -1.42567936e+02  4.96790207e-01  1.55219399e+02]
+chip res:  496 0.00010150261732633226 0.0018701270028032013 0.0027031264729359982
+row:  250 nlines:  499
+[ 1.21234830e-10 -1.03154690e-05 -2.82845071e-01  1.61514703e+04
+ -1.42572146e+02  5.03661894e-01  1.55212532e+02]
+res:  499 -0.0004509271093411371 0.00247532098001102 0.004007384207835208
+[ 1.21073070e-10 -1.03160781e-05 -2.82838875e-01  1.61514812e+04
+ -1.42610334e+02  5.03661894e-01  1.55262658e+02]
+chip res:  499 6.0894573834957555e-05 0.0019181514071533456 0.0029072128015110465
+row:  251 nlines:  496
+[ 1.21024394e-10 -1.03144979e-05 -2.82837687e-01  1.61515022e+04
+ -1.42545652e+02  5.10393215e-01  1.55287228e+02]
+res:  496 0.0006366012130456511 0.002386041696809116 0.003368947941979097
+[ 1.21056011e-10 -1.03155023e-05 -2.82840351e-01  1.61515076e+04
+ -1.42520223e+02  5.10393215e-01  1.55266275e+02]
+chip res:  496 -0.00016862340908119222 0.0019082062690358725 0.002913374196543882
+row:  252 nlines:  499
+[ 1.21169388e-10 -1.03152341e-05 -2.82843014e-01  1.61514899e+04
+ -1.42563605e+02  4.44313718e-01  1.55196600e+02]
+res:  499 -0.0018096833973686444 0.002690434135729447 0.003991821156455436
+[ 1.20874186e-10 -1.03155935e-05 -2.82835302e-01  1.61514944e+04
+ -1.42612637e+02  4.44313718e-01  1.55224027e+02]
+chip res:  499 0.00010147210741706658 0.001683169582975097 0.0025204824476107546
+row:  253 nlines:  496
+[ 1.20383009e-10 -1.03144164e-05 -2.82826928e-01  1.61515193e+04
+ -1.42613010e+02  4.88507081e-01  1.55305906e+02]
+res:  496 -0.0011946279964831774 0.0029704216776735848 0.004216270102554936
+[ 1.21320112e-10 -1.03157392e-05 -2.82837155e-01  1.61515249e+04
+ -1.42566767e+02  4.88507081e-01  1.55265679e+02]
+chip res:  496 -2.3508802769356407e-05 0.002013198081840528 0.002965276165408271
+row:  254 nlines:  495
+[ 1.21434306e-10 -1.03160762e-05 -2.82841890e-01  1.61515172e+04
+ -1.42554821e+02  4.39957605e-01  1.55171042e+02]
+res:  495 4.684751183958724e-05 0.002193904347222997 0.003301312013689362
+[ 1.21247732e-10 -1.03161569e-05 -2.82837922e-01  1.61515188e+04
+ -1.42595170e+02  4.39957605e-01  1.55199150e+02]
+chip res:  495 -4.691097274189815e-06 0.0019538898250175407 0.0029019064334852894
+row:  255 nlines:  495
+[ 1.20970700e-10 -1.03157490e-05 -2.82834580e-01  1.61515302e+04
+ -1.42531395e+02  5.09426131e-01  1.55252027e+02]
+res:  495 0.0012075644990545698 0.0026771455432026414 0.0035822986268472384
+[ 1.20857267e-10 -1.03160313e-05 -2.82830228e-01  1.61515387e+04
+ -1.42537875e+02  5.09426131e-01  1.55291729e+02]
+chip res:  495 0.00010359629959566519 0.0018280345520906849 0.0027707463590865254
+row:  256 nlines:  495
+[ 1.20758147e-10 -1.03158399e-05 -2.82829556e-01  1.61515332e+04
+ -1.42541156e+02  4.51589408e-01  1.55270317e+02]
+res:  495 0.0001036507328535663 0.00252786920464132 0.0037846877949892933
+[ 1.21273166e-10 -1.03160698e-05 -2.82835891e-01  1.61515277e+04
+ -1.42536290e+02  4.51589408e-01  1.55215946e+02]
+chip res:  495 0.00016682348723406903 0.0018980982567882165 0.002796394925529899
+row:  257 nlines:  495
+[ 1.21100146e-10 -1.03158104e-05 -2.82834219e-01  1.61515194e+04
+ -1.42518580e+02  4.59950199e-01  1.55223344e+02]
+res:  495 0.00023835752108425368 0.002521176647860557 0.0037266145013355643
+[ 1.21082151e-10 -1.03160978e-05 -2.82832472e-01  1.61515259e+04
+ -1.42533135e+02  4.59950199e-01  1.55234231e+02]
+chip res:  495 7.96802487457171e-06 0.0017362687412969535 0.0025725970243740425
+row:  258 nlines:  495
+[ 1.20856061e-10 -1.03157402e-05 -2.82828383e-01  1.61515353e+04
+ -1.42516548e+02  4.63648412e-01  1.55277000e+02]
+res:  495 -0.00026700298258219846 0.002353269050217932 0.0036205054280770382
+[ 1.21080979e-10 -1.03163535e-05 -2.82829991e-01  1.61515335e+04
+ -1.42528570e+02  4.63648412e-01  1.55248007e+02]
+chip res:  495 0.00018234176604892127 0.0020148072162555763 0.0030881527031682903
+row:  259 nlines:  498
+[ 1.21135264e-10 -1.03161451e-05 -2.82829335e-01  1.61515414e+04
+ -1.42470988e+02  5.28244104e-01  1.55293375e+02]
+res:  498 -0.0001170362875200226 0.0028572403871294227 0.004309531506963442
+[ 1.21718506e-10 -1.03165347e-05 -2.82837500e-01  1.61515532e+04
+ -1.42381152e+02  5.28244104e-01  1.55278877e+02]
+chip res:  498 2.1688285414711572e-05 0.0017272839895667857 0.0025550542136328976
+row:  260 nlines:  497
+[ 1.21107207e-10 -1.03162304e-05 -2.82829273e-01  1.61515287e+04
+ -1.42506982e+02  4.64549679e-01  1.55244351e+02]
+res:  497 0.00046642579764011316 0.0023932507829158567 0.0036161596278027333
+[ 1.21134726e-10 -1.03165166e-05 -2.82827560e-01  1.61515324e+04
+ -1.42505164e+02  4.64549679e-01  1.55255818e+02]
+chip res:  497 -6.9799061748199165e-06 0.00190164184277819 0.002822952110539625
+row:  261 nlines:  497
+[ 1.21642330e-10 -1.03170559e-05 -2.82836358e-01  1.61515153e+04
+ -1.42506234e+02  4.45690001e-01  1.55168493e+02]
+res:  497 -0.00041277976197307 0.0024648068774695275 0.003674500517876576
+[ 1.21437030e-10 -1.03164758e-05 -2.82831513e-01  1.61515231e+04
+ -1.42479227e+02  4.45690001e-01  1.55221920e+02]
+chip res:  497 5.971797145321034e-05 0.001850872589784558 0.0026913755877625077
+row:  262 nlines:  496
+[ 1.20239798e-10 -1.03156652e-05 -2.82815054e-01  1.61515143e+04
+ -1.42532742e+02  4.77171377e-01  1.55302540e+02]
+res:  496 0.0002005012738663936 0.00239419272475061 0.0035497497385764366
+[ 1.21156415e-10 -1.03168358e-05 -2.82823974e-01  1.61515201e+04
+ -1.42480404e+02  4.77171377e-01  1.55270917e+02]
+chip res:  496 -2.8382963137119077e-05 0.002155580161343096 0.0032235674584367214
+row:  263 nlines:  496
+[ 1.21456934e-10 -1.03164388e-05 -2.82829141e-01  1.61515025e+04
+ -1.42464250e+02  4.83213096e-01  1.55241723e+02]
+res:  496 0.0002999031594299595 0.0025077799891732866 0.003550503454829114
+[ 1.21439581e-10 -1.03167603e-05 -2.82826598e-01  1.61515084e+04
+ -1.42450337e+02  4.83213096e-01  1.55262696e+02]
+chip res:  496 2.288783434778452e-06 0.001788449396372016 0.0026481656873480744
+row:  264 nlines:  499
+[ 1.20225673e-10 -1.03160007e-05 -2.82808991e-01  1.61515161e+04
+ -1.42498593e+02  4.89866333e-01  1.55350162e+02]
+res:  499 -0.0010330830809834879 0.0040001450670388294 0.006380581271363789
+[ 1.22352031e-10 -1.03175448e-05 -2.82840328e-01  1.61515289e+04
+ -1.42308450e+02  4.89866333e-01  1.55227930e+02]
+chip res:  499 -6.55639378237538e-05 0.001896519122965401 0.002806214184501735
+row:  265 nlines:  500
+[ 1.20708321e-10 -1.03166902e-05 -2.82816522e-01  1.61515000e+04
+ -1.42428957e+02  4.90232522e-01  1.55275646e+02]
+res:  500 -0.00033705849818943534 0.0024422510323347524 0.0037397481549937277
+[ 1.20876190e-10 -1.03170814e-05 -2.82816746e-01  1.61515115e+04
+ -1.42443858e+02  4.90232522e-01  1.55309321e+02]
+chip res:  500 -8.81329397088848e-05 0.001798675516511139 0.00263262176059303
+row:  266 nlines:  498
+[ 1.21165209e-10 -1.03174337e-05 -2.82822461e-01  1.61514899e+04
+ -1.42451478e+02  4.68331868e-01  1.55224753e+02]
+res:  498 0.0008737192420085194 0.0024330720207217382 0.0035959125765168973
+[ 1.21403722e-10 -1.03183847e-05 -2.82819145e-01  1.61514972e+04
+ -1.42454818e+02  4.68331868e-01  1.55260739e+02]
+chip res:  498 -0.00014130901399767026 0.00172146285422059 0.00252182100548618
+row:  267 nlines:  497
+[ 1.20726287e-10 -1.03171717e-05 -2.82814422e-01  1.61514903e+04
+ -1.42376469e+02  4.95477044e-01  1.55312354e+02]
+res:  497 -0.0007952671567181824 0.0026774581747304182 0.0039803079408938236
+[ 1.21148227e-10 -1.03173604e-05 -2.82819643e-01  1.61514943e+04
+ -1.42370713e+02  4.95477044e-01  1.55294157e+02]
+chip res:  497 5.959255577181466e-05 0.0017977653060370358 0.0026068260978327766
+row:  268 nlines:  497
+[ 1.20609896e-10 -1.03164441e-05 -2.82815514e-01  1.61514610e+04
+ -1.42397317e+02  4.61927088e-01  1.55256568e+02]
+res:  497 0.000435941781688598 0.0023634949557163054 0.0035751762972930203
+[ 1.20974260e-10 -1.03169988e-05 -2.82816945e-01  1.61514666e+04
+ -1.42429926e+02  4.61927088e-01  1.55257606e+02]
+chip res:  497 -4.373372939880937e-05 0.001605727280548308 0.002366920224963245
+row:  269 nlines:  497
+[ 1.21050443e-10 -1.03174122e-05 -2.82819039e-01  1.61514444e+04
+ -1.42375637e+02  4.70705304e-01  1.55236334e+02]
+res:  497 -0.00010074046804220416 0.0022803125430073123 0.0033539992693372577
+[ 1.20890143e-10 -1.03174709e-05 -2.82813852e-01  1.61514537e+04
+ -1.42402829e+02  4.70705304e-01  1.55284343e+02]
+chip res:  497 -4.5048047468299046e-05 0.0017018637008732185 0.0025117948033230872
+row:  270 nlines:  497
+[ 1.20370787e-10 -1.03186668e-05 -2.82807076e-01  1.61515645e+04
+ -1.42365907e+02  4.82826177e-01  1.55342420e+02]
+res:  497 8.524061559000984e-05 0.0024304296257469105 0.003512527648537823
+[ 1.20857330e-10 -1.03184897e-05 -2.82813058e-01  1.61515636e+04
+ -1.42353645e+02  4.82826177e-01  1.55302532e+02]
+chip res:  497 -3.7288624298525974e-05 0.0017872685002657818 0.0026620617437732278
+row:  271 nlines:  498
+[ 1.20903882e-10 -1.03179312e-05 -2.82812902e-01  1.61515504e+04
+ -1.42375385e+02  4.46047583e-01  1.55262372e+02]
+res:  498 -0.0013271554871607805 0.0024088775353448 0.003651841416277798
+[ 1.20962914e-10 -1.03179766e-05 -2.82811367e-01  1.61515522e+04
+ -1.42426251e+02  4.46047583e-01  1.55270384e+02]
+chip res:  498 -1.5732339306850918e-06 0.0016949358523561386 0.002514110735642668
+row:  272 nlines:  498
+[ 1.21009109e-10 -1.03182844e-05 -2.82811677e-01  1.61515835e+04
+ -1.42367409e+02  4.69456694e-01  1.55290567e+02]
+res:  498 -0.00056172629865614 0.004332192152105563 0.006335596339327049
+[ 1.20175409e-10 -1.03185262e-05 -2.82795524e-01  1.61515915e+04
+ -1.42430805e+02  4.69456694e-01  1.55376475e+02]
+chip res:  498 -6.479499552369816e-05 0.001556207767862361 0.002346908904262963
+row:  273 nlines:  496
+[ 1.20881198e-10 -1.03189966e-05 -2.82809514e-01  1.61516504e+04
+ -1.42326449e+02  5.03816927e-01  1.55299213e+02]
+res:  496 0.0003272914909757674 0.003328616647195304 0.004875748123837727
+[ 1.21882972e-10 -1.03196079e-05 -2.82822831e-01  1.61516618e+04
+ -1.42221704e+02  5.03816927e-01  1.55263717e+02]
+chip res:  496 4.739401629194617e-05 0.0016193228311749408 0.002391990317017739
+row:  274 nlines:  497
+[ 1.21240943e-10 -1.03176416e-05 -2.82809554e-01  1.61516216e+04
+ -1.42313012e+02  4.91763028e-01  1.55302216e+02]
+res:  497 5.985080133541487e-05 0.0018156580699724145 0.0026655962165989524
+[ 1.21218807e-10 -1.03180154e-05 -2.82807729e-01  1.61516257e+04
+ -1.42345085e+02  4.91763028e-01  1.55316388e+02]
+chip res:  497 1.999519190576393e-05 0.0014690585048811045 0.002157635504351279
+No lines for row  275
+row:  276 nlines:  496
+[ 1.21473045e-10 -1.03184170e-05 -2.82810280e-01  1.61516826e+04
+ -1.42323676e+02  4.60151621e-01  1.55262225e+02]
+res:  496 -0.0005436556475615362 0.002479279965882597 0.0035499934477564005
+[ 1.21462941e-10 -1.03186245e-05 -2.82808762e-01  1.61516870e+04
+ -1.42308415e+02  4.60151621e-01  1.55279467e+02]
+chip res:  496 -0.00012211400644446258 0.0015755680315123755 0.0023325017445005613
+row:  277 nlines:  499
+[ 1.21003308e-10 -1.03181848e-05 -2.82803371e-01  1.61517073e+04
+ -1.42282960e+02  4.90290337e-01  1.55305254e+02]
+res:  499 -0.0004582531128107803 0.002114394965246902 0.003318402335512795
+[ 1.20866875e-10 -1.03179469e-05 -2.82801270e-01  1.61517130e+04
+ -1.42295614e+02  4.90290337e-01  1.55326073e+02]
+chip res:  499 -0.00010340014705434442 0.0016141605119628366 0.0024189573916964706
+row:  278 nlines:  497
+[ 1.20653797e-10 -1.03188384e-05 -2.82797824e-01  1.61517596e+04
+ -1.42254718e+02  4.99673864e-01  1.55344489e+02]
+res:  497 -0.0003925233759218827 0.0023517583140346687 0.0036074153445291622
+[ 1.20847816e-10 -1.03189799e-05 -2.82797347e-01  1.61517658e+04
+ -1.42278000e+02  4.99673864e-01  1.55354381e+02]
+chip res:  497 -0.00012119800521759316 0.00154610631216201 0.0022997563174384458
+No lines for row  279
+row:  280 nlines:  499
+[ 1.20741491e-10 -1.03182848e-05 -2.82793027e-01  1.61517598e+04
+ -1.42292150e+02  4.91895980e-01  1.55362031e+02]
+res:  499 -0.00045234678873384837 0.0022549901841557585 0.0033276803067911437
+[ 1.21416835e-10 -1.03188826e-05 -2.82798944e-01  1.61517611e+04
+ -1.42270606e+02  4.91895980e-01  1.55332460e+02]
+chip res:  499 6.40533326077275e-05 0.001682086571236141 0.002474939020707422
+row:  281 nlines:  500
+[ 1.21088585e-10 -1.03185241e-05 -2.82797755e-01  1.61517644e+04
+ -1.42295958e+02  4.58021818e-01  1.55288187e+02]
+res:  500 -0.002562875466537662 0.00505874157170183 0.007414844726595894
+[ 1.21705574e-10 -1.03175103e-05 -2.82798228e-01  1.61517718e+04
+ -1.42302689e+02  4.58021818e-01  1.55325632e+02]
+chip res:  500 -2.5940443265426438e-05 0.0015190359954431187 0.0022537150340647704
+row:  282 nlines:  500
+[ 1.21834832e-10 -1.03201130e-05 -2.82808752e-01  1.61517884e+04
+ -1.42097575e+02  5.08185868e-01  1.55244431e+02]
+res:  500 -0.001206986591569148 0.0043854457881025155 0.006605656703654189
+[ 1.21341474e-10 -1.03195608e-05 -2.82794007e-01  1.61517956e+04
+ -1.42248005e+02  5.08185868e-01  1.55348252e+02]
+chip res:  500 -0.00017329753245576285 0.003720519904163666 0.005639272540696553
+row:  283 nlines:  497
+[ 1.20639308e-10 -1.03188634e-05 -2.82787562e-01  1.61518002e+04
+ -1.42261723e+02  4.76653357e-01  1.55336800e+02]
+res:  497 -0.00045336522271099966 0.002355518579861382 0.0034617839741732173
+[ 1.21364319e-10 -1.03194666e-05 -2.82795838e-01  1.61518072e+04
+ -1.42224576e+02  4.76653357e-01  1.55315310e+02]
+chip res:  497 8.24582421046216e-05 0.0017315063596470281 0.002603162416814803
+row:  284 nlines:  497
+[ 1.21709514e-10 -1.03194742e-05 -2.82797865e-01  1.61517925e+04
+ -1.42256684e+02  4.71679885e-01  1.55289294e+02]
+res:  497 -0.0005395498410507571 0.0023481780754082138 0.0035407547909784088
+[ 1.21173171e-10 -1.03188750e-05 -2.82791695e-01  1.61517998e+04
+ -1.42250252e+02  4.71679885e-01  1.55329580e+02]
+chip res:  497 -5.676454566128086e-05 0.0016034992731874809 0.002373863700239532
+row:  285 nlines:  498
+[ 1.20911120e-10 -1.03196934e-05 -2.82787116e-01  1.61518039e+04
+ -1.42279094e+02  4.47161932e-01  1.55329962e+02]
+res:  498 -0.00044857512330054305 0.0028445200960049988 0.004395388105595467
+[ 1.21828696e-10 -1.03184969e-05 -2.82791937e-01  1.61517996e+04
+ -1.42275197e+02  4.47161932e-01  1.55319489e+02]
+chip res:  498 -0.00010261261104460573 0.0014039286188562983 0.0020746731789342463
+row:  286 nlines:  500
+[ 1.21569061e-10 -1.03191153e-05 -2.82794939e-01  1.61518088e+04
+ -1.42184875e+02  4.70991324e-01  1.55291691e+02]
+res:  500 -0.0015125762565730838 0.003084486354055116 0.004971501754196324
+[ 1.21889776e-10 -1.03179200e-05 -2.82789959e-01  1.61518127e+04
+ -1.42224222e+02  4.70991324e-01  1.55332647e+02]
+chip res:  500 -5.928802056587301e-05 0.0016463095407743822 0.002432457943385044
+row:  287 nlines:  496
+[ 1.20959373e-10 -1.03193704e-05 -2.82785053e-01  1.61518230e+04
+ -1.42192609e+02  4.79354487e-01  1.55323197e+02]
+res:  496 -0.00026879168217419647 0.0023496368812629953 0.0034430178252516153
+[ 1.21159631e-10 -1.03198134e-05 -2.82784702e-01  1.61518269e+04
+ -1.42223576e+02  4.79354487e-01  1.55342073e+02]
+chip res:  496 -4.1496867197565734e-05 0.0016650201032462064 0.0024702201776579495
+row:  288 nlines:  498
+[ 1.21294093e-10 -1.03197296e-05 -2.82786147e-01  1.61518250e+04
+ -1.42201400e+02  5.03759991e-01  1.55339197e+02]
+res:  498 -8.227269972849172e-06 0.002050470854555897 0.0030522304066596413
+[ 1.21480766e-10 -1.03202604e-05 -2.82785084e-01  1.61518354e+04
+ -1.42194181e+02  5.03759991e-01  1.55366555e+02]
+chip res:  498 4.2593092075549066e-07 0.0015628686132913572 0.002316480987170498
+row:  289 nlines:  500
+[ 1.20868300e-10 -1.03198526e-05 -2.82782577e-01  1.61518129e+04
+ -1.42233882e+02  4.51343758e-01  1.55289009e+02]
+res:  500 3.7485012398974504e-05 0.002515606384804414 0.0036986852758616367
+[ 1.21038320e-10 -1.03189509e-05 -2.82782934e-01  1.61518192e+04
+ -1.42210169e+02  4.51343758e-01  1.55325314e+02]
+chip res:  500 2.094400770147331e-05 0.001837314660406264 0.0027317482234146206
+row:  290 nlines:  498
+[ 1.21491691e-10 -1.03198115e-05 -2.82784218e-01  1.61518370e+04
+ -1.42153062e+02  4.74528042e-01  1.55333838e+02]
+res:  498 0.00026482040084374603 0.003043764390895376 0.0046363149041415775
+[ 1.20938913e-10 -1.03200587e-05 -2.82774821e-01  1.61518389e+04
+ -1.42247726e+02  4.74528042e-01  1.55367058e+02]
+chip res:  498 7.706551514274906e-06 0.0016811965479064384 0.002503971482042137
+row:  291 nlines:  500
+[ 1.21668847e-10 -1.03196707e-05 -2.82787450e-01  1.61518259e+04
+ -1.42095740e+02  4.94693083e-01  1.55307789e+02]
+res:  500 -0.0010678160970201134 0.00280332265447214 0.0041535649604430725
+[ 1.21696965e-10 -1.03200251e-05 -2.82784304e-01  1.61518370e+04
+ -1.42144044e+02  4.94693083e-01  1.55350826e+02]
+chip res:  500 -0.0001662897075220826 0.0017107173680415144 0.0026127803042621223
+row:  292 nlines:  498
+[ 1.21020770e-10 -1.03198046e-05 -2.82774677e-01  1.61518512e+04
+ -1.42144772e+02  5.10468069e-01  1.55390669e+02]
+res:  498 -0.0007728746559223509 0.002699919359656633 0.003926952029951939
+[ 1.21686874e-10 -1.03203959e-05 -2.82781380e-01  1.61518582e+04
+ -1.42113296e+02  5.10468069e-01  1.55373095e+02]
+chip res:  498 4.374706077214796e-05 0.001704772052107728 0.002538629672274438
+row:  293 nlines:  497
+[ 1.20812148e-10 -1.03207570e-05 -2.82772389e-01  1.61518247e+04
+ -1.42191631e+02  4.55482709e-01  1.55342571e+02]
+res:  497 0.00016729857270547654 0.002481820047250949 0.0036949052721420646
+[ 1.20799263e-10 -1.03196766e-05 -2.82772463e-01  1.61518254e+04
+ -1.42168942e+02  4.55482709e-01  1.55352570e+02]
+chip res:  497 -0.00010974339602398686 0.0016524991697224323 0.0024446836675188935
+row:  294 nlines:  498
+[ 1.20899394e-10 -1.03208917e-05 -2.82770274e-01  1.61518363e+04
+ -1.42158120e+02  4.39430344e-01  1.55345888e+02]
+res:  498 -0.00010544165888859425 0.0022884780937602045 0.003401667197579509
+[ 1.21519435e-10 -1.03218530e-05 -2.82773277e-01  1.61518316e+04
+ -1.42206241e+02  4.39430344e-01  1.55321204e+02]
+chip res:  498 -4.488710783334682e-05 0.0017728965931382845 0.0026601609302910017
+row:  295 nlines:  496
+[ 1.21266143e-10 -1.03213362e-05 -2.82774518e-01  1.61518505e+04
+ -1.42111789e+02  4.72152599e-01  1.55323739e+02]
+res:  496 0.00022130257366370643 0.002697655389965803 0.003923969533736026
+[ 1.20908178e-10 -1.03212520e-05 -2.82767478e-01  1.61518582e+04
+ -1.42132454e+02  4.72152599e-01  1.55373235e+02]
+chip res:  496 0.00012174115727248136 0.001810413300518121 0.0026969586284157432
+row:  296 nlines:  501
+[ 1.21455225e-10 -1.03211029e-05 -2.82774483e-01  1.61517786e+04
+ -1.42143839e+02  4.61468995e-01  1.55306444e+02]
+res:  501 -0.0004740723543363856 0.003796834223976475 0.005909354460847631
+[ 1.22000338e-10 -1.03203674e-05 -2.82784301e-01  1.61517914e+04
+ -1.42023731e+02  4.61468995e-01  1.55306342e+02]
+chip res:  501 3.826676220342051e-05 0.0018094389088219032 0.002710012133405134
+row:  297 nlines:  499
+[ 1.20636046e-10 -1.03198328e-05 -2.82762910e-01  1.61517738e+04
+ -1.42119505e+02  4.64566871e-01  1.55388084e+02]
+res:  499 -0.00019818869986920618 0.002473609400112764 0.003724145824172489
+[ 1.21053172e-10 -1.03207861e-05 -2.82764397e-01  1.61517754e+04
+ -1.42156450e+02  4.64566871e-01  1.55369972e+02]
+chip res:  499 -9.224818495567888e-05 0.0019050958762818482 0.002802398676913512
+row:  298 nlines:  498
+[ 1.20479844e-10 -1.03212246e-05 -2.82760194e-01  1.61517621e+04
+ -1.42137463e+02  4.42498916e-01  1.55359014e+02]
+res:  498 -0.00013071303510514554 0.0027330614402671927 0.00398145358317942
+[ 1.20556530e-10 -1.03201479e-05 -2.82761534e-01  1.61517627e+04
+ -1.42126057e+02  4.42498916e-01  1.55358038e+02]
+chip res:  498 4.290088872949127e-05 0.0016251334327535005 0.002394903586757667
+row:  299 nlines:  500
+[ 1.20793849e-10 -1.03202956e-05 -2.82760011e-01  1.61517660e+04
+ -1.42126499e+02  4.77797229e-01  1.55379921e+02]
+res:  500 -0.0008017044392545358 0.002677346398741065 0.003840235291108509
+[ 1.21084999e-10 -1.03206233e-05 -2.82759864e-01  1.61517769e+04
+ -1.42108442e+02  4.77797229e-01  1.55406923e+02]
+chip res:  500 -7.73049941926729e-05 0.0017235438263014657 0.0024924499224646033
+  Writing new FPI wavelength information to /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWaveFPI-59936-43740011.fits
+2/2  43740068
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap1D-43740068.fits NOT FOUND
+elapsed: 653.0 sec.

@@ -39,18 +39,20 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   dirs = getdir(apodir,caldir,spectrodir,vers)
   wavedir = apogee_filename('Wave',num=name,chip='a',/dir)
   file = dirs.prefix+string(format='("Wave-",i8.8)',name)
-  lockfile = wavedir+file+'.lock'
+  wavefile = wavedir+file
+  ;;lockfile = wavedir+file+'.lock'
 
   ;; If another process is alreadying make this file, wait!
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do begin
-      if keyword_set(nowait) then return
-      apwait,file,10
-    endwhile
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
-
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do begin
+  ;;    if keyword_set(nowait) then return
+  ;;    apwait,file,10
+  ;;  endwhile
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,wavefile,waittime=10,unlock=unlock
+  
   ;; Does product already exist?
   ;; check all three chips and .dat file
   chips = ['a','b','c']
@@ -65,9 +67,10 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
 
   print,'Making wave: ', waveid
   ;; Open .lock file
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,wavefile,/lock
+  
   cmjd = getcmjd(waveid[0],mjd=mjd)
   ;; This code is not used !?
   ;;expinfo = dbquery("select * from apogee_drp.exposure where mjd>="+strtrim(mjd-7,2)+" and mjd<="+strtrim(mjd+7,2)+" and exptype='ARCLAMP'")
@@ -88,7 +91,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   chfile = apogee_filename('2D',num=waveid,chip='b')
   if file_test(chfile) eq 0 then begin
     print,chfile+' NOT FOUND'
-    file_delete,lockfile,/allow     
+    aplock,wavefile,/clear
     return
   endif
   head0 = headfits(chfile,exten=0)
@@ -112,7 +115,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;; Check the line flux
   if avgpeakflux/sxpar(head0,'nread') lt thresh then begin
     print,'Not enough flux in ',chfile
-    file_delete,lockfile,/allow    
+    aplock,wavefile,/clear     
     return
   endif
   
@@ -132,6 +135,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
     free_lun,lock
   endif
 
-  file_delete,lockfile,/allow
-
+  ;;file_delete,lockfile,/allow
+  aplock,wavefile,/clear
+  
 end

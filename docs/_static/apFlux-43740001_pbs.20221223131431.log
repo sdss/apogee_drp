@@ -1,0 +1,166 @@
+makecal flux:     43740001
+Multiple cal products found for mjd        59936 will use last:     39870034
+  dark:     39860002
+  flat:     39870003
+  bpm:     39860002
+  sparse:     39870034
+  modelpsf:     39870034
+  fiber:     13400051
+  badfiber:           25
+  fixfiber:            0
+  wave:     13400053
+  multiwave:     39880000
+  lsf:     40030031
+  flux:            0
+  det:     13390003
+  littrow:     13400052
+  persist:     13400061
+  persistmodel:            0
+  response:            0
+makecal modelpsf:     39870034
+ modelpsf file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSFModel-c-39870034.fits
+ already made
+makecal littrow:     13400052
+ littrow file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/littrow/apLittrow-b-13400052.fits
+ already made
+Using detector:        0 dark:     39860002 flat:     39870003 trace:        0
+ psf:        0
+Calling ap3dproc...
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using FOWLER Sampling, Nfowler=1
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59936/apR-a-43740001.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2D-a-43740001.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+Calling ap3dproc...
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using FOWLER Sampling, Nfowler=1
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59936/apR-b-43740001.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2D-b-43740001.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+Calling ap3dproc...
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using FOWLER Sampling, Nfowler=1
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59936/apR-c-43740001.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2D-c-43740001.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+Multiple cal products found for mjd 59936 will use last: 39870034
+
+Running AP2D
+
+1 plan files
+
+=====================================================================
+1/1  processing plan file /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/logs/ap2DPlan-43740001.yaml
+=====================================================================
+
+Plan file information:
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apSparse-39870034.fits already made
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/trace/apETrace-13400051.fits already made
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-43740005.fits already made
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSFModel-39870034.fits exists already
+Using Model PSF: 39870034
+
+-------------------------------------------
+1/1  processing frame number >>43740001<<
+-------------------------------------------
+
+Extracting file  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/43740001
+--------------------------------------------------
+file:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2D-43740001.fits
+mjd5 =  59936
+ processing chip a - ap2D-a-43740001.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-a-43740005.fits
+Using Model PSF extraction
+Median offset = 0.023 pixels
+Offset coefficients =  [ 5.07262639e-03  5.07654349e-06 -1.23665597e-08  2.62997484e-05]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2Dmodel-a-43740001.fits
+
+ processing chip b - ap2D-b-43740001.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-b-43740005.fits
+Using Model PSF extraction
+Median offset = 0.015 pixels
+Offset coefficients =  [ 3.29902917e-02 -1.89901638e-06 -8.83150068e-10 -1.73482049e-05]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2Dmodel-b-43740001.fits
+
+ processing chip c - ap2D-c-43740001.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-c-43740005.fits
+Using Model PSF extraction
+Median offset = 0.011 pixels
+Offset coefficients =  [ 2.24666505e-02 -8.23334437e-06  1.05125984e-08 -1.45786922e-05]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap2Dmodel-c-43740001.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap1D-a-43740001.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap1D-b-43740001.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936/ap1D-c-43740001.fits
+AP2DPROC finished
+AP2D finished
+dt = 171.4 sec
+
+Running APMKFLUXCAL
+
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59936//43740001
+ previously extracted
+
+Making RELATIVE FLUX CALIBRATION FILE
+
+Writing FLUX file to 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-a-43740001.fits
+Writing FLUX file to 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-b-43740001.fits
+Writing FLUX file to 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-c-43740001.fits
+
+APMKFLUXCAL Finished
+dt = 4.0560551 sec

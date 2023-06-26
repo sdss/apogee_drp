@@ -52,6 +52,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
     telescope = observatory+'25m'
+    obstag = {'apo':'n','lco':'s'}[observatory]
     load = apload.ApLoad(apred=apred,telescope=telescope)
 
     # Make daily wavelength solution if it doesn't exist
@@ -148,6 +149,15 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     wpars = np.zeros((npoly+3,300),float)
     wpars[0:npoly,:] = allpars[0:npoly,:]
     wpars[npoly:,:] = allpars[npoly+wgroup*3:npoly+(wgroup+1)*3,:]
+    # Check for wacky chip offset values
+    for ch in range(3):
+        choff = wpars[npoly+ch,:]
+        med = np.median(choff)
+        bd, = np.where(np.abs(choff-med) > 10)
+        for j in range(len(bd)):
+            print('Fixing chip offset: chip {:2d}  row {:3d}  {:.2f}  median {:.2f}'.format(ch+1,bd[j],choff[bd[j]],med))
+            gd, = np.where((np.abs(choff-med) < 10) & (np.abs(np.arange(300)-bd[j]) < 5))
+            wpars[npoly+ch,bd[j]] = np.median(choff[gd])
     # Now calculate the 2D wavelength arrays
     waves = np.zeros((3,300,2048),float)
     for row in range(300):
@@ -157,7 +167,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
             x[1,:] = ichip+1
             x[2,:] = 0
             waves[ichip,row,:] = wave.func_multi_poly(x,*wpars[:,row],npoly=npoly)
-
+            
     # Fit peaks to the full-frame FPI data
     # ------------------------------------
     print(' ')
@@ -180,9 +190,11 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     print('Determine median wavelength per FPI lines')
     print('-----------------------------------------')
     # Load initial guesses
-    fpipeaksfile = os.environ['APOGEE_DRP_DIR']+'/data/arclines/fpi_peaks.fits'
+    #fpipeaksfile = os.environ['APOGEE_DRP_DIR']+'/data/arclines/fpi_peaks.fits'
+    fpipeaksfile = os.environ['APOGEE_DRP_DIR']+'/data/arclines/fpi_peaks-'+obstag+'.fits'    
     if os.path.exists(fpipeaksfile):
         fpipeaks = Table.read(fpipeaksfile)
+        for c in fpipeaks.colnames: fpipeaks[c].name = c.lower()  # lower case column names
     else:
         print('No initial FPI peaks file found')
         fpipeaks = None
@@ -219,7 +231,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
             print('  Writing FPI lines to ',fpilinesfile)
             fpilines.write(fpilinesfile,overwrite=True)
         # 2) Apply the daily wavelenth solution
-        print('2) Apply the daily wavelength solution for FPI-line identification')
+        print('  2) Apply the daily wavelength solution for FPI-line identification')
         # These wavelengths are ONLY used to identify which unique FPI line it is
         # NOT for deriving the new wavelength solution
         if 'wave' not in fpilines.colnames:
@@ -279,6 +291,7 @@ def fitlines(frame,rows=np.arange(300),chips=['a','b','c'],verbose=False):
             else:
                 if verbose:
                     print(chip,f,0,' lines')
+
     return linestr
 
 
@@ -328,7 +341,7 @@ def getfpiwave(fpilines,wcoef,fpipeaks,verbose=True):
     # chip loop
     #  not entirely necessary, but speeds up the where statements a bit
     for ichip,chip in enumerate(['a','b','c']):
-        ind, = np.where(fpipeaks['CHIP']==chip)
+        ind, = np.where(fpipeaks['chip']==chip)
         fpipeaks1 = fpipeaks[ind]
         fpilinestr1 = fpilinestr[ind]
         #wavecal1 = wavecal[chip]
@@ -338,7 +351,7 @@ def getfpiwave(fpilines,wcoef,fpipeaks,verbose=True):
         if verbose:
             print('CHIP   NUM         X       HEIGHT       FLUX        WAVE       WSIG   NFIBER')
         for i in range(len(ind)):
-            ind1, = np.where(np.abs(fpipeaks1['WAVE'][i]-fpilines1['wave']) < 1.0)
+            ind1, = np.where(np.abs(fpipeaks1['wave'][i]-fpilines1['wave']) < 1.0)
             wave1 = np.median(fpilines1['wave'][ind1])
             wsig1 = dln.mad(fpilines1['wave'][ind1].data)
             # outlier rejection
@@ -375,7 +388,7 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True):
     fpilines: catalog of FPI full-frame line measurements (all fibers)
     wcoef: original arclamp wavelength solution coefficients
     """
-
+    
     # Get the unique FPI line ID and wavelength
     if 'lineid' not in fpilines.colnames:
         fpilines['linewave'] = 999999.
@@ -393,7 +406,7 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True):
                     fpilines1['linewave'][ind1] = fpilinestr1['wave'][i]
                     fpilines1['lineid'][ind1] = fpilinestr1['id'][i]
             fpilines[lineind] = fpilines1
-
+            
     # Prune out lines that had unsuccessful fits or no mean wavelength
     bd, = np.where((fpilines['success']==False) | (fpilines['lineid']==-1))
     if len(bd)>0:
@@ -475,6 +488,12 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True):
         chres = np.zeros(len(thisrow),float)
         for ichip,chip in enumerate(chips):
             ind1, = np.where(fpilines['chip'][thisrow]==chip)
+            if len(ind1)==0:
+                print('No lines detected for this row/chip')
+                chrms = 999999.
+                newwcoef[ichip,:,row] = 999999.
+                newwaves[ichip,row,:] = 999999.
+                continue
             chind = thisrow[ind1]
             xx = fpilines['pars'][chind,1]
             yy = fpilines['linewave'][chind]
@@ -552,7 +571,7 @@ def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines):
         hdu.append(fits.table_to_hdu(Table(fpilines[ind])))    
         hdu.writeto(outfile.replace('WaveFPI','WaveFPI-'+chip),overwrite=True)
 
-
+        
 def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
                  vers='daily',telescope='apo25m',plugmap=None,verbose=False):
     """ 

@@ -38,6 +38,8 @@ from scipy.optimize import curve_fit
 from scipy import interpolate
 import datetime
 import logging
+import tempfile
+import shutil
 
 logging.getLogger('matplotlib.font_manager').disabled = True
 
@@ -1010,6 +1012,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html = open(qafile, 'w')
     tmp = os.path.basename(qafile).replace('.html','')
     html.write('<HTML><HEAD><script src="../../../../../../../sorttable.js"></script><title>'+tmp+'</title></head><BODY>\n')
+    html.write('<H1>Apred: <FONT COLOR="green">' + load.apred + '</FONT><BR>')
     html.write('<H1>Field: <FONT COLOR="green">' + field + '</FONT><BR>Plate: <FONT COLOR="green">' + plate)
     html.write('</FONT><BR>MJD: <FONT COLOR="green">' + mjd + '</FONT></H1>\n')
     html.write('<p><a href="../../../../../../qa/mjd.html">back to MJD page</a><BR>\n')
@@ -2244,7 +2247,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     vishtml.write('<HEAD><script src="../../../../../../../sorttable.js"></script><title>' + htmlfile + '</title></head>\n')
     vishtml.write('<BODY>\n')
 
-    vishtml.write('<H1>' + htmlfile + '</H1>\n')
+    vishtml.write('<H1>' + htmlfile + ' ('+load.apred+')</H1>\n')
     vishtml.write('<H3>' + str(len(stars)) + ' stars observed</H3><HR>\n')
     vishtml.write('<P><B>Note:</B> the "Dflat Tput" column gives the median dome flat flux in each ')
     vishtml.write('fiber divided by the maximum median dome flat flux across all fibers. ')
@@ -2652,7 +2655,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starHTML.write('<HTML>\n')
         starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +obj+ '</title></head>\n')
         starHTML.write('<BODY>\n')
-        starHTML.write('<H1>' + obj + ', ' + str(nvis) + ' visits</H1> <HR>\n')
+        starHTML.write('<H1>' + obj + ', ' + str(nvis) + ' visits ('+load.apred+')</H1> <HR>\n')
         if apStarRelPath is not None:
             starHTML.write('<P>' + simbadlink + '<BR><A HREF=' + apStarRelPath + '>apStar File</A>\n')
         else:
@@ -3226,7 +3229,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     html = open(htmlfile, 'w')
     html.write('<HTML><BODY>')
-    html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><TITLE>Nightly QA for MJD '+mjd+'</TITLE></HEAD>\n')
+    html.write('<HEAD><script type=text/javascript src=html/sorttable.js></script><TITLE>Nightly QA for MJD '+mjd+' ('+load.apred+')</TITLE></HEAD>\n')
     html.write('<H1>Nightly QA for MJD '+mjd+'</H1>\n')
 
     # Find the observing log file
@@ -3674,10 +3677,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         current_time = now.strftime("%H:%M:%S")
         current_date = today.strftime("%B %d, %Y")
 
-        html = open(mjdfile,'w')
+        # Write first to temporary file otherwise mjd.html won't be available during this process
+        #  move it over at the end
+        tid,tfile = tempfile.mkstemp(prefix="mjd")  # absolute filename
+        html = open(tfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE MJD Summary</title></head>\n')
-        html.write('<H1>APOGEE Observation Summary by MJD</H1>\n')
+        html.write('<H1>APOGEE Observation Summary by MJD ('+apred+')</H1>\n')
         html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
         html.write('<HR>\n')
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
@@ -3879,7 +3885,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         html.write('</body></html>\n')
         html.close()
-
+        # Now copy to the final file
+        shutil.copyfile(tfile,mjdfile)
+        # Delete temporary file
+        if os.path.exists(tfile): os.remove(tfile)
+        
     #---------------------------------------------------------------------------------------
     # Fields view
     if dofields is True:
@@ -3891,10 +3901,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
         current_time = now.strftime("%H:%M:%S")
         current_date = today.strftime("%B %d, %Y")
 
-        html = open(fieldfile,'w')
+        # Write first to temporary file otherwise fields.html won't be available during this process
+        #  move it over at the end
+        tid,tfile = tempfile.mkstemp(prefix="field")  # absolute filename
+        html = open(tfile,'w')
         html.write('<HTML><BODY>\n')
         html.write('<HEAD><script src="sorttable.js"></script><title>APOGEE Field Summary</title></head>\n')
-        html.write('<H1>APOGEE Observation Summary by Field</H1>\n')
+        html.write('<H1>APOGEE Observation Summary by Field ('+apred+')</H1>\n')
         html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
         html.write('<HR>\n')
         html.write('<p><A HREF=mjd.html>MJD view</A></p>\n')
@@ -4110,7 +4123,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
 
         html.write('</BODY></HTML>\n')
         html.close()
-
+        # Now copy to the final file
+        shutil.copyfile(tfile,fieldfile)
+        # Delete temporary file
+        if os.path.exists(tfile): os.remove(tfile)
+        
         #---------------------------------------------------------------------------------------
         # Aitoff maps
         # Set up some basic plotting parameters.

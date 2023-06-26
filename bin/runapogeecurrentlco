@@ -1,0 +1,15 @@
+#!/bin/csh
+set running=`ps aux | grep runapogeecurrentlco | grep cron | wc -l`
+if ( $running > 1 ) then
+  echo "One process of runapogeeacurrentlco already running.  Will try again when it is finished."
+  exit
+endif
+module purge
+module load mwm/daily
+# Get the current version name
+setenv VERS_DIR `readlink $APOGEE_REDUX/current`
+setenv APOGEE_VERS `basename $VERS_DIR`
+module switch apogee_drp/daily apogee_drp/$APOGEE_VERS
+module list
+echo "CURRENT APOGEE REDUCTION VERSION = "$APOGEE_VERS
+runapogee lco --vers $APOGEE_VERS

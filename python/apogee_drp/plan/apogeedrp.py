@@ -18,8 +18,8 @@ from collections import OrderedDict
 #from astropy.time import Time
 from datetime import datetime
 import logging
-import slurm
-from slurm import queue as pbsqueue
+#import slurm
+#from slurm import queue as pbsqueue
 import time
 import traceback
 import subprocess
@@ -337,7 +337,6 @@ def getplanfiles(load,mjds,exist=False,logger=None):
         return []
     plans = plans[ind]
     planfiles = plans['planfile']
-
     # Make sure they are unique
     planfiles = list(np.unique(np.array(planfiles)))
     # Check that they exist
@@ -773,7 +772,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             chkap1['designid'] = planstr['designid']
             chkap1['fieldid'] = planstr['fieldid']
         if platetype=='normal' and fiberdata is not None:
-            chkap1['nobj'] = np.sum((fiberdata['FIBERID']>-1) & (fiberdata['OBJTYPE']!='SKY'))  # stars and tellurics
+            chkap1['nobj'] = np.sum((fiberdata['FIBERID']>-1) & (np.char.array(fiberdata['OBJTYPE']).astype(str)!='SKY'))  # stars and tellurics
         chkap1['pbskey'] = pbskey
         chkap1['checktime'] = str(datetime.now())
         # ap3D, ap2D, apCframe success
@@ -1176,6 +1175,12 @@ def mkvers(apred,logger=None):
                 os.makedirs(apogee_redux+apred+'/'+d+'/'+obs)
             else:
                 logger.info(apogee_redux+apred+'/'+d+'/'+obs+' already exists')
+            # Make cron directory
+            if os.path.exists(apogee_redux+apred+'/'+d+'/'+obs+'/cron')==False:
+                logger.info('Creating '+apogee_redux+apred+'/'+d+'/'+obs+'/cron')
+                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs+'/cron')
+            else:
+                logger.info(apogee_redux+apred+'/'+d+'/'+obs+'/cron already exists')            
     # Cal subdirectories
     for d in ['bpm','darkcorr','detector','flatcorr','flux','fpi','html','littrow','lsf','persist','plans','psf','qa','telluric','trace','wave']:
         for obs in ['apogee-n','apogee-s']:
@@ -1255,6 +1260,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         cwd = os.path.abspath(os.curdir)
         for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','sparse','fiber','modelpsf','fpi']:
             for obs in ['apogee-n','apogee-s']:
+                prefix = {'apogee-n':'ap','apogee-s':'as'}[obs]
                 srcdir = apogee_redux+linkvers+'/cal/'+obs+'/'+d
                 destdir = apogee_redux+apred+'/cal/'+obs+'/'+d
                 if d=='sparse' or d=='modelpsf' or d=='fiber':
@@ -1262,48 +1268,115 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     destdir = apogee_redux+apred+'/cal/'+obs+'/psf'
                 logger.info('Creating symlinks for '+d+' '+obs)
                 os.chdir(destdir)
+                # PSFModel
                 if d=='modelpsf':
-                    subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'PSFModel-*.fits .'],shell=True)
+                    psfmfiles = glob(srcdir+'/'+prefix+'PSFModel-*.fits')
+                    if len(psfmfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSFModel-*.fits .'],shell=True)
+                    else:
+                        logger.info('No PSFModel files')
+                # Sparse
                 elif d=='sparse':
-                    subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'Sparse*.fits .'],shell=True)
-                    # Need to link apEPSF files as well
-                    sfiles = glob(srcdir+'/'+load.prefix+'Sparse*.fits')
+                    sparsefiles = glob(srcdir+'/'+prefix+'Sparse*.fits')
+                    if len(sparsefiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/'+prefix+'Sparse*.fits .'],shell=True)
+                    else:
+                        logger.info('No Sparse files')
+                    # Need to link apEPSF, apPSF and apETrace files as well
+                    #   otherwise the daily cal PSF stage will try to remake them
+                    sfiles = glob(srcdir+'/'+prefix+'Sparse*.fits')
                     if len(sfiles)>0:
                         snum = [os.path.basename(s)[9:-5] for s in sfiles]
                         for num in snum:
-                            subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'EPSF-?-'+num+'.fits .'],shell=True)
+                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+num+'.fits .'],shell=True)
+                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSF-?-'+num+'.fits .'],shell=True)                            
+                            trcdir = apogee_redux+linkvers+'/cal/'+obs+'/trace'
+                            dtrcdir = apogee_redux+apred+'/cal/'+obs+'/trace'                            
+                            subprocess.run(['ln -s '+trcdir+'/'+prefix+'ETrace-?-'+num+'.fits '+dtrcdir],shell=True)
+                # Darks and Flats
                 elif d=='darkcorr' or d=='flatcorr':
-                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
-                    subprocess.run(['ln -s '+srcdir+'/*.tab .'],shell=True)
+                    darkfiles = glob(srcdir+'/*.fits')
+                    if len(darkfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    else:
+                        logger.info('No '+os.path.basename(srcdir)+' files ')
+                    tabfiles = glob(srcdir+'/*.tab')
+                    if len(tabfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.tab .'],shell=True)
+                    else:
+                        logger.info('No '+os,path.basename(srcdir)+' .tab files')
+                # Detector
                 elif d=='detector':
-                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
-                    subprocess.run(['ln -s '+srcdir+'/*.dat .'],shell=True)                    
+                    detfiles = glob(srcdir+'/*.fits')
+                    if len(detfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    else:
+                        logger.info('No Detector files')
+                    detdatfiles = glob(srcdir+'/*.dat')
+                    if len(detdatfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.dat .'],shell=True)
+                    else:
+                        logger.info('No Detector .dat files')
+                # LSF
                 elif d=='lsf':
-                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
-                    subprocess.run(['ln -s '+srcdir+'/*.sav .'],shell=True)
-                elif d=='fpi':
-                    subprocess.run(['ln -s '+srcdir+'/fpi_peaks.fits .'],shell=True)
+                    lsffiles = glob(srcdir+'/*.fits')
+                    if len(lsffiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    else:
+                        logger.info('No LSF files')
+                    lsfsavfiles = glob(srcdir+'/*.sav')
+                    if len(lsfsavfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.sav .'],shell=True)
+                    else:
+                        logger.info('No LSF .sav files')
+                ## FPI
+                # fpi_peaks.fits is now in the repo (apogee_drp/data/arclines/fpi_peaks.fits)
+                #elif d=='fpi':
+                #    fpifiles = glob(srcdir+'/fpi_peaks.fits')
+                #    if len(fpifiles)>0:
+                #        subprocess.run(['ln -s '+srcdir+'/fpi_peaks.fits .'],shell=True)
+                #    else:
+                #        logger.info('No fpi_peaks.fits files')
+                # Fiber
                 elif d=='fiber':
                     # Create symlinks for all the fiber cal files, PSF, EPSF, ETrace
                     caldict = mkcal.readcal(caldir+obs+'.par')
                     fiberdict = caldict['fiber']
                     for f in fiberdict['name']:
-                        subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'EPSF-?-'+f+'.fits .'],shell=True)
-                        subprocess.run(['ln -s '+srcdir+'/'+load.prefix+'PSF-?-'+f+'.fits .'],shell=True)
+                        epsffiles = glob(srcdir+'/'+prefix+'EPSF-?-'+f+'.fits')
+                        if len(epsffiles)>0:
+                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+f+'.fits .'],shell=True)
+                        else:
+                            logger.info('No EPSF files found for fiber '+prefix+'EPSF-?-'+f+'.fits')
+                        psffiles = glob(srcdir+'/'+prefix+'PSF-?-'+f+'.fits')
+                        if len(psffiles)>0:
+                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSF-?-'+f+'.fits .'],shell=True)
+                        else:
+                            logger.info('No PSF files found for fiber '+prefix+'PSF-?-'+f+'.fits')                            
                         tsrcdir = apogee_redux+linkvers+'/cal/'+obs+'/trace'
                         tdestdir = apogee_redux+apred+'/cal/'+obs+'/trace'
                         os.chdir(tdestdir)
-                        subprocess.run(['ln -s '+tsrcdir+'/'+load.prefix+'ETrace-?-'+f+'.fits .'],shell=True)
+                        tracefiles = glob(tsrcdir+'/'+prefix+'ETrace-?-'+f+'.fits')
+                        if len(tracefiles)>0:
+                            subprocess.run(['ln -s '+tsrcdir+'/'+prefix+'ETrace-?-'+f+'.fits .'],shell=True)
+                        else:
+                            logger.info('No ETrace files found for fiber '+prefix+'ETrace-?-'+f+'.fits')                            
                         os.chdir(destdir)
                 else:
-                    subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
-                    
+                    cfiles = glob(srcdir+'/*.fits')
+                    if len(cfiles)>0:
+                        subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
+                    else:
+                        logger.info('No '+os.path.basename(srcdir)+' .fits files')
+                        
         # Link all of the PSF files in the PSF library
         psflibrary = False
         if psflibrary:
             for obs in ['apogee-n','apogee-s']:
                 logger.info('Creating symlinks for PSF library files '+obs)
-                sload = apload.ApLoad(apred=linkvers,telescope=load.telescope)
+                tscope = {'apogee-n':'apo25m','apogee-s':'lco25m'}
+                sload = apload.ApLoad(apred=linkvers,telescope=tscope)
+                dload = apload.ApLoad(apred=apred,telescope=tscope)
                 dpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+obs+'DomeFlatTrace-all.fits'
                 qpsflibraryfile = os.environ['APOGEE_REDUX']+'/'+linkvers+'/monitor/'+obs+'QuartzFlatTrace-all.fits'
                 psfid = []
@@ -1326,7 +1399,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 psfid = np.unique(psfid)
                 for i in range(len(psfid)):
                     srcfile = sload.filename('PSF',num=psfid[i],chips=True)
-                    destfile = load.filename('PSF',num=psfid[i],chips=True)
+                    destfile = dload.filename('PSF',num=psfid[i],chips=True)
                     for ch in chips:
                         srcfile1 = srcfile.replace('PSF-','PSF-'+ch+'-')
                         destfile1 = destfile.replace('PSF-','PSF-'+ch+'-')
@@ -1392,8 +1465,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Detector/Linearity in parallel')
         logger.info('============================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkdet', **slurmpars)
+        tasks = np.zeros(len(detdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkdet', **slurmpars)
         docal = np.zeros(len(detdict),bool)
         donames = []
         logfiles = []
@@ -1422,21 +1497,32 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Detector file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Detector files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Detector',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)        
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Detector files to run')        
+            key,jobid = slrm.submit(tasks,label='mkdet',verbose=True,logger=logger,**slurmpars1)
+            slrm.queue_wait('mkdet',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Detector',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
+            #logger.info(str(np.sum(docal))+' Detector files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Detector',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)        
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Detector calibration files need to be run')
-        del queue    
 
 
     # Make darks in parallel
@@ -1456,8 +1542,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         slurmpars1['cpus'] = 4
         slurmpars1['mem_per_cpu'] = 20000  # in MB
         logger.info('Slurm settings: '+str(slurmpars1))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkdark', **slurmpars1)
+        tasks = np.zeros(len(darkdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkdark', **slurmpars1)
         docal = np.zeros(len(darkdict),bool)
         donames = []
         logfiles = []
@@ -1486,21 +1574,32 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Dark file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Dark files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Dark',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Dark files to run')        
+            key,jobid = slrm.submit(tasks,label='mkdark',verbose=True,logger=logger,**slurmpars1)
+            slrm.queue_wait('mkdark',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Dark',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            #logger.info(str(np.sum(docal))+' Dark files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Dark',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Dark calibration files need to be run')
-        del queue    
         # Make the dark plots
         if np.sum(docal)>0:
             cal.darkplot(apred=apred,telescope=telescope)
@@ -1520,8 +1619,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Flats in parallel')
         logger.info('===============================')
         logger.info('Slurm settings: '+str(slurmpars1))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkflat', **slurmpars1)
+        tasks = np.zeros(len(flatdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkflat', **slurmpars1)
         docal = np.zeros(len(flatdict),bool)
         donames = []
         logfiles = []
@@ -1550,21 +1651,32 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Flat file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Flat files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Flat',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Flat files to run')        
+            key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars1)
+            slrm.queue_wait('mkflat',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
+            #logger.info(str(np.sum(docal))+' Flat files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Flat',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Flat calibration files need to be run')
-        del queue    
         # Make the flat plots
         if np.sum(docal)>0:
             cal.flatplot(apred=apred,telescope=telescope)
@@ -1580,8 +1692,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master BPMs in parallel')
         logger.info('==============================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkbpm', **slurmpars)
+        tasks = np.zeros(len(bpmdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkbpm', **slurmpars)
         docal = np.zeros(len(bpmdict),bool)
         donames = []
         logfiles = []
@@ -1610,21 +1724,32 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('BPM file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' BPM files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'BPM',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' BPM files to run')        
+            key,jobid = slrm.submit(tasks,label='mkbpm',verbose=True,logger=logger,**slurmpars1)
+            slrm.queue_wait('mkbpm',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'BPM',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            #logger.info(str(np.sum(docal))+' BPM files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'BPM',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master BPM calibration files need to be run')
-        del queue    
 
 
     # Make Littrow in parallel
@@ -1637,8 +1762,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Littrows in parallel')
         logger.info('==================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mklittrow', **slurmpars)
+        tasks = np.zeros(len(littdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)        
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mklittrow', **slurmpars)
         docal = np.zeros(len(littdict),bool)
         donames = []
         logfiles = []
@@ -1667,21 +1794,32 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Littrow file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Littrow files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Littrow',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Littrow files to run')        
+            key,jobid = slrm.submit(tasks,label='mklittrow',verbose=True,logger=logger,**slurmpars1)
+            slrm.queue_wait('mklittrow',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Littrow',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            #logger.info(str(np.sum(docal))+' Littrow files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Littrow',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Littrow calibration files need to be run')
-        del queue    
 
     
     # Make Response in parallel
@@ -1693,8 +1831,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Responses in parallel')
         logger.info('===================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkresponse', **slurmpars)
+        tasks = np.zeros(len(responsedict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)        
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkresponse', **slurmpars)
         docal = np.zeros(len(responsedict),bool)
         donames = []
         logfiles = []
@@ -1723,21 +1863,32 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Response file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Response files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Response',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Response files to run')        
+            key,jobid = slrm.submit(tasks,label='mkresponse',verbose=True,logger=logger,**slurmpars1)
+            slrm.queue_wait('mkresponse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Response',logfiles,key,apred,telescope,verbose=True,logger=logger)                            
+            #logger.info(str(np.sum(docal))+' Response files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Response',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Response calibration files need to be run')
-        del queue    
     
 
     # Make Sparse in parallel
@@ -1749,8 +1900,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Sparses in parallel')
         logger.info('=================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mksparse', **slurmpars)
+        tasks = np.zeros(len(sparsedict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mksparse', **slurmpars)
         docal = np.zeros(len(sparsedict),bool)
         donames = []
         logfiles = []
@@ -1779,21 +1932,32 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('Sparse file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' Sparse files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'Sparse',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Sparse files to run')        
+            key,jobid = slrm.submit(tasks,label='mksparse',verbose=True,logger=logger,**slurmpars1)
+            slrm.queue_wait('mksparse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Sparse',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            #logger.info(str(np.sum(docal))+' Sparse files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'Sparse',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Sparse calibration files need to be run')
-        del queue    
 
 
     # Make Model PSFs in parallel
@@ -1805,8 +1969,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master PSF Models in parallel')
         logger.info('====================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkpsfmodel', **slurmpars)
+        tasks = np.zeros(len(modelpsfdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mkpsfmodel', **slurmpars)
         docal = np.zeros(len(modelpsfdict),bool)    
         donames = []
         logfiles = []
@@ -1835,21 +2001,31 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('PSFModel file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' PSFModel files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' PSFModel files to run')        
+            key,jobid = slrm.submit(tasks,label='mkpsfmodel',verbose=True,logger=logger,**slurmpars1)
+            slrm.queue_wait('mkpsfmodel',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'PSFModel',logfiles,key,apred,telescope,verbose=True,logger=logger)                            
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
             # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'PSFModel',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            #chkmaster1 = check_mastercals(donames,'PSFModel',logfiles,key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master PSF Model calibration files need to be run')
-        del queue    
     
 
     # Make multiwave cals in parallel
@@ -1903,8 +2079,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master LSFs in parallel')
         logger.info('================================')
         logger.info('Slurm settings: '+str(slurmpars))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mklsf', **slurmpars)
+        tasks = np.zeros(len(lsfdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='mklsf', **slurmpars)
         docal = np.zeros(len(lsfdict),bool)
         donames = []
         logfiles = []
@@ -1933,21 +2111,32 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     logger.info('LSF file %d : %s' % (i+1,name))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)
+                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
-            logger.info(str(np.sum(docal))+' LSF files to run')        
-            queue.commit(hard=True,submit=True)
-            logger.info('PBS key is '+queue.key)
-            queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            chkmaster1 = check_mastercals(donames,'LSF',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' LSF files to run')        
+            key,jobid = slrm.submit(tasks,label='mklsf',verbose=True,logger=logger,**slurmpars1)
+            slrm.queue_wait('mklsf',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'LSF',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
+            #logger.info(str(np.sum(docal))+' LSF files to run')        
+            #queue.commit(hard=True,submit=True)
+            #logger.info('PBS key is '+queue.key)
+            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            ## This should check if the  ran okay and puts the status in the database
+            #chkmaster1 = check_mastercals(donames,'LSF',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))        
         else:
             logger.info('No master LSF calibration files need to be run')
-        del queue
         
     return chkmaster
     
@@ -2019,15 +2208,17 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='ap3d', **slurmpars1)
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='ap3d', **slurmpars1)
         for i in range(ntorun):
             num = expinfo['num'][torun[i]]
             mjd = int(load.cmjd(num))
             logfile1 = load.filename('2D',num=num,mjd=mjd,chips=True).replace('2D','3D')
             logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
             logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
-            if os.path.dirname(logfile1)==False:
+            if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
             cmd1 = 'ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope)
             if clobber:
@@ -2035,13 +2226,19 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
             logger.info('Exposure %d : %d' % (i+1,num))
             logger.info('Command : '+cmd1)
             logger.info('Logfile : '+logfile1)
-            queue.append(cmd1,outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+            tasks['cmd'][i] = cmd1
+            tasks['outfile'][i] = logfile1
+            tasks['errfile'][i] = logfile1.replace('.log','.err')
+            tasks['dir'][i] = os.path.dirname(logfile1)
+            #queue.append(cmd1,outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+        logger.info('Running AP3D on '+str(ntorun)+' exposures')
+        key,jobid = slrm.submit(tasks,label='ap3d',verbose=True,logger=logger,**slurmpars1)
+        slrm.queue_wait('ap3d',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
+        #queue.commit(hard=True,submit=True)
+        #logger.info('PBS key is '+queue.key)
+        #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This should check if the ap3d ran okay and puts the status in the database
-        chk3d = check_ap3d(expinfo,queue.key,apred,telescope,verbose=True,logger=logger)
-        del queue
+        chk3d = check_ap3d(expinfo,key,apred,telescope,verbose=True,logger=logger)
     else:
         chk3d = None
         logger.info('No exposures need AP3D processing')
@@ -2156,7 +2353,17 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 if len(ind)>0:
                     calinfo = expinfo[ind]
             elif ctype=='flux':
-                ind, = np.where(expinfo['exptype']=='DOMEFLAT')
+                # Make sure there is at least ONE flux calibration file per MJD
+                #  if no dome flat was taken, then use quartz flat
+                ind = np.array([],int)
+                for m in mjds:
+                    ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='DOMEFLAT'))
+                    if len(ind1)==0:
+                        ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='QUARTZFLAT'))
+                        # pick two
+                        if len(ind1)>2: ind1=ind1[0:2]
+                    if len(ind1)>0:
+                        ind = np.append(ind,ind1)
                 ncal = len(ind)
                 if len(ind)>=0:
                     calinfo = expinfo[ind]
@@ -2211,7 +2418,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     ncal = len(calinfo)
                     
             logger.info(str(ncal)+' file(s)')
-
+            
             # Loop over calibration files and check if we need to run them
             docal = np.zeros(ncal,bool)
             for j in range(ncal):
@@ -2244,8 +2451,10 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     slurmpars1['cpus'] = ntorun
                 slurmpars1['numpy_num_threads'] = 2
                 logger.info('Slurm settings: '+str(slurmpars1))
-                queue = pbsqueue(verbose=True)
-                queue.create(label='makecal-'+calnames[i], **slurmpars1)
+                tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+                tasks = Table(tasks)
+                #queue = pbsqueue(verbose=True)
+                #queue.create(label='makecal-'+calnames[i], **slurmpars1)
                 for j in range(ntorun):
                     num1 = calinfo['num'][torun[j]]
                     mjd1 = calinfo['mjd'][torun[j]]
@@ -2285,16 +2494,23 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     logger.info('Calibration file %d : %s %s' % (j+1,ctype,str(num1)))
                     logger.info('Command : '+cmd1)
                     logger.info('Logfile : '+logfile1)
-                    queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
-
-                queue.commit(hard=True,submit=True)
-                logger.info('PBS key is '+queue.key)
-                queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+                    tasks['cmd'][j] = cmd1
+                    tasks['outfile'][j] = logfile1
+                    tasks['errfile'][j] = logfile1.replace('.log','.err')
+                    tasks['dir'][j] = os.path.dirname(logfile1)
+                    #queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
+                logger.info('Creating '+str(ntorun)+' '+calnames[i]+' files')
+                label = 'makecal-'+calnames[i]
+                key,jobid = slrm.submit(tasks,label=label,verbose=True,logger=logger,**slurmpars1)
+                slrm.queue_wait(label,key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete   
+                #queue.commit(hard=True,submit=True)
+                #logger.info('PBS key is '+queue.key)
+                #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
             else:
                 logger.info('No '+str(calnames[i])+' calibration files need to be run')
             # Checks the status and updates the database
             if ntorun>0:
-                chkcal1 = check_calib(calinfo[torun],logfiles,queue.key,apred,verbose=True,logger=logger)
+                chkcal1 = check_calib(calinfo[torun],logfiles,key,apred,verbose=True,logger=logger)
                 # Summary
                 indcal, = np.where(chkcal1['success']==True)
                 logger.info('%d/%d calibrations successfully processed' % (len(indcal),len(chkcal1)))
@@ -2302,7 +2518,6 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     chkcal = chkcal1
                 else:
                     chkcal = np.hstack((chkcal,chkcal1))
-                del queue
 
     # make sure to run mkwave on all arclamps needed for daily cals
 
@@ -2527,8 +2742,10 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
-        queue = pbsqueue(verbose=True)
-        queue.create(label='apred', **slurmpars1)
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        #queue = pbsqueue(verbose=True)
+        #queue.create(label='apred', **slurmpars1)
         for i in range(ntorun):
             pf = planfiles[torun[i]]
             pfbase = os.path.basename(pf)
@@ -2543,13 +2760,18 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
             logger.info('planfile %d : %s' % (i+1,pf))
             logger.info('Command : '+cmd1)
             logger.info('Logfile : '+logfile1)
-            queue.append(cmd1, outfile=logfile1,errfile=errfile1)
-        queue.commit(hard=True,submit=True)
-        logger.info('PBS key is '+queue.key)
-        queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+            tasks['cmd'][i] = cmd1
+            tasks['outfile'][i] = logfile1
+            tasks['errfile'][i] = errfile1
+            tasks['dir'][i] = os.path.dirname(logfile1)
+            #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
+        logger.info('Running APRED on '+str(ntorun)+' planfiles')
+        key,jobid = slrm.submit(tasks,label='apred',verbose=True,logger=logger,**slurmpars1)
+        #queue.commit(hard=True,submit=True)
+        slrm.queue_wait('apred',key,jobid,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
+        #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete        
         # This also loads the status into the database using the correct APRED version
-        chkexp,chkvisit = check_apred(expinfo,planfiles,queue.key,verbose=True,logger=logger)
-        del queue
+        chkexp,chkvisit = check_apred(expinfo,planfiles,key,verbose=True,logger=logger)
     else:
         logger.info('No planfiles need to be run')
         chkexp,chkvisit = None,None
@@ -2700,7 +2922,6 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
         if ntorun<64:
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
-        del slurmpars1['ppn']
         logger.info('Slurm settings: '+str(slurmpars1))
         tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
@@ -2735,17 +2956,11 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             tasks['outfile'][i] = logfile
             tasks['errfile'][i] = errfile
             tasks['dir'][i] = os.path.dirname(logfile) 
-            #queue.append(cmd,outfile=logfile,errfile=errfile)
         logger.info('Running RV on '+str(ntorun)+' stars')
         key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=logger,**slurmpars1)
-        logger.info('PBS key is '+key)
         slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
-        #queue.commit(hard=True,submit=True)
-        #logger.info('PBS key is '+queue.key)
-        #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This checks the status and puts it into the database
         chkrv = check_rv(vcat[torun],key,logger=logger,verbose=False)
-        #del queue
     else:
         logger.info('No RVs need to be run')
         chkrv = None
@@ -2839,20 +3054,29 @@ def rununified(load,mjds,slurmpars,clobber=False,logger=None):
         slurmpars1['cpus'] = len(mjds)
     slurmpars1['numpy_num_threads'] = 2    
     logger.info('Slurm settings: '+str(slurmpars1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='unidir', **slurmpars1)
+    tasks = np.zeros(len(mjds),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+    tasks = Table(tasks)
+    #queue = pbsqueue(verbose=True)
+    #queue.create(label='unidir', **slurmpars1)
     # Loop over all MJDs
     for m in mjds:
-        outfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-unidir.'+logtime+'.log'
-        errfile = outfile.replace('.log','.err')
-        if os.path.exists(os.path.dirname(outfile))==False:
-            os.makedirs(os.path.dirname(outfile))
-        queue.append('sas_mwm_healpix --spectro apogee --mjd {0} --telescope {1} --drpver {2} -v'.format(mjd5,telescope,apred),
-                     outfile=outfile, errfile=errfile)
-    queue.commit(hard=True,submit=True)
-    logger.info('PBS key is '+queue.key)        
-    queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
-    del queue    
+        logfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-unidir.'+logtime+'.log'
+        errfile = logfile.replace('.log','.err')
+        if os.path.exists(os.path.dirname(logfile))==False:
+            os.makedirs(os.path.dirname(logfile))
+        cmd = 'sas_mwm_healpix --spectro apogee --mjd {0} --telescope {1} --drpver {2} -v'.format(mjd5,telescope,apred)
+        tasks['cmd'][i] = cmd
+        tasks['outfile'][i] = logfile
+        tasks['errfile'][i] = errfile
+        tasks['dir'][i] = os.path.dirname(logfile)
+        #queue.append(cmd,outfile=logfile, errfile=errfile)
+    logger.info('Making unified directory structure for '+str(len(MJDS)))
+    key,jobid = slrm.submit(tasks,label='unidir',verbose=True,logger=logger,**slurmpars1)
+    slrm.queue_wait('unidir',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete   
+    #queue.commit(hard=True,submit=True)
+    #logger.info('PBS key is '+queue.key)        
+    #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
+    #del queue    
     #  sas_mwm_healpix --spectro apogee --mjd 59219 --telescope apo25m --drpver daily -v
 
 
@@ -2894,7 +3118,8 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         logger = dln.basiclogger()
         
     # Get plan files for these MJDs
-    planfiles = getplanfiles(load,mjds,logger=logger)
+    logger.info('Getting plan files')
+    planfiles = getplanfiles(load,mjds,exist=True,logger=logger)
     nplans = len(planfiles)
     # Only want apPlan files
     if nplans>0:
@@ -2904,44 +3129,42 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         #    planfiles = [p for p in planfiles if os.path.basename(p).startswith('apPlan')]
         #else:
         #    planfiles = [p for p in planfiles if os.path.basename(p).startswith('asPlan')]
-    if nplans==0:
-        logger.info('No plan files')
-        return
     logger.info(str(nplans)+' plan file(s)')
 
     # Run apqa on each plate visit
-    slurmpars1 = slurmpars.copy()
-    if nplans<64:
-        slurmpars1['cpus'] = nplans
-    slurmpars1['numpy_num_threads'] = 2    
-    logger.info('Slurm settings: '+str(slurmpars1))
-    queue = pbsqueue(verbose=True)
-    queue.create(label='apqa', **slurmpars1)
-    plates = np.zeros(nplans).astype(str)
-    mjds = np.zeros(nplans).astype(str)
-    fields = np.zeros(nplans).astype(str)
-    for i,pf in enumerate(planfiles):
-        logger.info('planfile %d : %s' % (i+1,pf))
-        fdir = os.path.dirname(pf)
-        # apPlan-1491-59587.yaml
-        base = os.path.basename(pf)
-        dum = base.split('-')
-        plates[i] = dum[1]
-        mjds[i] = dum[2].split('.')[0]
-        fields[i] = os.path.dirname(os.path.dirname(fdir)).split('/')[-1]
-        logfile = fdir+'/apqa-'+plates[i]+'-'+mjds[i]+'_pbs.'+logtime+'.log'
-        errfile = logfile.replace('.log','.err')
-        cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjds[i],observatory,apred,telescope,plates[i])
-        #cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
-        cmd += ' --masterqa False --starhtml True --starplots True --nightqa False --monitor False'
-        logger.info('Command : '+cmd)
-        logger.info('Logfile : '+logfile)
-        queue.append(cmd, outfile=logfile, errfile=errfile)
-    queue.commit(hard=True,submit=True)
-    logger.info('PBS key is '+queue.key)
-    queue_wait(queue,sleeptime=60,logger=logger,verbose=True)  # wait for jobs to complete 
-    del queue
+    if nplans>0:
+        slurmpars1 = slurmpars.copy()
+        if nplans<64:
+            slurmpars1['cpus'] = nplans
+        slurmpars1['numpy_num_threads'] = 2    
+        logger.info('Slurm settings: '+str(slurmpars1))
+        tasks = np.zeros(len(planfiles),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        for i,pf in enumerate(planfiles):
+            logger.info('planfile %d : %s' % (i+1,pf))
+            fdir = os.path.dirname(pf)
+            # apPlan-1491-59587.yaml
+            base = os.path.basename(pf)
+            dum = base.split('-')
+            plate = dum[1]
+            mjd = dum[2].split('.')[0]
+            field = os.path.dirname(os.path.dirname(fdir)).split('/')[-1]
+            logfile = fdir+'/apqa-'+plate+'-'+mjd+'_pbs.'+logtime+'.log'
+            errfile = logfile.replace('.log','.err')
+            cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjd,observatory,apred,telescope,plate)
+            #cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
+            cmd += ' --masterqa False --starhtml True --starplots True --nightqa False --monitor False'
+            logger.info('Command : '+cmd)
+            logger.info('Logfile : '+logfile)
+            tasks['cmd'][i] = cmd
+            tasks['outfile'][i] = logfile
+            tasks['errfile'][i] = errfile
+            tasks['dir'][i] = os.path.dirname(logfile)
+        logger.info('Running APQA on '+str(len(planfiles))+' planfiles')
+        key,jobid = slrm.submit(tasks,label='apqa',verbose=True,logger=logger,**slurmpars1)
+        slrm.queue_wait('apqa',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete 
 
+    
     # Make nightly QA/summary pages
     # we should parallelize this
     for m in mjds:
@@ -2950,12 +3173,14 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
             qa.makeNightQA(load=load,mjd=str(m),telescope=telescope,apred=apred)
             # Run makeCalFits, makeDarkFits, makeExpFits
             # makeCalFits
-            expinfo = getexpinfo(load,m,logger=logger,verbose=False)
+            expinfo = getexpinfo(load,int(m),logger=logger,verbose=False)
             calind, = np.where((expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='QUARTZFLAT') |
-                               (expinfo['exptype']=='DOMEFLAT'))
+                               (expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='FPI'))
             if len(calind)>0:
                 all_ims = expinfo['num'][calind]
-                qa.makeCalFits(load=load, ims=all_ims, mjd=str(m), instrument=instrument, clobber=clobber)
+                all_types = np.full(len(all_ims), 'cal')
+                all_types[expinfo['exptype'][calind]=='FPI'] = 'fpi'
+                qa.makeCalFits(load=load, ims=all_ims, types=all_types, mjd=str(m), instrument=instrument, clobber=clobber)
             # makeDarkFits
             darkind, = np.where(expinfo['exptype']=='DARK')
             if len(darkind)>0:
@@ -3145,10 +3370,10 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     # Slurm settings
     alloc = 'sdss-np'
     shared = True
-    ppn = 64
+    #ppn = 64
     walltime = '336:00:00'
     # Only set cpus if you want to use less than 64 cpus
-    slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared, 'ppn':ppn,
+    slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared,
                  'walltime':walltime, 'notification':False}
     
     # Get software version (git hash)
@@ -3216,19 +3441,23 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('1) Setting up the directory structure')
         rootLogger.info('=====================================')
         rootLogger.info('')
-        queue = pbsqueue(verbose=True)
-        queue.create(label='mkvers', nodes=1, alloc=alloc, ppn=ppn, cpus=1, shared=shared, walltime=walltime, notification=False)
+
+        tasks = np.zeros(1,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        cmd = 'mkvers {0}'.format(apred)        
         mkvoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkvers.'+logtime+'.log'
         mkverrfile = mkvoutfile.replace('-mkvers.log','-mkvers.'+logtime+'.err')
         if os.path.exists(os.path.dirname(mkvoutfile))==False:
-            os.makedirs(os.path.dirname(mkvoutfile))
-        cmd = 'mkvers {0}'.format(apred)
+            os.makedirs(os.path.dirname(mkvoutfile))        
         rootLogger.info('Command : '+cmd)
-        rootLogger.info('Logfile : '+mkvoutfile)
-        queue.append(cmd,outfile=mkvoutfile, errfile=mkverrfile)
-        queue.commit(hard=True,submit=True)
-        queue_wait(queue,sleeptime=10,logger=rootLogger,verbose=True)  # wait for jobs to complete 
-        del queue    
+        rootLogger.info('Logfile : '+mkvoutfile)        
+        tasks['cmd'][0] = cmd
+        tasks['outfile'][0] = mkvoutfile
+        tasks['errfile'][0] = mkverrfile
+        tasks['dir'][0] = os.path.dirname(mkvoutfile)
+        slurmpars1 = {'nodes':1, 'alloc':alloc, 'cpus':1, 'shared':shared, 'walltime':walltime, 'notification':False}
+        key,jobid = slrm.submit(tasks,label='mkvers',verbose=True,logger=rootLogger,**slurmpars1)
+        slrm.queue_wait('mkvers',key,jobid,sleeptime=60,verbose=True,logger=rootLogger) # wait for jobs to complete 
 
     # 2) Master calibration products, make sure to do them in the right order
     #------------------------------------------------------------------------

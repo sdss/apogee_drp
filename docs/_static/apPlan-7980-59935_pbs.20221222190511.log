@@ -1,0 +1,1313 @@
+bin:           31
+flag: 11111
+planfile: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apPlan-7980-59935.yaml
+clobber:        0
+.yaml
+
+RUNNING AP3D
+
+1 PLAN files
+
+=========================================================================
+1/1  Processing Plan file 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apPlan-7980-59935.yaml
+=========================================================================
+
+Plan file information:
+apogee_drp_ver = daily
+telescope = apo25m
+instrument = apogee-n
+plateid =         7980
+fps = True
+force = True
+fpi =     43730009
+configid =         7980
+designid =       125550
+fieldid =       103490
+mjd =        59935
+planfile = apPlan-7980-59935.yaml
+logfile = apDiag-7980-59935.log
+plotfile = apDiag-7980-59935.ps
+apred_vers = daily
+platetype = normal
+survey = SDSS-V
+field =       103490
+plugmap = confSummary-7980.par
+detid =     13390003
+bpmid =     39860002
+littrowid =     13400052
+persistid =     13400061
+persistmodelid =            0
+darkid =     39860002
+flatid =     39870003
+sparseid =     39870034
+fiberid =     13400051
+badfiberid =           25
+fixfiberid =            0
+responseid =            0
+waveid =        59935
+lsfid =     40030031
+psfid =     43730003
+modelpsf =     39870034
+fluxid =     43730012
+testing detector file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/detector/apDetector-c-13390003.fits
+ Detector file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/detector/apDetector-c-13390003.fits
+ already made
+makecal dark:     39860002
+ dark file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/darkcorr/apDark-39860002.tab
+ already made
+makecal flat:     39870003
+ flat file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flatcorr/apFlat-39870003.tab
+ already made
+makecal bpm:     39860002
+ bpm file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/bpm/apBPM-c-39860002.fits
+ already made
+makecal littrow:     13400052
+ littrow file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/littrow/apLittrow-b-13400052.fits
+ already made
+makecal persist:     13400061
+ persist file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/persist/apPersist-c-13400061.fits
+ already made
+
+------------------------------------------------------
+1/2  Processing files for Frame Number >>43730013<<
+------------------------------------------------------
+This is an OBJECT frame
+
+-----------------------------------------
+ Processing chip a - apR-a-43730013.apz
+-----------------------------------------
+
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59935/apR-a-43730013.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2D-a-43730013.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+
+-----------------------------------------
+ Processing chip b - apR-b-43730013.apz
+-----------------------------------------
+
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59935/apR-b-43730013.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2D-b-43730013.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+
+-----------------------------------------
+ Processing chip c - apR-c-43730013.apz
+-----------------------------------------
+
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59935/apR-c-43730013.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2D-c-43730013.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+
+------------------------------------------------------
+2/2  Processing files for Frame Number >>43730014<<
+------------------------------------------------------
+This is an OBJECT frame
+
+-----------------------------------------
+ Processing chip a - apR-a-43730014.apz
+-----------------------------------------
+
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59935/apR-a-43730014.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2D-a-43730014.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+
+-----------------------------------------
+ Processing chip b - apR-b-43730014.apz
+-----------------------------------------
+
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59935/apR-b-43730014.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2D-b-43730014.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+
+-----------------------------------------
+ Processing chip c - apR-c-43730014.apz
+-----------------------------------------
+
+AP3DPROC Input Parameters:
+Saturation = 65000
+Fixing Cosmic Rays
+Fixing Saturated Pixels
+Using UP-THE-RAMP Sampling
+Iterative CR detection OFF
+Output will be in ADU
+
+1 File(s) input
+1/1 Filename = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/data/apogee/apo/59935/apR-c-43730014.apz
+----------------------------------
+OUTFILE = 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2D-c-43730014.fits
+ ALREADY EXISTS. Set /clobber to overwrite
+AP3D finished
+dt = 11.3 sec
+Start:  2022-12-22 19:12:22
+loading fpiid wavelengtth solution:  43730009
+frame:  43730013
+chip:  a
+row:  75   128  matches within 1.5 pixels
+row:  225   127  matches within 1.5 pixels
+rms = 0.0157 pixels
+sig = 0.0158 pixels
+Xshift 2D fit coef:  [-6.70278284e-02  1.75694084e-05 -7.56896868e-08  2.61046293e-04]
+chip:  b
+row:  75   163  matches within 1.5 pixels
+row:  225   163  matches within 1.5 pixels
+rms = 0.0101 pixels
+sig = 0.0105 pixels
+Xshift 2D fit coef:  [-1.72977286e-02  3.09449719e-06  3.90931596e-09  3.81472758e-05]
+chip:  c
+row:  75   206  matches within 1.5 pixels
+row:  225   206  matches within 1.5 pixels
+rms = 0.0091 pixels
+sig = 0.0091 pixels
+Xshift 2D fit coef:  [ 1.52539341e-02 -7.03070987e-06  2.77082957e-08 -6.58996977e-05]
+Writing to  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap1D-43730013.fits
+frame:  43730014
+chip:  a
+row:  75   127  matches within 1.5 pixels
+row:  225   127  matches within 1.5 pixels
+rms = 0.0156 pixels
+sig = 0.0163 pixels
+Xshift 2D fit coef:  [ 4.22656718e-01  2.30802865e-05 -1.11547734e-07  3.10128745e-04]
+chip:  b
+row:  75   164  matches within 1.5 pixels
+row:  225   162  matches within 1.5 pixels
+rms = 0.0119 pixels
+sig = 0.0115 pixels
+Xshift 2D fit coef:  [ 4.66949027e-01  9.98671477e-06 -1.27255239e-08  5.86610603e-05]
+chip:  c
+row:  75   205  matches within 1.5 pixels
+row:  225   206  matches within 1.5 pixels
+rms = 0.0095 pixels
+sig = 0.0089 pixels
+Xshift 2D fit coef:  [ 5.05284028e-01 -5.65896357e-06  2.73825881e-08 -4.76545831e-05]
+Writing to  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap1D-43730014.fits
+End:  2022-12-22 19:12:35
+elapsed:  12.649707317352295
+
+Running AP2D
+
+1 plan files
+
+=====================================================================
+1/1  processing plan file /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apPlan-7980-59935.yaml
+=====================================================================
+
+Plan file information:
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apSparse-39870034.fits already made
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/trace/apETrace-13400051.fits already made
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-43730003.fits already made
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/wave/apWave-59935.fits already made
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-43730012.fits already made
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSFModel-39870034.fits exists already
+Using Model PSF: 39870034
+
+plug map file information:
+Querying targetdb/catalogdb
+FiberID 300 is UNASSIGNED, NOT on target
+FiberID 298 is UNASSIGNED, NOT on target
+FiberID 297 is UNASSIGNED, NOT on target
+FiberID 296 is UNASSIGNED, NOT on target
+FiberID 293 is UNASSIGNED, NOT on target
+FiberID 288 is UNASSIGNED, NOT on target
+FiberID 285 is UNASSIGNED, NOT on target
+FiberID 281 is UNASSIGNED, NOT on target
+FiberID 280 is UNASSIGNED, NOT on target
+FiberID 279 is UNASSIGNED, NOT on target
+FiberID 277 is UNASSIGNED, NOT on target
+FiberID 276 is UNASSIGNED, NOT on target
+FiberID 271 is UNASSIGNED, NOT on target
+FiberID 269 is UNASSIGNED, NOT on target
+FiberID 268 is UNASSIGNED, NOT on target
+FiberID 267 is UNASSIGNED, NOT on target
+FiberID 265 is UNASSIGNED, NOT on target
+FiberID 264 is UNASSIGNED, NOT on target
+FiberID 263 is UNASSIGNED, NOT on target
+FiberID 262 is UNASSIGNED, NOT on target
+FiberID 261 is UNASSIGNED, NOT on target
+FiberID 254 is UNASSIGNED, NOT on target
+FiberID 251 is UNASSIGNED, NOT on target
+FiberID 250 is UNASSIGNED, NOT on target
+FiberID 248 is UNASSIGNED, NOT on target
+FiberID 246 is UNASSIGNED, NOT on target
+FiberID 245 is UNASSIGNED, NOT on target
+FiberID 242 is UNASSIGNED, NOT on target
+FiberID 240 is UNASSIGNED, NOT on target
+FiberID 237 is UNASSIGNED, NOT on target
+FiberID 236 is UNASSIGNED, NOT on target
+FiberID 235 is UNASSIGNED, NOT on target
+FiberID 232 is UNASSIGNED, NOT on target
+FiberID 231 is UNASSIGNED, NOT on target
+FiberID 230 is UNASSIGNED, NOT on target
+no match for fiber index 75
+FiberID 219 is UNASSIGNED, NOT on target
+FiberID 218 is UNASSIGNED, NOT on target
+FiberID 217 is UNASSIGNED, NOT on target
+FiberID 216 is UNASSIGNED, NOT on target
+FiberID 215 is UNASSIGNED, NOT on target
+FiberID 214 is UNASSIGNED, NOT on target
+FiberID 211 is UNASSIGNED, NOT on target
+FiberID 210 is UNASSIGNED, NOT on target
+FiberID 208 is UNASSIGNED, NOT on target
+FiberID 207 is UNASSIGNED, NOT on target
+FiberID 206 is UNASSIGNED, NOT on target
+FiberID 205 is UNASSIGNED, NOT on target
+FiberID 195 is UNASSIGNED, NOT on target
+FiberID 194 is UNASSIGNED, NOT on target
+FiberID 192 is UNASSIGNED, NOT on target
+FiberID 191 is UNASSIGNED, NOT on target
+FiberID 190 is UNASSIGNED, NOT on target
+FiberID 185 is UNASSIGNED, NOT on target
+FiberID 182 is UNASSIGNED, NOT on target
+FiberID 181 is UNASSIGNED, NOT on target
+FiberID 180 is UNASSIGNED, NOT on target
+FiberID 175 is UNASSIGNED, NOT on target
+FiberID 173 is UNASSIGNED, NOT on target
+FiberID 172 is UNASSIGNED, NOT on target
+FiberID 169 is UNASSIGNED, NOT on target
+FiberID 164 is UNASSIGNED, NOT on target
+FiberID 163 is UNASSIGNED, NOT on target
+FiberID 162 is UNASSIGNED, NOT on target
+FiberID 158 is UNASSIGNED, NOT on target
+FiberID 153 is UNASSIGNED, NOT on target
+FiberID 152 is UNASSIGNED, NOT on target
+FiberID 150 is UNASSIGNED, NOT on target
+FiberID 147 is UNASSIGNED, NOT on target
+FiberID 146 is NOT on target
+FiberID 145 is UNASSIGNED, NOT on target
+FiberID 142 is UNASSIGNED, NOT on target
+FiberID 141 is UNASSIGNED, NOT on target
+FiberID 140 is UNASSIGNED, NOT on target
+FiberID 139 is UNASSIGNED, NOT on target
+FiberID 138 is UNASSIGNED, NOT on target
+FiberID 136 is UNASSIGNED, NOT on target
+FiberID 135 is UNASSIGNED, NOT on target
+FiberID 134 is UNASSIGNED, NOT on target
+FiberID 133 is UNASSIGNED, NOT on target
+FiberID 132 is UNASSIGNED, NOT on target
+FiberID 131 is UNASSIGNED, NOT on target
+FiberID 129 is UNASSIGNED, NOT on target
+FiberID 127 is UNASSIGNED, NOT on target
+FiberID 126 is UNASSIGNED, NOT on target
+FiberID 125 is UNASSIGNED, NOT on target
+FiberID 124 is UNASSIGNED, NOT on target
+FiberID 123 is UNASSIGNED, NOT on target
+FiberID 121 is UNASSIGNED, NOT on target
+FiberID 119 is UNASSIGNED, NOT on target
+FiberID 118 is UNASSIGNED, NOT on target
+FiberID 117 is UNASSIGNED, NOT on target
+FiberID 115 is NOT on target
+FiberID 113 is UNASSIGNED, NOT on target
+FiberID 111 is UNASSIGNED, NOT on target
+FiberID 109 is UNASSIGNED, NOT on target
+FiberID 107 is UNASSIGNED, NOT on target
+FiberID 104 is UNASSIGNED, NOT on target
+FiberID 101 is UNASSIGNED, NOT on target
+FiberID 98 is UNASSIGNED, NOT on target
+FiberID 97 is UNASSIGNED, NOT on target
+FiberID 96 is UNASSIGNED, NOT on target
+FiberID 92 is UNASSIGNED, NOT on target
+FiberID 91 is UNASSIGNED, NOT on target
+FiberID 90 is UNASSIGNED, NOT on target
+FiberID 87 is UNASSIGNED, NOT on target
+FiberID 86 is UNASSIGNED, NOT on target
+FiberID 85 is UNASSIGNED, NOT on target
+FiberID 84 is UNASSIGNED, NOT on target
+FiberID 82 is UNASSIGNED, NOT on target
+FiberID 78 is UNASSIGNED, NOT on target
+FiberID 77 is UNASSIGNED, NOT on target
+FiberID 76 is UNASSIGNED, NOT on target
+no match for fiber index 225
+FiberID 74 is UNASSIGNED, NOT on target
+FiberID 73 is UNASSIGNED, NOT on target
+FiberID 71 is UNASSIGNED, NOT on target
+FiberID 69 is UNASSIGNED, NOT on target
+FiberID 68 is UNASSIGNED, NOT on target
+FiberID 65 is UNASSIGNED, NOT on target
+FiberID 64 is UNASSIGNED, NOT on target
+FiberID 63 is UNASSIGNED, NOT on target
+FiberID 62 is UNASSIGNED, NOT on target
+FiberID 61 is UNASSIGNED, NOT on target
+FiberID 60 is UNASSIGNED, NOT on target
+FiberID 58 is UNASSIGNED, NOT on target
+FiberID 56 is UNASSIGNED, NOT on target
+FiberID 55 is NOT on target
+FiberID 54 is UNASSIGNED, NOT on target
+FiberID 53 is UNASSIGNED, NOT on target
+FiberID 51 is UNASSIGNED, NOT on target
+FiberID 50 is UNASSIGNED, NOT on target
+FiberID 47 is UNASSIGNED, NOT on target
+FiberID 46 is UNASSIGNED, NOT on target
+FiberID 45 is UNASSIGNED, NOT on target
+FiberID 42 is UNASSIGNED, NOT on target
+FiberID 41 is UNASSIGNED, NOT on target
+FiberID 38 is UNASSIGNED, NOT on target
+FiberID 37 is UNASSIGNED, NOT on target
+FiberID 36 is UNASSIGNED, NOT on target
+FiberID 35 is UNASSIGNED, NOT on target
+FiberID 34 is UNASSIGNED, NOT on target
+FiberID 30 is UNASSIGNED, NOT on target
+FiberID 29 is UNASSIGNED, NOT on target
+FiberID 28 is UNASSIGNED, NOT on target
+FiberID 26 is UNASSIGNED, NOT on target
+fiber index  275  declared as bad
+no match for fiber index 275
+FiberID 24 is UNASSIGNED, NOT on target
+FiberID 21 is UNASSIGNED, NOT on target
+FiberID 19 is UNASSIGNED, NOT on target
+FiberID 17 is UNASSIGNED, NOT on target
+FiberID 15 is UNASSIGNED, NOT on target
+FiberID 14 is UNASSIGNED, NOT on target
+FiberID 9 is UNASSIGNED, NOT on target
+FiberID 4 is UNASSIGNED, NOT on target
+FiberID 3 is UNASSIGNED, NOT on target
+
+-------------------------------------------
+1/2  processing frame number >>43730013<<
+-------------------------------------------
+
+Extracting file  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/43730013
+--------------------------------------------------
+file:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2D-43730013.fits
+mjd5 =  59935
+ processing chip a - ap2D-a-43730013.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-a-43730003.fits
+Using Model PSF extraction
+Median offset = 0.046 pixels
+Offset coefficients =  [ 4.06323868e-02 -4.45618020e-06 -5.37106736e-09  1.76035664e-05]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Flux calibrating with  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-43730012
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2Dmodel-a-43730013.fits
+
+ processing chip b - ap2D-b-43730013.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-b-43730003.fits
+Using Model PSF extraction
+Median offset = 0.039 pixels
+Offset coefficients =  [ 5.02370412e-02  9.33703563e-06 -7.20952210e-09 -1.91433939e-05]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Flux calibrating with  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-43730012
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2Dmodel-b-43730013.fits
+
+ processing chip c - ap2D-c-43730013.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-c-43730003.fits
+Using Model PSF extraction
+Median offset = 0.035 pixels
+Offset coefficients =  [ 5.03979912e-02 -1.12992457e-05  7.54856769e-09 -1.16454102e-05]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Flux calibrating with  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-43730012
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2Dmodel-c-43730013.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap1D-a-43730013.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap1D-b-43730013.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap1D-c-43730013.fits
+AP2DPROC finished
+
+-------------------------------------------
+2/2  processing frame number >>43730014<<
+-------------------------------------------
+
+Extracting file  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/43730014
+--------------------------------------------------
+file:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2D-43730014.fits
+mjd5 =  59935
+ processing chip a - ap2D-a-43730014.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-a-43730003.fits
+Using Model PSF extraction
+Median offset = 0.050 pixels
+Offset coefficients =  [ 4.50422132e-02 -6.31285121e-06 -4.48251625e-09  1.73456038e-05]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Flux calibrating with  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-43730012
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2Dmodel-a-43730014.fits
+
+ processing chip b - ap2D-b-43730014.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-b-43730003.fits
+Using Model PSF extraction
+Median offset = 0.037 pixels
+Offset coefficients =  [ 4.93112906e-02  8.65465075e-06 -5.86756998e-09 -2.24817876e-05]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Flux calibrating with  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-43730012
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2Dmodel-b-43730014.fits
+
+ processing chip c - ap2D-c-43730014.fits
+  psf file = /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/psf/apPSF-c-43730003.fits
+Using Model PSF extraction
+Median offset = 0.028 pixels
+Offset coefficients =  [ 4.39678870e-02 -1.22678769e-05  6.38142498e-09 -1.04860724e-05]
+Generating full EPSF grid with spatial offsets
+fiber =  0
+fiber =  50
+fiber =  100
+fiber =  150
+fiber =  200
+fiber =  250
+Flux calibrating with  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/flux/apFlux-43730012
+Writing 2D model to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap2Dmodel-c-43730014.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap1D-a-43730014.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap1D-b-43730014.fits
+writing output to:  /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/exposures/apogee-n/59935/ap1D-c-43730014.fits
+AP2DPROC finished
+Wavelength calibrating the frames with ap1dwavecal
+AP2D finished
+dt = 401.7 sec
+
+RUNNING AP1DVISIT
+
+1 PLAN files
+
+=========================================================================
+1/1  Processing Plan file 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apPlan-7980-59935.yaml
+=========================================================================
+
+Plan file information:
+apogee_drp_ver = daily
+telescope = apo25m
+instrument = apogee-n
+plateid =         7980
+fps = True
+force = True
+fpi =     43730009
+configid =         7980
+designid =       125550
+fieldid =       103490
+mjd =        59935
+planfile = apPlan-7980-59935.yaml
+logfile = apDiag-7980-59935.log
+plotfile = apDiag-7980-59935.ps
+apred_vers = daily
+platetype = normal
+survey = SDSS-V
+field =       103490
+plugmap = confSummary-7980.par
+detid =     13390003
+bpmid =     39860002
+littrowid =     13400052
+persistid =     13400061
+persistmodelid =            0
+darkid =     39860002
+flatid =     39870003
+sparseid =     39870034
+fiberid =     13400051
+badfiberid =           25
+fixfiberid =            0
+responseid =            0
+waveid =        59935
+lsfid =     40030031
+psfid =     43730003
+modelpsf =     39870034
+fluxid =     43730012
+
+Plug Map file information:
+Querying targetdb/catalogdb
+FiberID 300 is UNASSIGNED, NOT on target
+FiberID 298 is UNASSIGNED, NOT on target
+FiberID 297 is UNASSIGNED, NOT on target
+FiberID 296 is UNASSIGNED, NOT on target
+FiberID 293 is UNASSIGNED, NOT on target
+FiberID 288 is UNASSIGNED, NOT on target
+FiberID 285 is UNASSIGNED, NOT on target
+FiberID 281 is UNASSIGNED, NOT on target
+FiberID 280 is UNASSIGNED, NOT on target
+FiberID 279 is UNASSIGNED, NOT on target
+FiberID 277 is UNASSIGNED, NOT on target
+FiberID 276 is UNASSIGNED, NOT on target
+FiberID 271 is UNASSIGNED, NOT on target
+FiberID 269 is UNASSIGNED, NOT on target
+FiberID 268 is UNASSIGNED, NOT on target
+FiberID 267 is UNASSIGNED, NOT on target
+FiberID 265 is UNASSIGNED, NOT on target
+FiberID 264 is UNASSIGNED, NOT on target
+FiberID 263 is UNASSIGNED, NOT on target
+FiberID 262 is UNASSIGNED, NOT on target
+FiberID 261 is UNASSIGNED, NOT on target
+FiberID 254 is UNASSIGNED, NOT on target
+FiberID 251 is UNASSIGNED, NOT on target
+FiberID 250 is UNASSIGNED, NOT on target
+FiberID 248 is UNASSIGNED, NOT on target
+FiberID 246 is UNASSIGNED, NOT on target
+FiberID 245 is UNASSIGNED, NOT on target
+FiberID 242 is UNASSIGNED, NOT on target
+FiberID 240 is UNASSIGNED, NOT on target
+FiberID 237 is UNASSIGNED, NOT on target
+FiberID 236 is UNASSIGNED, NOT on target
+FiberID 235 is UNASSIGNED, NOT on target
+FiberID 232 is UNASSIGNED, NOT on target
+FiberID 231 is UNASSIGNED, NOT on target
+FiberID 230 is UNASSIGNED, NOT on target
+no match for fiber index      75
+FiberID 219 is UNASSIGNED, NOT on target
+FiberID 218 is UNASSIGNED, NOT on target
+FiberID 217 is UNASSIGNED, NOT on target
+FiberID 216 is UNASSIGNED, NOT on target
+FiberID 215 is UNASSIGNED, NOT on target
+FiberID 214 is UNASSIGNED, NOT on target
+FiberID 211 is UNASSIGNED, NOT on target
+FiberID 210 is UNASSIGNED, NOT on target
+FiberID 208 is UNASSIGNED, NOT on target
+FiberID 207 is UNASSIGNED, NOT on target
+FiberID 206 is UNASSIGNED, NOT on target
+FiberID 205 is UNASSIGNED, NOT on target
+FiberID 195 is UNASSIGNED, NOT on target
+FiberID 194 is UNASSIGNED, NOT on target
+FiberID 192 is UNASSIGNED, NOT on target
+FiberID 191 is UNASSIGNED, NOT on target
+FiberID 190 is UNASSIGNED, NOT on target
+FiberID 185 is UNASSIGNED, NOT on target
+FiberID 182 is UNASSIGNED, NOT on target
+FiberID 181 is UNASSIGNED, NOT on target
+FiberID 180 is UNASSIGNED, NOT on target
+FiberID 175 is UNASSIGNED, NOT on target
+FiberID 173 is UNASSIGNED, NOT on target
+FiberID 172 is UNASSIGNED, NOT on target
+FiberID 169 is UNASSIGNED, NOT on target
+FiberID 164 is UNASSIGNED, NOT on target
+FiberID 163 is UNASSIGNED, NOT on target
+FiberID 162 is UNASSIGNED, NOT on target
+FiberID 158 is UNASSIGNED, NOT on target
+FiberID 153 is UNASSIGNED, NOT on target
+FiberID 152 is UNASSIGNED, NOT on target
+FiberID 150 is UNASSIGNED, NOT on target
+FiberID 147 is UNASSIGNED, NOT on target
+FiberID 146 is NOT on target
+FiberID 145 is UNASSIGNED, NOT on target
+FiberID 142 is UNASSIGNED, NOT on target
+FiberID 141 is UNASSIGNED, NOT on target
+FiberID 140 is UNASSIGNED, NOT on target
+FiberID 139 is UNASSIGNED, NOT on target
+FiberID 138 is UNASSIGNED, NOT on target
+FiberID 136 is UNASSIGNED, NOT on target
+FiberID 135 is UNASSIGNED, NOT on target
+FiberID 134 is UNASSIGNED, NOT on target
+FiberID 133 is UNASSIGNED, NOT on target
+FiberID 132 is UNASSIGNED, NOT on target
+FiberID 131 is UNASSIGNED, NOT on target
+FiberID 129 is UNASSIGNED, NOT on target
+FiberID 127 is UNASSIGNED, NOT on target
+FiberID 126 is UNASSIGNED, NOT on target
+FiberID 125 is UNASSIGNED, NOT on target
+FiberID 124 is UNASSIGNED, NOT on target
+FiberID 123 is UNASSIGNED, NOT on target
+FiberID 121 is UNASSIGNED, NOT on target
+FiberID 119 is UNASSIGNED, NOT on target
+FiberID 118 is UNASSIGNED, NOT on target
+FiberID 117 is UNASSIGNED, NOT on target
+FiberID 115 is NOT on target
+FiberID 113 is UNASSIGNED, NOT on target
+FiberID 111 is UNASSIGNED, NOT on target
+FiberID 109 is UNASSIGNED, NOT on target
+FiberID 107 is UNASSIGNED, NOT on target
+FiberID 104 is UNASSIGNED, NOT on target
+FiberID 101 is UNASSIGNED, NOT on target
+FiberID 98 is UNASSIGNED, NOT on target
+FiberID 97 is UNASSIGNED, NOT on target
+FiberID 96 is UNASSIGNED, NOT on target
+FiberID 92 is UNASSIGNED, NOT on target
+FiberID 91 is UNASSIGNED, NOT on target
+FiberID 90 is UNASSIGNED, NOT on target
+FiberID 87 is UNASSIGNED, NOT on target
+FiberID 86 is UNASSIGNED, NOT on target
+FiberID 85 is UNASSIGNED, NOT on target
+FiberID 84 is UNASSIGNED, NOT on target
+FiberID 82 is UNASSIGNED, NOT on target
+FiberID 78 is UNASSIGNED, NOT on target
+FiberID 77 is UNASSIGNED, NOT on target
+FiberID 76 is UNASSIGNED, NOT on target
+no match for fiber index     225
+FiberID 74 is UNASSIGNED, NOT on target
+FiberID 73 is UNASSIGNED, NOT on target
+FiberID 71 is UNASSIGNED, NOT on target
+FiberID 69 is UNASSIGNED, NOT on target
+FiberID 68 is UNASSIGNED, NOT on target
+FiberID 65 is UNASSIGNED, NOT on target
+FiberID 64 is UNASSIGNED, NOT on target
+FiberID 63 is UNASSIGNED, NOT on target
+FiberID 62 is UNASSIGNED, NOT on target
+FiberID 61 is UNASSIGNED, NOT on target
+FiberID 60 is UNASSIGNED, NOT on target
+FiberID 58 is UNASSIGNED, NOT on target
+FiberID 56 is UNASSIGNED, NOT on target
+FiberID 55 is NOT on target
+FiberID 54 is UNASSIGNED, NOT on target
+FiberID 53 is UNASSIGNED, NOT on target
+FiberID 51 is UNASSIGNED, NOT on target
+FiberID 50 is UNASSIGNED, NOT on target
+FiberID 47 is UNASSIGNED, NOT on target
+FiberID 46 is UNASSIGNED, NOT on target
+FiberID 45 is UNASSIGNED, NOT on target
+FiberID 42 is UNASSIGNED, NOT on target
+FiberID 41 is UNASSIGNED, NOT on target
+FiberID 38 is UNASSIGNED, NOT on target
+FiberID 37 is UNASSIGNED, NOT on target
+FiberID 36 is UNASSIGNED, NOT on target
+FiberID 35 is UNASSIGNED, NOT on target
+FiberID 34 is UNASSIGNED, NOT on target
+FiberID 30 is UNASSIGNED, NOT on target
+FiberID 29 is UNASSIGNED, NOT on target
+FiberID 28 is UNASSIGNED, NOT on target
+FiberID 26 is UNASSIGNED, NOT on target
+fiber index      275 declared as bad
+no match for fiber index     275
+FiberID 24 is UNASSIGNED, NOT on target
+FiberID 21 is UNASSIGNED, NOT on target
+FiberID 19 is UNASSIGNED, NOT on target
+FiberID 17 is UNASSIGNED, NOT on target
+FiberID 15 is UNASSIGNED, NOT on target
+FiberID 14 is UNASSIGNED, NOT on target
+FiberID 9 is UNASSIGNED, NOT on target
+FiberID 4 is UNASSIGNED, NOT on target
+FiberID 3 is UNASSIGNED, NOT on target
+makecal lsf:     40030031
+ lsf file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/cal/apogee-n/lsf/apLSF-40030031.sav
+ already made
+cant find file: 
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apPlate-c-7980-59935.fits
+
+-----------------------------------------
+1/2  Processing Frame Number >>43730013<<
+-----------------------------------------
+using WCOEF from 1D...
+using WCOEF from 1D...
+using WCOEF from 1D...
+STEP 1: Measuring the DITHER SHIFT with APDITHERSHIFT
+dither_commanded:       12.9940
+nodither:        1
+Shift = 0.0
+STEP 3: Airglow Subtraction with APSKYSUB
+Using nearest sky fibers for sky subtraction
+Subtracting Sky Lines from Spectra
+50/300
+No information for Fiber=76 in the plugmap file
+100/300
+150/300
+200/300
+No information for Fiber=226 in the plugmap file
+250/300
+No information for Fiber=276 in the plugmap file
+300/300
+STEP 4: Telluric Correction with APTELLURIC
+MRDFITS: Image array (4176,300)  Type=Real*8
+airmass:        1.2102295 iair:        0      1.00000      0.25000000
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+MRDFITS: Image array (4176,300)  Type=Real*8
+airmass:        1.2102295 iair:        0      1.00000      0.25000000
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+MRDFITS: Image array (4176,300)  Type=Real*8
+airmass:        1.2102295 iair:        0      1.00000      0.25000000
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+15 Stars to fit
+Star 1/15 Fiber Index 25
+Normalization= 0.813514 1.08108 0.149550
+Star 2/15 Fiber Index 30
+Normalization= 0.813514 1.10090 0.129730
+Star 3/15 Fiber Index 40
+Normalization= 1.11081 0.783784 0.149550
+Star 4/15 Fiber Index 59
+Normalization= 1.13063 0.833333 0.129730
+Star 5/15 Fiber Index 72
+Normalization= 0.813514 0.803604 0.139640
+Star 6/15 Fiber Index 77
+Normalization= 0.843243 0.813514 0.119820
+Star 7/15 Fiber Index 98
+Normalization= 0.813514 1.08108 0.100000
+Star 8/15 Fiber Index 101
+Normalization= 0.803604 1.11081 0.100000
+Star 9/15 Fiber Index 132
+Normalization= 1.11081 1.08108 0.149550
+Star 10/15 Fiber Index 141
+Normalization= 0.833333 0.803604 0.139640
+Star 11/15 Fiber Index 156
+Normalization= 0.803604 1.82432 0.109910
+Star 12/15 Fiber Index 172
+Normalization= 1.10090 1.09099 0.139640
+Star 13/15 Fiber Index 221
+Normalization= 0.803604 1.06126 0.100000
+Star 14/15 Fiber Index 288
+Normalization= 0.803604 1.12072 0.129730
+Star 15/15 Fiber Index 294
+Normalization= 1.09099 0.823423 0.149550
+bestmod:        2       1       0
+Star 1/15 Fiber Index 25
+Normalization= 0.81918554 1.1587896 0.23213714
+Star 2/15 Fiber Index 30
+Normalization= 0.82085011 1.1292924 0.19123635
+Star 3/15 Fiber Index 40
+Normalization= 0.80091443 1.0764062 0.18604091
+Star 4/15 Fiber Index 59
+Normalization= 0.83358371 1.1647248 0.19914617
+Star 5/15 Fiber Index 72
+Normalization= 0.78365084 1.1470160 0.20360120
+Star 6/15 Fiber Index 77
+Normalization= 0.82731960 1.1122432 0.19192610
+Star 7/15 Fiber Index 98
+Normalization= 0.75757995 1.1628576 0.14607170
+Star 8/15 Fiber Index 101
+Normalization= 0.79798365 1.1655340 0.18786548
+Star 9/15 Fiber Index 132
+Normalization= 0.81890444 1.1387032 0.19379196
+Star 10/15 Fiber Index 141
+Normalization= 0.81478622 1.1111650 0.20554900
+Star 11/15 Fiber Index 156
+Normalization= 0.79009779 1.1231710 0.18595073
+Star 12/15 Fiber Index 172
+Normalization= 0.80877371 1.1250072 0.18960918
+Star 13/15 Fiber Index 221
+Normalization= 0.80592441 1.1038920 0.22262703
+Star 14/15 Fiber Index 288
+Normalization= 0.81653669 1.1338476 0.22169397
+Star 15/15 Fiber Index 294
+Normalization= 0.79796198 1.1246952 0.18849634
+bestmod:        2       1       0
+Median normalization parameters:  0.808774 1.12929 0.191926
+13 good telluric spectral fits to use for 2D spatial fitting
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935//plots/aptelluric_43730013_skyfit_CH4.eps closed.
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935//plots/aptelluric_43730013_skyfit_CO2.eps closed.
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935//plots/aptelluric_43730013_skyfit_H2O.eps closed.
+Converting figures
+1/300
+25/300
+50/300
+75/300
+100/300
+125/300
+150/300
+175/300
+200/300
+225/300
+250/300
+275/300
+300/300
+Writing output apCframe files
+Using apCframe files: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apCframe-a-43730013.fits
+Using apCframe files: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apCframe-b-43730013.fits
+Using apCframe files: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apCframe-c-43730013.fits
+
+-----------------------------------------
+2/2  Processing Frame Number >>43730014<<
+-----------------------------------------
+using WCOEF from 1D...
+using WCOEF from 1D...
+using WCOEF from 1D...
+STEP 1: Measuring the DITHER SHIFT with APDITHERSHIFT
+dither_commanded:       13.4990
+ref_dither_commanded:       12.9940
+nodither:        1
+Using Cross-correlation to measure the dither shift
+Shift = 0.493686+/-0.000159667 pixels
+Fit coefficients:      0.490969  1.46414e-05
+n:          885
+  4.39188e-05     0.469871     0.469780     0.472093
+mad:    0.00735206
+n:          801
+  8.65175e-06     0.481958     0.474083     0.477212
+mad:    0.00689082
+n:          737
+  6.36722e-06     0.484919     0.474219     0.477307
+mad:    0.00784888
+Measured dither shift:       0.00000      0.00000
+     0.490969  1.46414e-05
+STEP 3: Airglow Subtraction with APSKYSUB
+Using nearest sky fibers for sky subtraction
+Subtracting Sky Lines from Spectra
+50/300
+No information for Fiber=76 in the plugmap file
+100/300
+150/300
+200/300
+No information for Fiber=226 in the plugmap file
+250/300
+No information for Fiber=276 in the plugmap file
+300/300
+STEP 4: Telluric Correction with APTELLURIC
+MRDFITS: Image array (4176,300)  Type=Real*8
+airmass:        1.2205269 iair:        0      1.00000      0.25000000
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+MRDFITS: Image array (4176,300)  Type=Real*8
+airmass:        1.2205269 iair:        0      1.00000      0.25000000
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+MRDFITS: Image array (4176,300)  Type=Real*8
+airmass:        1.2205269 iair:        0      1.00000      0.25000000
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+MRDFITS: Image array (4176,300,3,4)  Type=Real*8
+15 Stars to fit
+Star 1/15 Fiber Index 25
+Normalization= 0.853153 1.09099 0.169369
+Star 2/15 Fiber Index 30
+Normalization= 0.803604 1.10090 0.149550
+Star 3/15 Fiber Index 40
+Normalization= 0.813514 0.783784 0.149550
+Star 4/15 Fiber Index 59
+Normalization= 0.813514 0.833333 0.119820
+Star 5/15 Fiber Index 72
+Normalization= 0.823423 0.803604 0.109910
+Star 6/15 Fiber Index 77
+Normalization= 0.823423 0.823423 0.119820
+Star 7/15 Fiber Index 98
+Normalization= 0.833333 1.09099 0.109910
+Star 8/15 Fiber Index 101
+Normalization= 1.10090 1.09099 0.119820
+Star 9/15 Fiber Index 132
+Normalization= 1.10090 1.08108 0.119820
+Star 10/15 Fiber Index 141
+Normalization= 0.833333 0.803604 0.119820
+Star 11/15 Fiber Index 156
+Normalization= 0.793694 1.07117 0.119820
+Star 12/15 Fiber Index 172
+Normalization= 1.10090 0.813514 0.129730
+Star 13/15 Fiber Index 221
+Normalization= 1.05135 1.06126 0.109910
+Star 14/15 Fiber Index 288
+Normalization= 1.05135 0.843243 0.100000
+Star 15/15 Fiber Index 294
+Normalization= 0.843243 0.823423 0.139640
+bestmod:        2       2       0
+Star 1/15 Fiber Index 25
+Normalization= 0.85554559 0.87734948 0.22420209
+Star 2/15 Fiber Index 30
+Normalization= 0.81685150 0.86210444 0.21077197
+Star 3/15 Fiber Index 40
+Normalization= 0.79416379 0.82560411 0.20686617
+Star 4/15 Fiber Index 59
+Normalization= 0.80797423 0.88585640 0.21335291
+Star 5/15 Fiber Index 72
+Normalization= 0.79360180 0.87776663 0.20530055
+Star 6/15 Fiber Index 77
+Normalization= 0.81601039 0.85098109 0.21385572
+Star 7/15 Fiber Index 98
+Normalization= 0.79911666 0.88175618 0.16481435
+Star 8/15 Fiber Index 101
+Normalization= 0.83326460 0.87494731 0.24724174
+Star 9/15 Fiber Index 132
+Normalization= 0.80585708 0.86386186 0.17786355
+Star 10/15 Fiber Index 141
+Normalization= 0.82092875 0.85134094 0.19271210
+Star 11/15 Fiber Index 156
+Normalization= 0.78499803 0.86352985 0.19391310
+Star 12/15 Fiber Index 172
+Normalization= 0.80274553 0.84427535 0.16512811
+Star 13/15 Fiber Index 221
+Normalization= 0.77919484 0.83955359 0.24930124
+Star 14/15 Fiber Index 288
+Normalization= 0.78137159 0.86373093 0.18750202
+Star 15/15 Fiber Index 294
+Normalization= 0.82746757 0.86083558 0.16716150
+bestmod:        2       2       0
+Median normalization parameters:  0.805857 0.863530 0.205301
+14 good telluric spectral fits to use for 2D spatial fitting
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935//plots/aptelluric_43730014_skyfit_CH4.eps closed.
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935//plots/aptelluric_43730014_skyfit_CO2.eps closed.
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935//plots/aptelluric_43730014_skyfit_H2O.eps closed.
+Converting figures
+1/300
+25/300
+50/300
+75/300
+100/300
+125/300
+150/300
+175/300
+200/300
+225/300
+250/300
+275/300
+300/300
+Writing output apCframe files
+Using apCframe files: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apCframe-a-43730014.fits
+Using apCframe files: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apCframe-b-43730014.fits
+Using apCframe files: /uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apCframe-c-43730014.fits
+STEP 5: Combining DITHER FRAMES with APDITHERCOMB
+2 frames input
+ NUM   FRAME      SHIFT    S/N
+   1  43730013   0.00000  19.52983
+   2  43730014   0.49097  19.47537
+Pairing 43730013 with 43730014
+1 PAIRS
+ NUM   FRAME1    FRAME2    SHIFT1    SHIFT2 NUSED1 NUSED2 RELSHIFT
+   1  43730014  43730013   0.00000   0.49097    1    1   0.49097
+Combining Pair 1 - 43730014 + 43730013
+50/300
+No information for Fiber=225 in the plugmap file
+100/300
+150/300
+200/300
+No information for Fiber=75 in the plugmap file
+250/300
+No information for Fiber=25 in the plugmap file
+300/300
+STEP 6: Flux Calibration with AP1DFLUXING
+Fluxing: 
+FIBER   H   Zero   Norm
+     300          NaN  1.99528e-18
+     299      19.2877  2.18339e-18
+     298          NaN  1.99528e-18
+     297          NaN  1.99528e-18
+     296          NaN  1.99528e-18
+     295      19.4336  1.90886e-18
+     294      19.4510  1.87853e-18
+     293          NaN  1.99528e-18
+     291      19.0204  2.79303e-18
+     290      19.3833  1.99945e-18
+     289      19.5243  1.75588e-18
+     288          NaN  1.99528e-18
+     287      19.4185  1.93566e-18
+     285          NaN  1.99528e-18
+     284      19.5063  1.78532e-18
+     283      18.8593  3.23965e-18
+     282      19.4942  1.80533e-18
+     281          NaN  1.99528e-18
+     280          NaN  1.99528e-18
+     279          NaN  1.99528e-18
+     278      19.4718  1.84287e-18
+     277          NaN  1.99528e-18
+     276          NaN  1.99528e-18
+     275      19.4525  1.87607e-18
+     274      19.0924  2.61373e-18
+     273      19.1504  2.47780e-18
+     272      19.3587  2.04526e-18
+     271          NaN  1.99528e-18
+     270      19.4286  1.91768e-18
+     269          NaN  1.99528e-18
+     268          NaN  1.99528e-18
+     267          NaN  1.99528e-18
+     266      19.5156  1.77009e-18
+     265          NaN  1.99528e-18
+     264          NaN  1.99528e-18
+     263          NaN  1.99528e-18
+     262          NaN  1.99528e-18
+     261          NaN  1.99528e-18
+     260      19.2581  2.24379e-18
+     259      19.4992  1.79700e-18
+     258      19.4520  1.87691e-18
+     256      19.3495  2.06269e-18
+     255      19.4554  1.87094e-18
+     254          NaN  1.99528e-18
+     253      19.3896  1.98783e-18
+     252      19.4730  1.84094e-18
+     251          NaN  1.99528e-18
+     250          NaN  1.99528e-18
+     248          NaN  1.99528e-18
+     247      19.4106  1.94982e-18
+     246          NaN  1.99528e-18
+     245          NaN  1.99528e-18
+     244      19.4678  1.84978e-18
+     243      19.4754  1.83686e-18
+     242          NaN  1.99528e-18
+     241      19.3943  1.97925e-18
+     240          NaN  1.99528e-18
+     238      19.3455  2.07033e-18
+     237          NaN  1.99528e-18
+     236          NaN  1.99528e-18
+     235          NaN  1.99528e-18
+     234      19.2057  2.35473e-18
+     232          NaN  1.99528e-18
+     231          NaN  1.99528e-18
+     230          NaN  1.99528e-18
+     228      18.9843  2.88734e-18
+     227      19.3613  2.04037e-18
+     224      19.3520  2.05791e-18
+     223      19.2717  2.21587e-18
+     222      19.2502  2.26028e-18
+     221      18.9388  3.01088e-18
+     220      19.3856  1.99528e-18
+     219          NaN  1.99528e-18
+     218          NaN  1.99528e-18
+     217          NaN  1.99528e-18
+     216          NaN  1.99528e-18
+     215          NaN  1.99528e-18
+     214          NaN  1.99528e-18
+     212      19.4140  1.94376e-18
+     211          NaN  1.99528e-18
+     210          NaN  1.99528e-18
+     208          NaN  1.99528e-18
+     207          NaN  1.99528e-18
+     206          NaN  1.99528e-18
+     205          NaN  1.99528e-18
+     202      19.5483  1.71758e-18
+     201      19.4692  1.84739e-18
+     199      18.7969  3.43136e-18
+     198      18.7438  3.60342e-18
+     197      19.4527  1.87561e-18
+     196      19.3934  1.98084e-18
+     195          NaN  1.99528e-18
+     194          NaN  1.99528e-18
+     193      19.2615  2.23674e-18
+     192          NaN  1.99528e-18
+     191          NaN  1.99528e-18
+     190          NaN  1.99528e-18
+     189      19.4315  1.91266e-18
+     186      19.5019  1.79261e-18
+     185          NaN  1.99528e-18
+     183      19.4858  1.81935e-18
+     182          NaN  1.99528e-18
+     181          NaN  1.99528e-18
+     180          NaN  1.99528e-18
+     179      19.7366  1.44406e-18
+     177      19.5624  1.69540e-18
+     176      19.8197  1.33763e-18
+     175          NaN  1.99528e-18
+     173          NaN  1.99528e-18
+     172          NaN  1.99528e-18
+     171      19.8772  1.26872e-18
+     170      19.8159  1.34238e-18
+     169          NaN  1.99528e-18
+     168      19.6033  1.63267e-18
+     167      19.9172  1.22281e-18
+     166      19.7699  1.40047e-18
+     165          NaN  1.99528e-18
+     164          NaN  1.99528e-18
+     163          NaN  1.99528e-18
+     162          NaN  1.99528e-18
+     161      19.9923  1.14101e-18
+     160      19.9957  1.13753e-18
+     159      19.9524  1.18376e-18
+     158          NaN  1.99528e-18
+     156      19.6095  1.62349e-18
+     155      19.8920  1.25146e-18
+     154      19.9608  1.17465e-18
+     153          NaN  1.99528e-18
+     152          NaN  1.99528e-18
+     151      19.9484  1.18815e-18
+     150          NaN  1.99528e-18
+     149      19.3905  1.98625e-18
+     148      19.4793  1.83019e-18
+     147          NaN  1.99528e-18
+     145          NaN  1.99528e-18
+     144      19.4036  1.96246e-18
+     143      19.4219  1.92956e-18
+     142          NaN  1.99528e-18
+     141          NaN  1.99528e-18
+     140          NaN  1.99528e-18
+     139          NaN  1.99528e-18
+     138          NaN  1.99528e-18
+     136          NaN  1.99528e-18
+     135          NaN  1.99528e-18
+     134          NaN  1.99528e-18
+     133          NaN  1.99528e-18
+     132          NaN  1.99528e-18
+     131          NaN  1.99528e-18
+     130      19.3340  2.09224e-18
+     129          NaN  1.99528e-18
+     128      19.3589  2.04489e-18
+     127          NaN  1.99528e-18
+     126          NaN  1.99528e-18
+     125          NaN  1.99528e-18
+     124          NaN  1.99528e-18
+     123          NaN  1.99528e-18
+     121          NaN  1.99528e-18
+     119          NaN  1.99528e-18
+     118          NaN  1.99528e-18
+     117          NaN  1.99528e-18
+     116      19.4457  1.88784e-18
+     115          NaN  1.99528e-18
+     114      18.8511  3.26440e-18
+     113          NaN  1.99528e-18
+     112      19.2629  2.23398e-18
+     111          NaN  1.99528e-18
+     110      19.4433  1.89194e-18
+     109          NaN  1.99528e-18
+     107          NaN  1.99528e-18
+     106      18.6073  4.08595e-18
+     105      18.5524  4.29798e-18
+     104          NaN  1.99528e-18
+     103      18.5646  4.25015e-18
+     101          NaN  1.99528e-18
+     100      19.3392  2.08242e-18
+      98          NaN  1.99528e-18
+      97          NaN  1.99528e-18
+      96          NaN  1.99528e-18
+      95      19.2421  2.27710e-18
+      94      19.2043  2.35777e-18
+      93      18.2461  5.69895e-18
+      92          NaN  1.99528e-18
+      91          NaN  1.99528e-18
+      90          NaN  1.99528e-18
+      89      19.1405  2.50053e-18
+      87          NaN  1.99528e-18
+      86          NaN  1.99528e-18
+      85          NaN  1.99528e-18
+      84          NaN  1.99528e-18
+      82          NaN  1.99528e-18
+      80      19.4563  1.86936e-18
+      79      19.1958  2.37627e-18
+      78          NaN  1.99528e-18
+      77          NaN  1.99528e-18
+      76          NaN  1.99528e-18
+      74          NaN  1.99528e-18
+      73          NaN  1.99528e-18
+      72      19.2400  2.28163e-18
+      71          NaN  1.99528e-18
+      70      19.3267  2.10651e-18
+      69          NaN  1.99528e-18
+      68          NaN  1.99528e-18
+      67      19.2048  2.35669e-18
+      66      19.2150  2.33478e-18
+      65          NaN  1.99528e-18
+      64          NaN  1.99528e-18
+      63          NaN  1.99528e-18
+      62          NaN  1.99528e-18
+      61          NaN  1.99528e-18
+      60          NaN  1.99528e-18
+      59      19.2828  2.19345e-18
+      58          NaN  1.99528e-18
+      57      19.1743  2.42386e-18
+      56          NaN  1.99528e-18
+      54          NaN  1.99528e-18
+      53          NaN  1.99528e-18
+      51          NaN  1.99528e-18
+      50          NaN  1.99528e-18
+      48      19.4752  1.83719e-18
+      47          NaN  1.99528e-18
+      46          NaN  1.99528e-18
+      45          NaN  1.99528e-18
+      43      19.3048  2.14927e-18
+      42          NaN  1.99528e-18
+      41          NaN  1.99528e-18
+      38          NaN  1.99528e-18
+      37          NaN  1.99528e-18
+      36          NaN  1.99528e-18
+      35          NaN  1.99528e-18
+      34          NaN  1.99528e-18
+      33      19.1394  2.50299e-18
+      31      19.3456  2.07008e-18
+      30          NaN  1.99528e-18
+      29          NaN  1.99528e-18
+      28          NaN  1.99528e-18
+      27          NaN  1.99528e-18
+      26          NaN  1.99528e-18
+      24          NaN  1.99528e-18
+      23      19.1548  2.46776e-18
+      21          NaN  1.99528e-18
+      20      19.4027  1.96410e-18
+      19          NaN  1.99528e-18
+      18      18.8391  3.30047e-18
+      17          NaN  1.99528e-18
+      15          NaN  1.99528e-18
+      14          NaN  1.99528e-18
+      13      19.4702  1.84569e-18
+      12      19.0462  2.72731e-18
+      11      17.1836  1.51638e-17
+      10      19.4758  1.83610e-18
+       9          NaN  1.99528e-18
+       8      19.0917  2.61538e-18
+       7      19.2211  2.32161e-18
+       6      19.3060  2.14693e-18
+       5      19.3789  2.00760e-18
+       4          NaN  1.99528e-18
+       3          NaN  1.99528e-18
+       2      19.0851  2.63149e-18
+       1      18.9284  3.03991e-18
+Writing output apPlate and apVisit files
+No information for Fiber=225 in the plugmap file
+No information for Fiber=75 in the plugmap file
+No information for Fiber=25 in the plugmap file
+Radial velocity measurements
+apread: Plate
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apPlate-a-7980-59935.fits
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apPlate-b-7980-59935.fits
+/uufs/chpc.utah.edu/common/home/sdss50/sdsswork/mwm/apogee/spectro/redux/daily/visit/apo25m/103490/7980/59935/apPlate-c-7980-59935.fits
+Loading visit data into the database
+AP1DVISIT finished
+dt = 347.6 sec
+apred completed successfully

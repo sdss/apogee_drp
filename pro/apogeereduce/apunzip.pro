@@ -116,15 +116,17 @@ if keyword_set(fitsdir) then finalfile=fitsdir+base+'.fits' else $
 
 ; if another process is working already on this file, wait until done,
 ;    then return
-if file_test(finalfile+'.lock') then begin
-  while file_test(files+'.lock') do apwait,files+'.lock',10
-  return
-endif
+;;if file_test(finalfile+'.lock') then begin
+;;  while file_test(files+'.lock') do apwait,files+'.lock',10
+;;  return
+;;endif
+aplock,finalfile,waittime=10
 
 ; Does the file exist?
 ; open .lock file
-openw,lock,/get_lun,finalfile+'.lock'
-free_lun,lock
+;;openw,lock,/get_lun,finalfile+'.lock'
+;;free_lun,lock
+aplock,finalfile,/lock
 
 if file_test(finalfile) eq 1 and keyword_set(clobber) then begin
   if not keyword_set(silent) then $
@@ -325,7 +327,8 @@ if keyword_set(delete) then begin
 endif
 
 ; remove lock file
-file_delete,finalfile+'.lock'
+;;file_delete,finalfile+'.lock'
+aplock,finalfile,/clear
 
 ; Time elapsed
 dt = systime(1)-t0

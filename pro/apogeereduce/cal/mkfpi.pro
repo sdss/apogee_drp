@@ -37,18 +37,20 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   dirs = getdir(apodir,caldir,spectrodir,vers)
   wavedir = apogee_filename('Wave',num=name,chip='a',/dir)
   file = dirs.prefix+string(format='("WaveFPI-",i8.8)',name)
-  lockfile = wavedir+file+'.lock'
+  fpifile = wavedir+file
+  ;;lockfile = wavedir+file+'.lock'
 
   ;; If another process is alreadying make this file, wait!
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do begin
-      if keyword_set(nowait) then return
-      apwait,file,10
-    endwhile
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
-
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do begin
+  ;;    if keyword_set(nowait) then return
+  ;;    apwait,file,10
+  ;;  endwhile
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,fpifile,waittime=10,unlock=unlock
+  
   ;; Does product already exist?
   ;; check all three chip files
   sfpiid = string(fpiid,format='(i08)')
@@ -64,9 +66,10 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
 
   print,'Making fpi: ', fpiid
   ;; Open .lock file
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,fpifile,/lock
+  
   ;; Process the frames
   if keyword_set(psfid) then $
     MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
@@ -88,6 +91,7 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
     free_lun,lock
   endif
 
-  file_delete,lockfile,/allow
-
+  ;;file_delete,lockfile,/allow
+  aplock,fpifile,/clear
+  
 end

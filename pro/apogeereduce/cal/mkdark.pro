@@ -47,15 +47,17 @@ endif
 file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
 ;; Is another process already creating file
-if not keyword_set(unlock) then begin
-  while file_test(lockfile) do apwait,lockfile,10
-endif else begin
-  if file_test(lockfile) then file_delete,lockfile,/allow
-endelse
+;;if not keyword_set(unlock) then begin
+;;  while file_test(lockfile) do apwait,lockfile,10
+;;endif else begin
+;;  if file_test(lockfile) then file_delete,lockfile,/allow
+;;endelse
+aplock,darkfile,waittime=10,unlock=unlock
 
 ;; Open lock file
-openw,lock,/get_lun,lockfile
-free_lun,lock
+;;openw,lock,/get_lun,lockfile
+;;free_lun,lock
+aplock,darkfile,/lock
 
 ;; Initialize summary structure
 sum = {num:i1, nframes:0, nreads:0, nsat:0L, nhot:0L, nhotneigh:0L, nbad:0L, medrate:0., psfid:0L, nneg:0L}
@@ -253,7 +255,8 @@ file = prefix+string(format='("Dark-",i8.8)',i1)
 MWRFITS,darklog,darkdir+'/'+file+'.tab',/create
 
 ;; Remove lock file
-file_delete,lockfile,/allow
+;;file_delete,lockfile,/allow
+aplock,darkfile,/clear
 
 ;; Compile summary web page
 DARKHTML,darkdir

@@ -39,14 +39,17 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,modelpsf=modelp
   file = apogee_filename('Flux',num=ims[0],chip='c',/base)
   fluxdir = apogee_filename('Flux',num=ims[0],chip='c',/dir)
   if file_test(fluxdir,/directory) eq 0 then file_mkdir,fluxdir
-  fluxlockfile = fluxdir+file+'.lock'
+  fluxfile = fluxdir+file
+  ;;fluxlockfile = fluxdir+file+'.lock'
 
   ;; If another process is alreadying making this file, wait!
-  if not keyword_set(unlock) then begin
-    while file_test(fluxlockfile) do apwait,fluxlockfile,10
-  endif else begin
-    if file_test(fluxlockfile) then file_delete,fluxlockfile,/allow
-  endelse
+  aplock,fluxfile,waittime=10,unlock=unlock
+  ;;if not keyword_set(unlock) then begin
+  ;;  apwaitlock,fluxdir+file,time=10
+  ;;  ;;while file_test(fluxlockfile) do apwait,fluxlockfile,10
+  ;;endif else begin
+  ;;  if file_test(fluxlockfile) then file_delete,fluxlockfile,/allow
+  ;;endelse
 
   ;; Does product already exist?
   ;; check all three chip files
@@ -62,9 +65,10 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,modelpsf=modelp
   file_delete,allfiles,/allow  ;; delete any existing files to start fresh
 
   ;; Open .lock file
-  openw,lock,/get_lun,fluxlockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,fluxlockfile
+  ;;free_lun,lock
+  aplock,fluxfile,/lock
+  
   if not keyword_set(plate) then plate=0
 
   ;; Need to make sure extraction is done without flux calibration
@@ -146,30 +150,34 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,modelpsf=modelp
     endfor
   endif
 
-  file_delete,fluxlockfile,/allow  ;; delete lock file
+  aplock,fluxfile,/clear
+  ;;file_delete,fluxlockfile,/allow  ;; delete lock file
 
   response:
   ;; Extra block if we are calculating response function 
   if n_elements(temp) gt 0 then begin
     file = apogee_filename('Response',num=ims[0],chip='c',/base,/nochip)
-    ;file = dirs.prefix+string(format='("Response-c-",i8.8)',ims[0])
-    responselockfile = fluxdir+file+'.lock'
+    ;;file = dirs.prefix+string(format='("Response-c-",i8.8)',ims[0])
+    ;;responselockfile = fluxdir+file+'.lock'
+    responsefile = fluxdir+file
     
     ;; If another process is alreadying making this file, wait!
-    if not keyword_set(unlock) then begin
-      while file_test(responselockfile) do apwait,responselockfile,10
-    endif else begin
-      if file_test(responselockfile) then file_delete,responselockfile,/allow
-    endelse
+    aplock,responsefile,waittime=10
+    ;;if not keyword_set(unlock) then begin
+    ;;  while file_test(responselockfile) do apwait,responselockfile,10
+    ;;endif else begin
+    ;;  if file_test(responselockfile) then file_delete,responselockfile,/allow
+    ;;endelse
     ;; Does product already exist?
     if file_test(fluxdir+file) and not keyword_set(clobber) then begin
       print,' flux file: ',fluxdir+file,' already made'
       return
     endif
     ;; Open .lock file
-    openw,lock,/get_lun,responselockfile
-    free_lun,lock
-
+    ;;openw,lock,/get_lun,responselockfile
+    ;;free_lun,lock
+    aplock,responsefile,/lock
+    
     chips = ['a','b','c']
     if waveid lt 1e7 then begin
       wavefile1 = apogee_filename('Wave',num=waveid,chip=chips[1],/dir)+dirs.prefix+'Wave-'+chips[1]+'-'+strtrim(waveid,2)+'.fits'
@@ -203,7 +211,8 @@ pro mkflux,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,psfid=psfid,modelpsf=modelp
       MWRFITS,bbflux/flux,fluxdir+file,head
     endfor
 
-    file_delete,responselockfile,/allow   ;; delete lock file
+    aplock,responsefile,/clear
+    ;;file_delete,responselockfile,/allow   ;; delete lock file
   endif
  
 end

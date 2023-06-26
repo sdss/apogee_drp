@@ -40,12 +40,14 @@ pro mkpsf,psfid,bpmid=bpmid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberi
   ;; If another process is alreadying make this file, wait!
   ;;  don't use chip in name, apmkpsf.pro makes chip-specific lock files
   if file_test(psfdir,/directory) eq 0 then file_mkdir,psfdir
-  lockfile = psfdir+repstr(file,'-c-','-')+'.lock'
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do apwait,file,10
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
+  ;;lockfile = psfdir+repstr(file,'-c-','-')+'.lock'
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do apwait,file,10
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,file,waittime=10,unlock=unlock
+  
   ;; Does product already exist?
   ;; check all three chips and the EPSF and ETrace files
   tracedir = apogee_filename('ETrace',num=psfid[0],chip='c',/dir)
@@ -63,16 +65,18 @@ pro mkpsf,psfid,bpmid=bpmid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberi
 
   print,'Making PSF: ', psfid[0]
   ;; Open .lock file
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,file,/lock
+  
   cmjd = getcmjd(psfid)
   print,'mkpsf approcess...'
   d = approcess(psfid,bpmid=bpmid,darkid=darkid,flatid=flatid,littrowid=littrowid,/nocr,nfs=1,/doap3dproc,unlock=unlock)
   psffile = apogee_filename('2D',num=psfid[0],chip='c',/dir)+'/'+string(format='(i8.8)',psfid)
   APMKPSF,psffile,psfdir,sparseid=sparseid,fiberid=fiberid,average=average,clobber=clobber,unlock=unlock
 
-  file_delete,lockfile,/allow
-
+  ;;file_delete,lockfile,/allow
+  aplock,file,/clear
+  
 end
 

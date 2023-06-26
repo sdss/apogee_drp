@@ -27,18 +27,20 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
   dirs = getdir(apodir,caldir,spectrodir,vers)
   telldir = apogee_filename('Telluric',num=0,chip='a',/dir)
   file = dirs.prefix+'Telluric-'+name
-  lockfile = telldir+file+'.lock'
+  tellfile = telldir+file
+  ;;lockfile = telldir+file+'.lock'
   
   ;; If another process is alreadying make this file, wait!
-  if not keyword_set(unlock) then begin
-    while file_test(lockfile) do begin
-      if keyword_set(nowait) then return
-      apwait,file,10
-    endwhile
-  endif else begin
-    if file_test(lockfile) then file_delete,lockfile,/allow
-  endelse
-
+  ;;if not keyword_set(unlock) then begin
+  ;;  while file_test(lockfile) do begin
+  ;;    if keyword_set(nowait) then return
+  ;;    apwait,file,10
+  ;;  endwhile
+  ;;endif else begin
+  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+  ;;endelse
+  aplock,tellfile,waittime=10,unlock=unlock
+  
   ;; Does product already exist?
   ;; check all three chips and .dat file
   chips = ['a','b','c']
@@ -51,16 +53,17 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
 
   print,'Making telluric: ', name
   ;; Open .lock file
-  openw,lock,/get_lun,lockfile
-  free_lun,lock
-
+  ;;openw,lock,/get_lun,lockfile
+  ;;free_lun,lock
+  aplock,tellfile,/lock
+  
   ;; Get the wavelength calibration files
   waveid = long((strsplit(tellid,'-',/extract))[0])
   wavedir = apogee_filename('Wave',num=0,chip='a',/dir)
   wavefiles = wavedir+'/'+dirs.prefix+'Wave-'+chips+'-'+strtrim(waveid,2)+'.fits'
   if total(file_test(wavefiles),/int) ne 3 then begin
     print,'Wave '+strtrim(waveid,2)+' files not all found'
-    file_delete,lockfile,/allow
+    aplock,tellfile,/clear
     return
   endif
   ;; Get the LSF calibration file
@@ -68,7 +71,7 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
   lsffiles = apogee_filename('LSF',num=lsfid,chip=chips)
   if total(file_test(lsffiles),/int) ne 3 then begin
     print,'LSF '+strtrim(lsfid,2)+' files not all found'
-    file_delete,lockfile,/allow
+    aplock,tellfile,/clear
     return
   endif
   
@@ -103,6 +106,7 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
     free_lun,lock
   endif else print,'PROBLEMS with apTelluric-'+strtrim(tellid,2)+' files'
 
-  file_delete,lockfile,/allow
-
+  ;;file_delete,lockfile,/allow
+  aplock,tellfile,/clear
+  
 end

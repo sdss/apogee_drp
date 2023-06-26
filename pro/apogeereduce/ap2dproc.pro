@@ -285,28 +285,31 @@ if keyword_set(wavefile) then begin
 endif
 
 ; Wait if another process is working on this
-lockfile = outdir+dirs.prefix+'1D-'+framenum ; lock file
-if getlocaldir() then lockfile=getlocaldir()+'/'+dirs.prefix+'1D-'+framenum+'.lock' $
-else lockfile=outdir+dirs.prefix+'1D-'+framenum+'.lock'
+;;lockfile = outdir+dirs.prefix+'1D-'+framenum ; lock file
+;;lif getlocaldir() then lockfile=getlocaldir()+'/'+dirs.prefix+'1D-'+framenum+'.lock' $
+;;else lockfile=outdir+dirs.prefix+'1D-'+framenum+'.lock'
+onedfile = outdir+dirs.prefix+'1D-a-'+framenum+'.fits'
 
-if not keyword_set(unlock) and not keyword_set(clobber) then begin
-  while file_test(lockfile) do apwait,lockfile,10
-endif else begin
-  if file_test(lockfile) then file_delete,lockfile,/allow
-endelse
+;;if not keyword_set(unlock) and not keyword_set(clobber) then begin
+;;  while file_test(lockfile) do apwait,lockfile,10
+;;endif else begin
+;;  if file_test(lockfile) then file_delete,lockfile,/allow
+;;endelse
+aplock,onedfile,waittime=10,unlock=unlock
 
-err=1
-while err ne 0 do begin
-  if file_test(file_dirname(lockfile),/directory) eq 0 then begin
-    file_mkdir,file_dirname(lockfile)
-  endif
-  openw,lock,/get_lun,lockfile, error=err
-  IF (err NE 0) then begin
-     PRINTF, -2, !ERROR_STATE.MSG
-    print,file_search('/scratch/local','*')
-  endif
-endwhile
-free_lun,lock
+;;err=1
+;;while err ne 0 do begin
+;;  if file_test(file_dirname(lockfile),/directory) eq 0 then begin
+;;    file_mkdir,file_dirname(lockfile)
+;;  endif
+;;  openw,lock,/get_lun,lockfile, error=err
+;;  IF (err NE 0) then begin
+;;     PRINTF, -2, !ERROR_STATE.MSG
+;;    print,file_search('/scratch/local','*')
+;;  endif
+;;endwhile
+;;free_lun,lock
+aplock,onedfile,/lock
 
 ; Since final ap1dwavecal requires simultaneous fit of all three chips, and
 ;  this required final output to be put off until after all chips are done,
@@ -971,7 +974,8 @@ if not keyword_set(nowrite) then begin
 endif
 
 APEND:
-file_delete,lockfile
+;;file_delete,lockfile
+aplock,onedfile,/clear
 
 if not keyword_set(silent) then print,'AP2PROC finished'
 

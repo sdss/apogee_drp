@@ -732,14 +732,15 @@ FOR f=0,nfiles-1 do begin
 
   ; if another job is working on this file, wait
   if n_elements(outfile) gt 0 then begin
-    if getlocaldir() then lockfile=getlocaldir()+'/'+file_basename(outfile[f])+'.lock' $
-    else lockfile=outfile[f]+'.lock'
-    if not keyword_set(unlock) and not keyword_set(clobber) then begin
-      while file_test(lockfile) do apwait,lockfile,10
-    endif else begin
-      if file_test(lockfile) then file_delete,lockfile,/allow
-    endelse
-
+    ;;if getlocaldir() then lockfile=getlocaldir()+'/'+file_basename(outfile[f])+'.lock' $
+    ;;else lockfile=outfile[f]+'.lock'
+    ;;if not keyword_set(unlock) and not keyword_set(clobber) then begin
+    ;;  while file_test(lockfile) do apwait,lockfile,10
+    ;;endif else begin
+    ;;  if file_test(lockfile) then file_delete,lockfile,/allow
+    ;;endelse
+    aplock,outfile[f],waittime=10,unlock=unlock
+     
     ; Test if the output file already exists
     ;if n_elements(outfile) gt 0 then begin
       if (file_test(outfile[f]) eq 1 or file_test(outfile[f]+'.fz') eq 1) and not keyword_set(clobber) then begin
@@ -748,12 +749,13 @@ FOR f=0,nfiles-1 do begin
       endif
 
     ; set lock to notify other jobs that this file is being worked on
-    openw,lock,/get_lun,lockfile,error=err
-    IF (err NE 0) then begin
-      PRINTF, -2, !ERROR_STATE.MSG
-      print,file_search('/scratch/local','*')
-    endif
-    free_lun,lock
+    ;;openw,lock,/get_lun,lockfile,error=err
+    ;;IF (err NE 0) then begin
+    ;;  PRINTF, -2, !ERROR_STATE.MSG
+    ;;  print,file_search('/scratch/local','*')
+    ;;endif
+    ;;free_lun,lock
+    aplock,outfile[f],/lock  
   endif
 
   ; Check the file
@@ -2485,10 +2487,8 @@ print,'no_checksum: ', no_checksum
         MWRFITS,pmodelim,ioutfile,head4,/silent
       endif
         
-    endif
-  
-  endif
-  
+    endif  ;; writing the file 
+  endif  ;; output requested
   
   ; Remove the recently Decompressed file
   if extension eq 'apz' and keyword_set(cleanuprawfile) and doapunzip eq 1 then begin
@@ -2508,7 +2508,8 @@ print,'no_checksum: ', no_checksum
     print,''
   endif
 
-  file_delete,lockfile,/allow
+  ;;file_delete,lockfile,/allow
+  aplock,outfile[f],/clear
   
   dt = systime(1)-t0
   if not keyword_set(silent) then print,'dt = ',strtrim(string(dt,format='(F10.1)'),2),' sec'
