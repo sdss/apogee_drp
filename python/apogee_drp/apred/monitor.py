@@ -365,7 +365,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         print("----> monitor: Making " + os.path.basename(outfile))
 
         if allv5 is None:
-            allv5path = specdir5 + 'summary/allVisit-daily-'+telescope+'.fits'
+            allv5path = specdir5 + 'summary/allVisit-'+apred+'-'+telescope+'.fits'
             allv5 = fits.getdata(allv5path)
 
         #gd, = np.where((allv5['telescope'] == telescope) & (allv5['mjd'] >= np.max(allsnr4['MJD'])) & ((allv5['mjd'] < 59558) | (allv5['mjd'] >= 59595)))
@@ -4396,7 +4396,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
 
             fig = plt.figure(figsize=(30,14))
 
-            allv5 = fits.getdata(specdir5 + 'summary/allVisit-daily-apo25m.fits')
+            allv5 = fits.getdata(specdir5 + 'summary/allVisit-'+apred+'-'+telescope+'.fits')
             umjd,uind = np.unique(allv5['mjd'], return_index=True)
             nmjd = len(umjd)
 
