@@ -91,7 +91,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   chfile = apogee_filename('2D',num=waveid,chip='b')
   if file_test(chfile) eq 0 then begin
     print,chfile+' NOT FOUND'
-    file_delete,lockfile,/allow     
+    aplock,wavefile,/clear
     return
   endif
   head0 = headfits(chfile,exten=0)
@@ -115,7 +115,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;; Check the line flux
   if avgpeakflux/sxpar(head0,'nread') lt thresh then begin
     print,'Not enough flux in ',chfile
-    file_delete,lockfile,/allow    
+    aplock,wavefile,/clear     
     return
   endif
   

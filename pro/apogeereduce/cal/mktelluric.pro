@@ -63,7 +63,7 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
   wavefiles = wavedir+'/'+dirs.prefix+'Wave-'+chips+'-'+strtrim(waveid,2)+'.fits'
   if total(file_test(wavefiles),/int) ne 3 then begin
     print,'Wave '+strtrim(waveid,2)+' files not all found'
-    file_delete,lockfile,/allow
+    aplock,tellfile,/clear
     return
   endif
   ;; Get the LSF calibration file
@@ -71,7 +71,7 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
   lsffiles = apogee_filename('LSF',num=lsfid,chip=chips)
   if total(file_test(lsffiles),/int) ne 3 then begin
     print,'LSF '+strtrim(lsfid,2)+' files not all found'
-    file_delete,lockfile,/allow
+    aplock,tellfile,/clear
     return
   endif
   
