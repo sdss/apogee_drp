@@ -2362,8 +2362,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                         ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='QUARTZFLAT'))
                         # pick two
                         if len(ind1)>2: ind1=ind1[0:2]
-                        if len(ind1)>0:
-                            ind = np.append(ind,ind1)
+                    if len(ind1)>0:
+                        ind = np.append(ind,ind1)
                 ncal = len(ind)
                 if len(ind)>=0:
                     calinfo = expinfo[ind]
@@ -2418,7 +2418,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     ncal = len(calinfo)
                     
             logger.info(str(ncal)+' file(s)')
-
+            
             # Loop over calibration files and check if we need to run them
             docal = np.zeros(ncal,bool)
             for j in range(ncal):
