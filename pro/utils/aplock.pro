@@ -53,8 +53,8 @@ pro aplock,file,waittime=waittime,clear=clear,unlock=unlock,$
     if not keyword_set(silent) then print,'waiting for file lock: ', lockfile
     ;; How long has it been since the file has been modified
     info = file_info(file)
+    curtime = systime(1)    
     if info.exists then begin  ;; make sure it exists
-      curtime = systime(1)
       if curtime gt info.mtime+maxduration then begin
         if not keyword_set(silent) then $
            print,'lock file exists but original file unchanged in over '+strtrim(string(maxduration/3600,format='(F8.2)'),2)+' hours'

@@ -204,7 +204,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     if not okay:
         if not silent: 
             print('halt: there is a problem with files: '+' '.join(files))
-        import pdb; pdb.set_trace() 
+        #import pdb; pdb.set_trace() 
         return [],[]
          
     # Get PSF info
@@ -213,7 +213,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     if os.path.exists(psf_dir) == False: 
         if not silent: 
             print('halt: psf directory '+psf_dir+' not found')
-        import pdb; pdb.set_trace() 
+        #import pdb; pdb.set_trace() 
         return [],[]
      
     psfframeid = '%8d' % int(psf_base)
@@ -224,7 +224,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     if load.exists('PSF',int(psfframeid))==False:
         if not silent: 
             print('halt: there is a problem with psf files: '+' '.join(psffiles))
-        import pdb; pdb.set_trace() 
+        #import pdb; pdb.set_trace() 
         return [],[]
      
     if not silent: 
@@ -265,7 +265,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         if np.sum(ftest) < 3: 
             if not silent: 
                 print('halt: problems with flux calibration file '+fluxcalfile)
-            import pdb; pdb.set_trace() 
+            #import pdb; pdb.set_trace() 
             return [],[]
          
     # Double-check the response calibration file
@@ -275,7 +275,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         if np.sum(ftest) < 3: 
             if not silent: 
                 print('halt: problems with response calibration file '+responsefile)
-            import pdb; pdb.set_trace() 
+            #import pdb; pdb.set_trace() 
             return [],[]
          
     # Double-check the wave calibration file
@@ -285,7 +285,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         if np.sum(wtest) < 3: 
             if not silent: 
                 print('halt: problems with wavelength file '+wavefile)
-            import pdb; pdb.set_trace() 
+            #import pdb; pdb.set_trace() 
             return [],[]
          
     # Wait if another process is working on this
@@ -367,7 +367,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                 error = 'max(fibers) is larger than the number of fibers in psf file.' 
                 if not silent: 
                     print('halt: '+error)
-                import pdb; pdb.set_trace() 
+                #import pdb; pdb.set_trace() 
                 return 
              
         # Measuring the trace shift
@@ -1110,7 +1110,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 nbd1 = len(bd1)
                 if nbd1>0:
                     print('halt: '+','.join(np.array(tracefiles)[bd1])+' not found')
-                    import pdb; pdb.set_trace()
+                    #import pdb; pdb.set_trace()
+                    return
                 for ichip in range(2+1): 
                     p = fits.getdata(tracefiles[ichip],1)
                     if len(p) != 300: 
@@ -1166,7 +1167,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 nbd1 = len(bd1)
                 if nbd1 > 0: 
                     print('halt: '+str(np.array(fluxfiles)[bd1])+' not found')
-                    import pdb; pdb.set_trace()
+                    #import pdb; pdb.set_trace()
+                    return
         else:
             fluxtest = False 
  
@@ -1189,8 +1191,9 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 nbd1 = len(bd1)
                 if nbd1 > 0 : 
                     print('halt: ',responsefiles[bd1],' not found')
-                    import pdb; pdb.set_trace()
-         
+                    #import pdb; pdb.set_trace()
+                    return
+                    
         # Model PSF files
         if 'modelpsf' in planstr.keys():
             if load.exists('PSFModel',num=planstr['modelpsf']):
@@ -1209,7 +1212,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 nbd1 = len(bd1)
                 if nbd1 > 0: 
                     print('halt: ',modelpsffiles[bd1],' not found')
-                    import pdb; pdb.set_modelpsf()
+                    #import pdb; pdb.set_modelpsf()
+                    return
         else:
             modelpsffile = None
  
@@ -1238,7 +1242,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                                             mapper_data=mapper_data,noobject=True)
                 if plugmap is None:
                     print('halt: error with plugmap: ',plugfile)
-                    import pdb; pdb.set_trace()
+                    #import pdb; pdb.set_trace()
+                    return
                 plugmap['mjd'] = planstr['mjd']   # enter mjd from the plan file
  
         # Are there enough files
@@ -1260,7 +1265,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 nbd1 = len(bd1)
                 if nbd1 > 0: 
                     print('halt: ',tracefiles[bd1],' not found')
-                    import pdb; pdb.set_trace()
+                    #import pdb; pdb.set_trace()
+                    return
                 for ichip in range(3): 
                     p = fits.getdata(tracefiles[ichip],1)
                     if len(p) != 300: 
@@ -1281,8 +1287,9 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             #        ((info.naxis == 3) or (info.exten == 1))) 
             if okay==False:
                 print('halt: there is a problem with files: '+' '.join(files))
-                import pdb; pdb.set_trace()
- 
+                #import pdb; pdb.set_trace()
+                return
+                
             print('') 
             print('-------------------------------------------')
             print(str(j+1)+'/'+str(nframes)+'  processing frame number >>'+str(framenum)+'<<')
