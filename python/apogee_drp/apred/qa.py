@@ -1013,7 +1013,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     tmp = os.path.basename(qafile).replace('.html','')
     html.write('<HTML><HEAD><script src="../../../../../../../sorttable.js"></script><title>'+tmp+'</title></head><BODY>\n')
     html.write('<H1>Apred: <FONT COLOR="green">' + load.apred + '</FONT><BR>')
-    html.write('<H1>Field: <FONT COLOR="green">' + field + '</FONT><BR>Plate: <FONT COLOR="green">' + plate)
+    html.write('Field: <FONT COLOR="green">' + field + '</FONT><BR>Plate: <FONT COLOR="green">' + plate)
     html.write('</FONT><BR>MJD: <FONT COLOR="green">' + mjd + '</FONT></H1>\n')
     html.write('<p><a href="../../../../../../qa/mjd.html">back to MJD page</a><BR>\n')
     html.write('<a href="../../../../../../qa/fields.html">back to Fields page</a></p>\n')
