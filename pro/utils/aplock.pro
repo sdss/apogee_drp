@@ -20,7 +20,7 @@
 ;  /unlock       If the lock file exists, then unlock/delete it.
 ;  /lock         Relock the file at the end of the wait.
 ;  =maxduration  Maximum duration of the original file being unmodified.
-;                  Default is 5 hours.
+;                  Default is 3 hours.
 ;  /silent       Do not print anything to the screen.
 ;
 ; OUTPUTS:
@@ -37,7 +37,7 @@ pro aplock,file,waittime=waittime,clear=clear,unlock=unlock,$
   
   ;; Defaults
   if n_elements(waittime) eq 0 then waittime=10
-  if n_elements(maxduration) eq 0 then maxduration=5*3600 ; default, 5 hours
+  if n_elements(maxduration) eq 0 then maxduration=3*3600 ; default, 3 hours
   lockfile = file+'.lock'
   dir = file_expand_path(file_dirname(file))
   if file_test(dir,/directory) eq 0 then file_mkdir,dir  ;; make directory if necessary
