@@ -1,0 +1,269 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# @Author: David Nidever
+# @Date: June 27, 2023
+# @Filename: apgstat
+# @License: BSD 3-Clause
+# @Copyright: David Nidever
+
+
+from __future__ import division
+from __future__ import print_function
+from __future__ import absolute_import
+from __future__ import unicode_literals
+
+import argparse
+import os
+import sys
+import time
+from datetime import datetime
+from glob import glob
+import numpy as np
+#from astropy.table import Table,Column
+import logging
+#import traceback
+import psutil
+
+#from apogee_drp.utils import bitmask,apload
+from dlnpyutils import utils as dln
+
+if __name__ == '__main__' :
+
+    parser = argparse.ArgumentParser( prog=os.path.basename(sys.argv[0]),description='APOGEE Reduction Status')
+    #parser.add_argument('apred', type=str, nargs=1, help='APOGEE reduction version')
+    #parser.add_argument('telescope', type=str, nargs=1, help='APOGEE telescope (apo25m, lco25m, apo1m)')
+    #parser.add_argument('-c','--clobber', action='store_true', help='Overwrite files?')
+    parser.add_argument('-v','--verbose', action='store_true', help='Verbose output')
+    args = parser.parse_args()
+    verbose = args.verbose
+    
+    now = datetime.now()
+    username = 'u0914350'  # David Nidever's username
+
+    # Get the processes
+    #allprocs = {p.pid: p.info for p in psutil.process_iter(['pid','name','username'])}   # all processes
+    #procs = [allprocs[k] for k in allprocs.keys() if allprocs[k]['username']==username]  # only for the right user
+    #plist = [psutil.Process(p['pid']) for p in procs]                                    # Process list
+    ## Only want runapogee or apogeedrp processes
+    #plist = [p for p in plist if (' '.join(p.cmdline()).find('runapogee') > -1) or (' '.join(p.cmdline()).find('apogeedrp') > -1)]
+    # Make a dictionary of information for each process
+    procs = []
+    count = 0
+    for p in psutil.process_iter(['pid','name','username']):
+        if p.username()!=username:
+            continue
+        cmd = ' '.join(p.cmdline())
+        if cmd.find('runapogee')==-1 and cmd.find('apogeedrp')==-1:
+            continue
+        if cmd.find('runapogee')>-1:
+            rtype = 'runapogee'
+        else:
+            rtype = 'apogeedrp'
+        if cmd.find('lco')>-1:
+            observatory = 'lco'
+        else:
+            observatory = 'apo'
+        if cmd.find('daily')>-1:
+            apred = 'daily'
+        elif cmd.find('current')>-1:
+            apred = 'current'
+        else:
+            apred = '??'
+        procs1 = {'count':count,'pid':p.pid,'username':p.username(),'cmd':cmd,'rtype':rtype,'started':p._create_time,
+                  'observatory':observatory,'apred':apred,'mjd':'???','cron':(cmd.find('cron')>-1),'process':p}
+        procs.append(procs1)
+        count += 1
+        
+    # Check cron jobs
+    #  there should be 3 processes for each one
+    #  1) runapogeecurrentlco >> /uufs/.../apogee/spectro/redux/current/log/lco/cron/`date +%Y-%m-%d-%H:%M:%S`-runapogee_cron.log 2>&1',
+    #  2) runapogeecurrentlco
+    #  3) runapogee lco --vers 1.1
+    torem = []
+    cronind = [p['count'] for p in procs if p['cron']==True]    
+    for i in range(len(cronind)):
+        started = procs[cronind[i]]['started']
+        diff = np.array([p['started'] for p in procs])-started
+        # get all processes that started within 20 seconds of the cron job
+        gd, = np.where(np.abs(diff) < 20)
+
+        # Need to remove the non-cron job children processes
+        torem1 = [g for g in gd if procs[g]['cron']==False]
+        torem += torem1
+        
+        ## Nothing to do for "daliy"
+        #if procs[cronind[i]]['apred']=='daily':
+        #    continue
+        # Get the apred from the children        
+        cmdline = procs[cronind[i]]['process'].children()[0].children()[0].cmdline()
+        cmd = ' '.join(cmdline)
+        # ['python', '/uufs/chpc.utah.edu/common/home/sdss50/software/git/sdss/apogee_drp/1.1/bin/runapogee', 'lco', '--vers', '1.1']
+        lo = cmd.find(' --vers ')
+        if lo>-1:
+            apred = cmd[lo+1:].split()[1]
+            procs[cronind[i]]['apred'] = apred
+        else:
+            lo = cmd.find(' -v ')
+            if lo>-1:
+                apred = cmd[lo+1:].split()[1]
+                procs[cronind[i]]['apred'] = apred            
+
+    # Remove the child processes
+    if len(torem)>0:
+        ind = np.arange(len(procs))
+        ind = np.delete(ind,torem)
+        temp = procs
+        procs = [temp[i] for i in ind]
+        del temp
+    # Redo the index values
+    for i in range(len(procs)): procs[i]['count']=i
+
+
+    # Get the MJD from the logfile
+    for i in range(len(procs)):
+        #print(i,procs[i]['cron'],procs[i]['rtype'],procs[i]['cmd'])
+        if procs[i]['rtype']!='runapogee':
+            continue
+        ##files = glob(os.environ['APOGEE_REDUX']+'/'+procs[cronind[i]]['apred']+'/log/'+procs[cronind[i]]['observatory']+'/cron/*-runapogee_cron.log')
+        #files = glob(os.environ['APOGEE_REDUX']+'/'+procs[cronind[i]]['apred']+'/log/'+procs[cronind[i]]['observatory']+'/*.log')        
+        #ctimes = [os.path.getctime(f) for f in files]
+        #diff = np.array(ctimes)-procs[cronind[i]]['started']
+        #bestind = np.argmin(np.abs(diff))
+        dtime = datetime.fromtimestamp(procs[i]['started'])
+        stime = dtime.strftime('%Y-%m-%d-%H:%M')
+        mjd = None
+        # Cron job
+        if procs[i]['cron']:
+            # crontab log filename is +\%Y-\%m-\%d-\%H:\%M:\%S
+            #  2023-05-13-07:00:01-runapogee_cron.log
+            crondir = os.environ['APOGEE_REDUX']+'/'+procs[i]['apred']+'/log/'+procs[i]['observatory']+'/cron/'
+            files = glob(crondir+stime+':0?-runapogee_cron.log')
+            if len(files)==0:
+                stime = dtime.strftime('%Y-%m-%d-%H')
+                files = glob(crondir+stime+':??:??-runapogee_cron.log')
+            if len(files)==0:
+                stime = dtime.strftime('%Y-%m-%d-')
+                files = glob(crondir+stime+'??::??:??-runapogee_cron.log')
+            # Multiple files, get the closest one in creation time
+            if len(files)>1:
+                base = [os.path.basename(f) for f in files]
+                dtimes = [datetime.fromisoformat(b[0:19]) for b in base]
+                diff = [(dt-dtime).seconds for dt in dtimes]
+                bestind = np.argmin(np.abs(np.array(diff)))
+                files = [files[bestind]]
+        # Non-cron runapogee job
+        else:
+            #print(i,procs[i]['cmd'])
+            # Let's see if we can get it from the command
+            if procs[i]['cmd'].find('--mjd')>-1:
+                lo = procs[i]['cmd'].find('--mjd')
+                mjd = procs[i]['cmd'][lo:].split()[1]
+                procs[i]['mjd'] = mjd
+                #print('mjd=',mjd)
+                #break
+            # Try the log files
+            files = []
+            if mjd is None:
+                #print('checking daily log files')
+                logdir = os.environ['APOGEE_REDUX']+'/'+procs[i]['apred']+'/log/'+procs[i]['observatory']+'/'
+                files = glob(logdir+'?????.*.log')
+            # Multiple files, get the closest one in creation time
+            if len(files)>1:
+                ctimes = [os.path.getctime(f) for f in files]
+                diff = [c-dtime.timestamp() for c in ctimes]
+                ind, = np.where(np.array(diff) > -10)
+                if len(ind)>0:
+                    files = np.array(files)[ind]
+                    ctimes = np.array(ctimes)[ind]
+                    diff = diff[ind]
+                    bestind = np.argmin(np.abs(diff))
+                    files = [files[bestind]]
+
+        # We have a log file to check
+        if len(files)>0 and mjd is None:
+            logfile = files[0]
+            loglines = dln.readlines(logfile)
+            # Look for the line with the MJD information
+            # 2023-06-26 21:15:11,981 [INFO ]  Running daily APOGEE data reduction for LCO 60119 daily
+            for j in range(100):
+                lo = loglines[j].find('APOGEE data reduction for')
+                if lo>-1:
+                    bestind = j
+                    break
+            if lo>-1:
+                line = loglines[bestind]
+                arr = line[lo:].split()[-3:]
+                obs,mjd,apred = arr
+                procs[i]['observatory'] = obs.lower()
+                procs[i]['mjd'] = mjd
+                procs[i]['apred'] = apred            
+        
+
+    # Sort the processes
+    #  put cron jobs at the top, then other runapogee
+    cronind = [p['count'] for p in procs if p['cron']==True]
+    dailyind = [p['count'] for p in procs if p['cron']==False and p['rtype']=='runapogee']
+    # Only cron
+    if len(cronind)==len(procs):
+        ind = cronind
+    # Only cron and daily
+    elif len(cronind)+len(dailyind)==len(procs):
+        ind = np.append(cronind,dailyind)
+    # Some cron, some daily and some apogeedrp
+    else:
+        left = np.arange(len(procs))
+        torem = np.array([],int)
+        if len(cronind)>0:
+            torem = np.append(torem,cronind)
+        if len(dailyind)>0:
+            torem = np.append(torem,dailyind)
+        left = np.delete(left,torem)
+        ind = np.append(torem,left)
+    temp = procs
+    procs = [temp[i] for i in ind]
+    del temp
+    
+    # Now print out the information
+    print('{:} APOGEE Reduction Jobs running'.format(len(procs)))
+    print(str(datetime.now())[0:29])
+    print('crontab: daily-apo 0/30, daily-lco 15/45, current-apo 5/35, current-lco 20/50')
+    print('NUM CRON    TYPE     APRED    OBS    MJD         START TIME         DURATION')
+    for i in range(len(procs)):
+        proc = procs[i]
+        started = proc['started']
+        duration = now.timestamp()-started
+        dtime = datetime.fromtimestamp(started)
+        deltatime = now-dtime
+        duration = str(deltatime)[0:21]
+        if deltatime.total_seconds()/3600 < 24:
+            duration = duration[0:10]
+        # get apred and mjd for non-cron runapogee
+        if proc['cron']==False and proc['rtype']=='runapogee':
+            cmd = proc['cmd']
+            lo = cmd.find(' --vers ')
+            if lo>-1:
+                apred = cmd[lo+1:].split()[1]
+                proc['apred'] = apred
+            else:
+                lo = cmd.find(' -v ')
+                if lo>-1:
+                    apred = cmd[lo+1:].split()[1]
+                    proc['apred'] = apred
+        if proc['cron']==True:
+            print('{:<3d} cron  {:<10s} {:8s} {:5s} {:6s} {:10s}   {:s}'.format(i+1,proc['rtype'],proc['apred'],proc['observatory'],
+                                                                                proc['mjd'],str(dtime)[0:21],duration))
+            if verbose:
+                print('     ',proc['cmd'])
+        else:
+            if proc['rtype']=='runapogee':
+                print('{:<3d}       {:<10s} {:8s} {:5s} {:6s} {:10s}   {:s}'.format(i+1,proc['rtype'],proc['apred'],proc['observatory'],
+                                                                                    proc['mjd'],str(dtime)[0:21],duration))
+                if verbose:
+                    print('     ',proc['cmd'])                    
+            else:
+                print('{:<3d}       {:<10s} {:8s} {:5s} {:6s} {:10s}   {:s}'.format(i+1,proc['rtype'],proc['apred'],proc['observatory'],
+                                                                                    6*' ',str(dtime)[0:21],duration))
+                print('     ',proc['cmd'])
+
+    #import pdb; pdb.set_trace()
