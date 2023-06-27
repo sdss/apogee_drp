@@ -135,7 +135,7 @@ if __name__ == '__main__' :
 
         # Showing latest 10 jobs
         print('Latest 10 slurm jobs at '+str(datetime.now())[0:21])
-        print('NUM       LABEL                KEY              JOBID   NTASKS   LAST MODIFIED TIME     DURATION         STATUS')
+        print('NUM       LABEL        APRED          KEY              JOBID   NTASKS   LAST MODIFIED TIME     DURATION         STATUS')
         for i in range(10):
             jtab1 = jtab[i]
             dendtime = datetime.fromtimestamp(jtab1['endtime'])
@@ -148,8 +148,18 @@ if __name__ == '__main__' :
                 status = stat['State'][0]
             else:
                 status = 'N/A'
-            print('{:3d} {:18s} {:21s} {:9d} {:7d}  {:22s} {:15s} {:10s}'.format(i+1,jtab1['label'],jtab1['key'],jtab1['jobid'],
-                                                                                 jtab1['ntasks'],str(dendtime)[0:21],sdeltatime,status))
+            # Get apred from the last log file
+            loglist = jtab1['dir']+'/'+jtab1['label']+'_logs.txt'
+            apred = '??'
+            if os.path.exists(loglist):
+                loglines = dln.readlines(loglist)
+                if len(loglines)>0:
+                    log1 = loglines[0]
+                    lo = log1.find('apogee/spectro/redux/')   # apogee/spectro/redux/1.1
+                    if lo > -1:
+                        apred = log1[lo:].split('/')[3]
+            print('{:3d} {:18s} {:6} {:21s} {:9d} {:7d}  {:22s} {:15s} {:10s}'.format(i+1,jtab1['label'],apred,jtab1['key'],jtab1['jobid'],
+                                                                                      jtab1['ntasks'],str(dendtime)[0:21],sdeltatime,status))
         sys.exit()
         
     # Key input
