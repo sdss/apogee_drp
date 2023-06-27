@@ -665,10 +665,16 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             if chinfo['okay'][0]:
                 fiberdata = Table.read(chfiles[0],11)
             else:
+                logger.info('Cannot get fiber data from '+chfiles[0])
+                logger.info('info: okay ',chinfo['okay'][0])
+                logger.info('info: exists ',chinfo['exists'][0])
+                logger.info('info: size ',chinfo['size'][0])                
                 fiberdata = None
         else:
             fiberdata = None
-
+        if fiberdata is None:
+            logger.info('No fiber data!')
+            
         # Exposure-level processing: ap3d, ap2d, apcframe
         dtype = np.dtype([('exposure_pk',int),('planfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),
                           ('instrument',(str,20)),('telescope',(str,10)),('platetype',(str,50)),('mjd',int),
