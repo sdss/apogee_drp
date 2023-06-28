@@ -3601,7 +3601,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
 ###################################################################################################
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
-def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fieldfilebase=None,
+def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None, fieldfilebase=None,
                       domjd=True, dofields=True):
 
     # Establish data directories.
@@ -3611,10 +3611,10 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred=None, mjdfilebase=None, fi
     qadir = apodir+apred+'/qa/'
 
     # Summary file links
-    visSumPathN = '../summary/allVisit-daily-apo25m.fits'
-    starSumPathN = '../summary/allStar-daily-apo25m.fits'
-    visSumPathS = '../summary/allVisit-daily-lco25m.fits'
-    starSumPathS = '../summary/allStar-daily-lco25m.fits'
+    visSumPathN = '../summary/allVisit-'+apred+'-apo25m.fits'
+    starSumPathN = '../summary/allStar-'+apred+'-apo25m.fits'
+    visSumPathS = '../summary/allVisit-'+apred+'-lco25m.fits'
+    starSumPathS = '../summary/allStar-'+apred+'-lco25m.fits'
 
     if domjd is True:
         # Find all .log.html files, get all MJDs with data
