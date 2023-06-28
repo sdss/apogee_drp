@@ -3689,7 +3689,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
-        html.write('<p> <b>Summary files:</b> <a href="'+visSumPathN+'">allVisit</a> / <a href="'+starSumPathN+'">allStar</a> (<b>APO</b>), ')
+        html.write('<p> <b>Summary files:</b> <a href="'+visSumPathN+'">allVisit</a> / <a href="'+starSumPathN+'">allStar</a> (<b>APO</b>), \n')
         html.write('<a href="'+visSumPathS+'">allVisit</a> / <a href="'+starSumPathS+'">allStar</a> (<b>LCO</b>)</p>\n')
         html.write( '<P>Yellow: APO 2.5m, Green: LCO 2.5m <BR>\n')
         html.write( 'Note: numbers in brackets in the "Plots of Spectra" column give the numbers of assigned skies, tellurics, and science targets.</P>\n')

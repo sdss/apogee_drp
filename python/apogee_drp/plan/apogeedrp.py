@@ -3311,7 +3311,7 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
     
 
 def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
-        fresh=False,linkvers=None,nodes=5,debug=False):
+        fresh=False,linkvers=None,nodes=5,walltime='336:00:00',debug=False):
     """
     Perform APOGEE Data Release Processing
 
@@ -3342,6 +3342,8 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
        Name of reduction version to use for symlinks for the calibration files.
     nodes : int, optional
        Number of nodes to use on the CHPC.  Default is 5.
+    walltime : str, optional
+       Maximum runtime for the slurm jobs.  Default is '336:00:00' or 14 days.
     debug : boolean, optional
        For testing purposes.  Default is False.
 
@@ -3377,7 +3379,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     alloc = 'sdss-np'
     shared = True
     #ppn = 64
-    walltime = '336:00:00'
+    #walltime = '336:00:00'
     # Only set cpus if you want to use less than 64 cpus
     slurmpars = {'nodes':nodes, 'alloc':alloc, 'shared':shared,
                  'walltime':walltime, 'notification':False}
