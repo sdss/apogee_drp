@@ -649,7 +649,13 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         expstr = planstr['APEXP']
         nexp = len(expstr)
         load = apload.ApLoad(apred=apred_vers,telescope=telescope)
-
+        if planstr['fps']:
+            plate = planstr['configid']
+            design = planstr['designid']
+            field = planstr['fieldid']
+        else:
+            field,survey,program = apload.apfield(planstr['plateid'])
+        
         # normal: ap3d, ap2d, apCframe and ap1dvisit
         # dark: ap3d  (apDarkPlan)
         # cal: ap3d and ap2d (apCalPlan)
