@@ -98,7 +98,7 @@ if __name__ == '__main__' :
         dirs = [d for d in dirs if os.path.isdir(d)]
         # get modification times
         dt = [('dir',str,200),('key',str,100),('label',str,100),('jobid',int),('dirmtime',float),
-              ('starttime',float),('endtime',float),('deltatime',float),('ntasks',int)]
+              ('starttime',float),('endtime',float),('deltatime',float),('ntasks',int),('nodes',int)]
         jtab = np.zeros(len(dirs),dtype=np.dtype(dt))
         jtab['dir'] = dirs
         for i in range(len(dirs)):
@@ -112,6 +112,15 @@ if __name__ == '__main__' :
                 ntasks = dln.readlines(ntaskfile)
                 ntasks = int(ntasks[0])
                 jtab['ntasks'][i] = ntasks
+            mainslurmfile = dir1+'/'+label+'.slurm'
+            nodes = 0
+            if os.path.exists(mainslurmfile):
+                lines = dln.readlines(mainslurmfile)
+                arrline = dln.grep(lines,'array')
+                if len(arrline)>0:
+                    # #SBATCH --array=1-1
+                    nodes = arrline[0].split('--array=')[-1].split('-')[1]
+                    jtab['nodes'][i] = int(nodes)
             # Get JobID from the output filename
             outfile = glob(dir1+'/'+label+'*.out')
             if len(outfile)>0:
@@ -135,7 +144,7 @@ if __name__ == '__main__' :
 
         # Showing latest 10 jobs
         print('Latest 10 slurm jobs at '+str(datetime.now())[0:21])
-        print('NUM       LABEL        APRED          KEY              JOBID   NTASKS   LAST MODIFIED TIME     DURATION         STATUS')
+        print('NUM       LABEL        APRED          KEY              JOBID   NTASKS  NODES   LAST MODIFIED TIME    DURATION         STATUS')
         for i in range(10):
             jtab1 = jtab[i]
             dendtime = datetime.fromtimestamp(jtab1['endtime'])
@@ -158,8 +167,9 @@ if __name__ == '__main__' :
                     lo = log1.find('apogee/spectro/redux/')   # apogee/spectro/redux/1.1
                     if lo > -1:
                         apred = log1[lo:].split('/')[3]
-            print('{:3d} {:18s} {:6} {:21s} {:9d} {:7d}  {:22s} {:15s} {:10s}'.format(i+1,jtab1['label'],apred,jtab1['key'],jtab1['jobid'],
-                                                                                      jtab1['ntasks'],str(dendtime)[0:21],sdeltatime,status))
+            print('{:3d} {:18s} {:6} {:21s} {:9d} {:7d} {:4d}    {:22s} {:15s} {:10s}'.format(i+1,jtab1['label'],apred,jtab1['key'],jtab1['jobid'],
+                                                                                              jtab1['ntasks'],jtab1['nodes'],str(dendtime)[0:21],
+                                                                                              sdeltatime,status))
         sys.exit()
         
     # Key input
