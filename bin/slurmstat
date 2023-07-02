@@ -230,18 +230,27 @@ if __name__ == '__main__' :
                 print(str(len(notcomplete))+' tasks not completed:')
                 for i in range(len(notcomplete)):
                     task1 = tasks[notcomplete[i]]
-                    mtime = os.path.getmtime(task1['outfile'])
-                    mdate = datetime.fromtimestamp(mtime)
-                    deltatime = datetime.now()-mdate
-                    print(str(i+1)+' Task '+str(task1['task']))
-                    print('Last modified: ',str(mdate)[0:21])
-                    print('Time since modified:',str(deltatime)[0:9])
+                    print(str(i+1)+' Task '+str(task1['task']))                    
+                    if os.path.exists(task1['outfile']):
+                        mtime = os.path.getmtime(task1['outfile'])
+                        mdate = datetime.fromtimestamp(mtime)
+                        deltatime = datetime.now()-mdate
+                        print('Last modified: ',str(mdate)[0:21])
+                        print('Time since modified:',str(deltatime)[0:9])
+                    else:
+                        print(task1['outfile'],' not found')
                     print(task1['outfile'])
                     if dotail:
                         print('========================================== LOG TAIL =================================================')
-                        tail(task1['outfile'],verbose=True)
+                        if os.path.exists(task1['outfile']):
+                            tail(task1['outfile'],verbose=True)
+                        else:
+                            print(task1['outfile'],' not found')
                         print('========================================== ERR TAIL =================================================')
-                        tail(task1['outfile'].replace('.log','.err'),verbose=True)
+                        if os.path.exists(task1['outfile'].replace('.log','.err')):
+                            tail(task1['outfile'].replace('.log','.err'),verbose=True)
+                        else:
+                            print(task1['outfile'].replace('.log','.err'),' not found')
                         print('=====================================================================================================')
 
 
