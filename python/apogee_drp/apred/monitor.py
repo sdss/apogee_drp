@@ -449,11 +449,28 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
 
     ###############################################################################################
     # Read in the SDSS-V summary files
-    allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits')
-    alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits',2)
-    allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits')
-    allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits')
-    allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits')
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Cal.fits'):
+        allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits')
+        alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits',2)        
+    else:
+        allcal = None
+        alldark = None
+        print(specdir5 + 'monitor/' + instrument + 'Cal.fits not found')
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Exp.fits'):
+        allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits')
+    else:
+        allexp = None
+        print(specdir5 + 'monitor/' + instrument + 'Exp.fits not found')
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Sci.fits'):
+        allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits')
+    else:
+        allsci = None
+        print(specdir5 + 'monitor/' + instrument + 'Sci.fits not found')
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Trace.fits'):
+        allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits')
+    else:
+        allepsf = None
+        print(specdir5 + 'monitor/' + instrument + 'Trace.fits not found')
     # Read in the APOGEE2 Trace.fits file since the columns don't match between APOGEE2 and SDSS-V
     #allepsf = fits.getdata(specdir5 + 'monitor/' + instrument + 'Trace.fits',1)
 
@@ -2292,7 +2309,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # trace.png
         plotfile = specdir5 + 'monitor/' + instrument + '/trace.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
+        if (allepsf is not None) & ((os.path.exists(plotfile) == False) | (clobber == True)):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(35,17))
@@ -2348,7 +2365,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # biasmean.png
         plotfile = specdir5 + 'monitor/' + instrument + '/biasmean.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
+        if (alldark is not None) & ((os.path.exists(plotfile) == False) | (clobber == True)):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(35,20))
@@ -2402,7 +2419,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         ###########################################################################################
         # biassig.png
         plotfile = specdir5 + 'monitor/' + instrument + '/biassig.png'
-        if (os.path.exists(plotfile) == False) | (clobber == True):
+        if (alldark is not None) & ((os.path.exists(plotfile) == False) | (clobber == True)):
             print("----> monitor: Making " + os.path.basename(plotfile))
 
             fig = plt.figure(figsize=(35,20))
@@ -2565,7 +2582,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             ###########################################################################################
             # pipelineSNR.png
             plotfile = specdir5 + 'monitor/' + instrument + '/pipelineSNR.png'
-            if (os.path.exists(plotfile) == False) | (clobber == True):
+            if (allsnr is not None) & ((os.path.exists(plotfile) == False) | (clobber == True)):
                 print("----> monitor: Making " + os.path.basename(plotfile))
 
                 plateobs, = np.where(allsnr['MJD'] < startFPS)
