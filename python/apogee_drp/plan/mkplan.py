@@ -718,21 +718,21 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             psffile = psffile.replace('PSF-','PSF-b-')
             base = ('%8d' % im1)[0:4]
             psffiles = glob(psffile.replace('-00000000','-'+base+'????'))
-            if len(psffiles)==0:
+            if len(psffiles)>0:
+                psfnum = [os.path.basename(p)[8:16] for p in psffiles]
+                # Make sure all of the necessary files exist
+                psfexists = [load.exists('PSF',num=num) for num in psfnum]
+                if np.sum(psfexists)>0:
+                    psfnum = np.array(psfnum)[psfexists]
+                    si = np.argsort(np.abs(np.array(psfnum).astype(int)-int(im1)))
+                    psfid = np.array(psfnum)[si][0]
+                    out['psfid'] = str(psfid)
+                else:
+                    logger.info('No PSF files for MJD='+str(mjd)+' that exist')
+                    out['psfid'] = 0
+            else:
                 logger.info('No PSF files for MJD='+str(mjd))
                 out['psfid'] = 0
-                break
-            psfnum = [os.path.basename(p)[8:16] for p in psffiles]
-            # Make sure all of the necessary files exist
-            psfexists = [load.exists('PSF',num=num) for num in psfnum]
-            if np.sum(psfexists)==0:
-                logger.info('No PSF files for MJD='+str(mjd)+' that exist')
-                out['psfid'] = 0
-                break
-            psfnum = np.array(psfnum)[psfexists]
-            si = np.argsort(np.abs(np.array(psfnum).astype(int)-int(im1)))
-            psfid = np.array(psfnum)[si][0]
-            out['psfid'] = str(psfid)
         # Use psflibrary for all FPS exposures
         if fps and psflibrary:
             out['psflibrary'] = 1

@@ -1101,7 +1101,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             else:
                 sout = subprocess.run(['makecal','--fiber',str(planstr['fiberid']),
                                        '--vers',load.apred,'--telescope',str(planstr['telescope'])],shell=False)
-        if 'psfid' in planstr.keys():
+        if 'psfid' in planstr.keys() and planstr['psfid'] != 0:
             if load.exists('PSF',num=planstr['psfid']):
                 print(load.filename('PSF',num=planstr['psfid'],chips=True)+' already made')
             else:
