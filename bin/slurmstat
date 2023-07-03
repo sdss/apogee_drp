@@ -61,7 +61,8 @@ if __name__ == '__main__' :
     parser = argparse.ArgumentParser(
         prog=os.path.basename(sys.argv[0]),
         description='Check status of apogee_drp slurm jobs')
-    parser.add_argument('-u','--user', type=str, nargs=1, help='Username')
+    parser.add_argument('jobs', type=int, nargs='?', default=15, help='Number of jobs to show.')
+    parser.add_argument('-u','--user', type=str, nargs=1, help='Username')    
     parser.add_argument('-l','--latest', action='store_true', help='Show results of latest job')
     parser.add_argument('-k','--key', type=str, nargs=1, default='', help='Job key')
     parser.add_argument('--label', type=str, nargs=1, default='', help='Job label')
@@ -69,6 +70,9 @@ if __name__ == '__main__' :
     parser.add_argument('-v','--verbose', action='store_true', help='Verbose output')
     parser.add_argument('--clear', type=int, nargs='?', const='3600', help='Clear dormant jobs after this delay.')    
     args = parser.parse_args()
+    njobs = args.jobs
+    if type(njobs) is list:
+        njobs = njobs[0]
     latest = args.latest
     verbose = args.verbose
     dotail = args.tail
@@ -143,10 +147,10 @@ if __name__ == '__main__' :
         si = np.argsort(jtab['endtime'])[::-1]
         jtab = jtab[si]
 
-        # Showing latest 10 jobs
-        print('Latest 10 slurm jobs at '+str(datetime.now())[0:21])
-        print('NUM       LABEL        APRED          KEY              JOBID   NTASKS  NODES  NODENAME    LAST MODIFIED TIME    DURATION         STATUS')
-        for i in range(10):
+        # Showing latest 15 jobs
+        print('Latest '+str(njobs)+' slurm jobs at '+str(datetime.now())[0:21])
+        print('NUM       LABEL        APRED  OBS            KEY              JOBID   NTASKS  NODES  NODENAME    LAST MODIFIED TIME    DURATION         STATUS')
+        for i in range(njobs):
             jtab1 = jtab[i]
             dendtime = datetime.fromtimestamp(jtab1['endtime'])
             deltatime = timedelta(seconds=jtab1['deltatime'])
@@ -162,6 +166,7 @@ if __name__ == '__main__' :
             # Get apred from the last log file
             loglist = jtab1['dir']+'/'+jtab1['label']+'_logs.txt'
             apred = '??'
+            obs = '??'
             if os.path.exists(loglist):
                 loglines = dln.readlines(loglist)
                 if len(loglines)>0:
@@ -169,9 +174,14 @@ if __name__ == '__main__' :
                     lo = log1.find('apogee/spectro/redux/')   # apogee/spectro/redux/1.1
                     if lo > -1:
                         apred = log1[lo:].split('/')[3]
-            print('{:3d} {:18s} {:6} {:21s} {:9d} {:7d} {:4d}    {:9s}  {:22s} {:15s} {:10s}'.format(i+1,jtab1['label'],apred,jtab1['key'],jtab1['jobid'],
-                                                                                                     jtab1['ntasks'],jtab1['nodes'],jtab1['nodelist'],
-                                                                                                     str(dendtime)[0:21],sdeltatime,status))
+                        if log1.find('lco')>-1 or log1.find('apogee-s')>-1:
+                            obs = 'LCO'
+                        if log1.find('apogee-n')>-1:
+                            obs = 'APO'
+            fmt = '{:3d} {:18s} {:6s} {:6s} {:21s} {:9d} {:7d} {:4d}    {:9s}  {:22s} {:15s} {:10s}'
+            print(fmt.format(i+1,jtab1['label'],apred,obs,jtab1['key'],jtab1['jobid'],
+                             jtab1['ntasks'],jtab1['nodes'],jtab1['nodelist'],
+                             str(dendtime)[0:21],sdeltatime,status))
         sys.exit()
         
     # Key input
