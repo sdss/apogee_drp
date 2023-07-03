@@ -3616,7 +3616,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
     visSumPathS = '../summary/allVisit-'+apred+'-lco25m.fits'
     starSumPathS = '../summary/allStar-'+apred+'-lco25m.fits'
 
-    if domjd is True:
+    if domjd:
         # Find all .log.html files, get all MJDs with data
         print("----> makeMasterQApages: Finding log files. Please wait.")
 
@@ -3746,6 +3746,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
 
             logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
             logFileDir = os.path.dirname(logFile)
+
+            if cmjd == '60104': pdb.set_trace()
 
             html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
             html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
@@ -3892,7 +3894,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         
     #---------------------------------------------------------------------------------------
     # Fields view
-    if dofields is True:
+    if dofields:
         fieldfile = qadir+fieldfilebase
         print("----> makeMasterQApages: Creating "+fieldfilebase)
 
