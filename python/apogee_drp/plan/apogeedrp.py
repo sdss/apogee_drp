@@ -2316,25 +2316,50 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
     # Then the arclamps
     # apFlux files?
     # Then the FPI exposures last (needs apPSF and apWave files)
-    calind, = np.where((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT') | 
-                       (expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='FPI'))
+    # only select the cal types that we requested
+    exptypes = []
+    for c in caltypes:
+        if c=='psf' or c=='flux':
+            exptype = ['DOMEFLAT','QUARTZFLAT']
+        elif c=='arcs' or c=='dailywave' or c=='telluric':
+            exptype = ['ARCLAMP']
+        elif c=='fpi':
+            exptype = ['FPI']
+        elif c=='telluric':
+            exptype = ''
+        exptypes += exptype
+    exptypes = np.unique(exptypes)
+    calind = np.array([],int)
+    for e in exptypes:
+        calind1, = np.where(expinfo['exptype']==e)
+        if len(calind1)>0:
+            calind = np.append(calind,calind1)    
     if len(calind)>0:
         expinfo = expinfo[calind]
     else:
-        logger.info('No calibration files to run')
-        return None
+        if 'dailywave' not in caltypes and 'telluric' not in caltypes:
+            logger.info('No calibration files to run')
+            return None
+        else:
+            # dailywave and telluric do not require any calibration exposures            
+            expinfo = []
 
     # Run QA check on the files
     logger.info(' ')
     logger.info('Doing quality checks on all calibration exposures')
-    qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=logger)
-    logger.info(' ')
-    okay, = np.where(qachk['okay']==True)
-    if len(okay)>0:
-        expinfo = expinfo[okay]
-    else:
-        logger.info('No good calibration files to run')
-        return None        
+    if len(expinfo)>0:
+        qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=logger)
+        logger.info(' ')
+        okay, = np.where(qachk['okay']==True)
+        if len(okay)>0:
+            expinfo = expinfo[okay]
+        else:
+            if 'dailywave' not in caltypes and 'telluric' not in caltypes:
+                logger.info('No calibration files to run')
+                return None
+            else:
+                # dailywave and telluric do not require any calibration exposures            
+                expinfo = []
 
     # Create cal plan directories for each night
     for m in mjds:
@@ -2355,6 +2380,11 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
             logger.info('==============================================')
             logger.info('')
 
+            # No calibration exposures for psf/flux/arcs/fpi
+            if len(expinfo)==0 and ctype in ['psf','flux','arcs','fpi']:
+                logger.info('Cannot make '+ctype.upper()+'. No calibration exposures')
+                continue
+                
             # Get data for this calibration type
             if ctype=='psf':
                 # Domeflats and quartzflats for plates
