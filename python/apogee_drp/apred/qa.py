@@ -3749,7 +3749,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
 
             # Check to see if there were object exposures
             nobj = 0
-            tmp = read(datadir+'/'+cmjd+'/'+cmjd + '.log.html', 'r')
+            tmp = open(datadir+'/'+cmjd+'/'+cmjd + '.log.html', 'r')
             tmp1 = tmp.readlines()
             nobj = len([s for s in tmp1 if 'OBJECT' in s])
 
