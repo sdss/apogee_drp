@@ -98,7 +98,8 @@ if __name__ == '__main__' :
         dirs = [d for d in dirs if os.path.isdir(d)]
         # get modification times
         dt = [('dir',str,200),('key',str,100),('label',str,100),('jobid',int),('dirmtime',float),
-              ('starttime',float),('endtime',float),('deltatime',float),('ntasks',int),('nodes',int)]
+              ('starttime',float),('endtime',float),('deltatime',float),('ntasks',int),('nodes',int),
+              ('nodelist',str,30)]
         jtab = np.zeros(len(dirs),dtype=np.dtype(dt))
         jtab['dir'] = dirs
         for i in range(len(dirs)):
@@ -144,7 +145,7 @@ if __name__ == '__main__' :
 
         # Showing latest 10 jobs
         print('Latest 10 slurm jobs at '+str(datetime.now())[0:21])
-        print('NUM       LABEL        APRED          KEY              JOBID   NTASKS  NODES   LAST MODIFIED TIME    DURATION         STATUS')
+        print('NUM       LABEL        APRED          KEY              JOBID   NTASKS  NODES  NODENAME    LAST MODIFIED TIME    DURATION         STATUS')
         for i in range(10):
             jtab1 = jtab[i]
             dendtime = datetime.fromtimestamp(jtab1['endtime'])
@@ -153,6 +154,7 @@ if __name__ == '__main__' :
             if jtab1['deltatime'] < 24*3600:
                 sdeltatime = sdeltatime[0:9]
             stat = slurm.slurmstatus(jtab1['label'],jtab1['jobid'],username=user)
+            jtab1['nodelist'] = stat['Nodelist'][0]
             if len(stat)>0:
                 status = stat['State'][0]
             else:
@@ -167,9 +169,9 @@ if __name__ == '__main__' :
                     lo = log1.find('apogee/spectro/redux/')   # apogee/spectro/redux/1.1
                     if lo > -1:
                         apred = log1[lo:].split('/')[3]
-            print('{:3d} {:18s} {:6} {:21s} {:9d} {:7d} {:4d}    {:22s} {:15s} {:10s}'.format(i+1,jtab1['label'],apred,jtab1['key'],jtab1['jobid'],
-                                                                                              jtab1['ntasks'],jtab1['nodes'],str(dendtime)[0:21],
-                                                                                              sdeltatime,status))
+            print('{:3d} {:18s} {:6} {:21s} {:9d} {:7d} {:4d}    {:9s}  {:22s} {:15s} {:10s}'.format(i+1,jtab1['label'],apred,jtab1['key'],jtab1['jobid'],
+                                                                                                     jtab1['ntasks'],jtab1['nodes'],jtab1['nodelist'],
+                                                                                                     str(dendtime)[0:21],sdeltatime,status))
         sys.exit()
         
     # Key input
