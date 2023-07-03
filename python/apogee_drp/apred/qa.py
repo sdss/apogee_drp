@@ -3616,7 +3616,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
     visSumPathS = '../summary/allVisit-'+apred+'-lco25m.fits'
     starSumPathS = '../summary/allStar-'+apred+'-lco25m.fits'
 
-    if domjd is True:
+    if domjd:
         # Find all .log.html files, get all MJDs with data
         print("----> makeMasterQApages: Finding log files. Please wait.")
 
@@ -3747,6 +3747,12 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
             logFileDir = os.path.dirname(logFile)
 
+            # Check to see if there were object exposures
+            nobj = 0
+            tmp = open(datadir+'/'+cmjd+'/'+cmjd + '.log.html', 'r')
+            tmp1 = tmp.readlines()
+            nobj = len([s for s in tmp1 if 'OBJECT' in s])
+
             html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
             html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
 
@@ -3765,73 +3771,82 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
 
             # Column 6: Visit QA
             html.write('<TD align="left">')
-            for j in range(nplatesall):
-                field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
-                plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
-                # Check for failed plates
-                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
-                if os.path.exists(plateQAfile):
-                    plateQApathPartial = plateQAfile.split(apred+'/')[1]
-                    if j < nplatesall:
-                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
+            if nobj > 0 and nplatesall == 0:
+                html.write('<FONT COLOR="red">Reduction failed!!!</FONT>\n')
+            else:
+                for j in range(nplatesall):
+                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
+                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
+                    # Check for failed plates
+                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
+                    if os.path.exists(plateQAfile):
+                        plateQApathPartial = plateQAfile.split(apred+'/')[1]
+                        if j < nplatesall:
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
+                        else:
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
                     else:
-                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
-                else:
-                    if j < nplatesall:
-                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+' (failed)<BR>\n')
-                    else:
-                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+' (failed)\n')
+                        if j < nplatesall:
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+' (failed)<BR>\n')
+                        else:
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+' (failed)\n')
 
             # Column 7: Visit spectra plots
             html.write('<TD align="left">')
-            for j in range(nplatesall):
-                field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
-                plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
-                # Check for failed plates
-                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
-                if os.path.exists(plateQAfile):
-                    plateQApathPartial = plateQAfile.split(apred+'/')[1]
-                    if j < nplatesall:
-                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace(prefix+'QA',prefix+'Plate')+'">'+plate+': '+field+'</A><BR>\n')
+            if nobj > 0 and nplatesall == 0:
+                html.write('<FONT COLOR="red">Reduction failed!!!</FONT>\n')
+            else:
+                for j in range(nplatesall):
+                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
+                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
+                    # Check for failed plates
+                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
+                    if os.path.exists(plateQAfile):
+                        plateQApathPartial = plateQAfile.split(apred+'/')[1]
+                        if j < nplatesall:
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace(prefix+'QA',prefix+'Plate')+'">'+plate+': '+field+'</A><BR>\n')
+                        else:
+                            html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace(prefix+'QA',prefix+'Plate')+'">'+plate+': '+field+'</A>\n')
                     else:
-                        html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace(prefix+'QA',prefix+'Plate')+'">'+plate+': '+field+'</A>\n')
-                else:
-                    if j < nplatesall:
-                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT><BR>\n')
-                    else:
-                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT>\n')
+                        if j < nplatesall:
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT><BR>\n')
+                        else:
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT>\n')
 
             # Column 8: Number of skies, telluric, and science targets.
             html.write('<TD align="left">')
-            for j in range(nplatesall):
-                field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
-                plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
-                # Check for failed plates
-                plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
-                if os.path.exists(plateQAfile):
-                    note = ''
-                    if fps:
-                        plsumfile = load.filename('PlateSum', plate=int(plate), mjd=cmjd, fps=fps)
-                        if os.path.exists(plsumfile):
-                            plsum = fits.getdata(plsumfile,2)
-                            try:
-                                assignedSky, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'SKY'))
-                                assignedTel, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'HOT_STD'))
-                                assignedSci, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'STAR'))
-                                note = '   [' + str(len(assignedSky)).rjust(3) + ', ' + str(len(assignedTel)).rjust(3) + ', ' + str(len(assignedSci)).rjust(3) + ']'
-                            except:
-                                note = '   [?]'
-                            #if len(assignedFib) < 1: note = ' (ZERO assigned)'
-                    plateQApathPartial = plateQAfile.split(apred+'/')[1]
-                    if j < nplatesall:
-                        html.write('('+str(j+1).rjust(2)+') '+note+'<BR>\n')
+            if nobj > 0 and nplatesall == 0:
+                html.write('<FONT COLOR="red">Reduction failed!!!</FONT>\n')
+            else:
+                for j in range(nplatesall):
+                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
+                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
+                    # Check for failed plates
+                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
+                    if os.path.exists(plateQAfile):
+                        note = ''
+                        if fps:
+                            plsumfile = load.filename('PlateSum', plate=int(plate), mjd=cmjd, fps=fps)
+                            if os.path.exists(plsumfile):
+                                plsum = fits.getdata(plsumfile,2)
+                                try:
+                                    assignedSky, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'SKY'))
+                                    assignedTel, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'HOT_STD'))
+                                    assignedSci, = np.where((plsum['assigned']) & (plsum['on_target']) & (plsum['objtype'] == 'STAR'))
+                                    note = '   [' + str(len(assignedSky)).rjust(3) + ', ' + str(len(assignedTel)).rjust(3) + ', ' + str(len(assignedSci)).rjust(3) + ']'
+                                except:
+                                    note = '   [?]'
+                                #if len(assignedFib) < 1: note = ' (ZERO assigned)'
+                        plateQApathPartial = plateQAfile.split(apred+'/')[1]
+                        if j < nplatesall:
+                            html.write('('+str(j+1).rjust(2)+') '+note+'<BR>\n')
+                        else:
+                            html.write('('+str(j+1).rjust(2)+') '+note+'\n')
                     else:
-                        html.write('('+str(j+1).rjust(2)+') '+note+'\n')
-                else:
-                    if j < nplatesall:
-                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT><BR>\n')
-                    else:
-                        html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT>\n')
+                        if j < nplatesall:
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT><BR>\n')
+                        else:
+                            html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT>\n')
 
 
             # Column 7: Combined files for this night
@@ -3892,7 +3907,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         
     #---------------------------------------------------------------------------------------
     # Fields view
-    if dofields is True:
+    if dofields:
         fieldfile = qadir+fieldfilebase
         print("----> makeMasterQApages: Creating "+fieldfilebase)
 
