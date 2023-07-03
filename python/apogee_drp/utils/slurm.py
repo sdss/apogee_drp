@@ -71,7 +71,7 @@ def slurmstatus(label,jobid,username=None):
         out['Nodelist'][i] = dum[7]        
         if dum[5] == 'COMPLETED':
             out['done'][i] = True
-    
+
     return out
 
 def taskstatus(label,key,username=None):

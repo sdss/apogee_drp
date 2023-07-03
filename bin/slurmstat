@@ -158,8 +158,17 @@ if __name__ == '__main__' :
             if jtab1['deltatime'] < 24*3600:
                 sdeltatime = sdeltatime[0:9]
             stat = slurm.slurmstatus(jtab1['label'],jtab1['jobid'],username=user)
-            jtab1['nodelist'] = stat['Nodelist'][0]
-            if len(stat)>0:
+            if len(stat)>1:
+                # if multiple nodes were used, then each node gets its own status in "stat"
+                indrun, = np.where(stat['State']=='RUNNING')
+                if len(indrun)>0:  # some still running
+                    jtab1['nodelist'] = stat['Nodelist'][indrun[0]]  # first one that's still running
+                    status = 'RUNNING'
+                else:
+                    jtab1['nodelist'] = stat['Nodelist'][0]  # first one
+                    status = stat['State'][0]
+            elif len(stat)==1:
+                jtab1['nodelist'] = stat['Nodelist'][0]
                 status = stat['State'][0]
             else:
                 status = 'N/A'
