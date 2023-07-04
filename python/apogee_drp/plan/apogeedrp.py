@@ -412,7 +412,7 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False
             logger.info('%d/%d' % (i+1,nnames))
             logger.info('Master calibration type: %s' % chkmaster['caltype'][i])
             logger.info('Master calibration file: %s' % chkmaster['calfile'][i])
-            logger.info('log/errfile: '+lgfile+'/.err'
+            logger.info('log/errfile: '+lgfile+'/.err')
             logger.info('Master calibration success: %s ' % chkmaster['success'][i])
 
     # Load everything into the database
@@ -607,7 +607,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
             logger.info('%d/%d' % (i+1,ncal))
             logger.info('Calibration type: %s' % chkcal['caltype'][i])
             logger.info('Calibration file: %s' % chkcal['calfile'][i])
-            logger.info('log/errfile: '+lgfile+'/.err'
+            logger.info('log/errfile: '+lgfile+'/.err')
             logger.info('Calibration success: %s ' % chkcal['success'][i])
 
     # Load everything into the database
@@ -839,7 +839,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
             logger.info('')
             logger.info('%d/%d' % (ip+1,nplanfiles))
             logger.info('planfile: '+pfile)
-            logger.info('log/errfile: '+chkap1['logfile'][0]+'/.err'
+            logger.info('log/errfile: '+chkap1['logfile'][0]+'/.err')
             logger.info('platetype: %s' % platetype)
             logger.info('mjd: %d' % mjd)
             if platetype=='normal': logger.info('plate: %d' % plate)
