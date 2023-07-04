@@ -373,7 +373,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         for k in range(nbadgroup):
             ik = badgroup[k]
             # Get exposures to remove
-            frind = framegroupindex['index'][framegroupindex['lo'][k]:framegroupindex['hi'][k]+1]
+            frind = framegroupindex['index'][framegroupindex['lo'][ik]:framegroupindex['hi'][ik]+1]
             frind = frind[0]  # should be one exposures
             toremframe = np.append(toremframe,frind)
             # Get lines to remove
@@ -736,13 +736,16 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             sig[row,igroup] = np.median(np.abs(res[gd[j]]))
 
 
-        #newwaves = np.zeros((3,2048),float)
-        #x = np.zeros([3,2048])
-        #for ichip,chip in enumerate(chips): 
-        #    x[0,:] = np.arange(2048)
-        #    x[1,:] = ichip+1
-        #    x[2,:] = 0
-        #    newwaves[ichip,:] = func_multi_poly(x,*allpars[:,row],npoly=npoly)
+        newwaves = np.zeros((3,2048),float)
+        x = np.zeros([3,2048])
+        for ichip,chip in enumerate(chips): 
+            x[0,:] = np.arange(2048)
+            x[1,:] = ichip+1
+            x[2,:] = 0
+            newwaves[ichip,:] = func_multi_poly(x,*allpars[:,row],npoly=npoly)
+
+        #if ngroup>1 and row==269:
+        #    import pdb; pdb.set_trace()
 
             
     # Now refine the solution by averaging zeropoint across all groups and
