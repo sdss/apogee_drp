@@ -116,6 +116,9 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
                 expinfo = expinfo1
             else:
                 expinfo = np.hstack((expinfo,expinfo1))
+    if len(expinfo)==0:
+        print('No exposures for these nights')
+        return
     # Sort them
     si = np.argsort(expinfo['num'])
     expinfo = expinfo[si]

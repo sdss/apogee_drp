@@ -246,34 +246,52 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     db = apogeedb.DBSession()
 
     # Get information for all of the exposures
-    expinfo = None
+    expinfo = []
     for m in mjds:
+        # Get exposure information from the flat files
         expinfo1 = info.expinfo(observatory=observatory,mjd5=m)
         expinfo1 = Table(expinfo1)
-        # Get data from database
+        # Get exposure iformation from the database
         dbexpinfo = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))
-        if len(dbexpinfo)>0:
+        # No exposures for this night
+        if len(expinfo1)==0 and len(dbexpinfo)==0:
+            logger.info('No exposures for MJD='+str(m))
+            continue
+        # Crossmatch the two catalogs
+        if len(expinfo1)>0 and len(dbexpinfo)>0:
             vals,ind1,ind2 = np.intersect1d(expinfo1['num'],dbexpinfo['num'],return_indices=True)
         else:
             ind1 = []
-        # Load new exposures into database
-        if len(ind1) != len(expinfo1):
+        # If there are new exposures then update the database
+        doupdate = False   # default is no db update        
+        if len(ind1) != len(expinfo1) and len(expinfo1)>0:
+            doupdate = True
+        # Early on the FPI exposures were labeled 'ARCLAMP', fix those in the database
+        if np.sum(expinfo1['exptype']=='FPI') > np.sum(dbexpinfo['exptype']=='FPI'):
+            doupdate = True
+        # Update the database
+        #  for exposures that already exist in the db, it will update them
+        if doupdate:
             db.ingest('exposure',expinfo1)  # insert into database
+            # redo the query
             expinfo1 = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))            
             expinfo1 = Table(expinfo1)
         else:
             expinfo1 = Table(dbexpinfo)
-        if expinfo is None:
+        # Stack the MJD exposure catalogs
+        if len(expinfo)==0:
             expinfo = Table(expinfo1)
         else:
             if len(expinfo1)>0:
-                # this might cause issues with some string columsns
+                # this might cause issues with some string columns
                 #  if the lengths don't agree
                 expinfo = vstack((expinfo,expinfo1))
 
     nexp = len(expinfo)
     logger.info(str(nexp)+' exposures')
-
+    if len(expinfo)==0:
+        return expinfo
+    
     # Sort them
     si = np.argsort(expinfo['num'])
     expinfo = expinfo[si]
@@ -2310,8 +2328,9 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
     
     # Get exposures
     logger.info('Getting exposure information')
-    expinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
-
+    allexpinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
+    expinfo = allexpinfo.copy()
+    
     # First we need to run domeflats and quartzflats so there are apPSF files
     # Then the arclamps
     # apFlux files?
@@ -2422,6 +2441,22 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 calinfo['mjd'] = mjds
                 calinfo['exptype'] = 'dailywave'
                 calinfo['observatory'] = load.observatory
+                # Make sure there are exposures for each night
+                #  some APO summer shutdown nights have no data and we don't need to make dailywave
+                for j,m in enumerate(mjds):                
+                    mind, = np.where(allexpinfo['mjd']==m)
+                    if len(mind)==0:
+                        logger.info('No exposures for MJD '+str(m))
+                        calinfo['num'][j] = ''
+                # Keeping only nights with data
+                gdmjd, = np.where(calinfo['num'] != '')
+                if len(gdmjd)>0:
+                    calinfo = calinfo[gdmjd]
+                    ncal = len(calinfo)
+                else:
+                    logger.info('No dailywaves to process')
+                    calinfo = []
+                    ncal = 0                
             elif ctype=='fpi':
                 # Only FPI exposure number per MJD
                 fpi, = np.where(expinfo['exptype']=='FPI')
@@ -2443,13 +2478,18 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 calinfo['exptype'] = 'telluric'
                 calinfo['observatory'] = load.observatory                
                 for j,m in enumerate(mjds):
+                    mind, = np.where(allexpinfo['mjd']==m)
+                    if len(mind)==0:
+                        logger.info('No exposures for MJD='+str(m))
+                        calinfo['num'][j] = ''
+                        continue
                     caldata = mkcal.getcal(calfile,m,verbose=False)
                     lsfid = caldata['lsf']
                     if lsfid is None:
                         logger.info('No LSF calibration file for MJD='+str(m))
                         continue
                     calinfo['num'][j] = str(m)+'-'+str(lsfid)
-                # Remove nights with no issues
+                # Remove nights with issues
                 goodtell, = np.where(calinfo['num']!='')
                 if len(goodtell)==0:
                     logger.info('No telluric calibration files to run')
@@ -2495,8 +2535,6 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 logger.info('Slurm settings: '+str(slurmpars1))
                 tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
                 tasks = Table(tasks)
-                #queue = pbsqueue(verbose=True)
-                #queue.create(label='makecal-'+calnames[i], **slurmpars1)
                 for j in range(ntorun):
                     num1 = calinfo['num'][torun[j]]
                     mjd1 = calinfo['mjd'][torun[j]]
@@ -2512,25 +2550,20 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                         logfile1 = calplandir+'/'+load.prefix+'PSF-'+str(num1)+'_pbs.'+logtime+'.log'
                     elif ctype=='flux':   # flux
                         cmd1 += ' --flux '+str(num1)
-                        #if fps: cmd1 += ' --librarypsf'
                         logfile1 = calplandir+'/'+load.prefix+'Flux-'+str(num1)+'_pbs.'+logtime+'.log'
                     elif ctype=='arcs':  # arcs
                         cmd1 += ' --wave '+str(num1)
-                        #if fps: cmd1 += ' --librarypsf'
                         logfile1 = calplandir+'/'+load.prefix+'Wave-'+str(num1)+'_pbs.'+logtime+'.log' 
                     elif ctype=='dailywave':  # dailywave
                         cmd1 += ' --dailywave '+str(num1)
-                        #if fps: cmd1 += ' --librarypsf'
                         logfile1 = calplandir+'/'+load.prefix+'DailyWave-'+str(num1)+'_pbs.'+logtime+'.log' 
                     elif ctype=='fpi':  # fpi
                         cmd1 += ' --fpi '+str(num1)
-                        #if fps: cmd1 += ' --librarypsf'
                         logfile1 = calplandir+'/'+load.prefix+'FPI-'+str(num1)+'_pbs.'+logtime+'.log'
                         if os.path.exists(os.path.dirname(logfile1))==False:
                             os.makedirs(os.path.dirname(logfile1))
                     elif ctype=='telluric':  # dailywave
                         cmd1 += ' --telluric '+str(num1)
-                        #if fps: cmd1 += ' --librarypsf'
                         logfile1 = calplandir+'/'+load.prefix+'Telluric-'+str(num1)+'_pbs.'+logtime+'.log' 
                     logfiles.append(logfile1)
                     logger.info('Calibration file %d : %s %s' % (j+1,ctype,str(num1)))
@@ -2540,14 +2573,10 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     tasks['outfile'][j] = logfile1
                     tasks['errfile'][j] = logfile1.replace('.log','.err')
                     tasks['dir'][j] = os.path.dirname(logfile1)
-                    #queue.append(cmd1, outfile=logfile1,errfile=logfile1.replace('.log','.err'))
                 logger.info('Creating '+str(ntorun)+' '+calnames[i]+' files')
                 label = 'makecal-'+calnames[i]
                 key,jobid = slrm.submit(tasks,label=label,verbose=True,logger=logger,**slurmpars1)
                 slrm.queue_wait(label,key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete   
-                #queue.commit(hard=True,submit=True)
-                #logger.info('PBS key is '+queue.key)
-                #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
             else:
                 logger.info('No '+str(calnames[i])+' calibration files need to be run')
             # Checks the status and updates the database
