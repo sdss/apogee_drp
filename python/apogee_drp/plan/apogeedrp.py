@@ -2447,9 +2447,9 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     mind, = np.where(allexpinfo['mjd']==m)
                     if len(mind)==0:
                         logger.info('No exposures for MJD '+str(m))
-                        calinfo['num'][j] = ''
+                        calinfo['num'][j] = 0
                 # Keeping only nights with data
-                gdmjd, = np.where(calinfo['num'] != '')
+                gdmjd, = np.where(calinfo['num'] != 0)
                 if len(gdmjd)>0:
                     calinfo = calinfo[gdmjd]
                     ncal = len(calinfo)
