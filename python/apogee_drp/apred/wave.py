@@ -45,6 +45,78 @@ xlim = [[16400,17000],[15900,16500],[15100,15800]]
 
 DEBUG = False
 
+def getarcpairs(frameinfo,linestr):
+    """
+    Simple routine to keep only arclamp exposure pairs.
+
+    Parameters
+    ----------
+    frameinfo : table
+       Table of arclamp exposures.
+    linestr : table
+       Table of all lines in the arclamp exposures
+
+    Returns
+    -------
+    frameinfo : table
+       Table of arclamp exposures, but with unused exposures removed.
+    linestr : table
+       Table of all lines for the arclamp exposures in frameinfo.
+
+    Example
+    -------
+
+    frameinfo,linestr = getarcpairs(frameinfo,linestr)
+
+    """
+    
+    # We need two exposures per group
+    # They need to be consecutive in exposure number, at the
+    # same dither position and one UNE and one THARNE.
+    
+    framegroupindex = dln.create_index(frameinfo['group'])
+    badgroup, = np.where(framegroupindex['num'] !=2 )
+    nbadgroup = len(badgroup)
+    if nbadgroup>0:
+        print(str(nbadgroup)+' groups do not have two exposure.  Fixing them.')
+    toremframe = np.array([],int)
+    toremlinestr = np.array([],int)
+    for k in range(nbadgroup):
+        ik = badgroup[k]
+        frind = framegroupindex['index'][framegroupindex['lo'][ik]:framegroupindex['hi'][ik]+1]
+        # Only one exposure for this group, remove it
+        if len(frind)==1:
+            frind = frind[0]  # should be one exposures
+        # More than 2 exposures
+        else:
+            print('More than 2 exposures for this group.  This should never happen!')
+            continue
+        toremframe = np.append(toremframe,frind)
+        # Get lines to remove
+        lind, = np.where(linestr['frameid']==frameinfo['num'][frind])
+        if len(lind)>0:
+            toremlinestr = np.append(toremlinestr,lind)
+
+    # Removing exposures and lines
+    if len(toremframe)>0:
+        print('Removing '+str(len(toremframe))+' exposures: '+','.join(np.char.array(frameinfo['num'][toremframe]).astype(str)))
+        frameinfo = np.delete(frameinfo,toremframe)
+    if len(toremlinestr)>0:
+        print('Removing '+str(len(toremlinestr))+' linestr from these exposures')
+        linestr = np.delete(linestr,toremlinestr)
+        
+    # Groups must start with 0 and have no gaps,
+    # reassign group names
+    oldgroup = np.unique(frameinfo['group'])
+    newgroup = np.arange(len(oldgroup))
+    old2newgroup = np.zeros(np.max(oldgroup)+1,int)
+    old2newgroup[oldgroup] = newgroup
+    frameinfo['group'] = old2newgroup[frameinfo['group']]
+    linestr['group'] = old2newgroup[linestr['group']]
+
+    return frameinfo,linestr
+
+
 def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=False,verbose=True):
     """
     Function to run daily that generates a wavelength solution using a week's worth of
@@ -256,24 +328,22 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     framesgroup = []
     framesdithpix = []
     fcnt = 0     # count for "good" exposures
+    nexpforthisgroup = 0
     linestr = None
     # table of information on "good" exposures
-    fdt = [('num',int),('okay',bool),('nlines',int),('group',int),('dithpix',float)]
+    fdt = [('num',int),('okay',bool),('nlines',int),('lamptype',str,20),('group',int),('dithpix',float)]
     frameinfo = np.zeros(len(nums),dtype=np.dtype(fdt))
     frameinfo['group'] = -1
     for inum,num in enumerate(nums) :
         print(str(inum+1)+'/'+str(len(nums))+' '+str(num))
-        # load 1D frame
-        #filename = load.filename('1D',num=num,mjd=load.cmjd(num),chips=True)
-        #print(filename)
         frame = load.ap1D(num)
         if frame==0:
             print(load.filename('1D',num=num,chips=True)+' NOT FOUND')
             continue
         out = load.filename('Wave',num=num,chips=True)
-        #print(num,frame)
-        if frame is not None and frame != 0 :
-            # Get correct arclines
+        # We have a decent frame to use
+        if frame is not None and frame != 0:
+            # Get correct arclines list
             if frame['a'][0].header['LAMPUNE']:
                 lampfile = 'UNe.vac.apogee'
                 lamptype = 'UNE'
@@ -283,7 +353,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             else:
                 raise ValueError('This is NOT a UNE or THARNE exposure')
             arclines = ascii.read(os.environ['APOGEE_DRP_DIR']+'/data/arclines/'+lampfile)
-            # Find lines or use previous found lines
+            # Find lines or use previously found lines
             linesfile = out.replace('Wave','Lines')
             if os.path.exists(linesfile) and not clobber :
                 print('Reading existing Lines data',num)
@@ -297,17 +367,32 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 print('Finding lines: ', num)
                 flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1,plot=plot)
                 Table(flinestr).write(linesfile,overwrite=True)
-                
+
+            # Add information for this exposure to the frameinfo table
             frameinfo['num'][fcnt] = num
             frameinfo['okay'][fcnt] = True                
             frameinfo['nlines'][fcnt] = len(flinestr)
-
-            # Replace frameid tag with group identification, which must start at 0 for func_multi_poly indexing
+            frameinfo['lamptype'][fcnt] = lamptype
+            frameinfo['dithpix'][fcnt] = frame['a'][0].header['DITHPIX']
             
             # GROUPS: Frames must be consecutive and at the same dither position to be considered a group
-            frameinfo['dithpix'][fcnt] = frame['a'][0].header['DITHPIX']
-            if inum > 0 and fcnt > 0 and (abs(num-nums[inum-1]) > 1 or abs(frameinfo['dithpix'][fcnt]-frameinfo['dithpix'][fcnt-1])>0.1): maxgroup +=1
-
+            #  and have one UNE and one THARNE exposure
+            #  only 2 exposure per pair (even if they are consecutive)
+            # group number must start at 0 for func_multi_poly indexing            
+            if inum > 0 and fcnt > 0:
+                # Increment group number
+                if ((abs(num-frameinfo['num'][fcnt-1]) > 1) or                              # must be consecutive
+                    (abs(frameinfo['dithpix'][fcnt]-frameinfo['dithpix'][fcnt-1])>0.1) or   # must be at same dither position
+                    (lamptype == frameinfo['lamptype'][fcnt-1]) or                          # must be different lamp types
+                    (nexpforthisgroup==2)):                                                 # only 2 exposure per group
+                    maxgroup += 1           # increment group
+                    nexpforthisgroup = 1    # reset number of exposures for this group
+                else:
+                    nexpforthisgroup += 1   # increment counter for this group
+            else:
+                nexpforthisgroup += 1  # increment counter for this group
+                
+            # Add information to the linelist
             flinestr = Table(flinestr)  # convert temporarily to astropy Table to easily add a column
             flinestr['group'] = -1
             flinestr['lamptype'] = '      '  # initalize with enough spaces for UNE and THARNE
@@ -334,21 +419,21 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                         gdind = np.append(gdind,ind1[gd1])
                 else:
                     # all lines failed
-                    gdind = np.array([],int)
-                    
+                    gdind = np.array([],int)                    
             if len(gdind)<len(flinestr):
                 print('Setting BAD=1 for ',len(flinestr)-len(gdind),' of ',len(flinestr),' outlier lines')
-                flinestr['bad'] = 1  # bad
-                flinestr['bad'][gdind] = 0  # good
+                flinestr['bad'] = 1         # all bad to start
+                flinestr['bad'][gdind] = 0  # good lines
             frameinfo['group'][fcnt] = maxgroup-1
-            if linestr is None : linestr = flinestr
-            else : linestr = np.append(linestr,flinestr)
-            print(' Frame: {:d}  Nlines: {:d}  '.format(num,len(flinestr)))
+            # Add to the full linelist
+            if linestr is None: linestr = flinestr
+            else: linestr = np.append(linestr,flinestr)
+            print(' Frame: {:d}  Nlines: {:d}  Group: {:d}'.format(num,len(flinestr),maxgroup-1))
             fcnt += 1   # increment good frame counter
-        else :
+        else:
             print('Error reading frame: ', num)
 
-    if nofit : return
+    if nofit: return
 
     if linestr is None or len(linestr)==0:
         print('No good lines found')
@@ -364,41 +449,10 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         gdframe, = np.where(frameinfo['okay']==True)        
         frameinfo = frameinfo[gdframe]
 
-    # Multiple groups, we need two exposures per group
+    # Make sure we only have pairs of exposures for each grouop group
     if len(np.unique(frameinfo['group'])) > 1:
-        framegroupindex = dln.create_index(frameinfo['group'])
-        badgroup, = np.where(framegroupindex['num']<2)
-        nbadgroup = len(badgroup)
-        if nbadgroup>0:
-            print(str(nbadgroup)+' groups have only one exposure.  Removing them')
-        toremframe = np.array([],int)
-        toremlinestr = np.array([],int)
-        for k in range(nbadgroup):
-            ik = badgroup[k]
-            # Get exposures to remove
-            frind = framegroupindex['index'][framegroupindex['lo'][ik]:framegroupindex['hi'][ik]+1]
-            frind = frind[0]  # should be one exposures
-            toremframe = np.append(toremframe,frind)
-            # Get lines to remove
-            lind, = np.where(linestr['frameid']==frameinfo['num'][frind])
-            if len(lind)>0:
-                toremlinestr = np.append(toremlinestr,lind)
-        if len(toremframe)>0:
-            print('Removing '+str(len(toremframe))+' exposures: '+','.join(np.char.array(frameinfo['num'][toremframe]).astype(str)))
-            frameinfo = np.delete(frameinfo,toremframe)
-        if len(toremlinestr)>0:
-            print('Removing '+str(len(toremlinestr))+' linestr from these exposures')
-            linestr = np.delete(linestr,toremlinestr)
-    # Groups must start with 0 and have no gaps,
-    # reassign group names
-    oldgroup = np.unique(frameinfo['group'])
-    newgroup = np.arange(len(oldgroup))
-    old2newgroup = np.zeros(np.max(oldgroup)+1,int)
-    old2newgroup[oldgroup] = newgroup
-    frameinfo['group'] = old2newgroup[frameinfo['group']]
-    linestr['group'] = old2newgroup[linestr['group']]
-
-            
+        frameinfo,linestr = getarcpairs(frameinfo,linestr)
+    
     # Do the wavecal fit
     # initial parameter guess for first row, subsequent rows will use guess from previous row
     npars = npoly+3*maxgroup
@@ -551,7 +605,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         #   to avoid local minima
         if ngroup > 1 :
             if abs(frameinfo['num'][1]-frameinfo['num'][0]) > 1 :
-                import pdb; pdb.set_trace()
+                #import pdb; pdb.set_trace()
                 raise Exception('for multiple groups, first two frames must be from same group!')
             # Run all exposures of first group
             group0, = np.where(np.array(frameinfo['group'])==np.min(groups))
