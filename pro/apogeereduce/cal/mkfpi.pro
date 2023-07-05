@@ -33,22 +33,16 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
           modelpsf=modelpsf,fiberid=fiberid,clobber=clobber,$
           unlock=unlock,psflibrary=psflibrary
 
+  common apver,ver,telescop,instrume
+  obs = strmid(telescop,0,3)
+  
   if n_elements(name) eq 0 then name=string(fpiid[0])
   dirs = getdir(apodir,caldir,spectrodir,vers)
   wavedir = apogee_filename('Wave',num=name,chip='a',/dir)
   file = dirs.prefix+string(format='("WaveFPI-",i8.8)',name)
   fpifile = wavedir+file
-  ;;lockfile = wavedir+file+'.lock'
 
   ;; If another process is alreadying make this file, wait!
-  ;;if not keyword_set(unlock) then begin
-  ;;  while file_test(lockfile) do begin
-  ;;    if keyword_set(nowait) then return
-  ;;    apwait,file,10
-  ;;  endwhile
-  ;;endif else begin
-  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
-  ;;endelse
   aplock,fpifile,waittime=10,unlock=unlock
   
   ;; Does product already exist?
@@ -66,18 +60,30 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
 
   print,'Making fpi: ', fpiid
   ;; Open .lock file
-  ;;openw,lock,/get_lun,lockfile
-  ;;free_lun,lock
   aplock,fpifile,/lock
   
-  ;; Process the frames
+  ;; Make sure we have the PSF cal product
   if keyword_set(psfid) then $
     MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
-  w = approcess(fpiid,dark=darkid,flat=flatid,psf=psfid,modelpsf=modelpsf,flux=0,/doproc,unlock=unlock)
+
+  ;; Get all FPI frames for this night and process them
+  expinfo = dbquery("select * from apogee_drp.exposure where mjd="+strtrim(mjd,2)+" and observatory='"+strtrim(obs,2)+"' and exptype='FPI'")
+  expinfo.exptype = strtrim(expinfo.exptype,2)
+  gdfpi = where(expinfo.exptype eq 'FPI',ngdfpi)
+  if ngdfpi eq 0 then begin
+    print,'No FPI exposures for MJD ',strtrim(mjd,2)
+    aplock,fpifile,/clear 
+  endif
+  allfpinum = expinfo[gdfpi].num
+  print,'Found ',strtrim(allfpinum,2),' FPI exposures for MJD ',strtrim(mjd,2)
+  
+  ;; Process the frames
+  for i=0,n_elements(allfpinum)-1 do $
+    w = approcess(allfpinum[i],dark=darkid,flat=flatid,psf=psfid,modelpsf=modelpsf,flux=0,/doproc,unlock=unlock)
 
   ;; Make sure the dailywave file is there
   ;;  it uses modelpsf by default now
-  MAKECAL,dailywave=mjd,clobber=clobber,unlock=unlock,librarypsf=psflibrary
+  MAKECAL,dailywave=mjd,unlock=unlock,librarypsf=psflibrary
 
   ;; New Python version! 
   cmd = ['mkfpi',strtrim(cmjd,2),dirs.apred,strmid(dirs.telescope,0,3),'--num',sfpiid,'--verbose']
@@ -91,7 +97,6 @@ pro mkfpi,fpiid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
     free_lun,lock
   endif
 
-  ;;file_delete,lockfile,/allow
   aplock,fpifile,/clear
   
 end
