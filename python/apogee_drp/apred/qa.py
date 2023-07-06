@@ -3307,7 +3307,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 if imtype == 'Object': color = 'red'
                 if imtype == 'unknown': color = 'magenta'
                 if (imtype == 'Dark') & (miss2d == 1): color = 'yellow'
-                if (imtype != 'Dark') | (miss2d == 1):
+                if ((imtype != 'Dark') & (imtype != 'InternalFlat')) | (miss2d == 1):
                     html.write('<TR bgcolor='+color+'><TD> '+str(int(round(n)))+'\n')
                     html.write('<TD><CENTER>'+str(head['NFRAMES'])+'/'+str(head['NREAD'])+'</CENTER>\n')
                     html.write('<TD><CENTER>'+head['IMAGETYP']+'</CENTER>\n')
