@@ -205,13 +205,15 @@ def getdithergroups(expinfo):
 
     expinfo['dithergroup'] = -1
     currentditherpix = expinfo['dithpix'][0]
+    currentmjd = expinfo['mjd'][0]
     dithergroup = 1
     for e in range(len(expinfo)):
-        if np.abs(expinfo['dithpix'][e]-currentditherpix)<0.01:
+        if np.abs(expinfo['dithpix'][e]-currentditherpix)<0.01 and (expinfo['mjd'][e]==currentmjd):
             expinfo['dithergroup'][e] = dithergroup
         else:
             dithergroup += 1
             currentditherpix = expinfo['dithpix'][e]
+            currentmjd = expinfo['mjd'][e]
             expinfo['dithergroup'][e] = dithergroup
 
     return expinfo

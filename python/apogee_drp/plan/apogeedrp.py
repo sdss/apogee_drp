@@ -2490,6 +2490,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     if len(goodfpiind)==0:
                         logger.info('No FPI exposures with associated arc dither pairs for MJD '+str(m))
                         continue
+                    logger.info(str(m)+' '+str(expinfo['num'][goodfpiind[0]]))
                     # Pick the first good FPI exposure
                     calfpiind.append(goodfpiind[0])
                 # Make calinfo tale for all nights
