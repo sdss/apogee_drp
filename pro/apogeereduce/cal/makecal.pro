@@ -339,7 +339,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         MAKECAL,psf=psfid,unlock=unlock
       endelse
       MAKECAL,fiber=fiberid,unlock=unlock
-      MAKECAL,dailywave=mjd,clobber=clobber,unlock=unlock,librarypsf=librarypsf,modelpsf=modelpsf
+      MAKECAL,dailywave=mjd,unlock=unlock,librarypsf=librarypsf,modelpsf=modelpsf
       MKFPI,fpi,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
             fiberid=fiberid,clobber=clobber,unlock=unlock,psflibrary=librarypsf,modelpsf=modelpsf
     endif

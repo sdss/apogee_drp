@@ -301,6 +301,7 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
     
     return expinfo
 
+    
 def getplanfiles(load,mjds,exist=False,logger=None):
     """
     Get all of the plan files for a list of MJDs.
@@ -2325,10 +2326,13 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
     chips = ['a','b','c']
     caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
     calfile = caldir+load.instrument+'.par' 
+    reduxdir = os.environ['APOGEE_REDUX']+'/'+load.apred+'/'
     
     # Get exposures
     logger.info('Getting exposure information')
     allexpinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
+    # Calculate dither groups
+    allexpinfo = info.getdithergroups(allexpinfo)
     expinfo = allexpinfo.copy()
     
     # First we need to run domeflats and quartzflats so there are apPSF files
@@ -2343,7 +2347,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
         elif c=='arcs' or c=='dailywave' or c=='telluric':
             exptype = ['ARCLAMP']
         elif c=='fpi':
-            exptype = ['FPI']
+            exptype = ['FPI','ARCLAMP']
         elif c=='telluric':
             exptype = ''
         exptypes += exptype
@@ -2379,7 +2383,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
             else:
                 # dailywave and telluric do not require any calibration exposures            
                 expinfo = []
-
+                
     # Create cal plan directories for each night
     for m in mjds:
         calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=m))
@@ -2459,14 +2463,39 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     ncal = 0                
             elif ctype=='fpi':
                 # Only FPI exposure number per MJD
-                fpi, = np.where(expinfo['exptype']=='FPI')
-                if len(fpi)>0:
-                    # Take the first for each night
-                    vals,ui = np.unique(expinfo['mjd'][fpi],return_index=True)
-                    ncal = len(ui)
-                    calinfo = expinfo[fpi][ui]
-                    si = np.argsort(calinfo['num'])
-                    calinfo = calinfo[si]
+                calfpiind = []
+                for m in mjds:
+                    fpiind, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='FPI'))
+                    if len(fpiind)==0:
+                        logger.info('No FPI exposures for MJD '+str(m))
+                        continue
+                    # Make sure there is DailyWave calibration product
+                    wfile = reduxdir+'cal/'+load.instrument+'/wave/'+load.prefix+'Wave-b-{:5d}.fits'.format(int(m))
+                    if os.path.exists(wfile)==False:
+                        logger.info('DailyWave does not exist for MJD '+str(m))
+                        continue
+                    # Make sure there is an associated arclamp dither group for the FPI
+                    ftable = Table.read(wfile,7)
+                    ind3,ind4 = dln.match(ftable['frame'],allexpinfo['num'])
+                    ftable['dithergroup'] = -1
+                    if len(ind3)>0:
+                        ftable['dithergroup'][ind3] = allexpinfo['dithergroup'][ind4]
+                    # Loop over the FPIs and make sure there is an associated arclamp dither group
+                    goodfpiind = []
+                    for f in fpiind:
+                        gdpair, = np.where(ftable['dithergroup'] == expinfo['dithergroup'][f])
+                        if len(gdpair)>0:
+                            goodfpiind.append(f)
+                    # No good FPI exposure for this mjd
+                    if len(goodfpiind)==0:
+                        logger.info('No FPI exposures with associated arc dither pairs for MJD '+str(m))
+                        continue
+                    # Pick the first good FPI exposure
+                    calfpiind.append(goodfpiind[0])
+                # Make calinfo tale for all nights
+                if len(calfpiind)>0:
+                    calinfo = expinfo[calfpiind]
+                    ncal = len(calinfo)
                 else:
                     calinfo = []
                     ncal = 0

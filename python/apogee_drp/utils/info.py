@@ -8,7 +8,7 @@ import pdb
 from dlnpyutils import utils as dln
 from . import apload
 from astropy.io import fits
-
+from astropy.table import Table
 
 def file_status(filename):
     """
@@ -175,4 +175,43 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
                     
     return tab
 
+def getdithergroups(expinfo):
+    """
+    Calculate dither groups for a table of exposures.
+    The table should have all the exposure for a given night to
+    perform a proper dither group analysis.
 
+    Parameters
+    ----------
+    expinfo : table
+       Table of exposure information.  Must have dithpix column.
+
+    Returns
+    -------
+    expinfo : table
+       Table of exposure information with "dithergroup" column added.
+
+    Example
+    -------
+
+    expinfo = getdithergroups(expinfo)
+
+    """
+
+    expinfo = Table(expinfo)
+    if 'dithpix' not in expinfo.colnames:
+        raise Exception("dithpix column not found in table")
+
+
+    expinfo['dithergroup'] = -1
+    currentditherpix = expinfo['dithpix'][0]
+    dithergroup = 1
+    for e in range(len(expinfo)):
+        if np.abs(expinfo['dithpix'][e]-currentditherpix)<0.01:
+            expinfo['dithergroup'][e] = dithergroup
+        else:
+            dithergroup += 1
+            currentditherpix = expinfo['dithpix'][e]
+            expinfo['dithergroup'][e] = dithergroup
+
+    return expinfo

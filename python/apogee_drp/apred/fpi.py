@@ -115,17 +115,18 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     si = np.argsort(expinfo['num'])
     expinfo = expinfo[si]
     # Loop over the exposures and mark time periods of constant dither position
-    expinfo = Table(expinfo)
-    expinfo['dithergroup'] = -1
-    currentditherpix = expinfo['dithpix'][0]
-    dithergroup = 1
-    for e in range(len(expinfo)):
-        if np.abs(expinfo['dithpix'][e]-currentditherpix)<0.01:
-            expinfo['dithergroup'][e] = dithergroup
-        else:
-            dithergroup += 1
-            currentditherpix = expinfo['dithpix'][e]
-            expinfo['dithergroup'][e] = dithergroup
+    expinfo = info.getdithergroups(expinfo)
+    #expinfo = Table(expinfo)
+    #expinfo['dithergroup'] = -1
+    #currentditherpix = expinfo['dithpix'][0]
+    #dithergroup = 1
+    #for e in range(len(expinfo)):
+    #    if np.abs(expinfo['dithpix'][e]-currentditherpix)<0.01:
+    #        expinfo['dithergroup'][e] = dithergroup
+    #    else:
+    #        dithergroup += 1
+    #        currentditherpix = expinfo['dithpix'][e]
+    #        expinfo['dithergroup'][e] = dithergroup
 
     # Pick the group closest to the FPI exposure at the same dither period    
     arcdithergroup = np.zeros(len(ftable),int)-1
