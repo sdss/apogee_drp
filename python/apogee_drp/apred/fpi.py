@@ -207,7 +207,15 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     print('Refit wavelength solutions using FPI lines for each full-frame FPI exposure')
     print('--------------------------------------------------------------------------')
     ind, = np.where(expinfo['exptype']=='FPI')
-    print(str(len(ind))+' full-frame FPI exposures')
+    print(str(len(ind))+' full-frame FPI exposures')    
+    if len(ind)>6:
+        # only process 6 FPI full-frame exposures per night
+        fpiind = ind
+        si = np.argsort(expinfo['num'][fpiind])
+        pickind = np.concatenate((si[0:3],si[-3:]))
+        ind = fpiind[pickind]
+        print('Many FPI exposures. Only processing the first and last three.')
+    # Loop over the FPI exposures to process
     for i in range(len(ind)):
         fpinum1 = expinfo['num'][ind[i]]     
         print('%d/%d  %d' % (i+1,len(ind),fpinum1))
