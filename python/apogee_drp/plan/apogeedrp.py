@@ -2744,6 +2744,9 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
         logger.info('Making plan files for MJD='+str(m))
         plandicts,planfiles0 = mkplan.make_mjd5_yaml(m,apred,telescope,clobber=clobber,logger=logger)
         mjd5planfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+apred+'/'+telescope+'/'+telescope+'_'+str(m)+'.yaml'
+        if os.path.exists(mjd5planfile)==False:
+            logger.info(mjd5planfile+' NOT FOUND')
+            continue
         try:
             planfiles1 = mkplan.run_mjd5_yaml(mjd5planfile,clobber=clobber,logger=logger)
             nplanfiles1 = len(planfiles1)
