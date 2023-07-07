@@ -2407,36 +2407,77 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
             if len(expinfo)==0 and ctype in ['psf','flux','arcs','fpi']:
                 logger.info('Cannot make '+ctype.upper()+'. No calibration exposures')
                 continue
-                
-            # Get data for this calibration type
+        
+            
+            # Step 1) Get data for this calibration type
+            calinfo = []
+            
+            # --- PSF ---
             if ctype=='psf':
                 # Domeflats and quartzflats for plates
                 # Quartzflats only for FPS
-                ind, = np.where( (((expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='QUARTZFLAT')) & (expinfo['mjd']<59556)) | 
-                                 ((expinfo['exptype']=='QUARTZFLAT') & (expinfo['mjd']>=59556)) )
+                ind = np.array([],int)
+                logger.info('Daily PSF Calibration Products')
+                logger.info('------------------------------')                
+                for m in mjds:
+                    # plates, can use domeflats or quartzflats
+                    if m < 59556:
+                        ind1, = np.where((expinfo['mj']==m) & ((expinfo['exptype']=='DOMEFLAT') |
+                                                               (expinfo['exptype']=='QUARTZFLAT')))
+                    # FPS, use quartzflats because 2 FPI fibers missing in domeflats
+                    else:            
+                        ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='QUARTZFLAT'))
+                    if len(ind1)==0:
+                        logger.info(str(m)+' No PSF calibration products')
+                        continue
+                    ind = np.append(ind,ind1)
+                    logger.info(str(m)+' '+','.join(expinfo['num'][ind1].astype(str)))                        
                 ncal = len(ind)
                 if len(ind)>0:
                     calinfo = expinfo[ind]
+            # --- FLUX ---
             elif ctype=='flux':
                 # Make sure there is at least ONE flux calibration file per MJD
                 #  if no dome flat was taken, then use quartz flat
                 ind = np.array([],int)
+                logger.info('Daily Flux Calibration Products')
+                logger.info('-------------------------------')                
                 for m in mjds:
-                    ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='DOMEFLAT'))
-                    if len(ind1)==0:
+                    # plates, can use domeflats or quartzflats                    
+                    if m < 59556:
+                        ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='DOMEFLAT'))
+                        if len(ind1)==0:
+                            ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='QUARTZFLAT'))
+                    # FPS, use quartzflats because 2 FPI fibers missing in domeflats                        
+                    else:
                         ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='QUARTZFLAT'))
-                        # pick two
-                        if len(ind1)>2: ind1=ind1[0:2]
-                    if len(ind1)>0:
-                        ind = np.append(ind,ind1)
+                    if len(ind1)==0:
+                        logger.info(str(m)+' No Flux calibration products')
+                        continue
+                    # Multiple exposures, pick two
+                    if len(ind1)>2:
+                        ind1 = ind1[0:2]
+                    ind = np.append(ind,ind1)
+                    logger.info(str(m)+' '+','.join(expinfo['num'][ind1].astype(str)))
                 ncal = len(ind)
                 if len(ind)>=0:
                     calinfo = expinfo[ind]
+            # ---  ARCS ---
             elif ctype=='arcs':
-                ind, = np.where(expinfo['exptype']=='ARCLAMP')
+                ind = np.array([],int)                
+                logger.info('Daily Arclamp Calibration Products')
+                logger.info('----------------------------------')
+                for m in mjds:
+                    ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='ARCLAMP'))
+                    if len(ind1)==0:
+                        logger.info(str(m)+' No arclamp exposures')
+                        continue
+                    ind = np.append(ind,ind1)
+                    logger.info(str(m)+' '+str(len(ind1))+' arclamp exposures')
                 ncal = len(ind)
                 if len(ind)>0:
                     calinfo = expinfo[ind]
+            # ---  DAILY WAVE ---
             elif ctype=='dailywave':
                 ncal = len(mjds)
                 calinfo = np.zeros(ncal,dtype=np.dtype([('num',int),('mjd',int),('exptype',(str,20)),('observatory',(str,3)),
@@ -2447,32 +2488,44 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 calinfo['observatory'] = load.observatory
                 # Make sure there are exposures for each night
                 #  some APO summer shutdown nights have no data and we don't need to make dailywave
+                logger.info('DailyWave calibration products')
+                logger.info('------------------------------')                
                 for j,m in enumerate(mjds):                
                     mind, = np.where(allexpinfo['mjd']==m)
+                    mind, = np.where(allexpinfo['mjd']==m)                    
                     if len(mind)==0:
-                        logger.info('No exposures for MJD '+str(m))
+                        logger.info(str(m)+' No exposures for MJD')
                         calinfo['num'][j] = 0
+                        continue
+                    arcind, = np.where((calinfo['mjd']==m) & (calinfo['exptype']=='ARCLAMP'))
+                    if len(arcind)==0:
+                        logger.info(str(m)+' No ARCLAMP exposures')
+                        calinfo['num'][j] = 0
+                        continue                    
+                    logger.info(str(m)+' '+str(len(arcind))+' arclamp exposures')
                 # Keeping only nights with data
                 gdmjd, = np.where(calinfo['num'] != 0)
                 if len(gdmjd)>0:
                     calinfo = calinfo[gdmjd]
                     ncal = len(calinfo)
                 else:
-                    logger.info('No dailywaves to process')
                     calinfo = []
-                    ncal = 0                
+                    ncal = 0
+            # --- FPI ---
             elif ctype=='fpi':
                 # Only FPI exposure number per MJD
                 calfpiind = []
+                logger.info('Daily FPI calibration products')
+                logger.info('------------------------------')                
                 for m in mjds:
                     fpiind, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='FPI'))
                     if len(fpiind)==0:
-                        logger.info('No FPI exposures for MJD '+str(m))
+                        logger.info(str(m)+' No FPI exposures')
                         continue
                     # Make sure there is DailyWave calibration product
                     wfile = reduxdir+'cal/'+load.instrument+'/wave/'+load.prefix+'Wave-b-{:5d}.fits'.format(int(m))
                     if os.path.exists(wfile)==False:
-                        logger.info('DailyWave does not exist for MJD '+str(m))
+                        logger.info(str(m)+' DailyWave does not exist')
                         continue
                     # Make sure there is an associated arclamp dither group for the FPI
                     ftable = Table.read(wfile,7)
@@ -2488,7 +2541,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                             goodfpiind.append(f)
                     # No good FPI exposure for this mjd
                     if len(goodfpiind)==0:
-                        logger.info('No FPI exposures with associated arc dither pairs for MJD '+str(m))
+                        logger.info(str(m)+' No FPI exposures with associated arc dither pairs')
                         continue
                     logger.info(str(m)+' '+str(expinfo['num'][goodfpiind[0]]))
                     # Pick the first good FPI exposure
@@ -2500,38 +2553,51 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 else:
                     calinfo = []
                     ncal = 0
+            # --- TELLURIC ---
             elif ctype=='telluric':
                 ncal = len(mjds)
                 calinfo = np.zeros(ncal,dtype=np.dtype([('num',(str,100)),('mjd',int),('exptype',(str,20)),('observatory',(str,3)),
                                                         ('configid',int),('designid',int),('fieldid',int)]))
                 calinfo['mjd'] = mjds
                 calinfo['exptype'] = 'telluric'
-                calinfo['observatory'] = load.observatory                
+                calinfo['observatory'] = load.observatory
+                logger.info('Daily Telluric calibration products')
+                logger.info('-----------------------------------')
                 for j,m in enumerate(mjds):
                     mind, = np.where(allexpinfo['mjd']==m)
                     if len(mind)==0:
-                        logger.info('No exposures for MJD='+str(m))
+                        logger.info(str(m)+' No exposures')
                         calinfo['num'][j] = ''
                         continue
                     caldata = mkcal.getcal(calfile,m,verbose=False)
                     lsfid = caldata['lsf']
                     if lsfid is None:
-                        logger.info('No LSF calibration file for MJD='+str(m))
+                        logger.info(str(m)+' No LSF calibration file')
+                        continue
+                    # Make sure there is DailyWave calibration product
+                    wfile = reduxdir+'cal/'+load.instrument+'/wave/'+load.prefix+'Wave-b-{:5d}.fits'.format(int(m))
+                    if os.path.exists(wfile)==False:
+                        logger.info(str(m)+' DailyWave does not exist')
+                        continue                    
+                    # Need some object exposures for this night
+                    objind, = np.where(allexpinfo['mjd']==m)
+                    if len(objind)==0:
+                        logger.info(str(m)+' No object exposures')
                         continue
                     calinfo['num'][j] = str(m)+'-'+str(lsfid)
+                    logger.info(str(m)+' '+str(m)+'-'+str(lsfid))
                 # Remove nights with issues
-                goodtell, = np.where(calinfo['num']!='')
-                if len(goodtell)==0:
-                    logger.info('No telluric calibration files to run')
-                    calinfo = []
-                    ncal = 0
-                else:
+                goodtell, = np.where(calinfo['num'] != '')
+                if len(goodtell)>0:
                     calinfo = calinfo[goodtell]
                     ncal = len(calinfo)
+                else:
+                    calinfo = []
+                    ncal = 0
                     
             logger.info(str(ncal)+' file(s)')
             
-            # Loop over calibration files and check if we need to run them
+            # Step 2) Loop over calibration files and check if we need to run them
             docal = np.zeros(ncal,bool)
             for j in range(ncal):
                 num1 = calinfo['num'][j]
@@ -2553,7 +2619,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                         logger.info(str(j+1)+'  '+os.path.basename(outfile)+' already exists and clobber==False')
                         docal[j] = False
             logger.info(str(np.sum(docal))+' '+ctype.upper()+' to run')
-            # Loop over the calibrations and make the commands for the ones that we will run
+            
+            # Step 3) Loop over the calibrations, make the commands and submit to SLURM
             logfiles = []
             torun, = np.where(docal==True)
             ntorun = len(torun)
@@ -2609,7 +2676,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 slrm.queue_wait(label,key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete   
             else:
                 logger.info('No '+str(calnames[i])+' calibration files need to be run')
-            # Checks the status and updates the database
+
+            # Step 4) Checks the status and update the database
             if ntorun>0:
                 chkcal1 = check_calib(calinfo[torun],logfiles,key,apred,verbose=True,logger=logger)
                 # Summary
@@ -2619,8 +2687,6 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     chkcal = chkcal1
                 else:
                     chkcal = np.hstack((chkcal,chkcal1))
-
-    # make sure to run mkwave on all arclamps needed for daily cals
 
     return chkcal
 
