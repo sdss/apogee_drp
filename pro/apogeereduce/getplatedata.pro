@@ -649,9 +649,9 @@ if platenum ge 15000 then begin
   ;; Get catalogdb information using coordinates (tellurics don't have IDs)    
   if nbdid gt 0 then begin
     print,'Querying catalogdb using coordinates for ',strtrim(nbdid,2),' stars'
-    if objdata[bdid].catalogid ne -999 then begin
+    if total(objdata[bdid].catalogid ne -999) gt 0 then begin
         catalogdb2 = get_catalogdb_data(ra=objdata[bdid].ra,dec=objdata[bdid].dec)
-        ;; this returns a q3c_dist columns that we don't want to keep
+        ;; this returns a "q3c_dist" column that we don't want to keep
         if size(catalogdb2,/type) eq 8 then begin
           print,'Got results for ',strtrim(n_elements(catalogdb2),2),' stars'
           catalogdb2 = REMOVE_TAG(catalogdb2,'q3c_dist')
@@ -668,7 +668,7 @@ if platenum ge 15000 then begin
   for i=0,nobjind-1 do begin
     istar = objind[i]
     MATCH,catalogdb.catalogid,fiber[istar].catalogid,ind1,ind2,/sort,count=nmatch
-    ;; some stars are missing ids, use coordinate matching indeas   
+    ;; some stars are missing ids, use coordinate matching instead
     if nmatch eq 0 then begin
       dist = sphdist(catalogdb.ra,catalogdb.dec,fiber[istar].ra,fiber[istar].dec,/deg)*3600.0
       ind1 = where(dist lt 0.5,nmatch)
