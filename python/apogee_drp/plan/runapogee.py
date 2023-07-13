@@ -231,6 +231,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     if os.path.exists(mjddatadir):
         #mjdfiles = glob(mjddatadir+'/*.apz')
         mjdfiles = os.listdir(mjddatadir)
+        mjdfiles = [f for f in mjdfiles if f.endswith('.apz')]  # need apz files
     else:
         mjdfiles = []
     if len(mjdfiles)==0:
