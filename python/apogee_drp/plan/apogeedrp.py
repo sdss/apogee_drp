@@ -2491,13 +2491,12 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 logger.info('DailyWave calibration products')
                 logger.info('------------------------------')                
                 for j,m in enumerate(mjds):                
-                    mind, = np.where(allexpinfo['mjd']==m)
                     mind, = np.where(allexpinfo['mjd']==m)                    
                     if len(mind)==0:
                         logger.info(str(m)+' No exposures for MJD')
                         calinfo['num'][j] = 0
                         continue
-                    arcind, = np.where((calinfo['mjd']==m) & (calinfo['exptype']=='ARCLAMP'))
+                    arcind, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='ARCLAMP'))
                     if len(arcind)==0:
                         logger.info(str(m)+' No ARCLAMP exposures')
                         calinfo['num'][j] = 0
