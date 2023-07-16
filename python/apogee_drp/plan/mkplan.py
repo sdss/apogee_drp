@@ -905,10 +905,15 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     # Get domeflat and quartzflats for this night
     domeind, = np.where((expinfo['exptype']=='DOMEFLAT') & (qachk['okay']==True) )
     dome = list(expinfo['num'][domeind].astype(int))
-    domepluggroup = expinfo['pluggroup'][domeind]
+    domepluggroup = list(expinfo['pluggroup'][domeind])
     quartzind, = np.where((expinfo['exptype']=='QUARTZFLAT') & (qachk['okay']==True))
     quartz = list(expinfo['num'][quartzind].astype(int))
-
+    quartzpluggroup = list(expinfo['pluggroup'][quartzind])
+    
+    # Dome + Quartz
+    domequartz = dome + quartz
+    domequartzpluggroup = np.array( domepluggroup + quartzpluggroup )
+    
     # Check if good domes exist for this night. Otherwise try using domes from previous nights.
     #if len(dome) == 0: 
     #    logger.info('Dome flats are bad for this MJD. Trying previous MJDs...')
@@ -963,22 +968,22 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     gdquartz, = np.where(psfquartz_exist == True)
     if len(gdquartz)>0:
         psfquartz = list(np.array(quartz)[gdquartz])
-        logger.info('Available quartzflat apPSF:: '+str(psfquartz))
+        logger.info('Available quartzflat apPSF: '+str(psfquartz))
     else:
         psfquartz = []
         logger.info('No quartzflat apPSF files exist')
     # Which apFlux files exist
-    flux_exist = np.zeros(len(dome),bool)
-    for j in range(len(dome)):
-        fluxfile = load.filename('Flux',num=dome[j],chips=True)
+    flux_exist = np.zeros(len(domequartz),bool)
+    for j in range(len(domequartz)):
+        fluxfile = load.filename('Flux',num=domequartz[j],chips=True)
         fluxfiles = [fluxfile.replace(load.prefix+'Flux-',load.prefix+'Flux-'+ch+'-') for ch in chips]
         exist = [os.path.exists(ff) for ff in fluxfiles]
         if np.sum(np.array(exist))==3:
             flux_exist[j] = True
     gdflux, = np.where(flux_exist == True)
     if len(gdflux)>0:
-        flux = list(np.array(dome)[gdflux])
-        fluxpluggroup = domepluggroup[gdflux]
+        flux = list(np.array(domequartz)[gdflux])
+        fluxpluggroup = domequartzpluggroup[gdflux]
         logger.info('Available apFlux: '+str(flux))
     else:
         flux = []
