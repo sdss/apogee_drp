@@ -267,7 +267,7 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
         if len(ind1) != len(expinfo1) and len(expinfo1)>0:
             doupdate = True
         # Early on the FPI exposures were labeled 'ARCLAMP', fix those in the database
-        if np.sum(expinfo1['exptype']=='FPI') > np.sum(dbexpinfo['exptype']=='FPI'):
+        if len(dbexpinfo)>0 and (np.sum(expinfo1['exptype']=='FPI') > np.sum(dbexpinfo['exptype']=='FPI')):
             doupdate = True
         # Update the database
         #  for exposures that already exist in the db, it will update them
