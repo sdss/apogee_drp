@@ -110,7 +110,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     # Read in the master summary files
     
     allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
-    alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
+    try:
+        alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
+    except:
+        alldark = None
     allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
     allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
     allsnrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
@@ -3214,6 +3217,10 @@ def getQAdarkflatStruct(data=None):
                    ('MEAN',    np.float32, (nquad,nchips)),
                    ('SIG',     np.float32, (nquad,nchips))])
 
+    if data is None:
+        outstr = np.zeros(0, dtype=dt)
+        return outstr
+        
     outstr = np.zeros(len(data['NAME']), dtype=dt)
 
     outstr['NAME'] =    data['NAME']
