@@ -2422,7 +2422,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 for m in mjds:
                     # plates, can use domeflats or quartzflats
                     if m < 59556:
-                        ind1, = np.where((expinfo['mj']==m) & ((expinfo['exptype']=='DOMEFLAT') |
+                        ind1, = np.where((expinfo['mjd']==m) & ((expinfo['exptype']=='DOMEFLAT') |
                                                                (expinfo['exptype']=='QUARTZFLAT')))
                     # FPS, use quartzflats because 2 FPI fibers missing in domeflats
                     else:            
