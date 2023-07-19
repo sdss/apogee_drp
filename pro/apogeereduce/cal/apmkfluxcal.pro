@@ -33,7 +33,7 @@
 pro apmkfluxcal,flatid,outdir=outdir0,bbtemp=bbtemp,waveid=waveid,reproc=reproc,$
                 clobber=clobber,absolute=absolute,pl=pl,error=error,collapse=collapse,$
                 unlock=unlock
-
+  
 t0 = systime(1)
 
 ; Not enough inputs
@@ -410,7 +410,7 @@ For i=0,2 do begin
   ;; Use average of neighbors for FPI fibers 75 and 225
   ;; and broken fibers
   medratio = median(ratio,dim=1)
-  broken = where(finite(medratio) eq 0,nbroken)
+  broken = where(finite(medratio) eq 0,nbroken,comp=good,ncomp=ngood)
   if mjd5 ge 59556 then begin
     dointerp = [75,225]
     if dirs.telescope eq 'lco25m' then dointerp = [87,218]
@@ -418,9 +418,22 @@ For i=0,2 do begin
   endif else begin
     if nbroken gt 0 then dointerp=broken
   endelse
+
+  ;; Fix fibers with issues
+  avgratio = median(ratio,dim=2)
   for k=0,n_elements(dointerp)-1 do begin
     ind1 = dointerp[k]
-    ratio[*,ind1] = 0.5*(ratio[*,ind1-1]+ratio[*,ind1+1])
+    ;; Get closest good fibers 
+    dist = abs(good-ind1)
+    si = sort(dist)
+    bestnei = good[si[0:1]]
+    ;; Take average of two closest fibers
+    if abs(ind1-bestnei[0]) lt 10 then begin
+      ratio[*,ind1] = 0.5*(ratio[*,bestnei[0]]+ratio[*,bestnei[1]])
+    ;; No good fibers close by, use global median
+    endif else begin
+      ratio[*,ind1] = avgratio
+    endelse
   endfor
 
   ; Interpolate over the Littrow ghost using a low order polynomial fit to the region around it
