@@ -307,7 +307,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     qachk = check.check(expinfo['num'],apred,telescope,verbose=True,logger=rootLogger)
     rootLogger.info(' ')
 
-
+    
     # Run daily calibration files
     #----------------------------
     # First we need to run domeflats and quartzflats so there are apPSF files

@@ -158,7 +158,7 @@ def check_dark(num,apred,telescope):
         # Check the flux
         if med/expinfo['nread']>100:
             mask |= 2**4
-
+            
     return mask
 
 
@@ -211,7 +211,7 @@ def check_object(num,apred,telescope):
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] != '':
+    if expinfo['shutter'] != '' and telescope != 'lco25m':    
         # shutter must be open for object exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
@@ -343,7 +343,7 @@ def check_quartzflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] != '':
+    if expinfo['gangstate'] != '' and telescope != 'lco25m':
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong APOGEE shutter state
@@ -414,8 +414,8 @@ def check_arclamp(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] != '':
-        if expinfo['gangstate']!='Podium':
+    if expinfo['gangstate'] != '' and telescope != 'lco25m':
+        if expinfo['gangstate'] != 'Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
     if expinfo['shutter'] != '' and telescope != 'lco25m':
@@ -500,7 +500,7 @@ def check_fpi(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] != '':
+    if expinfo['gangstate'] != '' and telescope != 'lco25m':
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
@@ -572,7 +572,7 @@ def check_internalflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] != '':
+    if expinfo['gangstate'] != '' and telescope != 'lco25m':
         if expinfo['gangstate']!='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
@@ -636,7 +636,7 @@ def check_skyflat(num,apred,telescope):
         mask |= 2**1
         return mask
     # 2 - Wrong gang state
-    if expinfo['gangstate'] != '':
+    if expinfo['gangstate'] != '' and telescope != 'lco25m':
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
@@ -753,5 +753,5 @@ def check(nums,apred,telescope,verbose=True,logger=None):
                 lensbset = 0
             fmt = '%8d  %13s  %5d  %6s  %-'+str(lensbset+2)+'s'
             logger.info(fmt % (out['num'][i],out['exptype'][i],out['mask'][i],out['okay'][i],sbset))
-
+            
     return out
