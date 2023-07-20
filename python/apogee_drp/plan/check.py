@@ -147,7 +147,7 @@ def check_dark(num,apred,telescope):
     # 2 - Wrong gang state
     #   gang state doesn't matter for dark
     # 3 - Wrong shutter state
-    if expinfo['shutter'] is not None:
+    if expinfo['shutter'] != '' and telescope != 'lco25m':    
         # shutter must be closed for dark
         if expinfo['shutter']=='Open':
             mask |= 2**3
@@ -640,7 +640,7 @@ def check_skyflat(num,apred,telescope):
         if expinfo['gangstate']=='Podium':
             mask |= 2**2
     # 3 - Wrong shutter state
-    if expinfo['shutter'] != '':
+    if expinfo['shutter'] != '' and telescope != 'lco25m':
         # shutter must be open for skyflat exposures
         if expinfo['shutter']=='Closed':
             mask |= 2**3
