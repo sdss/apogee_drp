@@ -1,6 +1,7 @@
 import copy
 import numpy as np
 import os
+import sys
 import shutil
 from glob import glob
 import pdb
@@ -392,7 +393,23 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     # Change to the job directory, because that's where the outputs will go
     curdir = os.path.abspath(os.curdir)
     os.chdir(jobdir)
-    res = subprocess.check_output(['sbatch',jobdir+masterfile])
+    # Sometimes sbatch can fail for some reason
+    #  if that happens, retry
+    scount = 0
+    success = False
+    while (success==False) and (scount < 5):
+        if scount>0:
+            logger.info('Trying to submit to SLURM again')
+        try:
+            res = subprocess.check_output(['sbatch',jobdir+masterfile])
+            success = True
+        except:
+            logger.info('Submitting job to SLURM failed with sbatch.')
+            success = False
+            tb = traceback.format_exc()
+            logger.info(tb)
+            time.sleep(10)
+        scount += 1
     os.chdir(curdir)   # move back
     if type(res)==bytes: res = res.decode()
     res = res.strip()  # remove \n
