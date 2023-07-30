@@ -56,6 +56,7 @@ if __name__ == '__main__' :
     parser.add_argument('--clobber', type=str, nargs='*', help='Overwrite files')
     parser.add_argument('--unlock', type=str, nargs='*', help='Remove lock file and start fresh')
     parser.add_argument('--librarypsf', type=str, nargs='*', help='Use PSF library')
+    parser.add_argument('-v','--verbose', action='store_true', help='Verbose output')    
     args = parser.parse_args()
     argsdict = vars(args)
 
@@ -107,6 +108,7 @@ if __name__ == '__main__' :
                     
     # Run the command
     try:
+        if args.verbose: print(cmd)
         subprocess.call(["idl","-e",cmd])
     except:
         traceback.print_exc()

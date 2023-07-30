@@ -1156,6 +1156,10 @@ def extract_pmul(p1lo,p1hi,img,p2):
     hi = np.min([p1hi,p2['hi']])
     k2 = hi-p1lo
     l2 = hi-p2['lo']
+    # No overlap
+    if l1<0 or l2<0 or k1<0 or k2<0:
+        out = np.zeros(2048,float)
+        return out
     if lo>hi:
         out = np.zeros(2048,float)
     img2 = p2['img'].T  # transpose
