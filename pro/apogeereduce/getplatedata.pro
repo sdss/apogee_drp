@@ -271,7 +271,8 @@ if not keyword_set(mapa) and not keyword_set(fps) then begin
   platedata.locationid = loc
 
   ;; Sometimes TMASS_ID in "p" is 2MASS-J23580454-0007415
-  p.tmass_id = repstr(p.tmass_id,'2MASS-J','2M')
+  if tag_exist(p,'tmass_id') then $
+    p.tmass_id = repstr(p.tmass_id,'2MASS-J','2M')
   
   ;; Fix telluric catalogIDs
   ;; There is a problem with some of the telluric catalogIDs due to
