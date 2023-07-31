@@ -257,16 +257,19 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
 
         # Sometimes TMASS_ID in "p" is 2MASS-J23580454-0007415
         for i in range(len(ph)):
-            if ph['tmass_id'][i].astype(str).find('2MASS-J') > -1:
-                ph['tmass_id'][i] = ph['tmass_id'][i].astype(str).replace('2MASS-J','2M')
+            if 'tmass_id' in ph.dtype.names:
+                if ph['tmass_id'][i].astype(str).find('2MASS-J') > -1:
+                    ph['tmass_id'][i] = ph['tmass_id'][i].astype(str).replace('2MASS-J','2M')
                 
         # Fix telluric catalogIDs
         # There is a problem with some of the telluric catalogIDs due to
         # overflow.  We need to add 2**32 to them.
         # Use the minimum catalogid in the v0 cross-match
         # (version_id=21). That number is 4204681993.
-        bdcatid, = np.where((np.char.array(ph['holetype']).astype(str).find('APOGEE') > -1) & 
-                            (ph['catalogid']>0) & (ph['catalogid']<4204681993))
+        bdcatid = []
+        if 'catalogid' in ph.dtype.names:
+            bdcatid, = np.where((np.char.array(ph['holetype']).astype(str).find('APOGEE') > -1) & 
+                                (ph['catalogid']>0) & (ph['catalogid']<4204681993))
         if len(bdcatid)>0:
             print('KLUDGE!!!  Fixing overflow catalogIDs for '+str(len(bdcatid))+' telluric stars')
             print(ph['catalogid'][bdcatid])
