@@ -3360,7 +3360,8 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
             traceback.print_exc()    
     # Make final mjd/fields pages
     try:
-        qa.makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred,
+        mjdmin = np.minimum(np.min(mjd),59146)
+        qa.makeMasterQApages(mjdmin=mjdmin, mjdmax=9999999, apred=apred,
                              mjdfilebase='mjd.html',fieldfilebase='fields.html',
                              domjd=True, dofields=True)
     except:

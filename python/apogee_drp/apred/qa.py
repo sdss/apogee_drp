@@ -238,7 +238,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                 q = makeNightQA(load=load, mjd=mjd, telescope=telescope, apred=apred)
 
             # Make mjd.html and fields.html
-            if makemasterqa is True: 
+            if makemasterqa is True:
                 q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                       mjdfilebase='mjd.html',fieldfilebase='fields.html',
                                       domjd=True, dofields=True)
@@ -3603,7 +3603,37 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
 def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None, fieldfilebase=None,
                       domjd=True, dofields=True):
+    """
+    Parameters
+    ----------
+    mjdmin : int
+       Minimum MJD to include.
+    mjdmax : int
+       Maximum MJD to include.
+    apred : str, optional
+       The APOGEE reduction version.  Default is 'daily'.
+    mjdfilebase : str
+       Name of the MJD html file, e.g. "mjd.html".
+    fieldfilebase : str
+       Make of the fields html file, e.g. "fields.html".
+    domjd : boolean, optional
+       Make html pages for each MJD.
+    dofields : boolean, optional
+       Make the fields.html page.
 
+    Returns
+    -------
+    html pages are created
+
+    Example
+    -------
+
+    qa.makeMasterQApages(mjdmin=mjdmin, mjdmax=9999999, apred=apred,
+                             mjdfilebase='mjd.html',fieldfilebase='fields.html',
+                             domjd=True, dofields=True)
+
+    """
+    
     # Establish data directories.
     datadirN = os.environ['APOGEE_DATA_N']
     datadirS = os.environ['APOGEE_DATA_S']
