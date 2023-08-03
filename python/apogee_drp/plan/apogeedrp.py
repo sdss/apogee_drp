@@ -957,7 +957,7 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
             chkrv['v_apred'][i] = head.get('V_APRED')
         chkrv['checktime'][i] = str(datetime.now())
         chkrv['success'][i] = os.path.exists(starfile)
-
+        
         if verbose:
             logger.info('%5d %20s %8d %5d %9s' % (i+1,chkrv['apogee_id'][i],chkrv['healpix'][i],
                                                   chkrv['nvisits'][i],chkrv['success'][i]))
@@ -3055,12 +3055,19 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             vcat['apred_vers'][i] = allvisit['apred_vers'][ind][0]
             vcat['telescope'][i] = allvisit['telescope'][ind][0]            
     else:
-        vcat = allvisit
+        dtype = [('apogee_id',(str,50)),('mjd',int),('maxmjd',int),('nvisits',int),('apred_vers',(str,50)),('telescope',(str,50))]
+        vcat = np.zeros(len(allvisit),dtype=np.dtype(dtype))
+        vcat['apogee_id'] = allvisit['apogee_id']
+        vcat['mjd'] = allvisit['mjd']
+        vcat['maxmjd'] = allvisit['mjd']
+        vcat['nvisits'] = 1
+        vcat['apred_vers'] = allvisit['apred_vers']
+        vcat['telescope'] = allvisit['telescope'] 
             
     logger.info(str(len(vcat))+' stars to run')
     
     # Change MJD to MAXMJD because the apStar file will have MAXMJD in the name
-    if daily==False:
+    if daily==False and len(mjds)>1:
         vcat['mjd'] = vcat['maxmjd']    
         
     # Loop over the stars and figure out the ones that need to be run

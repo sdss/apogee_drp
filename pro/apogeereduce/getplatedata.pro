@@ -266,15 +266,15 @@ endif else begin
     endelse 
     plugdir = getenv('SDSSCORE_DIR')+'/'+observatory+'/summary_files/'+configgrp+'/'
     configfile = 'confSummary-'+strtrim(plate,2)+'.par'     
-    readline,configfile,configlines 
+    readline,plugdir+configfile,configlines
     ind = where(stregex(configlines,'field_id',/boolean) eq 1,nind)
     fieldid = (strsplit(configlines[ind[0]],/extract))[1]
     planfile = apogee_filename('Plan',plate=plate,mjd=mjd,field=strtrim(fieldid,2))
   endif else begin
     planfile = apogee_filename('Plan',plate=plate,mjd=mjd)
-    platedatafile = repstr(planfile,'Plan','PlateData')
-    platedatafile = repstr(platedatafile,'.yaml','.fits')
   endelse
+  platedatafile = repstr(planfile,'Plan','PlateData')
+  platedatafile = repstr(platedatafile,'.yaml','.fits')
 endelse
 if file_test(platedatafile) eq 0 and not keyword_set(clobber) then begin
   print,'Reading platedata from '+platedatafile

@@ -707,9 +707,13 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             epsffile1 = epsffiles[i]
             trace2dfile = load.filename('2D',num=int(psfframeid),chips=True).replace('2D','2D-'+chiptag[i])
             # Created the 2D EPSF 
-            outstr,back,ymodel = psf.extractwing(chstr,modelpsffile1,epsffile1,tracefile,trace2dfile)
+            outstr,back,ymodel,epsf = psf.extractwing(chstr,modelpsffile1,epsffile1,tracefile,trace2dfile)
             head = outstr['header']
- 
+            # Save the EPSF file
+            outepsffile = outdir+load.prefix+'EPSFmodel-'+chiptag[i]+'-'+str(framenum)+'.fits'  # output file
+            print('Saving EPSF file to '+outepsffile)
+            psf.saveepsf(outepsffile,epsf)
+            
         t2 = time.time()
         #import pdb; pdb.set_trace()
  

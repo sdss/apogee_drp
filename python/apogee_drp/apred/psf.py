@@ -10,6 +10,7 @@ from astropy.io import fits
 from scipy.interpolate import interp1d
 from scipy.signal import argrelextrema
 from scipy.optimize import curve_fit
+from astropy.table import Table
 import statsmodels.api as sm
 from ..utils import peakfit, mmm, apload, utils
 from numba import njit
@@ -1034,6 +1035,67 @@ def loadframe(infile):
     frame = {'flux':flux, 'err':err, 'mask':mask, 'header':head}
     return frame
 
+def saveepsf(filename,epsf):
+    """
+    Save Empirical PSF data
+
+    Parameters
+    ----------
+    filename : str
+       Filename to save the EPSF information to.
+    epsf : list
+       Empirical PSF information.
+
+    Results
+    -------
+    The empirical PSF information is saved to disk.
+    Nothing is returned.
+
+    Example
+    -------
+
+    saveepsf('apEPSFmodel-30330011.fits',epsf))
+
+    """
+
+    hdu = fits.HDUList()
+    hdu.append(fits.PrimaryHDU())
+    hdu[0].header['ntrace'] = len(epsf)
+    for i in range(len(epsf)):
+        if 'cent' in epsf[i].keys():
+            dt = [('fiber',int),('cent',float,len(epsf[i]['cent'])),('lo',int),('hi',int),('img',float,epsf[i]['img'].shape)]
+        else:
+            dt = [('fiber',int),('lo',int),('hi',int),('img',float,epsf[i]['img'].shape)]            
+        data = np.zeros(1,dtype=np.dtype(dt))
+        data['fiber'] = epsf[i]['fiber']
+        if 'cent' in epsf[i].keys():
+            data['cent'] = epsf[i]['cent']
+        data['lo'] = epsf[i]['lo']
+        data['hi'] = epsf[i]['hi']
+        data['img'] = epsf[i]['img']
+        hdu.append(fits.table_to_hdu(Table(data)))
+    hdu.writeto(filename,overwrite=True)
+    hdu.close()
+
+        
+    # from apmkpsf_epsf.pro
+    # file = apogee_filename('EPSF',chip=chip[ichip],num=im)
+    # sxdelpar,head,'NAXIS1'
+    # sxdelpar,head,'NAXIS2'
+    # MWRFITS,0,file,head,/create
+    #
+    # # Put the PSFs in the output structure
+    # for k=0,ntrace-1 do begin
+    #   m = TOTAL(bpsf[*,*,k],1,/nan)
+    #   ind = where(finite(m) and m ne 0)
+    #   i1 = MIN(ind)
+    #   i2 = MAX(ind)
+    #   if i1 ge 0 then begin
+    #     outpsf = {fiber: fiber[k], cent: trace[*,k], lo: i1, hi: i2, img: bpsf[*,i1:i2,k]}
+    #     MWRFITS,outpsf,file,/silent
+    #   endif else print,'not halted, but bad PSF at: ',k
+    # endfor
+
 def loadepsf(infile):
     """
     Load Empirical PSF data
@@ -1866,11 +1928,13 @@ def extractwing(frame,modelpsffile,epsffile,tracefile,trace2dfile):
     Returns
     -------
     outstr : dict
-        The 1D output structure with FLUX, VAR and MASK.
+       The 1D output structure with FLUX, VAR and MASK.
     back : numpy array
-        The background
+       The background
     model : numpy array
-        The model 2D image
+       The model 2D image
+    epsf : epsf object
+       The empirical EPSF generated for this exposure from the PSF model.
 
     Example
     -------
@@ -1943,4 +2007,4 @@ def extractwing(frame,modelpsffile,epsffile,tracefile,trace2dfile):
     out['header']['toffpar2'] = offcoef[2],'X*Y term'
     out['header']['toffpar3'] = offcoef[3],'Y term'
     
-    return out,back,model
+    return out,back,model,epsf
