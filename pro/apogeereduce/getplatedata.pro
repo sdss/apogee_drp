@@ -100,6 +100,129 @@ function catalog_info_common
   return, cat0
 end
 
+pro saveplatedata,filename,plug
+
+  ;; Save plugmap data to a PlateData file.
+  ;;
+  ;; Inputs:
+  ;;  filename  Filename to save the plugmap data to.
+  ;;  plug      Plugmap data as returned from getdata.
+  ;;
+  ;; Outputs:
+  ;;  The plugmap data is saved to disk.  Nothing is returned.
+  ;;
+  ;; Usage
+  ;;  IDL>saveplatedata,'apPlateData-3745-59636.fits',plug
+
+  ;; Save the data to file
+  MWRFITS,plug.fiberdata,filename,/create
+  if size(plug.guidedata,/type) eq 8 then begin
+    MWRFITS,plug.guidedata,filename,/silent  ;; add extension
+  endif else begin
+    MWRFITS,0,filename,/silent
+  endelse
+  ;; Add header keywords
+  MKHDR,head,1,0   ;; make basic header
+  sxaddpar,head,'plate',plug.plate
+  sxaddpar,head,'mjd',plug.mjd
+  sxaddpar,head,'location',plug.locationid
+  sxaddpar,head,'field',plug.field
+  sxaddpar,head,'program',plug.programname
+  sxaddpar,head,'ha1',plug.ha[0]
+  sxaddpar,head,'ha2',plug.ha[1]
+  sxaddpar,head,'ha3',plug.ha[2]
+  MODFITS,filename,0,head  ;; add header to HDU0
+  
+  ;  hdu = fits.HDUList()
+  ;  hdu.append(fits.PrimaryHDU())
+  ;  hdu[0].header['plate'] = plug.get('plate')
+  ;  hdu[0].header['mjd'] = plug.get('mjd')
+  ;  hdu[0].header['location'] = plug.get('locationid')
+  ;  hdu[0].header['field'] = plug.get('field')
+  ;  hdu[0].header['program'] = plug.get('programname')
+  ;  if plug.get('ha') is not None:
+  ;      hdu[0].header['ha1'] = plug['ha'][0]
+  ;      hdu[0].header['ha2'] = plug['ha'][1]
+  ;      hdu[0].header['ha3'] = plug['ha'][2]
+  ;  fiber = plug.get('fiberdata')
+  ;  if fiber is not None:
+  ;      hdu.append(fits.table_to_hdu(Table(fiber)))
+  ;  else:
+  ;      hdu.append(fits.ImageHDU())
+  ;  guidedata = plug.get('guidedata')
+  ;  if guidedata is not None:
+  ;      hdu.append(fits.table_to_hdu(Table(guidedata)))
+  ;  else:
+  ;      hdu.append(fits.ImageHDU())
+  ;  hdu.writeto(filename,overwrite=True)
+  ;  hdu.close()
+
+end
+
+
+function readplatedata,filename
+  ;; Read in plugmap data from apPlateData file.
+  ;;
+  ;; Inputs:
+  ;;   filename  PlateData filename to load.
+  ;;
+  ;; Outputs:
+  ;;   plug      Plugmap data.
+  ;;
+  ;; Usage:
+  ;;  IDL>plug = readplatedata('apPlateData-3745-59636.fits')
+
+  if file_test(filename) eq 0 then begin
+    print,filename,' NOT FOUND'
+    return,-1 
+  endif
+
+  ;; Get number of HDUs
+  nextend = 0
+  fits_open,filename,fcb
+  nextend = fcb.nextend
+  fits_close,fcb
+  
+  head = HEADFITS(filename,exten=0)
+  if nextend gt 0 then begin
+    fiber = MRDFITS(filename,1,/silent)
+  endif else begin
+    fiber = -1
+  endelse
+  if nextend gt 1 then begin
+    guide = MRDFITS(filename,2,/silent)
+  endif else begin
+    guide = -1
+  endelse
+  
+  ;plug = {}
+  ;plug['plate'] = head.get('plate')
+  ;plug['mjd'] = head.get('mjd')
+  ;plug['locationid'] = head.get('location')
+  ;plug['field'] = head.get('field')
+  ;plug['programname'] = head.get('program')
+  ;plug['ha'] = [head.get('ha1'),head.get('ha2'),head.get('ha3')]
+  ;plug['fiberdata'] = fiberdata
+  ;plug['guidedata'] = guidedata
+  
+  plug = {plate:0L, mjd:0L, locationid:0L, field:' ', programname:'',$
+          ha:[-99.,-99.,-99.], fiberdata:fiber, guidedata:guide}
+  plug.plate = sxpar(head,'plate')
+  plug.mjd = sxpar(head,'mjd')
+  plug.locationid = sxpar(head,'location')
+  plug.field = strtrim(sxpar(head,'field'),2)
+  plug.programname = strtrim(sxpar(head,'program'),2)
+  ha1 = sxpar(head,'ha1',count=nha1)
+  if nha1 gt 0 and strtrim(ha1,2) ne '-' then plug.ha[0] = float(ha1)
+  ha2 = sxpar(head,'ha2',count=nha2)
+  if nha2 gt 0 and strtrim(ha2,2) ne '-' then plug.ha[1] = float(ha2)  
+  ha3 = sxpar(head,'ha3',count=nha3)
+  if nha3 gt 0 and strtrim(ha3,2) ne '-' then plug.ha[2] = float(ha3)  
+  
+  return,plug
+
+end
+
 
 ;; Main function
 function getplatedata,plate,cmjd,plugid=plugid,asdaf=asdaf,mapa=mapa,obj1m=obj1m,fixfiberid=fixfiberid,$
@@ -125,6 +248,39 @@ endif else begin
   platenum = long(plate)
 endelse
 if keyword_set(fps) then cplate=strtrim(long(plate),2)  ;; no zero padding for FPS config
+
+
+;; Check if the apPlateData file already exists
+;;  if yes, load it unless clobber is set
+;; Use planfile name to construct PlateData filename
+if keyword_set(obj1m) then begin
+  planfile = apogee_filename('Plan',plate=plate,reduction=objid,mjd=mjd)
+endif else begin
+  if long(mjd) ge 59556 then begin  ;; FPS
+    ;; get fieldid from confSummary file
+    ;; at least 6 characters (0036XX), but potentially more 10036XX
+    if plate gt 999999 then begin
+      configgrp = string(plate/100,format='(I0)')+'XX'
+    endif else begin
+      configgrp = string(plate/100,format='(I04)')+'XX'
+    endelse 
+    plugdir = getenv('SDSSCORE_DIR')+'/'+observatory+'/summary_files/'+configgrp+'/'
+    configfile = 'confSummary-'+strtrim(plate,2)+'.par'     
+    readline,configfile,configlines 
+    ind = where(stregex(configlines,'field_id',/boolean) eq 1,nind)
+    fieldid = (strsplit(configlines[ind[0]],/extract))[1]
+    planfile = apogee_filename('Plan',plate=plate,mjd=mjd,field=strtrim(fieldid,2))
+  endif else begin
+    planfile = apogee_filename('Plan',plate=plate,mjd=mjd)
+    platedatafile = repstr(planfile,'Plan','PlateData')
+    platedatafile = repstr(platedatafile,'.yaml','.fits')
+  endelse
+endelse
+if file_test(platedatafile) eq 0 not keyword_set(clobber) then begin
+  print,'Reading platedata from '+platedatafile
+  return,readplatedata(platedatafile)
+endif
+
 
 ;; Deal with null values from yaml file
 if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then $
@@ -871,6 +1027,11 @@ if not keyword_set(noobject) and not keyword_set(sdss5) then begin
 endif
 
 platedata.fiberdata = fiber
+
+;; Save the platedata to file
+print,'Saving platedata to '+platedatafile
+SAVEPLATEDATA,platedatafile,platedata
+
 
 if keyword_set(stp) then stop
 

@@ -41,9 +41,104 @@ def coords2tmass(ra,dec):
     return name
 
 
+def save(filename,plug):
+    """
+    Save plugmap data to a PlateData file.
+
+    Parameters
+    ----------
+    filename : str
+      Filename to save the plugmap data to.
+    plug : dict
+      Plugmap data as returned from getdata().
+    
+    Returns
+    -------
+    The plugmap data is saved to disk.  Nothing is returned.
+
+    Example
+    -------
+
+    save('apPlateData-3745-59636.fits',plug)
+
+    """
+
+    # Save the data to file
+    hdu = fits.HDUList()
+    hdu.append(fits.PrimaryHDU())
+    hdu[0].header['plate'] = plug.get('plate')
+    hdu[0].header['mjd'] = plug.get('mjd')
+    hdu[0].header['location'] = plug.get('locationid')
+    hdu[0].header['field'] = plug.get('field')
+    hdu[0].header['program'] = plug.get('programname')
+    if plug.get('ha') is not None:
+        hdu[0].header['ha1'] = plug['ha'][0]
+        hdu[0].header['ha2'] = plug['ha'][1]
+        hdu[0].header['ha3'] = plug['ha'][2]
+    fiber = plug.get('fiberdata')
+    if fiber is not None:
+        hdu.append(fits.table_to_hdu(Table(fiber)))
+    else:
+        hdu.append(fits.ImageHDU())
+    guidedata = plug.get('guidedata')
+    if guidedata is not None:
+        hdu.append(fits.table_to_hdu(Table(guidedata)))
+    else:
+        hdu.append(fits.ImageHDU())        
+    hdu.writeto(filename,overwrite=True)
+    hdu.close()
+
+    
+def read(filename):
+    """
+    Read in plugmap data from apPlateData file.
+
+    Parameters
+    ----------
+    filename : str
+       PlateData filename to load.
+
+    Returns
+    -------
+    plug : dict
+       Plugmap data.
+
+    Example
+    -------
+
+    plug = read('apPlateData-3745-59636.fits')
+
+    """
+
+    if os.path.exists(filename)==False:
+        raise FileNotFoundError(filename)
+    
+    hdu = fits.open(filename)
+    head = hdu[0].header
+    if len(hdu)>1:
+        fiberdata = hdu[1].data
+    else:
+        fiberdata = None
+    if len(hdu)>2:
+        guidedata = hdu[2].data
+    else:
+        guidedata = None
+    plug = {}
+    plug['plate'] = head.get('plate')
+    plug['mjd'] = head.get('mjd')
+    plug['locationid'] = head.get('location')
+    plug['field'] = head.get('field')
+    plug['programname'] = head.get('program')
+    plug['ha'] = [head.get('ha1'),head.get('ha2'),head.get('ha3')]
+    plug['fiberdata'] = fiberdata
+    plug['guidedata'] = guidedata
+    
+    return plug
+
+
 def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=None,
             fixfiberid=False,noobject=False,skip=False,twilight=False,
-            badfiberid=None,mapper_data=None,starfiber=None):
+            badfiberid=None,mapper_data=None,starfiber=None,clobber=False):
     """
     Getdata loads up a structure with plate information and information about the 300 APOGEE fibers
     This is obtained from a plPlugMapA file or from a 
@@ -54,31 +149,49 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
 
     Parameters
     ----------
-    plate          ID for the desired plate.
-    mjd            MJD for the plugmap information.
-    apred          Reduction version.
-    telescope      Telescope name.
-    =plugid        Name of plugmap file.
-    =asdaf         Array of fiberIDs for stars in a ASDAF
-                     (Any-Star-Down-Any Fiber) observation.
-    /mapa          Use "plPlugMapA" file, otherwise "plPlugMapM".
-    =obj1m         Object name for APO-1m observation.
-    /fixfiberid    Fix issues with fibers.
-    /noobject      Don't load the apogeeObject targeting information.
-    /twilight      This is a twilight observation, no stars.
-    =badiberid     Array of fiberIDs of bad fibers.
-    =mapper_data   Directory for mapper information (optional).
-    =starfiber     FiberID of the star for APO-1m observations.
-    /skip          Don't load the plugmap information.
+    plate : int
+       ID for the desired plate.
+    mjd : int
+       MJD for the plugmap information.
+    apred : str
+       Reduction version.
+    telescope : str
+       Telescope name.
+    plugid : str, optional
+       Name of plugmap file.
+    asdaf : list, optional
+       Array of fiberIDs for stars in a ASDAF
+        (Any-Star-Down-Any Fiber) observation.
+    mapa : bool, optional
+       Use "plPlugMapA" file, otherwise "plPlugMapM".
+    obj1m : str, optional
+       Object name for APO-1m observation.
+    fixfiberid : bool, optional
+       Fix issues with fibers.  Default is False.
+    noobject : bool, optional
+       Don't load the apogeeObject targeting information.  Default is False.
+    twilight : bool, optional
+       This is a twilight observation, no stars.  Default is False.
+    badiberid : list, optional
+       Array of fiberIDs of bad fibers.
+    mapper_data : str, optional
+       Directory for mapper information (optional).
+    starfiber : int, optional
+       FiberID of the star for APO-1m observations.
+    skip : bool, optional
+       Don't load the plugmap information.  Default is False.
+    clobber : bool, optional
+       Overwrite any existing apPlateData file.  Default is False.
 
     Returns
     -------
-    plandata       Targeting information for an APOGEE plate.
+    plandata : dict
+       Targeting information for an APOGEE plate.
 
     Example
     -------
-    plugmap = getdata(plate,mjd,plugid=plugmap.plugid)
 
+    plugmap = getdata(plate,mjd,plugid=plugmap.plugid)
 
     By J. Holtzman, 2011?
     Doc updates by D. Nidever, Sep 2020
@@ -96,6 +209,27 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
     observatory = {'apo25m':'apo','apo1m':'apo','lco25m':'lco'}[telescope]
 
+    # Check if the apPlateData file already exists
+    #  if yes, load it unless clobber is set
+    # Use planfile name to construct PlateData filename
+    if obj1m is not None:
+        planfile = load.filename('Plan',plate=plate,reduction=objid,mjd=mjd) 
+    else:
+        if int(mjd)>=59556:  # FPS
+            # get fieldid from confSummary file
+            configfile = load.filename('confSummary',configid=plate)
+            configlines = dln.readlines(configfile)
+            cline = dln.grep(configlines,'field_id')
+            fieldid = cline[0].split()[1]
+            planfile = load.filename('Plan',plate=plate,mjd=mjd,field=str(fieldid)) 
+        else:
+            planfile = load.filename('Plan',plate=plate,mjd=mjd)
+    platedatafile = planfile.replace('Plan','PlateData').replace('.yaml','.fits')
+    if os.path.exists(platedatafile) and clobber==False:
+        print('Reading platedata from '+platedatafile)
+        return read(platedatafile)
+
+    
     # Create the output fiber structure
     dtype = np.dtype([('fiberid',int),('ra',np.float64),('dec',np.float64),('eta',np.float64),('zeta',np.float64),
                       ('objtype',np.str,10),('holetype',np.str,10),('object',np.str,30),('assigned',int),('on_target',int),
@@ -787,6 +921,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
 
     platedata['fiberdata'] = fiber
 
+    # Save the platedata to file
+    print('Saving platedata to '+platedatafile)    
+    save(platedatafile,platedata)
+    
     return platedata
 
 

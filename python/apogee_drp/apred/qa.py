@@ -511,7 +511,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     #    htmlsum.close()
     #    print("----> makePlateSum: Error!")
 
-    plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid) 
+    plug = platedata.getdata(int(plate), int(mjd), apred, telescope, plugid=plugmap, badfiberid=badfiberid)
     #pdb.set_trace()
 
     #nplug = len(plug['fiberdata']['fiberid'])

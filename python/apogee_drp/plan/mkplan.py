@@ -667,7 +667,8 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         if sky==False:
             if plate != 0:
                 logger.info('getting plate data')
-                plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,apred=apred,telescope=telescope)
+                plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,
+                                         apred=apred,telescope=telescope)
                 loc = plug['locationid']
                 spectro_dir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
                 if os.path.exists(spectro_dir+'fields/'+telescope+'/'+str(loc))==False:

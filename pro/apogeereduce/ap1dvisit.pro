@@ -109,7 +109,11 @@ FOR i=0L,nplanfiles-1 do begin
     if (strtrim(fixfiberid,2) eq 'null' or strtrim(strlowcase(fixfiberid),2) eq 'none') then undefine,fixfiberid  ;; null/none  
   if tag_exist(planstr,'badfiberid') then badfiberid=planstr.badfiberid 
   if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
-    if (strtrim(badfiberid,2) eq 'null' or strtrim(strlowcase(badfiberid),2) eq 'none') then undefine,badfiberid  ;; null/none  
+     if (strtrim(badfiberid,2) eq 'null' or strtrim(strlowcase(badfiberid),2) eq 'none') then undefine,badfiberid ;; null/none
+
+  ;; Check for existing plate data file
+  platedatafile = repstr(planfile,'Plan','PlateData')
+  platedatafile = repstr(platedatafile,'.yaml','.fits')
   if planstr.platetype eq 'single' then begin
     plugfile = getenv('APOGEEREDUCE_DIR')+'/data/plPlugMapA-0001.par' 
     plugmap = getplatedata(planstr.plateid,string(planstr.mjd,format='(i5.5)'),obj1m=planstr.apexp[0].singlename,$
