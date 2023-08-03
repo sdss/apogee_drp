@@ -276,7 +276,7 @@ endif else begin
     platedatafile = repstr(platedatafile,'.yaml','.fits')
   endelse
 endelse
-if file_test(platedatafile) eq 0 not keyword_set(clobber) then begin
+if file_test(platedatafile) eq 0 and not keyword_set(clobber) then begin
   print,'Reading platedata from '+platedatafile
   return,readplatedata(platedatafile)
 endif
