@@ -170,9 +170,9 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
   spawn,cmd,/noshell
   
   ;; Check that the calibration file was successfully created
-  outfile = wavedir+repstr(file,'apWave-','apWave-a-')
+  outfile = wavedir+repstr(wavefile,'apWave-','apWave-a-')
   if file_test(outfile) then begin
-    openw,lock,/get_lun,wavedir+file+'.dat'
+    openw,lock,/get_lun,wavedir+wavefile+'.dat'
     free_lun,lock
   endif
 
