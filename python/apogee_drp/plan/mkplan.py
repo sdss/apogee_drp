@@ -974,17 +974,17 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         psfquartz = []
         logger.info('No quartzflat apPSF files exist')
     # Which apFlux files exist
-    flux_exist = np.zeros(len(domequartz),bool)
-    for j in range(len(domequartz)):
-        fluxfile = load.filename('Flux',num=domequartz[j],chips=True)
+    flux_exist = np.zeros(len(dome),bool)
+    for j in range(len(dome)):
+        fluxfile = load.filename('Flux',num=dome[j],chips=True)
         fluxfiles = [fluxfile.replace(load.prefix+'Flux-',load.prefix+'Flux-'+ch+'-') for ch in chips]
         exist = [os.path.exists(ff) for ff in fluxfiles]
         if np.sum(np.array(exist))==3:
             flux_exist[j] = True
     gdflux, = np.where(flux_exist == True)
     if len(gdflux)>0:
-        flux = list(np.array(domequartz)[gdflux])
-        fluxpluggroup = domequartzpluggroup[gdflux]
+        flux = list(np.array(dome)[gdflux])
+        fluxpluggroup = domepluggroup[gdflux]
         logger.info('Available apFlux: '+str(flux))
     else:
         flux = []
