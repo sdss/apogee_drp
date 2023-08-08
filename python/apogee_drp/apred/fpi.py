@@ -571,13 +571,21 @@ def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines):
         hdu[0].header['COMMENT'] = 'HDU#1 : wavelength calibration parameters [5,300]'
         hdu[0].header['COMMENT'] = 'HDU#2 : wavelength calibration array [300,2048]'
         hdu[0].header['COMMENT'] = 'HDU#3 : table of unique FPI lines and wavelengths'
-        hdu[0].header['COMMENT'] = 'HDU#4 : table of full-frame FPI lines measurements'
+        hdu[0].header['COMMENT'] = 'HDU#4 : table of full-frame FPI line measurements'
         hdu.append(fits.ImageHDU(fpiwcoef[ichip,:,:]))
+        hdu[1].header['COMMENT'] = 'Wavelength calibration parameters [5,300]'
+        hdu[1].header['EXTNAME'] = 'wavepars'
         hdu.append(fits.ImageHDU(fpiwaves[ichip,:,:]))
+        hdu[2].header['COMMENT'] = 'Wavelength calibration array [300,2048]'
+        hdu[2].header['EXTNAME'] = 'wavearray'
         ind, = np.where(fpilinestr['chip']==chip)
         hdu.append(fits.table_to_hdu(Table(fpilinestr[ind])))
+        hdu[3].header['COMMENT'] = 'Table of unique FPI lines and wavelengths'
+        hdu[3].header['EXTNAME'] = 'fpiwave' 
         ind, = np.where(fpilines['chip']==chip)
-        hdu.append(fits.table_to_hdu(Table(fpilines[ind])))    
+        hdu.append(fits.table_to_hdu(Table(fpilines[ind])))
+        hdu[4].header['COMMENT'] = 'Table of full-frame FPI line measurements'
+        hdu[4].header['EXTNAME'] = 'fpilines'
         hdu.writeto(outfile.replace('WaveFPI','WaveFPI-'+chip),overwrite=True)
 
         
