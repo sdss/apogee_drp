@@ -227,7 +227,11 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     platedatafile = planfile.replace('Plan','PlateData').replace('.yaml','.fits')
     if os.path.exists(platedatafile) and clobber==False:
         print('Reading platedata from '+platedatafile)
-        return read(platedatafile)
+        pdata = read(platedatafile)
+        fiber = Table(pdata['fiberdata'])  # make sure the fiberdata columns are lowercase
+        for c in fiber.colnames: fiber[c].name = c.lower()
+        pdata['fiberdata'] = fiber
+        return pdata
 
     
     # Create the output fiber structure
