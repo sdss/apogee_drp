@@ -984,7 +984,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     gdflux, = np.where(flux_exist == True)
     if len(gdflux)>0:
         flux = list(np.array(dome)[gdflux])
-        fluxpluggroup = domepluggroup[gdflux]
+        fluxpluggroup = list(np.array(domepluggroup)[gdflux])
         logger.info('Available apFlux: '+str(flux))
     else:
         flux = []

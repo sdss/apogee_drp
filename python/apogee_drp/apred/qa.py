@@ -537,15 +537,15 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     snColumn =     np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
     obsmagColumn = np.zeros(nfiber, dtype=[('obsmag', 'float32', (n_exposures, nchips))])
     fiber =        merge_arrays([fiber, snColumn, obsmagColumn], flatten=True)
-
-    unplugged, = np.where(fiber['fiberid'] < 0)
+    
+    unplugged, = np.where(fiber['FIBERID'] < 0)
     nunplugged = len(unplugged)
     if flat is not None:
-        fiber['hmag'] = 12
-        fiber['object'] = 'FLAT'
-
+        fiber['HMAG'] = 12
+        fiber['OBJECT'] = 'FLAT'
+        
     # Find telluric, object, sky, and non-sky fibers.
-    fibtype = fiber['objtype']
+    fibtype = np.char.array(fiber['OBJTYPE']).astype(str).strip()
     fibertelluric, = np.where((fibtype == 'SPECTROPHOTO_STD') | (fibtype == 'HOT_STD'))
     ntelluric = len(fibertelluric)
     telluric = rows[fibertelluric]
@@ -568,7 +568,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         fiberstar = np.concatenate([fiberobj,fibertelluric])
         nstar = len(fiberstar)
         star = rows[fiberstar]
-
+        
     # Loop through all the images for this plate, and make the plots.
     # Load up and save information for this plate in a FITS table.
     allsky =     np.zeros((n_exposures,3), dtype=np.float64)
@@ -750,7 +750,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         exptime = dhdr['EXPTIME']
         skyzero = 14.75 + (2.5 * np.log10(nreads))
 
-        gdHmag, = np.where((fiber['hmag'] > 5) & (fiber['hmag'] < 20))
+        gdHmag, = np.where((fiber['HMAG'] > 5) & (fiber['HMAG'] < 20))
         zero = 0
         zerorms = 0.
         zeronorm = 0
@@ -764,9 +764,9 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
         # Only run this part if there some stars with reasonable H mag
         if len(gdHmag) >= 5:
-            tmp = fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
+            tmp = fiber['HMAG'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1]))
             zero = np.nanmedian(tmp)
-            zerorms = dln.mad(fiber['hmag'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
+            zerorms = dln.mad(fiber['HMAG'][fiberstar] + (2.5 * np.log10(obs[fiberstar,1])))
             faint, = np.where((tmp - zero) < -0.5)
             nfaint = len(faint)
             zeronorm = zero - (2.5 * np.log10(nreads))
@@ -777,14 +777,14 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                 sntargetmag = 12.2
 
                 # Get typical S/N for this plate
-                snstars, = np.where((fiber['hmag'] > 12) & (fiber['hmag'] < 12.2))
+                snstars, = np.where((fiber['HMAG'] > 12) & (fiber['HMAG'] < 12.2))
                 nsn = len(snstars)
                 scale = 1
                 if nsn < 3:
                     try:
-                        bright, = np.where(fiber['hmag'] < 12)
-                        hmax = np.nanmax(fiber['hmag'][bright])
-                        snstars, = np.where((fiber['hmag'] > hmax-0.2) & (fiber['hmag'] <= hmax))
+                        bright, = np.where(fiber['HMAG'] < 12)
+                        hmax = np.nanmax(fiber['HMAG'][bright])
+                        snstars, = np.where((fiber['HMAG'] > hmax-0.2) & (fiber['HMAG'] <= hmax))
                         nsn = len(snstars)
                         scale = np.sqrt(10**(0.4 * (hmax - 12.2)))
                     except:
@@ -796,8 +796,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                 #achievedsnt = np.nanmedian(snt[:], axis=0) * scale
 
                 # Alternative S/N as computed from median of all stars with H<12.2, scaled
-                snstars, = np.where(fiber['hmag'] < 12.2)
-                scale = np.sqrt(10**(0.4 * (fiber['hmag'][snstars] - 12.2)))
+                snstars, = np.where(fiber['HMAG'] < 12.2)
+                scale = np.sqrt(10**(0.4 * (fiber['HMAG'][snstars] - 12.2)))
                 altsn = achievedsn * 0.
                 for ichip in range(nchips): 
                     altsn[ichip] = np.nanmedian(sn[snstars,ichip] * scale)
