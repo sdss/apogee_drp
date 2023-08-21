@@ -34,6 +34,7 @@ if __name__ == "__main__":
         mjd = int(args.mjd[0])
     else:
         mjd = None
+        mjd5 = runapogee.getNextMJD(observatory)  # only used below, if there is a crash
     if isinstance(args.qos,list):
         qos = args.qos[0]
     else:
@@ -49,9 +50,7 @@ if __name__ == "__main__":
         sys.exit()
     except:
         # Reduction crashed
-        if mjd is None:
-            mjd5 = runapogee.getNextMJD(observatory)
-        else:
+        if mjd is not None:
             mjd5 = mjd
         message = 'APOGEE '+vers+' reduction '+observatory+' '+str(dln.first_el(mjd5))+' CRASHED!!'
         tracemessage = traceback.format_exc()
