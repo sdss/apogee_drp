@@ -17,6 +17,7 @@ from numba import njit
 import copy
 import matplotlib
 import matplotlib.pyplot as plt
+import subprocess
 
 WARNMASK = -16640
 BADMASK = 16639
@@ -1035,7 +1036,7 @@ def loadframe(infile):
     frame = {'flux':flux, 'err':err, 'mask':mask, 'header':head}
     return frame
 
-def saveepsf(filename,epsf):
+def saveepsf(filename,epsf,compress=True):
     """
     Save Empirical PSF data
 
@@ -1045,6 +1046,8 @@ def saveepsf(filename,epsf):
        Filename to save the EPSF information to.
     epsf : list
        Empirical PSF information.
+    compress : bool, optional
+       Fpack compress the EPSF file.  Default is True.
 
     Results
     -------
@@ -1077,6 +1080,8 @@ def saveepsf(filename,epsf):
     hdu.writeto(filename,overwrite=True)
     hdu.close()
 
+    if compress:
+        sout = subprocess.run(['fpack','-D','-Y',filename],shell=False)
         
     # from apmkpsf_epsf.pro
     # file = apogee_filename('EPSF',chip=chip[ichip],num=im)
