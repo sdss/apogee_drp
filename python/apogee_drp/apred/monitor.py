@@ -454,7 +454,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     # Read in the SDSS-V summary files
     if os.path.exists(specdir5 + 'monitor/' + instrument + 'Cal.fits'):
         allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits')
-        alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits',2)        
+        try:
+            alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits',2)
+        except:
+            alldark = None
     else:
         allcal = None
         alldark = None
