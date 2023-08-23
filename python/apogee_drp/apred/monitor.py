@@ -90,8 +90,9 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
     # Establish  directories... hardcode sdss4/apogee2 for now
-    specdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'
-    sdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/monitor/' + instrument + '/'
+    specdir4 = '/uufs/chpc.utah.edu/common/home/sdss/dr17/apogee/spectro/redux/dr17/'
+    sdir4 = specdir4 + 'monitor/' + instrument + '/'
+    #specdir4 = '/uufs/chpc.utah.edu/common/home/sdss/apogeework/apogee/spectro/redux/current/'    
 
     specdir5 = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
     sdir5 = specdir5 + 'monitor/' + instrument + '/'
@@ -103,19 +104,39 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     #allsci =  fits.open(specdir4 + instrument + 'Sci.fits')[1].data
     #allepsf = fits.open(specdir4 + instrument + 'Trace.fits')[1].data
 
-    allexp4 =  fits.getdata(specdir4 + instrument + 'Exp.fits')
-    allsci4 =  fits.getdata(specdir4 + instrument + 'Sci.fits')
+    if os.path.exists(specdir4 + instrument + 'Exp.fits'):
+        allexp4 =  fits.getdata(specdir4 + instrument + 'Exp.fits')
+    else:
+        print(specdir4 + instrument + 'Exp.fits not found')
+        allexp4 = None
+    if os.path.exists(specdir4 + instrument + 'Sci.fits'):
+        allsci4 =  fits.getdata(specdir4 + instrument + 'Sci.fits')
+    else:
+        print(specdir4 + instrument + 'Sci.fits not found')
+        allsci4 = None
     #allsnr4 = fits.getdata(specdir5 + 'monitor/' + instrument + 'SNR_ap1-2.fits')
 
     # Read in the master summary files
-    
-    allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
-    try:
-        alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
-    except:
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Cal.fits'):
+        allcal =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 1)
+        try:
+            alldark = fits.getdata(specdir5 + 'monitor/' + instrument + 'Cal.fits', 2)
+        except:
+            alldark = None
+    else:
+        print(specdir5 + 'monitor/' + instrument + 'Cal.fits not found')
+        allcal = None
         alldark = None
-    allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
-    allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Exp.fits'):
+        allexp =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Exp.fits', 1)
+    else:
+        print(specdir5 + 'monitor/' + instrument + 'Exp.fits not found')
+        allexp = None
+    if os.path.exists(specdir5 + 'monitor/' + instrument + 'Sci.fits'):
+        allsci =  fits.getdata(specdir5 + 'monitor/' + instrument + 'Sci.fits', 1)
+    else:
+        print(specdir5 + 'monitor/' + instrument + 'Sci.fits not found')
+        allsci = None
     allsnrfile = specdir5 + 'monitor/' + instrument + 'SNR.fits'
 
     if os.path.exists(allsnrfile): allsnr = fits.getdata(allsnrfile)
