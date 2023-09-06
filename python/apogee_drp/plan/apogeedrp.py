@@ -1485,11 +1485,12 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
 
     # Maybe have an option to copy/symlink them from a previous apred version
 
+    
     chkmaster = None
 
     # Make Detector and Linearity 
     #----------------------------
-    if 'det' in caltypes:
+    if 'detector' in caltypes:
         # MKDET.PRO makes both
         detdict = allcaldict['det']
         logger.info('--------------------------------------------')
@@ -1554,7 +1555,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Detector calibration files need to be run')
-
+            
 
     # Make darks in parallel
     #-----------------------
@@ -1571,7 +1572,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         slurmpars1 = slurmpars.copy()
         slurmpars1['nodes'] = 2
         slurmpars1['cpus'] = 4
-        slurmpars1['mem_per_cpu'] = 20000  # in MB
+        #slurmpars1['memory'] = 20000  # in MB
         logger.info('Slurm settings: '+str(slurmpars1))
         tasks = np.zeros(len(darkdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
