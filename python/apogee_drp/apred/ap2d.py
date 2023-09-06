@@ -685,7 +685,10 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                     head['HISTORY'] = leadstr+' /recenterln2 set, shifting traces by %.3f' % xshift
 
             outstr,back,ymodel = psf.extract(chstr,epsf,outstr,scat=True)
-
+            # add chi-squared to header, mask bad pixels
+            #chisq = np.sum((chstr['flux']-ymodel)**2 / chstr['err']**2)
+            # reduced chi-squared
+            
      
         # Model PSF extraction
         #---------------------
@@ -713,6 +716,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             outepsffile = outdir+load.prefix+'EPSFmodel-'+chiptag[i]+'-'+str(framenum)+'.fits'  # output file
             print('Saving EPSF file to '+outepsffile)
             psf.saveepsf(outepsffile,epsf)
+            # add chi-squared to header, mask bad pixels?
             
         t2 = time.time()
         #import pdb; pdb.set_trace()

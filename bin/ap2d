@@ -81,7 +81,7 @@ if __name__ == '__main__' :
         # This makes sure that the plan file uses the input PSFID
         # otherwise mkplan() will automatically use the default modelpsf
         # even if the PSFID is input
-        if modelpsf is None and psfid is not None:
+        if modelpsf is None and psfid is None:
             psflibrary = True
         else:
             psflibrary = False

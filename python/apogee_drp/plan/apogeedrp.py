@@ -1496,11 +1496,11 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('--------------------------------------------')
         logger.info('Making master Detector/Linearity in parallel')
         logger.info('============================================')
-        logger.info('Slurm settings: '+str(slurmpars))
+        slurmpars1 = slurmpars.copy()
+        slurmpars1['nodes'] = 1
+        logger.info('Slurm settings: '+str(slurmpars1))
         tasks = np.zeros(len(detdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
-        #queue = pbsqueue(verbose=True)
-        #queue.create(label='mkdet', **slurmpars)
         docal = np.zeros(len(detdict),bool)
         donames = []
         logfiles = []
@@ -2444,14 +2444,9 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 logger.info('Daily Flux Calibration Products')
                 logger.info('-------------------------------')                
                 for m in mjds:
-                    # plates, can use domeflats or quartzflats                    
-                    if m < 59556:
-                        ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='DOMEFLAT'))
-                        if len(ind1)==0:
-                            ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='QUARTZFLAT'))
-                    # FPS, use quartzflats because 2 FPI fibers missing in domeflats                        
-                    else:
-                        ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='QUARTZFLAT'))
+                    # ALWAYS need to use domeflats so we get the fiber-to-fiber throughput
+                    #    corrections right
+                    ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='DOMEFLAT'))
                     if len(ind1)==0:
                         logger.info(str(m)+' No Flux calibration products')
                         continue
