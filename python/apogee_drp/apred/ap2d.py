@@ -4,7 +4,7 @@ import os
 import sys
 import time
 import numpy as np
-from ..utils import plan,apload,platedata,utils,lock
+from ..utils import plan,apload,platedata,utils,lock,bitmask
 from . import psf,wave
 from dlnpyutils import utils as dln
 from astropy.io import fits
@@ -19,6 +19,8 @@ except: # initialize if needed
     epsfchip = [None,None,None]
 
 BADERR = 1.0000000e+10
+pixelmask = bitmask.PixelBitMask()
+PIXBADVAL = pixelmask.badval()
 
 def errout(data):
     """ Errout sets the value to output for the error for bad pixels """
@@ -685,10 +687,6 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                     head['HISTORY'] = leadstr+' /recenterln2 set, shifting traces by %.3f' % xshift
 
             outstr,back,ymodel = psf.extract(chstr,epsf,outstr,scat=True)
-            # add chi-squared to header, mask bad pixels
-            #chisq = np.sum((chstr['flux']-ymodel)**2 / chstr['err']**2)
-            # reduced chi-squared
-            
      
         # Model PSF extraction
         #---------------------
@@ -717,11 +715,24 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             print('Saving EPSF file to '+outepsffile)
             psf.saveepsf(outepsffile,epsf)
             # add chi-squared to header, mask bad pixels?
+
+        # Add chi-squared to header
+        if extract_type==4 or extract_type==5:
+            goodmask = ((chstr['mask'] & PIXBADVAL) == 0)   # mask bad pixels
+            ngoodpix = np.sum(goodmask)
+            chisq = np.nansum((chstr['flux'][goodmask]-ymodel[goodmask])**2 / chstr['err'][goodmask]**2)
+            rchisq = chisq / ngoodpix  # reduced chi-squared
+            # Update header
+            head['CHISQ'] = chisq, 'chi-squared of 2Dmodel fit'
+            head['RCHISQ'] = rchisq, 'reduced chi-squared of 2D model fit'
+            head['NGOODPIX'] = ngoodpix, 'good pixels'
+            head['HISTORY'] = leadstr+'Chi-squared of 2D model fit is {:.2f}'.format(chisq)
+            head['HISTORY'] = leadstr+'Reduced chi-squared = {:.4f} with {:d} good pixels'.format(rchisq,ngoodpix)
+            print('2D Model fit: chisq={:.2f}  reduced chisq={:.4f}  {:d} pixels'.format(chisq,rchisq,ngoodpix))
             
         t2 = time.time()
-        #import pdb; pdb.set_trace()
- 
- 
+
+        
         # Do the fiber-to-fiber throughput corrections and relative
         #   flux calibration
         #----------------------------------------------------------
@@ -1311,7 +1322,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             print('-------------------------------------------')
             print(str(j+1)+'/'+str(nframes)+'  processing frame number >>'+str(framenum)+'<<')
             print('-------------------------------------------')
- 
+            
             # Run AP2DPROC
             if 'platetype' in planstr.keys():
                 if planstr['platetype'] == 'cal': 

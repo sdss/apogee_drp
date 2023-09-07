@@ -635,7 +635,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             raise ValueError('plateid in header does not match plate!')
 
     if fps and (configid is None or configid==''):
-        print('configid problem. using input plate value')
+        logger.info('configid problem. using input plate value')
         configid = plate
         
     # plugmap
@@ -684,7 +684,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
                     file.write(telescope+'/'+str(plate)+'/'+str(mjd)+'/'+os.path.basename(planfile))
                 file.close()
             else:
-                print('No plate/configuration information')
+                logger.info('No plate/configuration information')
                 plugid = 0
         out['plugmap'] = plugid
 
@@ -705,10 +705,23 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         out[c+'id'] = val
 
     if ap3d==False:
-        # We use multiwaveid for waveid
+        # Find wavelength calibration file
         if waveid is None:
-            waveid = caldata['multiwave']
-            if str(waveid).isdigit(): waveid=int(waveid)
+            # Try daily apWave wave files for this MJD
+            wavefile = os.path.dirname(load.filename('Wave',num=mjd,chips=True))+'/'+load.prefix+'Wave-a-'+str(mjd)+'.fits'
+            if os.path.exists(wavefile):
+                waveid = str(mjd)
+                logger.info('Using daily Wave file '+waveid)
+            # Try a regular THARNE/UNE pair wavelength solution
+            if waveid is None:
+                wavestr = load.filename('Wave',num='????????',chips=True).replace('Wave-','Wave-a-')
+                wavefile = glob(wavestr)
+                if len(wavefile)>0:
+                    waveid = os.path.basename(wavefile[0])[9:-5]
+                    logger.info('Using regular Wave file '+waveid)                
+            # We use multiwaveid for waveid
+            #waveid = caldata['multiwave']
+            #if str(waveid).isdigit(): waveid=int(waveid)
         out['waveid'] = waveid
         # Input PSFID and FLUXID
         if psfid is not None:
@@ -776,7 +789,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             flavor = 'object'
             rawfile = sdss_path.full(load.prefix+'R',num=im1,chip='a',mjd=mjd)
             if os.path.exists(rawfile)==False:
-                print(rawfile,' NOT FOUND')
+                logger.info(rawfile,' NOT FOUND')
             head = fits.getheader(rawfile,1)
             exptype = head.get('EXPTYPE')
             if exptype.lower()=='domeflat':
@@ -791,7 +804,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     with open(planfile,'w') as ofile:
         dum = yaml.dump(out,ofile,default_flow_style=False, sort_keys=False)
     os.chmod(planfile, 0o664)
-
+    
     return planfile
 
 
