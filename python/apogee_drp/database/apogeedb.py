@@ -303,6 +303,7 @@ class DBSession(object):
 
             # Use the data returned to get the type
             dt = []
+            stringizecol = []
             for i,c in enumerate(colnames):
                 type1 = type(data[0][i])
                 if type1 is str:
@@ -316,14 +317,23 @@ class DBSession(object):
                     # Check for None/null, need a "real" value to get the type
                     if (data[0][i] is None):
                         cnt = 0
-                        while (data[cnt][i] is None) and (cnt<(ndata-1)) and (cnt<100): cnt += 1
+                        while (data[cnt][i] is None) and (cnt<(ndata-1)) and (cnt<10000): cnt += 1
                         if data[cnt][i] is not None:
                             dtype1 = type(data[cnt][i])
                         else:  # still None, use float
-                            dtype1 = float
+                            dtype1 = (str,300)  # changed from float to str, DLN 9/7/23
+                            stringizecol.append(i)
                     dt.append( (c, dtype1) )
             dtype = np.dtype(dt)
 
+            # Convert columns for which we couldn't figure out the data type to strings
+            if len(stringizecol)>0:
+                for i in range(len(data)):
+                    data1 = list(data[i])  # convert to list first so we can modify it
+                    for k in range(len(stringizecol)):
+                        data1[stringizecol[k]] = str(data1[stringizecol[k]])
+                    data[i] = tuple(data1)  # convert back to tuple for numpy array loading
+            
             # Convert to numpy structured array
             cat = np.zeros(len(data),dtype=dtype)
             cat[...] = data
