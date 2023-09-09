@@ -97,7 +97,7 @@ persistmodel    56861 99999 0
 # response function
 #response   55600 56860 01710042 1710042 1710042 423
 #response   56861 99999 01710042 1710042 1710042 423
-response   55600 99999  0  0   0 0
+#response   55600 99999  0  0   0 0
 # wavecals:start  end   name     frames          psfid
 wave       55699 55699 01370096 1370096,1370099  1370098
 wave       55700 55700 01380079 1380079          1380081
