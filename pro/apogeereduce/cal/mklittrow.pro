@@ -34,23 +34,17 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
   litdir = apogee_filename('Littrow',num=littrowid,chip='b',/dir)
   if file_test(litdir,/directory) eq 0 then file_mkdir,litdir
   litfile = apogee_filename('Littrow',num=littrowid,chip='b',/base)
-  ;;lockfile = litdir+file+'.lock'
 
   ;; If another process is alreadying making this file, wait!
-  ;;if not keyword_set(unlock) then begin
-  ;;  while file_test(lockfile) do apwait,lockfile,10
-  ;;endif else begin
-  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
-  ;;endelse
   aplock,litfile,waittime=10,unlock=unlock
   
   ;; Does product already exist?
   ;;  we only use the b detector file
-  if file_test(litdir+file) and not keyword_set(clobber) then begin
-    print,' littrow file: ',litdir+file,' already made'
+  if file_test(litfile) and not keyword_set(clobber) then begin
+    print,' littrow file: ',litfile,' already made'
     return
   endif
-  allfiles = litdir+file
+  allfiles = litfile
   file_delete,allfiles,/allow  ;; delete any existing files to start fresh
   ;; Open .lock file
   ;;openw,lock,/get_lun,lockfile

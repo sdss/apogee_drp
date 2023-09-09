@@ -1496,6 +1496,9 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('--------------------------------------------')
         logger.info('Making master Detector/Linearity in parallel')
         logger.info('============================================')
+        if detdict is None or len(detdict)==0:
+            detdict = []
+            logger.info('No master Detector calibration files to make')
         slurmpars1 = slurmpars.copy()
         slurmpars1['nodes'] = 1
         logger.info('Slurm settings: '+str(slurmpars1))
@@ -1516,7 +1519,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 cmd1 += ' --det '+str(name)+' --unlock'
                 if clobber:
                     cmd1 += ' --clobber'
-                #logfiles.append(logfile1)
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
@@ -1534,7 +1536,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
@@ -1542,13 +1543,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             key,jobid = slrm.submit(tasks,label='mkdet',verbose=True,logger=logger,**slurmpars1)
             slrm.queue_wait('mkdet',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Detector',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
-            #logger.info(str(np.sum(docal))+' Detector files to run')        
-            #queue.commit(hard=True,submit=True)
-            #logger.info('PBS key is '+queue.key)
-            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            ## This should check if the  ran okay and puts the status in the database
-            #chkmaster1 = check_mastercals(donames,'Detector',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)        
+            chkmaster1 = check_mastercals(tasks['name'],'Detector',logfiles,key,apred,telescope,verbose=True,logger=logger)                        
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1568,6 +1563,9 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('-------------------------------')
         logger.info('Making master Darks in parallel')
         logger.info('===============================')
+        if darkdict is None or len(darkdict)==0:
+            darkdict = []
+            logger.info('No master Dark calibration files to make')
         # Give each job LOTS of memory
         slurmpars1 = slurmpars.copy()
         slurmpars1['nodes'] = 2
@@ -1576,8 +1574,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Slurm settings: '+str(slurmpars1))
         tasks = np.zeros(len(darkdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
-        #queue = pbsqueue(verbose=True)
-        #queue.create(label='mkdark', **slurmpars1)
         docal = np.zeros(len(darkdict),bool)
         donames = []
         logfiles = []
@@ -1593,7 +1589,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 cmd1 += ' --dark '+str(name)+' --unlock'
                 if clobber:
                     cmd1 += ' --clobber'
-                #logfiles.append(logfile1)
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
@@ -1611,7 +1606,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
@@ -1620,12 +1614,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             slrm.queue_wait('mkdark',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Dark',logfiles,key,apred,telescope,verbose=True,logger=logger)
-            #logger.info(str(np.sum(docal))+' Dark files to run')        
-            #queue.commit(hard=True,submit=True)
-            #logger.info('PBS key is '+queue.key)
-            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            ## This should check if the  ran okay and puts the status in the database
-            #chkmaster1 = check_mastercals(donames,'Dark',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1651,10 +1639,11 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Flats in parallel')
         logger.info('===============================')
         logger.info('Slurm settings: '+str(slurmpars1))
+        if flatdict is None or len(flatdict)==0:
+            flatdict = []
+            logger.info('No master Flat calibration files to make')
         tasks = np.zeros(len(flatdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
-        #queue = pbsqueue(verbose=True)
-        #queue.create(label='mkflat', **slurmpars1)
         docal = np.zeros(len(flatdict),bool)
         donames = []
         logfiles = []
@@ -1670,7 +1659,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 cmd1 += ' --flat '+str(name)+' --unlock'
                 if clobber:
                     cmd1 += ' --clobber'
-                #logfiles.append(logfile1)
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
@@ -1688,7 +1676,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
@@ -1696,13 +1683,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars1)
             slrm.queue_wait('mkflat',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
-            #logger.info(str(np.sum(docal))+' Flat files to run')        
-            #queue.commit(hard=True,submit=True)
-            #logger.info('PBS key is '+queue.key)
-            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            ## This should check if the  ran okay and puts the status in the database
-            #chkmaster1 = check_mastercals(donames,'Flat',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,telescope,verbose=True,logger=logger)                            
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1724,10 +1705,11 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master BPMs in parallel')
         logger.info('==============================')
         logger.info('Slurm settings: '+str(slurmpars))
+        if bpmdict is None or len(bpmdict)==0:
+            bpmdict = []
+            logger.info('No master BPM calibration files to make')
         tasks = np.zeros(len(bpmdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
-        #queue = pbsqueue(verbose=True)
-        #queue.create(label='mkbpm', **slurmpars)
         docal = np.zeros(len(bpmdict),bool)
         donames = []
         logfiles = []
@@ -1743,7 +1725,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 cmd1 += ' --bpm '+str(name)+' --unlock'
                 if clobber:
                     cmd1 += ' --clobber'
-                #logfiles.append(logfile1)
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
@@ -1761,7 +1742,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
@@ -1770,12 +1750,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             slrm.queue_wait('mkbpm',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'BPM',logfiles,key,apred,telescope,verbose=True,logger=logger)
-            #logger.info(str(np.sum(docal))+' BPM files to run')        
-            #queue.commit(hard=True,submit=True)
-            #logger.info('PBS key is '+queue.key)
-            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            ## This should check if the  ran okay and puts the status in the database
-            #chkmaster1 = check_mastercals(donames,'BPM',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1794,10 +1768,11 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Littrows in parallel')
         logger.info('==================================')
         logger.info('Slurm settings: '+str(slurmpars))
+        if littdict is None or len(littdict)==0:
+            littdict = []
+            logger.info('No master Littrow calibration files to make')
         tasks = np.zeros(len(littdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)        
-        #queue = pbsqueue(verbose=True)
-        #queue.create(label='mklittrow', **slurmpars)
         docal = np.zeros(len(littdict),bool)
         donames = []
         logfiles = []
@@ -1813,7 +1788,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 cmd1 += ' --littrow '+str(name)+' --unlock'
                 if clobber:
                     cmd1 += ' --clobber'
-                #logfiles.append(logfile1)
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
@@ -1831,7 +1805,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
@@ -1840,12 +1813,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             slrm.queue_wait('mklittrow',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Littrow',logfiles,key,apred,telescope,verbose=True,logger=logger)
-            #logger.info(str(np.sum(docal))+' Littrow files to run')        
-            #queue.commit(hard=True,submit=True)
-            #logger.info('PBS key is '+queue.key)
-            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            ## This should check if the  ran okay and puts the status in the database
-            #chkmaster1 = check_mastercals(donames,'Littrow',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1863,10 +1830,11 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Responses in parallel')
         logger.info('===================================')
         logger.info('Slurm settings: '+str(slurmpars))
+        if responsedict is None or len(responsedict)==0:
+            responsedict = []
+            logger.info('No master Response calibration files to make')
         tasks = np.zeros(len(responsedict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)        
-        #queue = pbsqueue(verbose=True)
-        #queue.create(label='mkresponse', **slurmpars)
         docal = np.zeros(len(responsedict),bool)
         donames = []
         logfiles = []
@@ -1882,7 +1850,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 cmd1 += ' --response '+str(name)+' --unlock'
                 if clobber:
                     cmd1 += ' --clobber'
-                #logfiles.append(logfile1)
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
@@ -1900,7 +1867,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
@@ -1908,13 +1874,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             key,jobid = slrm.submit(tasks,label='mkresponse',verbose=True,logger=logger,**slurmpars1)
             slrm.queue_wait('mkresponse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Response',logfiles,key,apred,telescope,verbose=True,logger=logger)                            
-            #logger.info(str(np.sum(docal))+' Response files to run')        
-            #queue.commit(hard=True,submit=True)
-            #logger.info('PBS key is '+queue.key)
-            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            ## This should check if the  ran okay and puts the status in the database
-            #chkmaster1 = check_mastercals(donames,'Response',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
+            chkmaster1 = check_mastercals(tasks['name'],'Response',logfiles,key,apred,telescope,verbose=True,logger=logger)                        
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1932,10 +1892,11 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master Sparses in parallel')
         logger.info('=================================')
         logger.info('Slurm settings: '+str(slurmpars))
+        if sparsedict is None or len(sparsedict)==0:
+            sparsedict = []
+            logger.info('No master Sparse calibration files to make')
         tasks = np.zeros(len(sparsedict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
-        #queue = pbsqueue(verbose=True)
-        #queue.create(label='mksparse', **slurmpars)
         docal = np.zeros(len(sparsedict),bool)
         donames = []
         logfiles = []
@@ -1951,7 +1912,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 cmd1 += ' --sparse '+str(name)+' --unlock'
                 if clobber:
                     cmd1 += ' --clobber'
-                #logfiles.append(logfile1)
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
@@ -1969,7 +1929,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
@@ -1978,12 +1937,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             slrm.queue_wait('mksparse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Sparse',logfiles,key,apred,telescope,verbose=True,logger=logger)
-            #logger.info(str(np.sum(docal))+' Sparse files to run')        
-            #queue.commit(hard=True,submit=True)
-            #logger.info('PBS key is '+queue.key)
-            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            ## This should check if the  ran okay and puts the status in the database
-            #chkmaster1 = check_mastercals(donames,'Sparse',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)                
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -2001,10 +1954,11 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master PSF Models in parallel')
         logger.info('====================================')
         logger.info('Slurm settings: '+str(slurmpars))
+        if modelpsfdict is None or len(modelpsfdict)==0:
+            modelpsfdict = []
+            logger.info('No master PSF Model calibration files to make')
         tasks = np.zeros(len(modelpsfdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
-        #queue = pbsqueue(verbose=True)
-        #queue.create(label='mkpsfmodel', **slurmpars)
         docal = np.zeros(len(modelpsfdict),bool)    
         donames = []
         logfiles = []
@@ -2020,7 +1974,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 cmd1 += ' --modelpsf '+str(name)+' --unlock'
                 if clobber:
                     cmd1 += ' --clobber'
-                #logfiles.append(logfile1)
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
@@ -2038,7 +1991,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)
-                    #queue.append(cmd1, outfile=logfile1,errfile=errfile1)
         if np.sum(docal)>0:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
@@ -2046,12 +1998,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             key,jobid = slrm.submit(tasks,label='mkpsfmodel',verbose=True,logger=logger,**slurmpars1)
             slrm.queue_wait('mkpsfmodel',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'PSFModel',logfiles,key,apred,telescope,verbose=True,logger=logger)                            
-            #queue.commit(hard=True,submit=True)
-            #logger.info('PBS key is '+queue.key)
-            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            # This should check if the  ran okay and puts the status in the database
-            #chkmaster1 = check_mastercals(donames,'PSFModel',logfiles,key,apred,telescope,verbose=True,logger=logger)                
+            chkmaster1 = check_mastercals(tasks['name'],'PSFModel',logfiles,key,apred,telescope,verbose=True,logger=logger)                        
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -2097,13 +2044,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
 
     # Make LSFs in parallel
     #-----------------------
-    #set n = 0
-    #while ( $n < 5 ) 
-    #   idl -e "makecal,lsf=1,/full,/pl,vers='$vers',telescope='$telescope'" >& log/mklsf-$telescope"$n".$host.log &
-    #   sleep 20
-    #   @ n = $n + 1
-    #end
-    #wait
     if 'lsf' in caltypes:
         lsfdict = allcaldict['lsf']
         logger.info('')
@@ -2111,10 +2051,11 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('Making master LSFs in parallel')
         logger.info('================================')
         logger.info('Slurm settings: '+str(slurmpars))
+        if lsfdict is None or len(lsfdict)==0:
+            lsfdict = []
+            logger.info('No master LSF calibration files to make')
         tasks = np.zeros(len(lsfdict),dtype=np.dtype([('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
-        #queue = pbsqueue(verbose=True)
-        #queue.create(label='mklsf', **slurmpars)
         docal = np.zeros(len(lsfdict),bool)
         donames = []
         logfiles = []
@@ -2130,7 +2071,6 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 cmd1 += ' --lsf '+str(name)+' --unlock'
                 if clobber:
                     cmd1 += ' --clobber'
-                #logfiles.append(logfile1)
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
@@ -2156,13 +2096,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             key,jobid = slrm.submit(tasks,label='mklsf',verbose=True,logger=logger,**slurmpars1)
             slrm.queue_wait('mklsf',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'LSF',logfiles,key,apred,telescope,verbose=True,logger=logger)                                        
-            #logger.info(str(np.sum(docal))+' LSF files to run')        
-            #queue.commit(hard=True,submit=True)
-            #logger.info('PBS key is '+queue.key)
-            #queue_wait(queue,sleeptime=120,verbose=True,logger=logger)  # wait for jobs to complete
-            ## This should check if the  ran okay and puts the status in the database
-            #chkmaster1 = check_mastercals(donames,'LSF',logfiles,queue.key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'LSF',logfiles,key,apred,telescope,verbose=True,logger=logger)                             
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
