@@ -574,18 +574,18 @@ def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines):
         hdu[0].header['COMMENT'] = 'HDU#4 : table of full-frame FPI line measurements'
         hdu.append(fits.ImageHDU(fpiwcoef[ichip,:,:]))
         hdu[1].header['COMMENT'] = 'Wavelength calibration parameters [5,300]'
-        hdu[1].header['EXTNAME'] = 'wavepars'
+        hdu[1].header['EXTNAME'] = 'WAVEPARS'
         hdu.append(fits.ImageHDU(fpiwaves[ichip,:,:]))
         hdu[2].header['COMMENT'] = 'Wavelength calibration array [300,2048]'
-        hdu[2].header['EXTNAME'] = 'wavearray'
+        hdu[2].header['EXTNAME'] = 'WAVELENGTH'
         ind, = np.where(fpilinestr['chip']==chip)
         hdu.append(fits.table_to_hdu(Table(fpilinestr[ind])))
         hdu[3].header['COMMENT'] = 'Table of unique FPI lines and wavelengths'
-        hdu[3].header['EXTNAME'] = 'fpiwave' 
+        hdu[3].header['EXTNAME'] = 'FPIWAVE'
         ind, = np.where(fpilines['chip']==chip)
         hdu.append(fits.table_to_hdu(Table(fpilines[ind])))
         hdu[4].header['COMMENT'] = 'Table of full-frame FPI line measurements'
-        hdu[4].header['EXTNAME'] = 'fpilines'
+        hdu[4].header['EXTNAME'] = 'FPILINES'
         hdu.writeto(outfile.replace('WaveFPI','WaveFPI-'+chip),overwrite=True)
 
         
@@ -768,10 +768,15 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
             hdu = fits.HDUList()
             hdu.append(frame[chip][0])           # header
             hdu.append(frame[chip][1])           # flux
+            hdu[1].header['EXTNAME'] = 'FLUX'
             hdu.append(frame[chip][2])           # err
+            hdu[2].header['EXTNAME'] = 'ERROR'
             hdu.append(frame[chip][3])           # mask
+            hdu[3].header['EXTNAME'] = 'MASK'
             hdu.append(fits.ImageHDU(newwaves[ichip,:,:]))      # wavelength array
+            hdu[4].header['EXTNAME'] = 'WAVELENGTH'
             hdu.append(fits.ImageHDU(newchippars[ichip,:,:]))   # wave coefficients
+            hdu[5].header['EXTNAME'] = 'WAVEPARS'
             hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
             hdu.close()
             

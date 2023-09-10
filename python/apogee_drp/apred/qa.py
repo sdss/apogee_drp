@@ -910,6 +910,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         hdulist = fits.open(platesum)
         hdu = fits.table_to_hdu(Table(fiber))
         hdulist.append(hdu)
+        hdulist[1].header['EXTNAME'] = 'PLATESUM'
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
 
@@ -953,6 +954,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         hdulist = fits.open(platesum)
         hdu1 = fits.table_to_hdu(Table(platetab))
         hdulist.append(hdu1)
+        hdulist[1].header['EXTNAME'] = 'PLATESUM'
         hdulist.writeto(platesum, overwrite=True)
         hdulist.close()
 

@@ -1042,22 +1042,28 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frameinfo=[],
         hdu[0].header['COMMENT']='HDU#7 : table with frames/group information'
         hdu[0].header.add_comment('APOGEE_DRP_VER:'+str(os.environ.get('APOGEE_DRP_VER')))
         hdu.append(fits.ImageHDU(chippars))
+        hdu[1].header['EXTNAME'] = 'WAVEPARS'
         hdu.append(fits.ImageHDU(chipwaves))
+        hdu[2].header['EXTNAME'] = 'WAVELENGTH' 
         hdu.append(fits.ImageHDU(pars))
+        hdu[3].header['EXTNAME'] = 'WAVE PARS'
         if rms is not None :
             hdu[0].header['MEDRMS']=(np.nanmedian(rms),'median rms')
             hdu.append(fits.ImageHDU(rms))
         else:
             hdu.append(fits.ImageHDU(None))
+        hdu[4].header['EXTNAME'] = 'MEDIAN RMS'              
         if sig is not None :
             hdu[0].header['MEDSIG']=(np.nanmedian(sig),'median sig')
             hdu.append(fits.ImageHDU(sig))
         else:
             hdu.append(fits.ImageHDU(None))
+        hdu[5].header['EXTNAME'] = 'MEDIAN SIG'              
         if allpars is not None :
             hdu.append(fits.ImageHDU(allpars))
         else:
             hdu.append(fits.ImageHDU(None))
+        hdu[6].header['EXTNAME'] = 'WAVE ORIGINAL ALLPARS' 
         if len(frameinfo)>0:
             ftable = np.zeros(len(frameinfo),dtype=np.dtype([('frame',np.str,8),('group',int),('dithpix',float)]))
             ftable['frame'] = frameinfo['num']
@@ -1066,6 +1072,7 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frameinfo=[],
             hdu.append(fits.table_to_hdu(Table(ftable)))
         else:
             hdu.append(fits.ImageHDU(None))
+        hdu[7].header['EXTNAME'] = 'GROUPS TABLE'
         if out is not None: hdu.writeto(out.replace('Wave','Wave-'+chip),overwrite=True)
         allhdu.append(hdu)
     # Save table of line measurements
@@ -1803,10 +1810,15 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
 
                 hdu.append(frame[chip][0])    # 0-header only
                 hdu.append(frame[chip][1])    # 1-flux
+                hdu[1].header['EXTNAME'] = 'FLUX'
                 hdu.append(frame[chip][2])    # 2-error
+                hdu[2].header['EXTNAME'] = 'ERROR'
                 hdu.append(frame[chip][3])    # 3-mask
+                hdu[3].header['EXTNAME'] = 'MASK'
                 hdu.append(allhdu[ichip][2])  # 4-chipwave [300,2048]
+                hdu[4].header['EXTNAME'] = 'WAVELENGTH'
                 hdu.append(allhdu[ichip][1])  # 5-chippars [14,300]
+                hdu[5].header['EXTNAME'] = 'WAVEPARS'
                 print('Updating ',outname.replace('1D-','1D-'+chip+'-'))
                 hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
 

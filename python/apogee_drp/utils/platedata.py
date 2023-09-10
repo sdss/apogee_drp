@@ -80,11 +80,13 @@ def save(filename,plug):
         hdu.append(fits.table_to_hdu(Table(fiber)))
     else:
         hdu.append(fits.ImageHDU())
+    hdu[1].header['EXTNAME'] = 'FIBERDATA'
     guidedata = plug.get('guidedata')
     if guidedata is not None:
         hdu.append(fits.table_to_hdu(Table(guidedata)))
     else:
-        hdu.append(fits.ImageHDU())        
+        hdu.append(fits.ImageHDU())
+    hdu[2].header['EXTNAME'] = 'GUIDEDATA'
     hdu.writeto(filename,overwrite=True)
     hdu.close()
 

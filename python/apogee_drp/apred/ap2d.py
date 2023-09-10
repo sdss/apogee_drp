@@ -812,6 +812,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                 print('Writing 2D model to: ',modelfile)
             hdu = fits.HDUList()
             hdu.append(fits.PrimaryHDU(ymodel.astype(np.float32)))
+            hdu[0].header['EXTNAME'] = 'PSFMODEL'
             hdu.writeto(modelfile,overwrite=True)
             hdu.close()
             #    # compress model and 2D image done in ap2d
@@ -895,7 +896,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             hdu[1].header['CTYPE1'] = 'Pixel'
             hdu[1].header['CTYPE2'] = 'Fiber'
             hdu[1].header['BUNIT'] = 'Flux (ADU)'
- 
+            hdu[1].header['EXTNAME'] = 'FLUX'
+            
             # HDU2 - error
             err = errout(frame_wave[i]['err']) 
             if outlong:
@@ -906,13 +908,15 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             hdu[2].header['CTYPE1'] = 'Pixel'
             hdu[2].header['CTYPE2'] = 'Fiber'
             hdu[2].header['BUNIT'] = 'Error (ADU)'
- 
+            hdu[2].header['EXTNAME'] = 'ERROR'
+            
             # HDU3 - mask
             mask = frame_wave[i]['mask']
             mask = mask.astype(np.int16)
             hdu.append(fits.ImageHDU(mask.T))
             hdu[3].header['CTYPE1'] = 'Pixel'
             hdu[3].header['CTYPE2'] = 'Fiber'
+            hdu[3].header['EXTNAME'] = 'MASK'
             if (extract_type == 1): 
                 hdu[3].header['BUNIT'] = 'Flag Mask (bitwise)' 
                 hdu[3].header['HISTORY'] = 'Explanation of BITWISE flag mask (OR combined)'
@@ -933,7 +937,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                 hdu[4].header['CTYPE1'] = 'Pixel'
                 hdu[4].header['CTYPE2'] = 'Fiber'
                 hdu[4].header['BUNIT'] = 'Wavelength (Angstroms)' 
- 
+                hdu[4].header['EXTNAME'] = 'WAVELENGTH'
+                
                 # HDU5 - Wavelength solution coefficients [DOUBLE]
                 #-------------------------------------------------
                 wcoef = frame_wave[i]['wcoef'].astype(float)
@@ -946,7 +951,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                 hdu[5].header['HISTORY'] = ' 4 Sine Parameters'
                 hdu[5].header['HISTORY'] = ' 7 Polynomial parameters (first is a zero-point offset'
                 hdu[5].header['HISTORY'] = '                     in addition to the pixel offset)'
-
+                hdu[5].header['EXTNAME'] = 'WAVECOEF'
+                
             # Write the data to disk
             hdu.writeto(outfile,overwrite=True)
             hdu.close()

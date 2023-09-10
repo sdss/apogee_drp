@@ -479,8 +479,10 @@ class PSF(object):
         hdu[0].header['COMMENT'] = 'Data (log)'
         hdu.append(fits.ImageHDU(self._labels))
         hdu[1].header['COMMENT'] = 'Labels'
+        hdu[1].header['EXTNAME'] = 'LABELS'
         hdu.append(fits.ImageHDU(self.y))
         hdu[2].header['COMMENT'] = 'x'
+        hdu[2].header['EXTNAME'] = 'X'
         hdu.writeto(outfile,overwrite=True)
     
     @classmethod
@@ -1077,6 +1079,7 @@ def saveepsf(filename,epsf,compress=True):
         data['hi'] = epsf[i]['hi']
         data['img'] = epsf[i]['img']
         hdu.append(fits.table_to_hdu(Table(data)))
+        hdu[i+1].header['EXTNAME'] = 'EPSF'+str(epsf[i]['fiber'])
     hdu.writeto(filename,overwrite=True)
     hdu.close()
 

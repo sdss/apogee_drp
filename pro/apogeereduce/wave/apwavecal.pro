@@ -767,6 +767,7 @@ CASE fitmethod of
     MKHDR,head1,wavestr[i].coef,/image
     sxaddpar,head1,'CTYPE1','Fiber'
     sxaddpar,head1,'CTYPE2','Coefficient'
+    sxaddpar,head1,'EXTNAME','WAVEPARS'    
     ;sxaddpar,head1,'BUNIT',''
     MWRFITS,wavestr[i].coef,outfile,head1,/silent  ; write the coeffient array
     ; HDU2 - wavelength arrays
@@ -774,11 +775,13 @@ CASE fitmethod of
     sxaddpar,head2,'CTYPE1','Pixel'
     sxaddpar,head2,'CTYPE2','Fiber'
     sxaddpar,head2,'BUNIT','Wavelength (Angstroms)'
+    sxaddpar,head2,'EXTNAME','WAVELENGTH'
     MWRFITS,wavestr[i].wave,outfile,head2,/silent   ; add the wavelength array to the first extension
     ; HDU3 - full coefficients
     MKHDR,head3,transpose(coefstr.coef),/image
     sxaddpar,head3,'CTYPE1','Fiber'
     sxaddpar,head3,'CTYPE2','Coefficient'
+    sxaddpar,head3,'EXTNAME','WAVE ALLPARS'        
     ;sxaddpar,head3,'BUNIT',''
     MWRFITS,transpose(coefstr.coef),outfile,head3,/silent  ; the actual coefficients
   
@@ -1148,6 +1151,7 @@ End  ; poly fits to each fiber sepatately
     MKHDR,head1,wavestr[i].coef,/image
     sxaddpar,head1,'CTYPE1','Fiber'
     sxaddpar,head1,'CTYPE2','Coefficient'
+    sxaddpar,head1,'EXTNAME','WAVEPARS'
     ;sxaddpar,head1,'BUNIT',''
     MWRFITS,wavestr[i].coef,outfile,head1,/silent  ; write the coeffient array
     ; HDU2 - wavelength arrays
@@ -1155,11 +1159,13 @@ End  ; poly fits to each fiber sepatately
     sxaddpar,head2,'CTYPE1','Pixel'
     sxaddpar,head2,'CTYPE2','Fiber'
     sxaddpar,head2,'BUNIT','Wavelength (Angstroms)'
+    sxaddpar,head2,'EXTNAME','WAVELENGTH'
     MWRFITS,wavestr[i].wave,outfile,head2,/silent   ; add the wavelength array to the first extension
     ; HDU3 - full coefficients
     MKHDR,head3,transpose(coefstr.coef),/image
     sxaddpar,head3,'CTYPE1','Fiber'
     sxaddpar,head3,'CTYPE2','Coefficient'
+    sxaddpar,head3,'EXTNAME','WAVE ALLPARS'
     ;sxaddpar,head3,'BUNIT',''
     MWRFITS,transpose(coefstr.coef),outfile,head3,/silent  ; the actual coefficients
   
@@ -2291,6 +2297,7 @@ End ; 2D poly fitting method
     MKHDR,head1,wavestr[i].coef,/image
     sxaddpar,head1,'CTYPE1','Fiber'
     sxaddpar,head1,'CTYPE2','Coefficient'
+    sxaddpar,head1,'EXTNAME','WAVEPARS'
     ;sxaddpar,head1,'BUNIT',''
     MWRFITS,wavestr[i].coef,outfile,head1,/silent  ; write the coeffient array
     ; HDU2 - wavelength arrays
@@ -2298,11 +2305,13 @@ End ; 2D poly fitting method
     sxaddpar,head2,'CTYPE1','Pixel'
     sxaddpar,head2,'CTYPE2','Fiber'
     sxaddpar,head2,'BUNIT','Wavelength (Angstroms)'
+    sxaddpar,head2,'EXTNAME','WAVELENGTH'
     MWRFITS,wavestr[i].wave,outfile,head2,/silent   ; add the wavelength array to the first extension
     ; HDU3 - full coefficients
     MKHDR,head3,transpose(coefstr.coef),/image
     sxaddpar,head3,'CTYPE1','Fiber'
     sxaddpar,head3,'CTYPE2','Coefficient'
+    sxaddpar,head3,'EXTNAME','WAVE ALLPARS'
     ;sxaddpar,head3,'BUNIT',''
     MWRFITS,transpose(coefstr.coef),outfile,head3,/silent  ; the actual coefficients
   
