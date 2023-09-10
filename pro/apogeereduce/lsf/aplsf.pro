@@ -1,7 +1,3 @@
-pro aplsf,lampframes,waveid,lsfim,fitmethod=fitmethod,nsigfit=nsigfit,gauss=gauss,$
-          psfid=psfid,Porder=Porder,WPorder=WPorder,Wproftype=Wproftype,pl=pl,$
-          verbose=verbose,silent=silent,outdir=outdir,clobber=clobber,stp=stp,fibers=fibers
-
 ;+
 ;
 ; APLSF
@@ -52,6 +48,10 @@ pro aplsf,lampframes,waveid,lsfim,fitmethod=fitmethod,nsigfit=nsigfit,gauss=gaus
 ;
 ; By D.Nidever  March 2010
 ;-
+
+pro aplsf,lampframes,waveid,lsfim,fitmethod=fitmethod,nsigfit=nsigfit,gauss=gauss,$
+          psfid=psfid,Porder=Porder,WPorder=WPorder,Wproftype=Wproftype,pl=pl,$
+          verbose=verbose,silent=silent,outdir=outdir,clobber=clobber,stp=stp,fibers=fibers
 
 t0_0 = systime(1)
 
@@ -2230,7 +2230,7 @@ For i=0,2 do begin
       endif
     endif
 
-  End ; fiber loop
+  Endfor ; fiber loop
 
 
   ; Creating header for the main data unit, the LSF parameters
@@ -2262,7 +2262,8 @@ For i=0,2 do begin
   sxaddhist,'1-every line fit separately',head1
   sxaddhist,'2-all lines per chip/fiber fit together',head1
   sxaddhist,'3-all lines per fiber (all three chips) fir together',head1
-
+  sxaddpar,head1,'EXTNAME','LSFPARS'
+  
   ; Header for the first extension with the LSF array
   ;head2 = combframe.(0).header
   MKHDR,head2,lsfarr
@@ -2284,7 +2285,8 @@ For i=0,2 do begin
   sxaddhist,'  combined pixels. There is an LSF for each fiber and pixel.',head2
   sxaddhist,'The array is [Npix, Nfibers, Nlsfpix].  There are pixels to cover',head2
   sxaddhist,'approximately +/-5 sigma => '+strtrim(nlsfpix,2)+' pixels.',head2
-
+  sxaddpar,head2,'EXTNAME','LSF ARRAY'
+  
   ; Output the file
   ;----------------
   ;outfile = lsf_dir+'apLSF-'+chiptag[i]+'-'+strtrim(info[0].mjd5,2)+'.fits'
@@ -2296,21 +2298,19 @@ For i=0,2 do begin
   outfile = outdir+dirs.prefix+'LSF-'+chiptag[i]+'-'+lampframeid1+'fibers.fits'  else $
   outfile = outdir+dirs.prefix+'LSF-'+chiptag[i]+'-'+lampframeid1+'.fits'
   print,'Writing LSF file to ',outfile
-  FITS_WRITE,outfile,ilsfim,head1                ; Write the parameter array
+  FITS_WRITE,outfile,ilsfim,head1                     ; Write the parameter array
   MWRFITS,lsfarr,outfile,head2,/silent                ; add the LSF array
 
   ; with 19 pixels and using float these files are ~92MB
 
   print,''
 
-  ;stop
-
-End ; chip loop
+Endfor ; chip loop
 
 ; Save the final structure
 if keyword_set(fibers) then $
-savefile = outdir+dirs.prefix+'LSF-'+lampframeid1+'fibers.sav' else $
-savefile = outdir+dirs.prefix+'LSF-'+lampframeid1+'.sav'
+  savefile = outdir+dirs.prefix+'LSF-'+lampframeid1+'fibers.sav' else $
+  savefile = outdir+dirs.prefix+'LSF-'+lampframeid1+'.sav'
 print,'Saving final structure to ',savefile
 save,linestr,fitstr1,fitstr,file=savefile
 

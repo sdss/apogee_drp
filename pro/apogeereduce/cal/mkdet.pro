@@ -88,9 +88,15 @@ pro mkdet,detid,linid,unlock=unlock
    file = apogee_filename('Detector',num=detid,chip=chips[ichip])
    mkhdr,head,0
    MWRFITS,0,file,head,/create
-   MWRFITS,rn,file
-   MWRFITS,gain,file
-   MWRFITS,lincorr,file
+   MKHDR,head1,rn
+   sxaddpar,head1,'EXTNAME','READNOISE'
+   MWRFITS,rn,head1,file
+   MKHDR,head2,gain
+   sxaddpar,head2,'EXTNAME','GAIN'
+   MWRFITS,gain,head2,file
+   MKHDR,head3,lincorr
+   sxaddpar,head3,'EXTNAME','LINEARITY CORRECTION'
+   MWRFITS,lincorr,head3,file
  endfor
 
  ;;file_delete,lockfile,/allow

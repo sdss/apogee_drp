@@ -102,20 +102,29 @@ class ApSpec() :
         header['CRPIX1'] = hdu.header['CRPIX1']
         header['CTYPE1'] = hdu.header['CTYPE1']
         header['BUNIT'] = 'Flux (10^-17 erg/s/cm^2/Ang)'
+        header['EXTNAME'] = 'FLUX'
         hdulist.append(fits.ImageHDU(self.flux,header=header))
         header['BUNIT'] = 'Err (10^-17 erg/s/cm^2/Ang)'
+        header['EXTNAME'] = 'ERROR'
         hdulist.append(fits.ImageHDU(self.err,header=header))
         header['BUNIT'] = 'Pixel bitmask'
+        header['EXTNAME'] = 'MASK'
         hdulist.append(fits.ImageHDU(self.bitmask,header=header))
         header['BUNIT'] = 'Sky (10^-17 erg/s/cm^2/Ang)'
+        header['EXTNAME'] = 'SKY FLUX'
         hdulist.append(fits.ImageHDU(self.sky,header=header))
         header['BUNIT'] = 'Sky error (10^-17 erg/s/cm^2/Ang)'
+        header['EXTNAME'] = 'SKY ERROR'
         hdulist.append(fits.ImageHDU(self.skyerr,header=header))
         header['BUNIT'] = 'Telluric'
+        header['EXTNAME'] = 'TELLURIC'
         hdulist.append(fits.ImageHDU(self.telluric,header=header))
         header['BUNIT'] = 'Telluric error'
+        header['EXTNAME'] = 'TELLURIC ERROR'
         hdulist.append(fits.ImageHDU(self.telerr,header=header))
         hdulist.append(fits.table_to_hdu(self.lsftab))
-        hdulist.append(fits.table_to_hdu(self.rvtab))
+        hdulist[-1].header['EXTNAME'] = 'LSF TABLE'
+        hdulist.append(fits.table_to_hdu(self.rvtab)) 
+        hdulist[-1].header['EXTNAME'] = 'RV TABLE'       
         hdulist.writeto(filename,overwrite=overwrite)
 

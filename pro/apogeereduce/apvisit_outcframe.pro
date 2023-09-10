@@ -142,6 +142,7 @@ For i=0,2 do begin
   sxaddpar,header1,'CTYPE1','Pixel'
   sxaddpar,header1,'CTYPE2','Fiber'
   sxaddpar,header1,'BUNIT','Flux (ADU)'
+  sxaddpar,header1,'EXTNAME','FLUX'
   MWRFITS,flux,outfile,header1,/silent
 
   ; HDU #2 = Flux Error in ADU [FLOAT]
@@ -153,6 +154,7 @@ For i=0,2 do begin
   sxaddpar,header2,'CTYPE1','Pixel'
   sxaddpar,header2,'CTYPE2','Fiber'
   sxaddpar,header2,'BUNIT','Flux Error (ADU)'
+  sxaddpar,header2,'EXTNAME','ERROR'  
   MWRFITS,errout(err),outfile,header2,/silent
 
   ; HDU #3 = Pixel mask [32-bit INT]
@@ -167,6 +169,7 @@ For i=0,2 do begin
   sxaddhist,' 2 - cosmic ray',header3
   sxaddhist,' 4 - saturated',header3
   sxaddhist,' 8 - unfixable',header3
+  sxaddpar,header3,'EXTNAME','MASK' 
   MWRFITS,mask,outfile,header3,/silent
 
   ; HDU #4 = Wavelength in units of Ang [DOUBLE]
@@ -176,6 +179,7 @@ For i=0,2 do begin
   sxaddpar,header4,'CTYPE1','Pixel'
   sxaddpar,header4,'CTYPE2','Fiber'
   sxaddpar,header4,'BUNIT','Wavelength (Ang)'
+  sxaddpar,header4,'EXTNAME','WAVELENGTH'
   MWRFITS,wave,outfile,header4,/silent
 
   ; HDU #5 = Sky flux in units of ADU [FLOAT]
@@ -185,6 +189,7 @@ For i=0,2 do begin
   sxaddpar,header5,'CTYPE1','Pixel'
   sxaddpar,header5,'CTYPE2','Fiber'
   sxaddpar,header5,'BUNIT','Sky (ADU)'
+  sxaddpar,header5,'EXTNAME','SKY FLUX'  
   MWRFITS,sky,outfile,header5,/silent
 
   ; HDU #6 = Sky error in units of ADU [FLOAT]
@@ -194,6 +199,7 @@ For i=0,2 do begin
   sxaddpar,header6,'CTYPE1','Pixel'
   sxaddpar,header6,'CTYPE2','Fiber'
   sxaddpar,header6,'BUNIT','Sky Error (ADU)'
+  sxaddpar,header6,'EXTNAME','SKY ERROR'  
   MWRFITS,skyerr,outfile,header6,/silent
 
   ; HDU #7 = Telluric absorption flux in units of [FLOAT]
@@ -203,6 +209,7 @@ For i=0,2 do begin
   sxaddpar,header7,'CTYPE1','Pixel'
   sxaddpar,header7,'CTYPE2','Fiber'
   sxaddpar,header7,'BUNIT','Telluric'
+  sxaddpar,header7,'EXTNAME','TELLURIC'
   MWRFITS,telluric,outfile,header7,/silent
 
   ; HDU #8 = Telluric error [FLOAT]
@@ -212,6 +219,7 @@ For i=0,2 do begin
   sxaddpar,header8,'CTYPE1','Pixel'
   sxaddpar,header8,'CTYPE2','Fiber'
   sxaddpar,header8,'BUNIT','Telluric Error'
+  sxaddpar,header8,'EXTNAME','TELLURIC ERROR'
   MWRFITS,telerr,outfile,header8,/silent
 
   ; HDU #9 = Wavelength solution coefficients [DOUBLE]
@@ -226,6 +234,7 @@ For i=0,2 do begin
   sxaddhist,' 4 Sine Parameters',header9
   sxaddhist,' 7 Polynomial parameters (first is a zero-point offset',header9
   sxaddhist,'                     in addition to the pixel offset)',header9
+  sxaddpar,header9,'EXTNAME','WAVE COEFFICIENTS'
   MWRFITS,wcoef,outfile,header9,/silent
 
   ; HDU #10 = LSF coefficients [DOUBLE]
@@ -256,6 +265,7 @@ For i=0,2 do begin
   sxaddhist,'             Horder Hermite parameters.  There are Porder[i]+1',header10
   sxaddhist,'             coefficients for parameter i.  The Hermite parameters',header10
   sxaddhist,'             start with H1 since we fix H0=1.',header10
+  sxaddpar,header10,'EXTNAME','LSF COEFFICIENTS'
   MWRFITS,lsfcoef,outfile,header10,/silent
 
   ; HDU #11 = Plug-map structure from plPlugMapM file [BINARY FITS TABLE]

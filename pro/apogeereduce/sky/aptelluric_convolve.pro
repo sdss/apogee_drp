@@ -82,8 +82,8 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
     if k eq 0 then wcoef=wtmp else wcoef=[[[wcoef]],[[wtmp]]]
   endfor
 
- ; get the input telluric spectra
-  nspecies=3
+  ; get the input telluric spectra
+  nspecies = 3
   FITS_READ,telluric_dir+'CH4.fits',telim1,telhead1,message=message1,/no_abort
   FITS_READ,telluric_dir+'CO2.fits',telim2,telhead2,message=message2,/no_abort
   FITS_READ,telluric_dir+'H2O.fits',telim3,telhead3,message=message3,/no_abort
@@ -92,16 +92,16 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
     stop
     return,0
   endif
-  sz=size(telim1)
+  sz = size(telim1)
   if sz[0] eq 3 then begin 
-    twave1=sxpar(telhead1,'CRVAL1')+indgen(sxpar(telhead1,'NAXIS1'))*sxpar(telhead1,'CDELT1')
-    twave2=sxpar(telhead2,'CRVAL1')+indgen(sxpar(telhead2,'NAXIS1'))*sxpar(telhead2,'CDELT1')
-    twave3=sxpar(telhead3,'CRVAL1')+indgen(sxpar(telhead3,'NAXIS1'))*sxpar(telhead3,'CDELT1')
+    twave1 = sxpar(telhead1,'CRVAL1')+indgen(sxpar(telhead1,'NAXIS1'))*sxpar(telhead1,'CDELT1')
+    twave2 = sxpar(telhead2,'CRVAL1')+indgen(sxpar(telhead2,'NAXIS1'))*sxpar(telhead2,'CDELT1')
+    twave3 = sxpar(telhead3,'CRVAL1')+indgen(sxpar(telhead3,'NAXIS1'))*sxpar(telhead3,'CDELT1')
     si1 = sort(twave1)  ; sort with wavelength
     si2 = sort(twave2)  ; sort with wavelength
     si3 = sort(twave3)  ; sort with wavelength
-    nair=sz[2]
-    nscale=sz[3]
+    nair = sz[2]
+    nscale = sz[3]
     tspec1_orig = telim1
     tspec2_orig = telim2
     tspec3_orig = telim3
@@ -115,29 +115,21 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
     twave3 = reform(telim3[2,*])
     tspec3_orig = reform(telim3[1,*],n_elements(telim3[1,*]),1,1)
     si3 = sort(twave3)  ; sort with wavelength
-    nair=1
-    nscale=1
+    nair = 1
+    nscale = 1
   endelse
 
   ; loop over chips
   if n_elements(chip) gt 0 then begin
-    j1=chip
-    j2=chip
+    j1 = chip
+    j2 = chip
   endif else begin
-    j1=0
-    j2=2
+    j1 = 0
+    j2 = 2
   endelse
   for j=j1,j2 do begin
 
     ;; wait if another process is already working on this frame
-    ;;lockfile1 = outfile[j]+'.lock'
-    ;;if not keyword_set(unlock) then begin
-    ;;  while file_test(lockfile1) do begin
-    ;;    apwait,lockfile1,10
-    ;;  endwhile
-    ;;endif else begin
-    ;;   if file_test(lockfile1) then file_delete,lockfile1,/allow
-    ;;endelse
     outfile1 = outfile[j]
     aplock,outfile1,waittime=10,unlock=unlock
      
@@ -149,8 +141,6 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
     endif
 
     ; open lock file to prevent multiple processes from working on same frame
-    ;;openw,lock,/get_lun,lockfile1
-    ;;free_lun,lock
     aplock,outfile1,/lock
     
     ; get frame size 
@@ -177,93 +167,84 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
 
     ; Loop over airmass and scale factors if we have them
     for iair=0,nair-1 do begin
-    out*=0.
-    for iscale=0,nscale-1 do begin
+      out *= 0.   ;; re-initialize the output array
+      for iscale=0,nscale-1 do begin
 
-    ; interpolate telluric spectra to output wavelengths
-    tspec1 = dblarr(nx)
-    tspec1[wsi] = SPLINE(twave1[si1],tspec1_orig[si1,iair,iscale],wave1[wsi],/double)
-    tspec2 = dblarr(nx)
-    tspec2[wsi] = SPLINE(twave2[si2],tspec2_orig[si2,iair,iscale],wave1[wsi],/double)
-    tspec3 = dblarr(nx)
-    tspec3[wsi] = SPLINE(twave3[si3],tspec3_orig[si3,iair,iscale],wave1[wsi],/double)
-    ; Loop through the fibers
-    for i=0,nfibers-1 do begin
-      ;i=fibers(ii)
+        ; interpolate telluric spectra to output wavelengths
+        tspec1 = dblarr(nx)
+        tspec1[wsi] = SPLINE(twave1[si1],tspec1_orig[si1,iair,iscale],wave1[wsi],/double)
+        tspec2 = dblarr(nx)
+        tspec2[wsi] = SPLINE(twave2[si2],tspec2_orig[si2,iair,iscale],wave1[wsi],/double)
+        tspec3 = dblarr(nx)
+        tspec3[wsi] = SPLINE(twave3[si3],tspec3_orig[si3,iair,iscale],wave1[wsi],/double)
+        ; Loop through the fibers
+        for i=0,nfibers-1 do begin
+          ;i=fibers(ii)
  
-      print,'Convolving fiber index: ', i , iscale, iair, j
-      ; Convolve the model spectra with this fiber's LSF
-      ;-------------------------------------------------
-      x = dblarr(3*npix)
-      twave[*,i]=wave1
+          print,'Convolving fiber index: ', i , iscale, iair, j
+          ; Convolve the model spectra with this fiber's LSF
+          ;-------------------------------------------------
+          x = dblarr(3*npix)
+          twave[*,i]=wave1
   
-      ; get the LSF for this fiber
-      lsfpars = reform( frame.(j).lsfcoef[i,*] )
-      lsf2d = LSF_GH(xlsf,xfine,lsfpars)
-      lsftot = total(lsf2d,2)
-      lsf2d /= lsftot#replicate(1,nLSFpix)  ; make sure the LSF is normalizedS
+          ; get the LSF for this fiber
+          lsfpars = reform( frame.(j).lsfcoef[i,*] )
+          lsf2d = LSF_GH(xlsf,xfine,lsfpars)
+          lsftot = total(lsf2d,2)
+          lsf2d /= lsftot#replicate(1,nLSFpix)  ; make sure the LSF is normalizedS
 
-      ; do the convolution
-      nhalf=nLSFpix/2
-      for k=nhalf,nx-1-nhalf do begin
-        out[k-nhalf:k+nhalf,i,0,iscale] += lsf2d[k,*]*tspec1[k]
-        out[k-nhalf:k+nhalf,i,1,iscale] += lsf2d[k,*]*tspec2[k]
-        out[k-nhalf:k+nhalf,i,2,iscale] += lsf2d[k,*]*tspec3[k]
-      endfor
-;
-;      ; instead of using a very high sampling we could rebin
-;      ; to lower sampling (i.e. summing/binning) and then use
-;      ; less LSF pixels.
-;      ; but we need the integer pixels in there.
-;  
-;      ; Step 2-Make 2D arrays of the model spectra
-;      nLSFpix = 2*7*osamp + 1   ; +/-7 underampled pixels
-;      ;ind0 = REPLICATE(1,npix)#(lindgen(nLSFpix)-nLSFpix/2)
-;      ;indcen = (lindgen(npix)*osamp + osamp*extend )#replicate(1,nLSFpix)
-;      ind0 = REPLICATE(1,nx)#(lindgen(nLSFpix)-nLSFpix/2)
-;      ;indcen = (lindgen(nx) + extend )#replicate(1,nLSFpix)
-;      ;ind = ind0+indcen
-;      ind = ind0
-;      tspec1_2d = tspec1[ind]
-;      tspec2_2d = tspec2[ind]
-;      tspec3_2d = tspec3[ind]
-;    
-;      ; Step 3-Make 2D LSF array
-;      ;xlsf = REPLICATE(1.0d0,npix)#(dindgen(nLSFpix)-nLSFpix/2)*dx
-;      ;xlsf += dindgen(npix)#REPLICATE(1.0d0,nLSFpix)
-;      ;xcenter = dindgen(npix)
-;      xlsf = REPLICATE(1.0d0,nx)#(dindgen(nLSFpix)-nLSFpix/2)*dx
-;      xlsf += dindgen(nx)*dx#REPLICATE(1.0d0,nLSFpix)
-;      xcenter = dindgen(nx)*dx
-;  
-;      lsf2d = LSF_GH(xlsf,xcenter,lsfpars)
-;      lsftot = total(lsf2d,2)
-;      lsf2d /= lsftot#replicate(1,nLSFpix)/osamp  ; make sure the LSF is normalized
-;  
-;      ; Step 4-Multiply LSF by spectrum 2D arrays and sum/collapse
-;      out[*,i,0] = TOTAL(lsf2d*tspec1_2d,2)/osamp
-;      out[*,i,1] = TOTAL(lsf2d*tspec2_2d,2)/osamp
-;      out[*,i,2] = TOTAL(lsf2d*tspec3_2d,2)/osamp
-    endfor  ;end fibers
+          ; do the convolution
+          nhalf=nLSFpix/2
+          for k=nhalf,nx-1-nhalf do begin
+            out[k-nhalf:k+nhalf,i,0,iscale] += lsf2d[k,*]*tspec1[k]
+            out[k-nhalf:k+nhalf,i,1,iscale] += lsf2d[k,*]*tspec2[k]
+            out[k-nhalf:k+nhalf,i,2,iscale] += lsf2d[k,*]*tspec3[k]
+          endfor
+        
+        endfor  ;end fibers
 
+      endfor  ; end scale
 
-    endfor  ; end scale
-    ; write this out for subsequent use
-    if iair eq 0 then begin
-      mkhdr,hdr,twave
-      if sxpar(telhead1,'CRVAL2') gt 0 then air0=sxpar(telhead1,'CRVAL2') else air0=1.
-      if sxpar(telhead1,'CDELT2') gt 0 then dair=sxpar(telhead1,'CDELT2') else dair=1.
-      sxaddpar,hdr,'AIR0',air0
-      sxaddpar,hdr,'DAIR',dair
-      sxaddpar,hdr,'NSPECIES',nspecies
-      sxaddpar,hdr,'NSCALE',nscale
-      mwrfits,twave,outfile[j],hdr,/create
-    endif
-    mwrfits,out,outfile[j]
+      ;; Write the wavelengths out
+      if iair eq 0 then begin
+        mkhdr,hdr,twave
+        if sxpar(telhead1,'CRVAL2') gt 0 then air0=sxpar(telhead1,'CRVAL2') else air0=1.
+        if sxpar(telhead1,'CDELT2') gt 0 then dair=sxpar(telhead1,'CDELT2') else dair=1.
+        sxaddpar,hdr,'AIR0',air0
+        sxaddpar,hdr,'DAIR',dair
+        sxaddpar,hdr,'NSPECIES',nspecies
+        sxaddpar,hdr,'NSCALE',nscale
+        sxaddpar,hdr,'EXTNAME','WAVELENGTH'
+        mwrfits,twave,outfile[j],hdr,/create
+      endif
 
-    endfor  ; end airmass
+      ;; Write out the telluric information
+      mkhdr,head,out
+      sxaddpar,head,'CTYPE1','WAVELENGTH'  ;; 4176
+      if sxpar(telhead1,'CRVAL2') gt 0 then begin
+        sxaddpar,head,'CRVAL1',sxpar(telhead1,'CRVAL1')
+        sxaddpar,head,'CDELT1',sxpar(telhead1,'CDELT1')
+        sxaddpar,head,'CRPIX1',1
+      endif
+      sxaddpar,head,'CTYPE2','FIBER'       ;; 300
+      sxaddpar,head,'CRVAL2',1
+      sxaddpar,head,'CRPIX2',1
+      sxaddpar,head,'CDELT2',1      
+      sxaddpar,head,'CTYPE3','SPECIES'     ;; 3
+      sxaddpar,head,'SPECIES1','CH4'
+      sxaddpar,head,'SPECIES2','CO2'
+      sxaddpar,head,'SPECIES3','H2O'
+      sxaddpar,head,'CTYPE4','SCALE'       ;; 4
+      sxaddpar,head,'CRVAL4',sxpar(telhead1,'CRVAL3')
+      sxaddpar,head,'CDELT4',sxpar(telhead1,'CDELT3')
+      sxaddpar,head,'CRPIX4',1  
+      sxaddpar,head,'AIRMASS',air0+iair*dair
+      sxaddpar,head,'EXTNAME','TELLURIC'
+      mwrfits,out,outfile[j]
+
+    endfor   ; end airmass
+    
     ; remove lock file
-    ;;file_delete,lockfile1
     aplock,outfile1,/clear
     
     nextchip:

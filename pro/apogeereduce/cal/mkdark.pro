@@ -219,9 +219,15 @@ for ichip=0,n_elements(chips)-1 do begin
   sxaddhist,leadstr+'IDL '+!version.release+' '+!version.os+' '+!version.arch,head0
   sxaddhist,leadstr+' APOGEE Reduction Pipeline Version: '+getvers(),head0
   MWRFITS,0,darkdir+'/'+file+'.fits',head0,/create
-  MWRFITS,dark,darkdir+'/'+file+'.fits'
-  MWRFITS,chi2,darkdir+'/'+file+'.fits'
-  MWRFITS,mask,darkdir+'/'+file+'.fits'
+  MKHDR,head1,dark
+  sxaddpar,head1,'EXTNAME','DARK'
+  MWRFITS,dark,head1,darkdir+'/'+file+'.fits'
+  MKHDR,head2,chi2
+  sxaddpar,head2,'EXTNAME','CHI-SQUARED'
+  MWRFITS,chi2,head2,darkdir+'/'+file+'.fits'
+  MKHDR,head3,mask
+  sxaddpar,head3,'EXTNAME','MASK'
+  MWRFITS,mask,head3,darkdir+'/'+file+'.fits'
 
   ;; Make some plots/images
   if not file_test(darkdir+'/plots',/dir) then file_mkdir,darkdir+'/plots'

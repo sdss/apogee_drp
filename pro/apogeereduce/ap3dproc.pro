@@ -2449,6 +2449,7 @@ print,'no_checksum: ', no_checksum
       sxaddpar,head1,'CTYPE1','Pixel'
       sxaddpar,head1,'CTYPE2','Pixel'
       sxaddpar,head1,'BUNIT','Flux (ADU)'
+      sxaddpar,head1,'EXTNAME','FLUX'
       MWRFITS,flux,ioutfile,head1,/silent
 
       ; HDU2 - error
@@ -2459,6 +2460,7 @@ print,'no_checksum: ', no_checksum
       sxaddpar,head2,'CTYPE1','Pixel'
       sxaddpar,head2,'CTYPE2','Pixel'
       sxaddpar,head2,'BUNIT','Error (ADU)'
+      sxaddpar,head2,'EXTNAME','ERROR'
       MWRFITS,err,ioutfile,head2,/silent
 
       ; HDU3 - mask
@@ -2474,6 +2476,7 @@ print,'no_checksum: ', no_checksum
       sxaddhist,' 2 - cosmic ray',head3
       sxaddhist,' 4 - saturated',head3
       sxaddhist,' 8 - unfixable',head3
+      sxaddpar,head3,'EXTNAME','MASK'
       MWRFITS,flagmask,ioutfile,head3,/silent
       ;FITS_WRITE,ioutfile,output,head,/no_abort,message=write_error
       ;if write_error ne '' then print,'Error writing file '+write_error
@@ -2484,6 +2487,7 @@ print,'no_checksum: ', no_checksum
         sxaddpar,head4,'CTYPE1','Pixel'
         sxaddpar,head4,'CTYPE2','Pixel'
         sxaddpar,head4,'BUNIT','Persistence correction (ADU)'
+        sxaddpar,head4,'EXTNAME','PERSIST CORRECTION'               
         MWRFITS,pmodelim,ioutfile,head4,/silent
       endif
         
