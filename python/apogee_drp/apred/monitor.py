@@ -164,9 +164,12 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
         else:
             outfile = specdir5 + 'monitor/' + instrument + 'Cal.fits'
             print("----> monitor: Making " + os.path.basename(outfile))
-
+            
             # Make output structure and fill with APOGEE2 summary file values
-            outstr = getQAcalStruct(allcal)
+            if allcal is not None:
+                outstr = getQAcalStruct(allcal)
+            else:
+                outstr = None
 
             files.sort()
             files = np.array(files)
@@ -176,7 +179,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             Nadditions = 0
             for i in range(nfiles):
                 data = fits.getdata(files[i])
-                check, = np.where(data['NAME'][0] == outstr['NAME'])
+                if outstr is not None:
+                    check, = np.where(data['NAME'][0] == outstr['NAME'])
+                else:
+                    check = []
                 if len(check) > 0:
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
                     continue
@@ -184,7 +190,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #if os.path.exists(files[i].replace('QAcal', 'QAdarkflat')):
                     print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                     newstr = getQAcalStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
+                    if outstr is not None:
+                        outstr = np.concatenate([outstr, newstr])
+                    else:
+                        outstr = newstr
                     Nadditions += 1
 
             if Nadditions > 0:
@@ -205,8 +214,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Adding QAdarkflat info to " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
-            outstr = getQAdarkflatStruct(alldark)
-
+            if alldark is not None:
+                outstr = getQAdarkflatStruct(alldark)
+            else:
+                outstr = None
+            
             files.sort()
             files = np.array(files)
             nfiles = len(files)
@@ -215,7 +227,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             Nadditions = 0
             for i in range(nfiles):
                 data = fits.getdata(files[i])
-                check, = np.where(data['NAME'][0] == outstr['NAME'])
+                if outstr is not None:
+                    check, = np.where(data['NAME'][0] == outstr['NAME'])
+                else:
+                    check = []
                 if len(check) > 0:
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
                     continue
@@ -223,7 +238,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                     #if os.path.exists(files[i].replace('QAdarkflat', 'QAcal')):
                     print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                     newstr = getQAdarkflatStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
+                    if outstr is not None:
+                        outstr = np.concatenate([outstr, newstr])
+                    else:
+                        outstr = newstr
                     Nadditions += 1
 
             if Nadditions > 0:
@@ -249,7 +267,10 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
-            outstr = getExpStruct(allexp)
+            if allexp is not None:
+                outstr = getExpStruct(allexp)
+            else:
+                outstr = None
 
             files.sort()
             files = np.array(files)
@@ -261,14 +282,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 data = fits.getdata(files[i])
                 nobs = len(data)
                 try:
-                    check, = np.where(data['DATEOBS'][nobs-1] == outstr['DATEOBS'])
+                    if outstr is not None:
+                        check, = np.where(data['DATEOBS'][nobs-1] == outstr['DATEOBS'])
+                    else:
+                        check = []
                 except:
                     print('---->    monitor: Problem with missing values in ' + os.path.basename(files[i]))
                     continue
                 if len(check) < 1:
                     print("---->    monitor: adding " + str(nobs) + " exposures from " + os.path.basename(files[i]) + " to master file")
                     newstr = getExpStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
+                    if outstr is not None:
+                        outstr = np.concatenate([outstr, newstr])
+                    else:
+                        outstr = newstr
                     Nadditions += 1
 
                 #for j in range(nobs):
@@ -445,8 +472,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(outfile))
 
             # Make output structure and fill with APOGEE2 summary file values
-            outstr = getSciStruct(allsci)
-
+            if allsci is not None:
+                outstr = getSciStruct(allsci)
+            else:
+                outstr = None
+                
             files.sort()
             files = np.array(files)
             nfiles=len(files)
@@ -455,14 +485,20 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             Nadditions = 0
             for i in range(nfiles):
                 data = fits.getdata(files[i])
-                check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
+                if outstr is not None:
+                    check, = np.where(data['DATEOBS'][0] == outstr['DATEOBS'])
+                else:
+                    check = []
                 if len(check) > 0:
                     #print("---->    monitor: skipping " + os.path.basename(files[i]))
                     continue
                 else:
                     print("---->    monitor: adding " + os.path.basename(files[i]) + " to master file")
                     newstr = getSciStruct(data)
-                    outstr = np.concatenate([outstr, newstr])
+                    if outstr is not None:
+                        outstr = np.concatenate([outstr, newstr])
+                    else:
+                        outstr = newstr
                     Nadditions += 1
 
             if Nadditions > 0:

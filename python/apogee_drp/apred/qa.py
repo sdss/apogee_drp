@@ -1007,7 +1007,8 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     qafile = load.filename('QA', plate=int(plate), mjd=mjd)
     qafiledir = os.path.dirname(qafile)
     print("----> makeObsHTML: Creating "+os.path.basename(qafile))
-    if os.path.exists(qafiledir) == False: subprocess.call(['mkdir',qafiledir])
+    if os.path.exists(qafiledir) == False:
+        os.makedirs(qafiledir)
 
     html = open(qafile, 'w')
     tmp = os.path.basename(qafile).replace('.html','')
@@ -1272,7 +1273,8 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))
     plotsdir = platedir+'/plots/'
-    if len(glob.glob(plotsdir)) == 0: subprocess.call(['mkdir',plotsdir])
+    if len(glob.glob(plotsdir)) == 0:
+        os.makedirs(plotsdir)
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
@@ -3193,16 +3195,20 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     print("----> makeNightQA: "+htmlfile)
 
     # Make the html folder if it doesn't already exist
-    if os.path.exists(outdir) == False: subprocess.call(['mkdir',outdir])
-    if os.path.exists(plotsdir) == False: subprocess.call(['mkdir',plotsdir])
+    if os.path.exists(outdir) == False:
+        os.makedirs(outdir)
+    if os.path.exists(plotsdir) == False:
+        os.makedirs(plotsdir)
 
     # Get all apR file numbers for the night
     rawfiles = glob.glob(datadir + mjd + '/a*R-*.apz')
     rawfiles.sort()
     rawfiles = np.array(rawfiles)
     nrawfiles = len(rawfiles)
-    if nrawfiles < 1: sys.exit("----> makeNightQA: PROBLEM! No raw data found.")
-
+    if nrawfiles < 1:
+        print("----> makeNightQA: PROBLEM! No raw data found.")
+        return
+        
 #    checksums = np.zeros(nrawfiles)
     exposures = np.zeros(nrawfiles)
     for i in range(nrawfiles):

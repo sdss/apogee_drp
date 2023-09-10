@@ -3280,24 +3280,25 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
             # Run makeCalFits, makeDarkFits, makeExpFits
             # makeCalFits
             expinfo = getexpinfo(load,int(m),logger=logger,verbose=False)
-            calind, = np.where((expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='QUARTZFLAT') |
-                               (expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='FPI'))
-            if len(calind)>0:
-                all_ims = expinfo['num'][calind]
-                all_types = np.full(len(all_ims), 'cal')
-                all_types[expinfo['exptype'][calind]=='FPI'] = 'fpi'
-                qa.makeCalFits(load=load, ims=all_ims, types=all_types, mjd=str(m), instrument=instrument, clobber=clobber)
-            # makeDarkFits
-            darkind, = np.where(expinfo['exptype']=='DARK')
-            if len(darkind)>0:
-                all_ims = expinfo['num'][darkind]
-                qa.makeDarkFits(load=load, ims=all_ims, mjd=str(m), clobber=clobber)
-            qa.makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=str(m), clobber=clobber)
+            if len(expinfo)>0:
+                calind, = np.where((expinfo['exptype']=='ARCLAMP') | (expinfo['exptype']=='QUARTZFLAT') |
+                                   (expinfo['exptype']=='DOMEFLAT') | (expinfo['exptype']=='FPI'))
+                if len(calind)>0:
+                    all_ims = expinfo['num'][calind]
+                    all_types = np.full(len(all_ims), 'cal')
+                    all_types[expinfo['exptype'][calind]=='FPI'] = 'fpi'
+                    qa.makeCalFits(load=load, ims=all_ims, types=all_types, mjd=str(m), instrument=instrument, clobber=clobber)
+                # makeDarkFits
+                darkind, = np.where(expinfo['exptype']=='DARK')
+                if len(darkind)>0:
+                    all_ims = expinfo['num'][darkind]
+                    qa.makeDarkFits(load=load, ims=all_ims, mjd=str(m), clobber=clobber)
+                qa.makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=str(m), clobber=clobber)
         except:
             traceback.print_exc()    
     # Make final mjd/fields pages
     try:
-        mjdmin = np.minimum(np.min(np.array(mjd).astype(int)),59146)
+        mjdmin = np.minimum(np.min(np.array(mjds).astype(int)),59146)
         qa.makeMasterQApages(mjdmin=mjdmin, mjdmax=9999999, apred=apred,
                              mjdfilebase='mjd.html',fieldfilebase='fields.html',
                              domjd=True, dofields=True)
