@@ -229,13 +229,13 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
     MWRFITS,0,file,head0,/create
     MKHDR,head1,flat,/image
     sxaddpar,head1,'EXTNAME','FLAT'
-    MWRFITS,flat,head1,file
+    MWRFITS,flat,file,head1
     MKHDR,head2,sflat,/image
     sxaddpar,head2,'EXTNAME','SPECTRAL FLAT'
-    MWRFITS,sflat,head2,file
+    MWRFITS,sflat,file,head2
     MKHDR,head3,mask,/image
     sxaddpar,head3,'EXTNAME','MASK'
-    MWRFITS,mask,head3,file
+    MWRFITS,mask,filehead3
 
     ;; Make a jpg of the flat
     if not file_test(flatdir+'plots',/dir) then file_mkdir,flatdir+'plots'

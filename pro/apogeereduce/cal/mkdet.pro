@@ -90,13 +90,13 @@ pro mkdet,detid,linid,unlock=unlock
    MWRFITS,0,file,head,/create
    MKHDR,head1,rn
    sxaddpar,head1,'EXTNAME','READNOISE'
-   MWRFITS,rn,head1,file
+   MWRFITS,rn,file,head1
    MKHDR,head2,gain
    sxaddpar,head2,'EXTNAME','GAIN'
-   MWRFITS,gain,head2,file
+   MWRFITS,gain,file,head2
    MKHDR,head3,lincorr
    sxaddpar,head3,'EXTNAME','LINEARITY CORRECTION'
-   MWRFITS,lincorr,head3,file
+   MWRFITS,lincorr,file,head3
  endfor
 
  ;;file_delete,lockfile,/allow

@@ -221,13 +221,13 @@ for ichip=0,n_elements(chips)-1 do begin
   MWRFITS,0,darkdir+'/'+file+'.fits',head0,/create
   MKHDR,head1,dark
   sxaddpar,head1,'EXTNAME','DARK'
-  MWRFITS,dark,head1,darkdir+'/'+file+'.fits'
+  MWRFITS,dark,darkdir+'/'+file+'.fits',head1
   MKHDR,head2,chi2
   sxaddpar,head2,'EXTNAME','CHI-SQUARED'
-  MWRFITS,chi2,head2,darkdir+'/'+file+'.fits'
+  MWRFITS,chi2,darkdir+'/'+file+'.fits',head2
   MKHDR,head3,mask
   sxaddpar,head3,'EXTNAME','MASK'
-  MWRFITS,mask,head3,darkdir+'/'+file+'.fits'
+  MWRFITS,mask,darkdir+'/'+file+'.fits',head3
 
   ;; Make some plots/images
   if not file_test(darkdir+'/plots',/dir) then file_mkdir,darkdir+'/plots'
