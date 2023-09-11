@@ -235,7 +235,7 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
     MWRFITS,sflat,file,head2
     MKHDR,head3,mask,/image
     sxaddpar,head3,'EXTNAME','MASK'
-    MWRFITS,mask,filehead3
+    MWRFITS,mask,file,head3
 
     ;; Make a jpg of the flat
     if not file_test(flatdir+'plots',/dir) then file_mkdir,flatdir+'plots'
