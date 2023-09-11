@@ -289,17 +289,30 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
             writeNewMJD(observatory,mjd5,apred=apred)
     
 
+    # Generate History file for this MJD
+    #-----------------------------------
+    if len(expinfo)>0:
+        rootLogger.info('')
+        rootLogger.info('-------------------------------------')
+        rootLogger.info('1) Generate History file for this MJD')
+        rootLogger.info('======================================')
+        chkhist = apogeedrp.runhistory(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
+    else:
+        rootLogger.info('No exposures to make a history file for')
+        chkhist = None
+
+        
     # Process all exposures through ap3D first
     #-----------------------------------------
     if len(expinfo)>0:
         rootLogger.info('')
         rootLogger.info('--------------------------------')
-        rootLogger.info('1) Running AP3D on all exposures')
+        rootLogger.info('2) Running AP3D on all exposures')
         rootLogger.info('================================')
         chk3d = apogeedrp.runap3d(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
     else:
         rootLogger.info('No exposures to process with AP3D')
-        chk3d = None
+        chk3d = None        
 
     # Do QA check of the files
     rootLogger.info(' ')
@@ -320,7 +333,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     if len(calind)>0:
         rootLogger.info('')
         rootLogger.info('----------------------------------------')
-        rootLogger.info('2) Generating daily calibration products')
+        rootLogger.info('3) Generating daily calibration products')
         rootLogger.info('========================================')
         chkcal = apogeedrp.rundailycals(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
     else:
@@ -333,7 +346,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     # Check that the necessary daily calibration files exist
     rootLogger.info(' ')
     rootLogger.info('--------------------')
-    rootLogger.info('3) Making plan files')
+    rootLogger.info('4) Making plan files')
     rootLogger.info('====================')
     # Default is to remake the plan files, just in case something changed since
     #  the same thing this was run.  For example, the daily wave crashed and it
@@ -357,7 +370,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     if nplanfiles>0:
         rootLogger.info('')
         rootLogger.info('----------------')
-        rootLogger.info('4) Running APRED')
+        rootLogger.info('5) Running APRED')
         rootLogger.info('================')
         chkexp,chkvisit = apogeedrp.runapred(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
     else:
@@ -368,7 +381,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     #----------------------------------
     rootLogger.info('')
     rootLogger.info('--------------------------------')
-    rootLogger.info('5) Running RV+Visit Combination')
+    rootLogger.info('6) Running RV+Visit Combination')
     rootLogger.info('================================')
     chkrv = apogeedrp.runrv(load,[mjd5],slurm,daily=True,clobber=clobber,logger=rootLogger)
 
@@ -377,7 +390,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
     # The QA code needs these
     rootLogger.info('')
     rootLogger.info('-----------------------')
-    rootLogger.info('6) Create summary files')
+    rootLogger.info('7) Create summary files')
     rootLogger.info('=======================')
     apogeedrp.create_sumfiles(apred,telescope,mjd5)
 

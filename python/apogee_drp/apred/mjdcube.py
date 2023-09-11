@@ -8,8 +8,7 @@ from ..utils import apload
 
 def mjdcube(mjd, darkid=None, write=False, apred='daily', instrument='apogee-n', clobber=False):
     """
-    Make a cube for a given night with the CDS images of all frames
-    Optionally, write out individual uncompressed data cubes
+    Make a cube for a given night with the CDS images of all frames.
 
     Parameters
     ----------
@@ -19,7 +18,7 @@ def mjdcube(mjd, darkid=None, write=False, apred='daily', instrument='apogee-n',
        Dark calibration file to use to correct the data.  Default
          is not to apply a dark correction.
     write : bool, optional
-       Write out
+       Write out individual uncompressed data cubes.  Default is False.
     apred : str, optional
        Apred reduction version.  Default is 'daily'.
     instrument : str, optional
@@ -73,12 +72,11 @@ def mjdcube(mjd, darkid=None, write=False, apred='daily', instrument='apogee-n',
         
         # Get dark frame if requested
         if darkid is not None:
-            darkfile = load.filename('Dark',num=darkid,chips=True).replace('Dark-','Dark-'+chip)
+            darkfile = load.filename('Dark',num=darkid,chips=True).replace('Dark-','Dark-'+chip+'-')
             if os.path.exists(darkfile)==False:
                 raise FileNotFoundError(darkfile)
             darkhdu = fits.open(darkfile)
             dark = darkhdu[1].data
-            #dark = fits.open(os.environ['APOGEE_REDUX']+'/'+apred+'/cal/darkcorr/apDark-'+chip+'-'+darkid+'.fits')[1].data
 
         # Loop over all files
         for f,fil in enumerate(files):
@@ -87,6 +85,9 @@ def mjdcube(mjd, darkid=None, write=False, apred='daily', instrument='apogee-n',
                 outfile = os.path.basename(fil.strip('apz')+'fits')
                 hduout = fits.HDUList(fits.PrimaryHDU())
 
+            # Add filename to primary output header
+            out[0].header['FILE'+str(f+1)] = fil
+                
             # Open file and confirm checksums
             hdu = fits.open(fil, do_not_scale_image_data = True, uint = True, checksum = True)
 
@@ -129,19 +130,22 @@ def mjdcube(mjd, darkid=None, write=False, apred='daily', instrument='apogee-n',
             cds = (data[0:2048,0:2048] - first[0:2048,0:2048] ).astype(float)
             #print(cds.shape)
             if darkid is not None:
-                print(dark.shape,nreads)
+                #print(dark.shape,nreads)
                 # If we don't have enough reads in the dark, do nothing
                 try :
                     cds -= (dark[nreads-1,:,:] - dark[2,:,:])
                 except:
                     print('not halting: not enough reads in dark, skipping dark subtraction for mjdcube')
                     pass
+            cds = cds.astype(np.int32)     # convert back to integers
+            header['EXTNAME'] = 'CDS'
+            header['RAWFILE'] = fil
             out.append(fits.ImageHDU(cds,header))
             if write:
-                hdout.writeto(outfile,overwrite=True, checksum = True, output_verify='fix')
-                hd.close()
+                hduout.writeto(outfile,overwrite=True, checksum = True, output_verify='fix')
+                hdu.close()
 
         # Write out the CDS frame
-        print('Writing to ',outfile)        
+        print('Writing to ',outfile)
         out.writeto(outfile,overwrite=True, checksum = True, output_verify='fix')
         out.close()

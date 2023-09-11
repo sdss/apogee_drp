@@ -773,6 +773,8 @@ class ApLoad:
 
         if lroot=='r' or lroot=='2d' or lroot=='1d' or lroot=='bpm' or lroot=='lsf':
             prefix = lroot.upper()
+        elif lroot=='hist':
+            prefix = 'Hist'
         elif lroot=='detector':
             prefix = 'Detector'
         elif lroot=='flux':

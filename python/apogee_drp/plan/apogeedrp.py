@@ -64,7 +64,7 @@ def loadsteps(steps):
     """ Parse and expand input steps into a list."""
     # Reduction steps
     # The default is to do all
-    allsteps = ['setup','master','3d','cal','plan','apred','rv','summary','unified','qa']
+    allsteps = ['setup','master','history','3d','cal','plan','apred','rv','summary','unified','qa']
     if steps is None:
         steps = allsteps
     else:
@@ -442,6 +442,59 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False
     return chkmaster
 
 
+def check_history(mjds,pbskey,apred=None,telescope=None,verbose=False,logger=None):
+    """ Check that the History ran okay """
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    #db = apogeedb.DBSession()  # open db session
+
+    if verbose==True:
+        logger.info('')
+        logger.info('--------------------')
+        logger.info('Checking History run')
+        logger.info('====================')
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+
+    if verbose:
+        logger.info('')
+        logger.info('%d MJDs' % len(mjds))
+        logger.info(' MJD         SUCCESS')
+
+    # Loop over the MJDs
+    nmjd = len(mjds)
+
+    dtype = np.dtype([('mjd',int),('apred_vers',(str,20)),('v_apred',(str,50)),
+                      ('instrument',(str,20)),('telescope',(str,10)),
+                      ('pbskey',(str,50)),('checktime',(str,100)),('success',bool)])
+    chkhist = np.zeros(nmjd,dtype=dtype)
+    chkhist['apred_vers'] = apred
+    chkhist['telescope'] = telescope
+    chkhist['pbskey'] = pbskey
+    chkhist['success'] = False
+    chips = ['a','b','c']
+    for i,mjd in enumerate(mjds):
+        chkhist['mjd'] = mjd
+        outfile = load.filename('Hist',mjd=mjd,chips=True)
+        outfiles = [outfile.replace('Hist-','Hist-'+ch+'-') for ch in chips]
+        outinfo = info.file_status(outfiles)
+        chkhist['checktime'][i] = str(datetime.now())
+        chkhist['success'][i] = np.sum(outinfo['exists'])==3
+
+        if verbose:
+            logger.info('%5d %20s %9s' % (i+1,mjd,chkhist['success'][i]))
+    success, = np.where(chkhist['success']==True)
+    logger.info('%d/%d succeeded' % (len(success),nmjd))
+    
+    # Inset into the database
+    #db.ingest('history_status',chkhist)
+    #db.close()        
+
+    return chkhist
+
+
 def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=None):
     """ Check that ap3d ran okay and load into database."""
 
@@ -471,45 +524,45 @@ def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=Non
                       ('plate',int),('configid',(str,20)),('designid',(str,20)),('fieldid',(str,20)),
                       ('proctype',(str,30)),('pbskey',(str,50)),('checktime',(str,100)),
                       ('num',int),('success',bool)])
-    chk3d = np.zeros(nexp,dtype=dtype)
-    chk3d['apred_vers'] = apred
-    chk3d['telescope'] = telescope
-    chk3d['pbskey'] = pbskey
-    chk3d['proctype'] = 'AP3D'
-    chk3d['success'] = False
+    chkhistory = np.zeros(nexp,dtype=dtype)
+    chkhistory['apred_vers'] = apred
+    chkhistory['telescope'] = telescope
+    chkhistory['pbskey'] = pbskey
+    chkhistory['proctype'] = 'AP3D'
+    chkhistory['success'] = False
     chips = ['a','b','c']
     for i,num in enumerate(expinfo['num']):
-        chk3d['exposure_pk'] = expinfo['pk'][i]
-        chk3d['num'][i] = num
+        chkhistory['exposure_pk'] = expinfo['pk'][i]
+        chkhistory['num'][i] = num
         mjd = int(load.cmjd(num))
         outfile = load.filename('2D',num=num,mjd=mjd,chips=True)
         outfiles = [outfile.replace('2D-','2D-'+ch+'-') for ch in chips]
         planfile = os.path.dirname(outfile)+'/logs/'+os.path.basename(outfile)
         planfile = outfile.replace('2D','3DPlan').replace('.fits','.yaml')
-        chk3d['planfile'][i] = planfile
+        chkhistory['planfile'][i] = planfile
         outinfo = info.file_status(outfiles)
         if outinfo['okay'][0]:
             head = fits.getheader(outfiles[0])
-            chk3d['v_apred'][i] = head.get('V_APRED')
+            chkhistory['v_apred'][i] = head.get('V_APRED')
             head = fits.getheader(outfiles[0])
-            chk3d['v_apred'][i] = head.get('V_APRED')
+            chkhistory['v_apred'][i] = head.get('V_APRED')
             head = fits.getheader(outfiles[0])
-            chk3d['v_apred'][i] = head.get('V_APRED')
+            chkhistory['v_apred'][i] = head.get('V_APRED')
             head = fits.getheader(outfiles[0])
-            chk3d['v_apred'][i] = head.get('V_APRED')
-        chk3d['checktime'][i] = str(datetime.now())
-        chk3d['success'][i] = np.sum(outinfo['exists'])==3
+            chkhistory['v_apred'][i] = head.get('V_APRED')
+        chkhistory['checktime'][i] = str(datetime.now())
+        chkhistory['success'][i] = np.sum(outinfo['exists'])==3
 
         if verbose:
-            logger.info('%5d %20s %9s' % (i+1,num,chk3d['success'][i]))
-    success, = np.where(chk3d['success']==True)
+            logger.info('%5d %20s %9s' % (i+1,num,chkhistory['success'][i]))
+    success, = np.where(chkhistory['success']==True)
     logger.info('%d/%d succeeded' % (len(success),nexp))
     
     # Inset into the database
-    db.ingest('exposure_status',chk3d)
+    db.ingest('exposure_status',chkhistory)
     db.close()        
 
-    return chk3d
+    return chkhistory
 
 
 def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
@@ -2107,6 +2160,110 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     return chkmaster
     
     
+def runhistory(load,mjds,slurmpars,clobber=False,logger=None):
+    """
+    Creating image history for each MJD.
+
+    Parameters
+    ----------
+    load : ApLoad object
+       ApLoad object that contains "apred" and "telescope".
+    mjds : list
+       List of MJDs to process.
+    slurmpars : dictionary
+       Dictionary of slurmpars settings.
+    clobber : boolean, optional
+       Overwrite existing files.  Default is False.
+    logger : logger, optional
+       Logging object.  If not is input, then a default one will be created.
+
+    Returns
+    -------
+    chkhistory : numpy structured array
+       Table of summary and QA information about the history files.
+
+    Example
+    -------
+
+    runhistory(load,mjds)
+
+    """
+
+    if logger is None:
+        logger = dln.basiclogger()
+    
+    apred = load.apred
+    telescope = load.telescope
+    instrument = {'apo':'apogee-n','lco':'apogee-s'}[telescope[0:3]]
+    observatory = telescope[0:3]
+    logtime = datetime.now().strftime("%Y%m%d%H%M%S")
+
+    caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
+    calfile = caldir+load.instrument+'.par'
+    
+    # Process the files
+    if mjds is None or len(mjds)==0:
+        logger.info('No MJDs to process')
+        chkhist = []
+
+    # Loop over exposures and see if the outputs exist already
+    dohist = np.zeros(len(mjds),bool)
+    for i,mjd in enumerate(mjds):    
+        # Check if output files exist already
+        dohist[i] = True
+        if clobber is not True:
+            outfile = load.filename('Hist',mjd=mjd,chips=True)
+            if load.exists('Hist',mjd=mjd):
+                logger.info(str(i+1)+' '+os.path.basename(outfile)+' already exists and clobber==False')
+                dohist[i] = False
+    logger.info(str(np.sum(dohist))+' MJDs to run')
+    
+    # Loop over the MJDs and make the commands for the ones that we will run
+    torun, = np.where(dohist==True)
+    ntorun = len(torun)
+    if ntorun>0:
+        slurmpars1 = slurmpars.copy()
+        if ntorun<64:
+            slurmpars1['cpus'] = ntorun
+        slurmpars1['numpy_num_threads'] = 2
+        logger.info('Slurm settings: '+str(slurmpars1))
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = Table(tasks)
+        for i in range(ntorun):
+            mjd = mjds[torun[i]]
+            logfile1 = load.filename('Hist',mjd=mjd,chips=True)
+            logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
+            logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            # Get DarkID for this MJD
+            caldata = mkcal.getcal(calfile,mjd)
+            darkid = caldata['dark']
+            if darkid is None:
+                logger.info('No darkid found for '+str(mjd))           
+                cmd1 = 'makehist {:0} --apred {:1} --instrument {:2}'.format(mjd,apred,instrument)
+            else:
+                cmd1 = 'makehist {:0} --apred {:1} --instrument {:2} --darkid {:3}'.format(mjd,apred,instrument,darkid)            
+            if clobber:
+                cmd1 += ' --clobber'
+            logger.info('MJD %d : %d' % (i+1,mjd))
+            logger.info('Command : '+cmd1)
+            logger.info('Logfile : '+logfile1)
+            tasks['cmd'][i] = cmd1
+            tasks['outfile'][i] = logfile1
+            tasks['errfile'][i] = logfile1.replace('.log','.err')
+            tasks['dir'][i] = os.path.dirname(logfile1)
+        logger.info('Creating apHist for '+str(ntorun)+' MJDs')
+        key,jobid = slrm.submit(tasks,label='history',verbose=True,logger=logger,**slurmpars1)
+        slrm.queue_wait('history',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
+        chkhist = check_history(mjds,key,apred,telescope,verbose=True,logger=logger)
+    else:
+        chkhist = None
+        logger.info('No MJDs need HISTORY processing')
+        
+    return chkhist
+
+
 def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
     """
     Run AP3D on all exposures for a list of MJDs.
@@ -3430,7 +3587,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
          By default, all SDSS-V MJDs are run.
     steps : list, optional
        Processing steps to perform.  The full list is:
-         ['setup','master','3d','cal','plan','apred','rv','summary','unified','qa']
+         ['setup','master','history','3d','cal','plan','apred','rv','summary','unified','qa']
          By default, all steps are run.
     caltypes : list, optional
        Calibration types to run.  This is used to select a subset of the master cals or daily cals
@@ -3581,15 +3738,25 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
 
     # 3) Process all exposures through ap3d
     #---------------------------------------
+    if 'history' in steps:
+        rootLogger.info('')
+        rootLogger.info('------------------------------------------')
+        rootLogger.info('3) Creating MJD image history for each MJD')
+        rootLogger.info('==========================================')
+        rootLogger.info('')
+        chkhist = runhistory(load,mjds,**kws)
+
+    # 4) Process all exposures through ap3d
+    #---------------------------------------
     if '3d' in steps:
         rootLogger.info('')
         rootLogger.info('--------------------------------')
-        rootLogger.info('3) Running AP3D on all exposures')
+        rootLogger.info('4) Running AP3D on all exposures')
         rootLogger.info('================================')
         rootLogger.info('')
         chk3d = runap3d(load,mjds,**kws)
-
-    # 4) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
+        
+    # 5) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
     #----------------------------------------------------------------
     if 'cal' in steps:
         rootLogger.info('')
@@ -3599,7 +3766,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('')
         chkcal = rundailycals(load,mjds,caltypes=caltypes,**kws)
 
-    # 5) Make plan files
+    # 6) Make plan files
     #-------------------
     if 'plan' in steps:
         rootLogger.info('')
@@ -3609,7 +3776,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('')
         planfiles = makeplanfiles(load,mjds,**kws)
 
-    # 6) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
+    # 7) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
     if 'apred' in steps:
         rootLogger.info('')
@@ -3619,7 +3786,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('')
         chkexp,chkvisit = runapred(load,mjds,**kws)
         
-    # 7) Run "rv" on all unique stars
+    # 8) Run "rv" on all unique stars
     #--------------------------------
     if 'rv' in steps:
         rootLogger.info('')
@@ -3629,7 +3796,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('')
         chkrv = runrv(load,mjds,**kws)
 
-    # 8) Create full allVisit/allStar files
+    # 9) Create full allVisit/allStar files
     #--------------------------------------
     if 'summary' in steps:
         rootLogger.info('')
@@ -3639,8 +3806,8 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('')
         runsumfiles(load,mjds,logger=rootLogger)
     
-    # 9) Unified directory structure
-    #-------------------------------
+    # 10) Unified directory structure
+    #--------------------------------
     if 'unified' in steps:
         rootLogger.info('')
         rootLogger.info('---------------------------------------------')
@@ -3649,7 +3816,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('')
         #rununified(load,mjds,**kws)
         
-    # 10) Run QA script
+    # 11) Run QA script
     #------------------
     if 'qa' in steps:
         rootLogger.info('')

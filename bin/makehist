@@ -1,14 +1,16 @@
 #!/usr/bin/env python
 
-from apogee.apred.mjdcube import *
+from apogee_drp.apred.mjdcube import *
 import sys, argparse
 
 parser = argparse.ArgumentParser()
 parser.add_argument("mjd", help="MJD to create history file for", type=int)
-parser.add_argument("--write", help="write out individual FITS files ",default=False,type=bool)
-parser.add_argument("--apred", help="apred version to put output in",default='current')
-parser.add_argument("--darkid", help="optional darkid",default='None')
-parser.add_argument("--clobber", help="clobber existing frames?",default=False)
-args=parser.parse_args()
+parser.add_argument("--write", help="Write out individual FITS files ",default=False,type=bool)
+parser.add_argument("--apred", help="apred version to put output in",default='daily')
+parser.add_argument("--instrument", help="APOGEE instrument",default='apogee-n')
+parser.add_argument("--darkid", help="Optional darkid",default='None')
+parser.add_argument("--clobber", help="Clobber existing frames",default=False)
+args = parser.parse_args()
   
-mjdcube(args.mjd,apred=args.apred,write=args.write,darkid=args.darkid,clobber=args.clobber)
+mjdcube(args.mjd,apred=args.apred,instrument=args.instrument,
+        write=args.write,darkid=args.darkid,clobber=args.clobber)
