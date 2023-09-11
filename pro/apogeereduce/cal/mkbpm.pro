@@ -85,7 +85,7 @@ pro mkbpm,bpmid,darkid=darkid,flatid=flatid,badrow=badrow,clobber=clobber,unlock
    file = apogee_filename('BPM',chip=chip,num=bpmid)
    MKHDR,head1,mask
    sxaddpar,head1,'EXTNAME','BPM'
-   MWRFITS,mask,head1,file,/create
+   MWRFITS,mask,file,head1,/create
  endfor
 
  ;;file_delete,lockfile
