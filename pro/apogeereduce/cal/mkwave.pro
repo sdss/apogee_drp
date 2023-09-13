@@ -76,9 +76,9 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;;expinfo = dbquery("select * from apogee_drp.exposure where mjd>="+strtrim(mjd-7,2)+" and mjd<="+strtrim(mjd+7,2)+" and exptype='ARCLAMP'")
   ;;expinfo.arctype = strtrim(expinfo.arctype,2)
   ;;gdarc = where(expinfo.arctype eq 'UNE' or expinfo.arctype eq 'THAR',ngdarc)
-
+  
   ;; Process the frame, if necessary
-  chipfiles = apogee_filename('1D',num=waveid,chip=['a','b','c'])
+  chipfiles = apogee_filename('1D',num=waveid[0],chip=['a','b','c'])
   if total(file_test(chipfiles)) ne 3 then begin
     if keyword_set(psfid) then begin
       cmjd = getcmjd(psfid)
@@ -88,7 +88,7 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   endif
 
   ;; Check that the data is okay
-  chfile = apogee_filename('2D',num=waveid,chip='b')
+  chfile = apogee_filename('2D',num=waveid[0],chip='b')
   if file_test(chfile) eq 0 then begin
     print,chfile+' NOT FOUND'
     aplock,wavefile,/clear
