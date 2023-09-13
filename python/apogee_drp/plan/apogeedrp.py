@@ -1318,7 +1318,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     """
 
     if caltypes is None:
-        caltypes = ['detector','dark','flat','bpm','littrow','response','sparse','modelpsf','lsf']
+        caltypes = ['detector','dark','flat','bpm','littrow','response','sparse','modelpsf','multiwave','lsf']
     else:
         caltypes = [c.lower() for c in caltypes]
         
