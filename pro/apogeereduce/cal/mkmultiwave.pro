@@ -36,20 +36,8 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,$
   if file_test(wavedir,/directory) eq 0 then file_mkdir,wavedir
   file = dirs.prefix+string(format='("Wave-",i8.8)',name)
   wavefile = wavedir+file
-  ;;lockfile = wavedir+file+'.lock'
 
   ;; If another process is alreadying make this file, wait!
-  ;;if not keyword_set(unlock) then begin
-  ;;  while file_test(lockfile) do begin
-  ;;    if keyword_set(nowait) then begin
-  ;;      print,' Wavecal file: ', wavedir+file, ' already being made (.lock file exists)'
-  ;;      return
-  ;;    endif
-  ;;    apwait,file,10
-  ;;  endwhile
-  ;;endif else begin
-  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
-  ;;endelse
   aplock,wavefile,waittime=10,unlock=unlock
   
   ;; Does product already exist?
@@ -64,8 +52,6 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,$
 
   print,'Making wave: ', waveid
   ;; Open .lock file
-  ;;openw,lock,/get_lun,lockfile
-  ;;free_lun,lock
   aplock,wavefile,/lock
   
   ;; Process the frames and find lines
@@ -81,7 +67,6 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,$
 
   ;; New Python version!
   print,'Running apmultiwavecal'
-  ;;cmd = ['apmultiwavecal','--name',name,'--vers',dirs.apred,'--plot','--hard','--inst',dirs.instrument]
   cmd = ['apmultiwavecal','--name',name,'--vers',dirs.apred,'--hard','--inst',dirs.instrument,'--verbose']
   for i=0,n_elements(waveid)-1 do cmd=[cmd,string(waveid[i])]
   spawn,cmd,/noshell
@@ -93,7 +78,6 @@ pro mkmultiwave,waveid,name=name,clobber=clobber,nowait=nowait,file=calfile,$
     close,1
   endif else stop,'HALT:  failed to make wavecal',waveid
 
-  ;;file_delete,lockfile,/allow
   aplock,wavefile,/clear
   
 end
