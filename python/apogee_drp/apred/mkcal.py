@@ -90,6 +90,7 @@ def readcal(calfile):
     #  dark       55600 56860 12910009 12910009-12910037
     #  dark       56861 99999 15640003 15640003-15640021
     dtdict['dark'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50),('frames',np.str,100)])
+
     # -- Flats --
     #  mjd1, mjd2, name, frames, nrep, dithered
     #  flat       99999 55761 01380106 1380106-1380134 1 1
@@ -112,21 +113,25 @@ def readcal(calfile):
     #  fiber      55600 55761 01970078
     #  fiber      55797 56860 02410024
     dtdict['fiber'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50)])
+
     # -- Badfiber --
     #  mjd1, mjd2, frames
     #  badfiber   55600 57008   0
     #  badfiber   57009 57177   195
     dtdict['badfiber'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,100)])
+
     # -- Fixfiber --
     #  mjd1, mjd2, name
     #  fixfiber   56764 56773   1
     #  fixfiber   58038 58046   2
     dtdict['fixfiber'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50)])
+
     # -- q3fix --
     #  mjd1, mjd2, name
     #  q3fix      56930 57600   1
     #  q3fix      59146 99999   1
     dtdict['q3fix'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50)])
+
     # -- Wave --
     #  mjd1, mjd2, name, frames, psfid
     #  wave       55699 55699 01370096 1370096,1370099  1370098
@@ -138,6 +143,7 @@ def readcal(calfile):
     #  multiwave 55800 56130 2380000  02390007,02390008,02500007
     #  multiwave 56130 56512 5680000  05870007,05870008,05870018,05870019
     dtdict['multiwave'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50),('frames',np.str,500)])
+    
     # -- LSF --
     #  mjd1, mjd2, name, frames, psfid
     #  lsf 55800 56130 03430016 03430016 03430020
