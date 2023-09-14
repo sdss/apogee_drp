@@ -2089,7 +2089,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' wave files to run')
-            key,jobid = slrm.submit(tasks,label='makecal-wave',verbose=True,logger=logger,**slurmpars1)
+            key,jobid = slrm.submit(tasks,label='makecal-wave',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('makecal-wave',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if it ran okay and puts the status in the database            
             chkcal = check_calib(tasks['name'],'wave',logfiles,key,apred,telescope,verbose=True,logger=logger)
@@ -2135,7 +2135,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' multiwave files to run')        
-            key,jobid = slrm.submit(tasks,label='mkmultiwave',verbose=True,logger=logger,**slurmpars1)
+            key,jobid = slrm.submit(tasks,label='mkmultiwave',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mkmultiwave',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'multiwave',logfiles,key,apred,telescope,verbose=True,logger=logger)
