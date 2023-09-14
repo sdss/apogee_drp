@@ -12,6 +12,11 @@ pro apvisit_output,frame,plugmap,shiftstr,pairstr,silent=silent,stp=stp,single=s
 ;  frame         The structure that contains the dither-combined
 ;                 and sky-corrected frame with all three chips.
 ;  plugmap       The Plug Map structure for this plate
+;  shiftstr      Table with exposure dither shift information.
+;  pairstr       Table with information on how dither exposures were paired.
+;  /single       Single star.  Skip making apPlate files.
+;  =mjdfrac      Floating point MJD with fractional part of the day.
+;  =survey       Survey name to add to headers.
 ;  /silent       Don't print anything to the screen.
 ;  /stp          Stop at the end of the program.
 ;
@@ -103,273 +108,248 @@ git_vers = getgitvers()
 
 chiptag = ['a','b','c']
 
-if ~keyword_set(single) then begin
+if not keyword_set(single) then begin
 
-; Loop through the three chips
-For i=0,2 do begin
+  ; Loop through the three chips
+  For i=0,2 do begin
 
-  ; Update the header:
-  ;-------------------
-  header = frame.(i).header
+    ; Update the header:
+    ;-------------------
+    header = frame.(i).header
 
-  ; Remove HISTORY tags from AP3D and AP2D
-  remhead = where(stregex(header,'HISTORY AP3D: ',/boolean) eq 1 or $
-                  stregex(header,'HISTORY AP2D: ',/boolean) eq 1,nremhead)
-  if nremhead gt 0 then REMOVE,remhead,header
+    ; Remove HISTORY tags from AP3D and AP2D
+    remhead = where(stregex(header,'HISTORY AP3D: ',/boolean) eq 1 or $
+                    stregex(header,'HISTORY AP2D: ',/boolean) eq 1,nremhead)
+    if nremhead gt 0 then REMOVE,remhead,header
 
-  ; Remove the trailing blank lines
-  indend = where(stregex(header,'^END',/boolean) eq 1,nindend)
-  if indend[0] eq -1 then indend=n_elements(header)-1
-  header = header[0:indend[0]]
+    ; Remove the trailing blank lines
+    indend = where(stregex(header,'^END',/boolean) eq 1,nindend)
+    if indend[0] eq -1 then indend=n_elements(header)-1
+    header = header[0:indend[0]]
 
-  ; Add extension explanations
-  ;----------------------------
-  leadstr = 'AP1DVISIT: '
-  sxaddpar,header,'V_APRED',git_vers,'apogee software version'
-  sxaddpar,header,'APRED',svn_vers,'apogee reduction version'
-  sxaddhist,leadstr+systime(0),header
-  info = GET_LOGIN_INFO()
-  sxaddhist,leadstr+info.user_name+' on '+info.machine_name,header
-  ; Add Reduction pipeline version to the header
-  sxaddhist,leadstr+' APOGEE Reduction Pipeline Version: '+svn_vers,header
-  sxaddhist,leadstr+'IDL '+!version.release+' '+!version.os+' '+!version.arch,header
-  sxaddhist,leadstr+'Output File:',header
-  sxaddhist,leadstr+' HDU0 - Header only',header
-  sxaddhist,leadstr+' All image extensions HDU1-HDU8 have 3 chips in 3 rows',header
-  sxaddhist,leadstr+' HDU1 - Flux (10^-17 ergs/s/cm^2/Ang)',header
-  sxaddhist,leadstr+' HDU2 - Error (10^-17 ergs/s/cm^2/Ang)',header
-  sxaddhist,leadstr+' HDU3 - flag mask (bitwise OR combined)',header
-  sxaddhist,leadstr+' HDU4 - Wavelength (Ang)',header
-  sxaddhist,leadstr+' HDU5 - Sky (10^-17 ergs/s/cm^2/Ang)',header
-  sxaddhist,leadstr+' HDU6 - Sky Error (10^-17 ergs/s/cm^2/Ang)',header
-  sxaddhist,leadstr+' HDU7 - Telluric',header
-  sxaddhist,leadstr+' HDU8 - Telluric Error',header
-  sxaddhist,leadstr+' HDU9 - Wavelength coefficients',header
-  sxaddhist,leadstr+' HDU10 - LSF coefficients',header
-  sxaddhist,leadstr+' HDU11 - Plugmap structure',header
-  sxaddhist,leadstr+' HDU12 - Plugmap header',header
-  sxaddhist,leadstr+' HDU13 - Shift structure',header
-  sxaddhist,leadstr+' HDU14 - Pair structure',header
-  if tag_exist(frame,'FLUXCORR') then $
-    sxaddhist,leadstr+' HDU15 - Counts to flux units conversion factors',header
+    ; Add extension explanations
+    ;----------------------------
+    leadstr = 'AP1DVISIT: '
+    sxaddpar,header,'V_APRED',git_vers,'apogee software version'
+    sxaddpar,header,'APRED',svn_vers,'apogee reduction version'
+    sxaddhist,leadstr+systime(0),header
+    info = GET_LOGIN_INFO()
+    sxaddhist,leadstr+info.user_name+' on '+info.machine_name,header
+    ; Add Reduction pipeline version to the header
+    sxaddhist,leadstr+' APOGEE Reduction Pipeline Version: '+svn_vers,header
+    sxaddhist,leadstr+'IDL '+!version.release+' '+!version.os+' '+!version.arch,header
+    sxaddhist,leadstr+'Output File:',header
+    sxaddhist,leadstr+' HDU0 - Header only',header
+    sxaddhist,leadstr+' All image extensions HDU1-HDU8 have 3 chips in 3 rows',header
+    sxaddhist,leadstr+' HDU1 - Flux (10^-17 ergs/s/cm^2/Ang)',header
+    sxaddhist,leadstr+' HDU2 - Error (10^-17 ergs/s/cm^2/Ang)',header
+    sxaddhist,leadstr+' HDU3 - flag mask (bitwise OR combined)',header
+    sxaddhist,leadstr+' HDU4 - Wavelength (Ang)',header
+    sxaddhist,leadstr+' HDU5 - Sky (10^-17 ergs/s/cm^2/Ang)',header
+    sxaddhist,leadstr+' HDU6 - Sky Error (10^-17 ergs/s/cm^2/Ang)',header
+    sxaddhist,leadstr+' HDU7 - Telluric',header
+    sxaddhist,leadstr+' HDU8 - Telluric Error',header
+    sxaddhist,leadstr+' HDU9 - Wavelength coefficients',header
+    sxaddhist,leadstr+' HDU10 - LSF coefficients',header
+    sxaddhist,leadstr+' HDU11 - Plugmap structure',header
+    sxaddhist,leadstr+' HDU12 - Plugmap header',header
+    sxaddhist,leadstr+' HDU13 - Shift structure',header
+    sxaddhist,leadstr+' HDU14 - Pair structure',header
+    if tag_exist(frame,'FLUXCORR') then $
+      sxaddhist,leadstr+' HDU15 - Counts to flux units conversion factors',header
 
-  ; Add plate information
-  sxaddpar,header,'PLATE',plate,'Plate iD'
-  sxaddpar,header,'MJD5',mjd,'MJD of observation'
-  sxaddpar,header,'LOCID',locid,'Location ID of field'
-  if keyword_set(single) then $
-    sxaddpar,header,'TELESCOP','apo1m','Telescope' else $
-    sxaddpar,header,'TELESCOP','apo25m','Telescope'
+    ; Add plate information
+    sxaddpar,header,'PLATE',plate,'Plate iD'
+    sxaddpar,header,'MJD5',mjd,'MJD of observation'
+    sxaddpar,header,'LOCID',locid,'Location ID of field'
+    if keyword_set(single) then $
+      sxaddpar,header,'TELESCOP','apo1m','Telescope' else $
+      sxaddpar,header,'TELESCOP','apo25m','Telescope'
 
-  ; Create filename
-  ;   apPlate-[abc]-PLATE4-MJD5.fits 
-  outfile = apogee_filename('Plate',chip=chiptag[i],plate=plate,mjd=mjd,field=field)
-  if not keyword_set(silent) then $
-    print,'Writing Plate frame to ',outfile
+    ; Create filename
+    ;   apPlate-[abc]-PLATE4-MJD5.fits 
+    outfile = apogee_filename('Plate',chip=chiptag[i],plate=plate,mjd=mjd,field=field)
+    if not keyword_set(silent) then $
+      print,'Writing Plate frame to ',outfile
 
-  ; HDU #0 = Header only
-  ;----------------------
-  FITS_WRITE,outfile,0,header
+    ; HDU #0 = Header only
+    ;----------------------
+    FITS_WRITE,outfile,0,header
   
-  ; HDU #1 = Flux in units of 10^(-17) erg/s/cm^2/Ang [FLOAT]
-  ;-----------------------------------------------------------
-  flux = float(frame.(i).flux) / 1e-17
-  bad = where(finite(flux) eq 0,nbad)
-  if nbad gt 0 then flux[bad] = 0.
-  MKHDR,header1,flux,/image
-  sxaddpar,header1,'CTYPE1','Pixel'
-  sxaddpar,header1,'CTYPE2','Fiber'
-  sxaddpar,header1,'BUNIT','Flux (10^-17 ergs/s/cm^2/Ang)'
-  sxaddpar,header1,'EXTNAME','FLUX'
-  MWRFITS,flux,outfile,header1,/silent
+    ; HDU #1 = Flux in units of 10^(-17) erg/s/cm^2/Ang [FLOAT]
+    ;-----------------------------------------------------------
+    flux = float(frame.(i).flux) / 1e-17
+    bad = where(finite(flux) eq 0,nbad)
+    if nbad gt 0 then flux[bad] = 0.
+    MKHDR,header1,flux,/image
+    sxaddpar,header1,'CTYPE1','Pixel'
+    sxaddpar,header1,'CTYPE2','Fiber'
+    sxaddpar,header1,'BUNIT','Flux (10^-17 ergs/s/cm^2/Ang)'
+    sxaddpar,header1,'EXTNAME','FLUX'
+    MWRFITS,flux,outfile,header1,/silent
 
-  ; HDU #2 = Flux Error 10^(-17) erg/s/cm^2/Ang [FLOAT]
-  ;------------------------------------------------------
-  err = float(frame.(i).err) 
-  bderr=where(err eq baderr() or finite(err) eq 0,nbderr)
-  err /= 1e-17
-  if nbderr gt 0 then err[bderr] = baderr()
-  MKHDR,header2,err,/image
-  sxaddpar,header2,'CTYPE1','Pixel'
-  sxaddpar,header2,'CTYPE2','Fiber'
-  sxaddpar,header2,'BUNIT','Flux Error (10^-17 ergs/s/cm^2/Ang)'
-  sxaddpar,header2,'EXTNAME','ERROR'
-  MWRFITS,errout(err),outfile,header2,/silent
+    ; HDU #2 = Flux Error 10^(-17) erg/s/cm^2/Ang [FLOAT]
+    ;------------------------------------------------------
+    err = float(frame.(i).err) 
+    bderr=where(err eq baderr() or finite(err) eq 0,nbderr)
+    err /= 1e-17
+    if nbderr gt 0 then err[bderr] = baderr()
+    MKHDR,header2,err,/image
+    sxaddpar,header2,'CTYPE1','Pixel'
+    sxaddpar,header2,'CTYPE2','Fiber'
+    sxaddpar,header2,'BUNIT','Flux Error (10^-17 ergs/s/cm^2/Ang)'
+    sxaddpar,header2,'EXTNAME','ERROR'
+    MWRFITS,errout(err),outfile,header2,/silent
 
-  ; HDU #3 = Pixel mask [16-bit INT]
-  ;---------------------------------
-  mask = fix(frame.(i).mask)
-  if nbad gt 0 then mask[bad] = mask[bad] or maskval('BADPIX')
-  MKHDR,header3,mask,/image
-  sxaddpar,header3,'CTYPE1','Pixel'
-  sxaddpar,header3,'CTYPE2','Fiber'
-  sxaddpar,header3,'BUNIT','Flag Mask (bitwise)'
-  sxaddpar,header3,'EXTNAME','MASK'  
-  ;sxaddhist,'Explanation of BITWISE flag mask (OR combined)',header3
-  ;sxaddhist,' 1 - bad pixels',header3
-  ;sxaddhist,' 2 - cosmic ray',header3
-  ;sxaddhist,' 4 - saturated',header3
-  ;sxaddhist,' 8 - unfixable',header3
-  MWRFITS,mask,outfile,header3,/silent
+    ; HDU #3 = Pixel mask [16-bit INT]
+    ;---------------------------------
+    mask = fix(frame.(i).mask)
+    if nbad gt 0 then mask[bad] = mask[bad] or maskval('BADPIX')
+    MKHDR,header3,mask,/image
+    sxaddpar,header3,'CTYPE1','Pixel'
+    sxaddpar,header3,'CTYPE2','Fiber'
+    sxaddpar,header3,'BUNIT','Flag Mask (bitwise)'
+    sxaddpar,header3,'EXTNAME','MASK'  
+    ;sxaddhist,'Explanation of BITWISE flag mask (OR combined)',header3
+    ;sxaddhist,' 1 - bad pixels',header3
+    ;sxaddhist,' 2 - cosmic ray',header3
+    ;sxaddhist,' 4 - saturated',header3
+    ;sxaddhist,' 8 - unfixable',header3
+    MWRFITS,mask,outfile,header3,/silent
 
-  ; HDU #4 = Wavelength in units of A [DOUBLE]
-  ;---------------------------------------------
-  wave = double(frame.(i).wavelength)
-  MKHDR,header4,wave,/image
-  sxaddpar,header4,'CTYPE1','Pixel'
-  sxaddpar,header4,'CTYPE2','Fiber'
-  sxaddpar,header4,'BUNIT','Wavelength (Ang)'
-  sxaddpar,header4,'EXTNAME','WAVELENGTH'  
-  MWRFITS,wave,outfile,header4,/silent
+    ; HDU #4 = Wavelength in units of A [DOUBLE]
+    ;---------------------------------------------
+    wave = double(frame.(i).wavelength)
+    MKHDR,header4,wave,/image
+    sxaddpar,header4,'CTYPE1','Pixel'
+    sxaddpar,header4,'CTYPE2','Fiber'
+    sxaddpar,header4,'BUNIT','Wavelength (Ang)'
+    sxaddpar,header4,'EXTNAME','WAVELENGTH'  
+    MWRFITS,wave,outfile,header4,/silent
 
-  ; HDU #5 = Sky flux in units of 10^(-17) erg/s/cm^2/Ang [FLOAT]
-  ;---------------------------------------------------------------
-  sky = float(frame.(i).sky) / 1e-17
-  MKHDR,header5,sky,/image
-  sxaddpar,header5,'CTYPE1','Pixel'
-  sxaddpar,header5,'CTYPE2','Fiber'
-  sxaddpar,header5,'BUNIT','Sky (10^-17 ergs/s/cm^2/Ang)'
-  sxaddpar,header5,'EXTNAME','SKY FLUX'  
-  MWRFITS,sky,outfile,header5,/silent
+    ; HDU #5 = Sky flux in units of 10^(-17) erg/s/cm^2/Ang [FLOAT]
+    ;---------------------------------------------------------------
+    sky = float(frame.(i).sky) / 1e-17
+    MKHDR,header5,sky,/image
+    sxaddpar,header5,'CTYPE1','Pixel'
+    sxaddpar,header5,'CTYPE2','Fiber'
+    sxaddpar,header5,'BUNIT','Sky (10^-17 ergs/s/cm^2/Ang)'
+    sxaddpar,header5,'EXTNAME','SKY FLUX'  
+    MWRFITS,sky,outfile,header5,/silent
 
-  ; HDU #6 = Sky error in units of 10^(-17) erg/s/cm^2/Ang [FLOAT]
-  ;----------------------------------------------------------------
-  bderr=where(frame.(i).skyerr eq baderr(),nbd)
-  skyerr = float(frame.(i).skyerr) / 1e-17
-  if nbd gt 0 then skyerr[bderr] = baderr()
-  MKHDR,header6,skyerr,/image
-  sxaddpar,header6,'CTYPE1','Pixel'
-  sxaddpar,header6,'CTYPE2','Fiber'
-  sxaddpar,header6,'BUNIT','Sky Error (10^-17 ergs/s/cm^2/Ang)'
-  sxaddpar,header6,'EXTNAME','SKY ERROR'  
-  MWRFITS,errout(skyerr),outfile,header6,/silent
+    ; HDU #6 = Sky error in units of 10^(-17) erg/s/cm^2/Ang [FLOAT]
+    ;----------------------------------------------------------------
+    bderr=where(frame.(i).skyerr eq baderr(),nbd)
+    skyerr = float(frame.(i).skyerr) / 1e-17
+    if nbd gt 0 then skyerr[bderr] = baderr()
+    MKHDR,header6,skyerr,/image
+    sxaddpar,header6,'CTYPE1','Pixel'
+    sxaddpar,header6,'CTYPE2','Fiber'
+    sxaddpar,header6,'BUNIT','Sky Error (10^-17 ergs/s/cm^2/Ang)'
+    sxaddpar,header6,'EXTNAME','SKY ERROR'  
+    MWRFITS,errout(skyerr),outfile,header6,/silent
 
-  ; HDU #7 = Telluric absorption flux in units of [FLOAT]
-  ;--------------------------------------------------------
-  telluric = float(frame.(i).telluric)
-  MKHDR,header7,telluric,/image
-  sxaddpar,header7,'CTYPE1','Pixel'
-  sxaddpar,header7,'CTYPE2','Fiber'
-  sxaddpar,header7,'BUNIT','Telluric'
-  sxaddpar,header7,'EXTNAME','TELLURIC'  
-  MWRFITS,telluric,outfile,header7,/silent
+    ; HDU #7 = Telluric absorption flux in units of [FLOAT]
+    ;--------------------------------------------------------
+    telluric = float(frame.(i).telluric)
+    MKHDR,header7,telluric,/image
+    sxaddpar,header7,'CTYPE1','Pixel'
+    sxaddpar,header7,'CTYPE2','Fiber'
+    sxaddpar,header7,'BUNIT','Telluric'
+    sxaddpar,header7,'EXTNAME','TELLURIC'  
+    MWRFITS,telluric,outfile,header7,/silent
 
-  ; HDU #8 = Telluric error [FLOAT]
-  ;-------------------------------------
-  telerr = float(frame.(i).telluricerr)
-  MKHDR,header8,telerr,/image
-  sxaddpar,header8,'CTYPE1','Pixel'
-  sxaddpar,header8,'CTYPE2','Fiber'
-  sxaddpar,header8,'BUNIT','Telluric Error'
-  sxaddpar,header8,'EXTNAME','TELLURIC ERROR'  
-  MWRFITS,telerr,outfile,header8,/silent
+    ; HDU #8 = Telluric error [FLOAT]
+    ;-------------------------------------
+    telerr = float(frame.(i).telluricerr)
+    MKHDR,header8,telerr,/image
+    sxaddpar,header8,'CTYPE1','Pixel'
+    sxaddpar,header8,'CTYPE2','Fiber'
+    sxaddpar,header8,'BUNIT','Telluric Error'
+    sxaddpar,header8,'EXTNAME','TELLURIC ERROR'  
+    MWRFITS,telerr,outfile,header8,/silent
 
-  ; HDU #9 = Wavelength solution coefficients [DOUBLE]
-  ;-----------------------------------------------------
-  wcoef = double(frame.(i).wcoef)
-  MKHDR,header9,wcoef,/image
-  sxaddpar,header9,'CTYPE1','Fiber'
-  sxaddpar,header9,'CTYPE2','Parameters'
-  sxaddpar,header9,'BUNIT','Wavelength Coefficients'
-  sxaddhist,'Wavelength Coefficients to be used with PIX2WAVE.PRO:',header9
-  sxaddhist,' 1 Global additive pixel offset',header9
-  sxaddhist,' 4 Sine Parameters',header9
-  sxaddhist,' 7 Polynomial parameters (first is a zero-point offset',header9
-  sxaddhist,'                     in addition to the pixel offset)',header9
-  sxaddpar,header9,'EXTNAME','WAVE COEFFICIENTS'
-  MWRFITS,wcoef,outfile,header9,/silent
+    ; HDU #9 = Wavelength solution coefficients [DOUBLE]
+    ;-----------------------------------------------------
+    wcoef = double(frame.(i).wcoef)
+    MKHDR,header9,wcoef,/image
+    sxaddpar,header9,'CTYPE1','Fiber'
+    sxaddpar,header9,'CTYPE2','Parameters'
+    sxaddpar,header9,'BUNIT','Wavelength Coefficients'
+    sxaddhist,'Wavelength Coefficients to be used with PIX2WAVE.PRO:',header9
+    sxaddhist,' 1 Global additive pixel offset',header9
+    sxaddhist,' 4 Sine Parameters',header9
+    sxaddhist,' 7 Polynomial parameters (first is a zero-point offset',header9
+    sxaddhist,'                     in addition to the pixel offset)',header9
+    sxaddpar,header9,'EXTNAME','WAVE COEFFICIENTS'
+    MWRFITS,wcoef,outfile,header9,/silent
 
-  ; HDU #10 = LSF coefficients [DOUBLE]
-  ;-------------------------------------
-  lsfcoef = double(frame.(i).lsfcoef)
-  MKHDR,header10,lsfcoef,/image
-  sxaddpar,header10,'CTYPE1','Fiber'
-  sxaddpar,header10,'CTYPE2','Parameters'
-  sxaddpar,header10,'BUNIT','LSF Coefficients'
-  sxaddhist,'LSF Coefficients to be used with LSF_GH.PRO:',header10
-  sxaddhist,'  binsize  The width of a pixel in X-units.  If this is non-zero',header10
-  sxaddhist,'             then a "binned" Gauss-Hermite function is used.  If',header10
-  sxaddhist,'             binsize=0 then a "normal, unbinned" Gauss-Hermite',header10
-  sxaddhist,'             function is used.',header10
-  sxaddhist,'  X0       An additive x-offset.  This is only used to',header10
-  sxaddhist,'             evaluate the GH parameters that vary globally',header10
-  sxaddhist,'             with X.',header10
-  sxaddhist,'  Horder   The highest Hermite order, Horder=0 means',header10
-  sxaddhist,'             only a constant term (i.e. only Gaussian).',header10
-  sxaddhist,'             There are Horder Hermite coefficients (since we fix H0=1).',header10
-  sxaddhist,'  Porder   This array gives the polynomial order for the',header10
-  sxaddhist,'             global variation (in X) of each LSF parameter.',header10
-  sxaddhist,'             That includes sigma and the Horder Hermite',header10
-  sxaddhist,'             coefficients (starting with H1 because we fix H0=1)',header10
-  sxaddhist,'             There will be Porder[i]+1 coefficients for',header10
-  sxaddhist,'             parameter i.',header10
-  sxaddhist,'  GHcoefs  The polynomial coefficients for sigma and the',header10
-  sxaddhist,'             Horder Hermite parameters.  There are Porder[i]+1',header10
-  sxaddhist,'             coefficients for parameter i.  The Hermite parameters',header10
-  sxaddhist,'             start with H1 since we fix H0=1.',header10
-  sxaddpar,header10,'EXTNAME','LSF COEFFICIENTS'  
-  MWRFITS,lsfcoef,outfile,header10,/silent
+    ; HDU #10 = LSF coefficients [DOUBLE]
+    ;-------------------------------------
+    lsfcoef = double(frame.(i).lsfcoef)
+    MKHDR,header10,lsfcoef,/image
+    sxaddpar,header10,'CTYPE1','Fiber'
+    sxaddpar,header10,'CTYPE2','Parameters'
+    sxaddpar,header10,'BUNIT','LSF Coefficients'
+    sxaddhist,'LSF Coefficients to be used with LSF_GH.PRO:',header10
+    sxaddhist,'  binsize  The width of a pixel in X-units.  If this is non-zero',header10
+    sxaddhist,'             then a "binned" Gauss-Hermite function is used.  If',header10
+    sxaddhist,'             binsize=0 then a "normal, unbinned" Gauss-Hermite',header10
+    sxaddhist,'             function is used.',header10
+    sxaddhist,'  X0       An additive x-offset.  This is only used to',header10
+    sxaddhist,'             evaluate the GH parameters that vary globally',header10
+    sxaddhist,'             with X.',header10
+    sxaddhist,'  Horder   The highest Hermite order, Horder=0 means',header10
+    sxaddhist,'             only a constant term (i.e. only Gaussian).',header10
+    sxaddhist,'             There are Horder Hermite coefficients (since we fix H0=1).',header10
+    sxaddhist,'  Porder   This array gives the polynomial order for the',header10
+    sxaddhist,'             global variation (in X) of each LSF parameter.',header10
+    sxaddhist,'             That includes sigma and the Horder Hermite',header10
+    sxaddhist,'             coefficients (starting with H1 because we fix H0=1)',header10
+    sxaddhist,'             There will be Porder[i]+1 coefficients for',header10
+    sxaddhist,'             parameter i.',header10
+    sxaddhist,'  GHcoefs  The polynomial coefficients for sigma and the',header10
+    sxaddhist,'             Horder Hermite parameters.  There are Porder[i]+1',header10
+    sxaddhist,'             coefficients for parameter i.  The Hermite parameters',header10
+    sxaddhist,'             start with H1 since we fix H0=1.',header10
+    sxaddpar,header10,'EXTNAME','LSF COEFFICIENTS'  
+    MWRFITS,lsfcoef,outfile,header10,/silent
 
-  ; HDU #11 = Plug-map structure from plPlugMapM file [BINARY FITS TABLE]
-  ;----------------------------------------------------------------------
-  plugdata = plugmap.fiberdata
-  MWRFITS,plugdata,outfile,/silent ; first write the data with no header
-                                   ; MWRFITS will add the necessary info
+    ; HDU #11 = Plug-map structure from plPlugMapM file [BINARY FITS TABLE]
+    ;----------------------------------------------------------------------
+    plugdata = plugmap.fiberdata
+    MWRFITS,plugdata,outfile,/silent ; first write the data with no header
+                                     ; MWRFITS will add the necessary info
 
-  ; HDU # 12 = Plug-map header values
-  ;-------------------------------------
-  ; remove FIBERDATA
-  pltags = tag_names(plugmap)
-  plind = indgen(n_elements(pltags))
-  bd = where(pltags eq 'FIBERDATA',nbd)
-  tmp = where(pltags eq 'GUIDEDATA',nbd)
-  if nbd gt 0 then bd=[bd,tmp]
-  REMOVE,bd,plind
-  newplug = CREATE_STRUCT(pltags[plind[0]],plugmap.(plind[0]))
-  for k=1,n_elements(plind)-1 do newplug = CREATE_STRUCT(newplug,pltags[plind[k]],plugmap.(plind[k]))
-  MWRFITS,newplug,outfile,/silent
+    ; HDU # 12 = Plug-map header values
+    ;-------------------------------------
+    ; remove FIBERDATA
+    pltags = tag_names(plugmap)
+    plind = indgen(n_elements(pltags))
+    bd = where(pltags eq 'FIBERDATA',nbd)
+    tmp = where(pltags eq 'GUIDEDATA',nbd)
+    if nbd gt 0 then bd=[bd,tmp]
+    REMOVE,bd,plind
+    newplug = CREATE_STRUCT(pltags[plind[0]],plugmap.(plind[0]))
+    for k=1,n_elements(plind)-1 do newplug = CREATE_STRUCT(newplug,pltags[plind[k]],plugmap.(plind[k]))
+    MWRFITS,newplug,outfile,/silent
 
-  ; HDU # 13 = Shift structure
-  ;-------------------------------------
-  MWRFITS,shiftstr,outfile,/silent
+    ; HDU # 13 = Shift structure
+    ;-------------------------------------
+    MWRFITS,shiftstr,outfile,/silent
 
-  ; HDU # 14 = Pair structure
-  ;-------------------------------------
-  MWRFITS,pairstr,outfile,/silent
+    ; HDU # 14 = Pair structure
+    ;-------------------------------------
+    MWRFITS,pairstr,outfile,/silent
 
-  ; HDU # 15 = Flux Correction Factors
-  ;-------------------------------------
-  if tag_exist(frame,'FLUXCORR') then $
-    MWRFITS,frame.fluxcorr,outfile,/silent
+    ; HDU # 15 = Flux Correction Factors
+    ;-------------------------------------
+    if tag_exist(frame,'FLUXCORR') then $
+      MWRFITS,frame.fluxcorr,outfile,/silent
 
-  ;; Now modify the header
-  ;header11 = HEADFITS(outfile,exten=11)
-  ;pltags = tag_names(plugmap)
-  ;; Add plate information to output header
-  ;for j=0,n_elements(pltags)-1 do begin
-  ;  sz = size(plugmap.(j))
-  ;  type = size(plugmap.(j),/type)
-  ;  if pltags[j] ne 'HDR' and pltags[j] ne 'FIBERDATA' and sz[0] lt 2 then begin
-  ;    ;sxaddpar,header11,pltags[j],plugmap.(j),' PLUGMAPTAG'
-  ;    line = 'PLMAPTG: '+strtrim(pltags[j],2)+'='
-  ;    if type eq 7 then line=line+"'"+strtrim(plugmap.(j),2)+"'" else $
-  ;      line=line+strtrim(plugmap.(j),2)
-  ;    sxaddhist,line,header11
-  ;  endif
-  ;end
-  ;; Add original plPlugMap header as history lines
-  ;for j=0,n_elements(plugmap.hdr)-1 do begin
-  ;  if strtrim(plugmap.hdr[j],2) ne '' then $
-  ;    sxaddhist,'PLMAPHD: '+plugmap.hdr[j],header11
-  ;  end
-  ;; Now modify the header in the file
-  ;MODFITS,outfile,0,header11,exten_no=11
+  endfor  ;; chip loop
 
-  ;stop
-
-endfor
-
-endif
+endif   ;; not single
 
 
 ;##############################################################
@@ -425,7 +405,7 @@ For i=0,nfibers-1 do begin
   endif else hminus=99.99
 
   if fiberholetype eq 'OBJECT' and (fiberobjtype ne 'SKY') and $
-     tmass_name ne '-' then begin
+     (fiberobjtype ne 'none') and tmass_name ne '-' then begin
 
     ; Each extension contains a different data type and is a 2D
     ; array of length [3,4096], although the wavelength coefficients
@@ -519,54 +499,54 @@ For i=0,nfibers-1 do begin
     endif
 
     ; Start a FLAG for this object
-    flag=0L
+    flag = 0L
     ; is this low S/N?
     if snr lt 5 then flag=flag or starflagval('LOW_SNR')
 
     ; is star from comissioning data?
     if mjd le 55761L then flag = flag OR starflagval('COMMISSIONING')
 
-    ; does star have a bright neighbor?
+    ; Does star have a bright neighbor?
     if hplus lt -5 or hminus lt -5 then flag=flag or starflagval('VERY_BRIGHT_NEIGHBOR') else $
     if hplus lt -2.5 or hminus lt -2.5 then flag=flag or starflagval('BRIGHT_NEIGHBOR')
 
-    ; get the pixel mask
+    ; Get the pixel mask
     mask = intarr(npix,3)
     flux = fltarr(npix,3)
     for j=0,2 do mask[*,j]=fix(frame.(j).mask[*,ifiber])
     for j=0,2 do flux[*,j]=float(frame.(j).flux[*,ifiber])
 
-    ; does star have a significant number of persistence pixels?
-    junk=where(mask and maskval('PERSIST_HIGH'),nbad)
+    ; Does star have a significant number of persistence pixels?
+    junk = where(mask and maskval('PERSIST_HIGH'),nbad)
     if float(nbad)/n_elements(mask) gt 0.2 then flag = flag OR starflagval('PERSIST_HIGH') else begin
-      junk=where((mask and maskval('PERSIST_HIGH')) or (mask and maskval('PERSIST_MED')),nbad)
+      junk = where((mask and maskval('PERSIST_HIGH')) or (mask and maskval('PERSIST_MED')),nbad)
       if float(nbad)/n_elements(mask) gt 0.2 then flag = flag OR starflagval('PERSIST_MED') else begin
-        junk=where((mask and maskval('PERSIST_HIGH')) or (mask and maskval('PERSIST_MED')) or $
-                   (mask and maskval('PERSIST_LOW')),nbad)
+        junk = where((mask and maskval('PERSIST_HIGH')) or (mask and maskval('PERSIST_MED')) or $
+                     (mask and maskval('PERSIST_LOW')),nbad)
         if float(nbad)/n_elements(mask) gt 0.2 then flag = flag OR starflagval('PERSIST_LOW')
       endelse
     endelse
 
-    ; does star show evidence of significant persistence?
-    bmed=median(frame.(2).flux[*,ifiber])
-    gmed=median(frame.(1).flux[*,ifiber])
+    ; Does star show evidence of significant persistence?
+    bmed = median(frame.(2).flux[*,ifiber])
+    gmed = median(frame.(1).flux[*,ifiber])
     if bmed gt 1.5*gmed*(1.55/1.62)^(-4) then flag = flag OR starflagval('PERSIST_JUMP_POS')
     if bmed lt 0.667*gmed*(1.55/1.62)^(-4) then flag = flag OR starflagval('PERSIST_JUMP_NEG')
     ; if persistence in evident, flag persistence pixels as bad 
     if (flag AND  starflagval('PERSIST_JUMP_POS')) gt 0 then begin
-      junk=where((mask and maskval('PERSIST_LOW') gt 0) or (mask and maskval('PERSIST_MED') gt 0) or (mask and maskval('PERSIST_HIGH') gt 0),nbad)
+      junk = where((mask and maskval('PERSIST_LOW') gt 0) or (mask and maskval('PERSIST_MED') gt 0) or (mask and maskval('PERSIST_HIGH') gt 0),nbad)
       if nbad gt 0 then mask[junk] = mask[junk] or maskval('BADPIX')
     endif
 
-    ; any unaccounted for NaNs? make sure BADPIX is set!
-    junk=where(finite(flux) eq 0,nbad)
+    ; Any unaccounted for NaNs? make sure BADPIX is set!
+    junk = where(finite(flux) eq 0,nbad)
     if nbad gt 0 then mask[junk] = mask[junk] or maskval('BADPIX')
 
-    ; does star have a significant number of bad pixels?
-    junk=where(mask and badmask(),nbad)
+    ; Does star have a significant number of bad pixels?
+    junk = where(mask and badmask(),nbad)
     if float(nbad)/n_elements(mask) gt 0.2 then flag = flag OR starflagval('BAD_PIXELS')
 
-    ; add to header
+    ; Add to header
     sxaddpar,header,'STARFLAG',flag,' Star data quality flag'
 
     ; Add flux correction factor
@@ -776,7 +756,9 @@ For i=0,nfibers-1 do begin
 
   BOMB:
 
-End
+Endfor
+
+
 
 if keyword_set(stp) then stop
 
