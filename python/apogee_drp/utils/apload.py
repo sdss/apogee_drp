@@ -765,12 +765,16 @@ class ApLoad:
         """ Check whether a certain APOGEE file exists."""
 
         chips = ['a','b','c']
+        lroot = root.lower()        
         if 'mjd' in kwargs.keys():
             mjd = kwargs.pop('mjd')
         else:
-            mjd = int(self.cmjd(int(num)))
-        lroot = root.lower()
-
+            if lroot=='psfmodel':
+                # psfmodel is sparseid-psfid
+                mjd = int(self.cmjd(int(str(num).split('-')[0])))
+            else:
+                mjd = int(self.cmjd(int(num)))
+                
         if lroot=='r' or lroot=='2d' or lroot=='1d' or lroot=='bpm' or lroot=='lsf':
             prefix = lroot.upper()
         elif lroot=='detector':

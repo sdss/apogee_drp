@@ -444,7 +444,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
           calibration file from the master calibration inventory is used.
     psflibrary : boolean, optional
         Use PSF library for extraction.
-    modelpsf : int, optional
+    modelpsf : str, optional
         The Model PSF calibration file to use.
     clobber : boolean, optional
         Overwrite existing file.
@@ -753,9 +753,9 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         # Use Model PSF for extraction
         if psflibrary is None or modelpsf:
             if modelpsf is not None and str(modelpsf).isnumeric():
-                out['modelpsf'] = int(modelpsf)
+                out['modelpsf'] = str(modelpsf)
             elif caldata['modelpsf'] is not None:
-                out['modelpsf'] = int(caldata['modelpsf'])  # use from library
+                out['modelpsf'] = str(caldata['modelpsf'])  # use from library
         # Flux calibration file
         if fluxid is not None:
             out['fluxid'] = fluxid

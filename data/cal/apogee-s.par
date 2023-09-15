@@ -15,8 +15,8 @@ det        57000 99999 22810006 0
 # sparse   start end   name      psfs              darks             dmax maxread
 sparse     57822 59809 22600009 22600009-22600028 0                 21    30,30,30
 sparse     59810 99999 44820015 44820015-44820024 0                 21    30,30,30
-# modelpsf start end   name     sparse   psf
-modelpsf   59810 99999 44820015 44820015 44820050
+# modelpsf start end   name              sparse   psf
+modelpsf   59810 99999 44820015-44820050 44820015 44820050
 # fiber
 fiber      57802 57802 22400203
 fiber      57803 57803 22400214

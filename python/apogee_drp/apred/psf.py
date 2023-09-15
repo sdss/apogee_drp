@@ -965,7 +965,7 @@ def mkmodelpsf(name,psfid,sparseid,apred,telescope,nfbin=5,ncbin=200,verbose=Fal
 
     Parameters
     ----------
-    name : int
+    name : str
       Name of the output model PSF file (apPSFModel).
     psfid : int
       ID of apEPSF exposure empirical PSF profiles.
