@@ -2051,7 +2051,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info(str(len(wave_names))+' individual wave calibration files to create')        
 
         # Creating individual wave files to the multiwave calibration files
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),
+              ('dir',str,1000),('num',int),('mjd',int),('observatory',str,10),
+              ('configid',str,50),('designid',str,50),('fieldid',str,50)]
+        # num, mjd, observatory, configid, designid, fieldid        
         tasks = np.zeros(len(wave_names),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(wave_names),bool)
@@ -2085,14 +2088,21 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 tasks['outfile'][i] = logfile1
                 tasks['errfile'][i] = errfile1
                 tasks['dir'][i] = os.path.dirname(logfile1)
+                tasks['num'][i] = int(name)
+                tasks['mjd'][i] = load.cmjd(int(name))
+                tasks['observatory'][i] = load.observatory
+                tasks['configid'][i] = ''
+                tasks['designid'][i] = ''
+                tasks['fieldid'][i] =  ''               
         if np.sum(docal)>0:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' wave files to run')
             key,jobid = slrm.submit(tasks,label='makecal-wave',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('makecal-wave',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
-            # This should check if it ran okay and puts the status in the database            
-            chkcal = check_calib(tasks['name'],'wave',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            # This should check if it ran okay and puts the status in the database
+            #  'tasks' doubles as 'expinfo' for check_calib()
+            chkcal = check_calib(tasks,logfiles,key,apred,verbose=True,logger=logger)
         else:
             logger.info('No individual wave calibration files need to be run')        
 
