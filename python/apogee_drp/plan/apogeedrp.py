@@ -2062,12 +2062,26 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(wave_names)):
             name = wave_names[i]
+            mjd = int(load.cmjd(int(name)))
             outfile = load.filename('Wave',num=name,chips=True)
             logfile1 = os.path.dirname(outfile)+'/'+load.prefix+'Wave-'+str(name)+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
                 os.makedirs(os.path.dirname(logfile1))
-            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)            
+            # Use a quartzflat for the PSF, the PSF cal file will automatically be created
+            expinfo1 = info.expinfo(observatory=load.observatory,mjd5=mjd)
+            qtzind, = np.where(expinfo1['exptype']=='QUARTZFLAT')
+            psfid = None
+            if len(qtzind)>0:
+                qtzinfo = expinfo1[qtzind]
+                bestind = np.argsort(np.abs(qtzinfo['num']-int(name)))[0]
+                psfid = qtzinfo['num'][bestind]
+                cmd1 += ' --psf '+str(psfid)
+            # Use modelpsf, if possible
+            caldata1 = mkcal.getcal(calfile,mjd,verbose=False)
+            if caldata1.get('modelpsf') is not None:
+                cmd1 += ' --modelpsf '+str(caldata1['modelpsf'])
             cmd1 += ' --wave '+str(name)+' --unlock'
             if clobber:
                 cmd1 += ' --clobber'
@@ -2148,7 +2162,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             key,jobid = slrm.submit(tasks,label='mkmultiwave',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mkmultiwave',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'multiwave',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Wave',logfiles,key,apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:

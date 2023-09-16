@@ -1084,6 +1084,7 @@ def saveepsf(filename,epsf,compress=True):
     hdu.close()
 
     if compress:
+        if os.path.exists(filename+'.fz'): os.remove(filename+'.fz')
         sout = subprocess.run(['fpack','-D','-Y',filename],shell=False)
         
     # from apmkpsf_epsf.pro
