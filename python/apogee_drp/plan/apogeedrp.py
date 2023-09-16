@@ -2036,49 +2036,133 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if multiwavedict is None or len(multiwavedict)==0:
             multiwavedict = []
             logger.info('No master multiwave calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]
-        tasks = np.zeros(len(multiwavedict),dtype=np.dtype(dt))
-        tasks = Table(tasks)
-        docal = np.zeros(len(multiwavedict),bool)    
-        donames = []
-        logfiles = []
+
+        # Which multiwave and individual wave still need to be made
+        multiwave_names = []
+        wave_names = []
         for i in range(len(multiwavedict)):
             name = multiwavedict['name'][i]
             if np.sum((mjds >= multiwavedict['mjd1'][i]) & (mjds <= multiwavedict['mjd2'][i])) > 0:
-                outfile = load.filename('Wave',num=name,chips=True)
-                logfile1 = os.path.dirname(outfile)+'/mkmultiwave-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
-                errfile1 = outfile1.replace('.log','.err')
-                if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
-                cmd = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-                cmd1 += ' --multiwave '+str(name)+' --unlock'
-                if clobber:
-                    cmd1 += ' --clobber'
-                # Check if files exist already
-                docal[i] = True
-                if clobber is not True:
-                    if load.exists('Wave',num=name):
-                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                        docal[i] = False
-                if docal[i]:
-                    donames.append(name)
-                    logfiles.append(logfile1)                
-                    logger.info('multiwave file %d : %s' % (i+1,name))
-                    logger.info('Command : '+cmd1)
-                    logger.info('Logfile : '+logfile1)
-                    tasks['cmd'][i] = cmd1
-                    tasks['name'][i] = name
-                    tasks['outfile'][i] = logfile1
-                    tasks['errfile'][i] = errfile1
-                    tasks['dir'][i] = os.path.dirname(logfile1)
+                multiwave_names.append(name)
+                wnames = multiwavedict['frames'][i].split(',')
+                wave_names += wnames
+
+        logger.info(str(len(multiwave_names))+' multiwave calibration files to create')
+        logger.info(str(len(wave_names))+' individual wave calibration files to create')        
+
+        # Creating individual wave files to the multiwave calibration files
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),
+              ('dir',str,1000),('num',int),('mjd',int),('observatory',str,10),
+              ('configid',str,50),('designid',str,50),('fieldid',str,50)]
+        # num, mjd, observatory, configid, designid, fieldid        
+        tasks = np.zeros(len(wave_names),dtype=np.dtype(dt))
+        tasks = Table(tasks)
+        docal = np.zeros(len(wave_names),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(wave_names)):
+            name = wave_names[i]
+            mjd = int(load.cmjd(int(name)))
+            outfile = load.filename('Wave',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/'+load.prefix+'Wave-'+str(name)+'_pbs.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)            
+            # Use a quartzflat for the PSF, the PSF cal file will automatically be created
+            expinfo1 = info.expinfo(observatory=load.observatory,mjd5=mjd)
+            qtzind, = np.where(expinfo1['exptype']=='QUARTZFLAT')
+            psfid = None
+            if len(qtzind)>0:
+                qtzinfo = expinfo1[qtzind]
+                bestind = np.argsort(np.abs(qtzinfo['num']-int(name)))[0]
+                psfid = qtzinfo['num'][bestind]
+                cmd1 += ' --psf '+str(psfid)
+            # Use modelpsf, if possible
+            caldata1 = mkcal.getcal(calfile,mjd,verbose=False)
+            if caldata1.get('modelpsf') is not None:
+                cmd1 += ' --modelpsf '+str(caldata1['modelpsf'])
+            cmd1 += ' --wave '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                if load.exists('Wave',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[i] = False
+            if docal[i]:
+                donames.append(name)
+                logfiles.append(logfile1)                
+                logger.info('wave file %d : %s' % (i+1,name))
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
+                tasks['cmd'][i] = cmd1
+                tasks['name'][i] = name
+                tasks['outfile'][i] = logfile1
+                tasks['errfile'][i] = errfile1
+                tasks['dir'][i] = os.path.dirname(logfile1)
+                tasks['num'][i] = int(name)
+                tasks['mjd'][i] = load.cmjd(int(name))
+                tasks['observatory'][i] = load.observatory
+                tasks['configid'][i] = ''
+                tasks['designid'][i] = ''
+                tasks['fieldid'][i] =  ''               
+        if np.sum(docal)>0:
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' wave files to run')
+            key,jobid = slrm.submit(tasks,label='makecal-wave',verbose=True,logger=logger,**slurmpars)
+            slrm.queue_wait('makecal-wave',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if it ran okay and puts the status in the database
+            #  'tasks' doubles as 'expinfo' for check_calib()
+            chkcal = check_calib(tasks,logfiles,key,apred,verbose=True,logger=logger)
+        else:
+            logger.info('No individual wave calibration files need to be run')        
+
+        # Creating the multiwave calibration files
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]
+        tasks = np.zeros(len(multiwave_names),dtype=np.dtype(dt))
+        tasks = Table(tasks)
+        docal = np.zeros(len(multiwave_names),bool)    
+        donames = []
+        logfiles = []
+        for i in range(len(multiwave_names)):
+            name = multiwave_names[i]
+            outfile = load.filename('Wave',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/mkmultiwave-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 += ' --multiwave '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                if load.exists('Wave',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[i] = False
+            if docal[i]:
+                donames.append(name)
+                logfiles.append(logfile1)                
+                logger.info('multiwave file %d : %s' % (i+1,name))
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
+                tasks['cmd'][i] = cmd1
+                tasks['name'][i] = name
+                tasks['outfile'][i] = logfile1
+                tasks['errfile'][i] = errfile1
+                tasks['dir'][i] = os.path.dirname(logfile1)
         if np.sum(docal)>0:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' multiwave files to run')        
-            key,jobid = slrm.submit(tasks,label='mkmultiwave',verbose=True,logger=logger,**slurmpars1)
+            key,jobid = slrm.submit(tasks,label='mkmultiwave',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mkmultiwave',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'multiwave',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Wave',logfiles,key,apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:

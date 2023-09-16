@@ -2,7 +2,7 @@
 ;
 ; GETPSFCAL
 ;
-; Find the best PSF calibration file an exposure, or make
+; Find the best PSF calibration file for an exposure, or make
 ; a new one.
 ;
 ; INPUTS:

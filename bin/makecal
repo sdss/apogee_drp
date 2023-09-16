@@ -42,7 +42,7 @@ if __name__ == '__main__' :
     parser.add_argument('--persist', type=int, help='apPersist ID')
     parser.add_argument('--modelpersist', type=int, help='apModelPersist ID')
     parser.add_argument('--response', type=int, help='apResponse ID')
-    parser.add_argument('--modelpsf', type=int, help='apModelPSF ID')    
+    parser.add_argument('--modelpsf', type=str, help='apModelPSF ID')    
     parser.add_argument('--fpi', type=int, help='FPI ID')
     parser.add_argument('--telluric', type=str, help='Telluric ID')    
     parser.add_argument('--mjd', type=int, help='MJD')

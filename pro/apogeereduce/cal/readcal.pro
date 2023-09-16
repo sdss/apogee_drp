@@ -106,6 +106,7 @@ for i=0,n_elements(sparse)-1 do begin
 endfor
 
 ;; Extract the model PSF information
+name = ''
 modelpsf = where(strpos(line,'modelpsf') eq 0)
 for i=0,n_elements(modelpsf)-1 do begin
   if modelpsf[i] ge 0 then begin
@@ -121,6 +122,7 @@ for i=0,n_elements(modelpsf)-1 do begin
 endfor
 
 ;; Extract the fiber location information
+name = 0L
 fiber = where(strpos(line,'fiber') eq 0)
 for i=0,n_elements(fiber)-1 do begin
   if fiber[i] ge 0 then begin

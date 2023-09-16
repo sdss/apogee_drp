@@ -40,17 +40,8 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   wavedir = apogee_filename('Wave',num=name,chip='a',/dir)
   file = dirs.prefix+string(format='("Wave-",i8.8)',name)
   wavefile = wavedir+file
-  ;;lockfile = wavedir+file+'.lock'
 
   ;; If another process is alreadying make this file, wait!
-  ;;if not keyword_set(unlock) then begin
-  ;;  while file_test(lockfile) do begin
-  ;;    if keyword_set(nowait) then return
-  ;;    apwait,file,10
-  ;;  endwhile
-  ;;endif else begin
-  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
-  ;;endelse
   aplock,wavefile,waittime=10,unlock=unlock
   
   ;; Does product already exist?
@@ -58,7 +49,6 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   chips = ['a','b','c']
   swaveid = string(waveid[0],format='(i08)')
   allfiles = wavedir+dirs.prefix+'Wave-'+chips+'-'+swaveid+'.fits'
-  ;;allfiles = [allfiles,wavedir+file+'.dat']
   if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
     print,' Wavecal file: ', wavedir+file+'.dat', ' already made'
     return
@@ -67,8 +57,6 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
 
   print,'Making wave: ', waveid
   ;; Open .lock file
-  ;;openw,lock,/get_lun,lockfile
-  ;;free_lun,lock
   aplock,wavefile,/lock
   
   cmjd = getcmjd(waveid[0],mjd=mjd)

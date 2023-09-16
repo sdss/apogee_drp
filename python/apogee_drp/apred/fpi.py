@@ -390,7 +390,7 @@ def getfpiwave(fpilines,wcoef,fpipeaks,verbose=True):
     return fpilinestr, fpilines
 
 
-def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True):
+def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True,doplot=False):
     """ 
     Refit wavelength solution using FPI wavelengths
     fpilinestr: information on each unique FPI line
@@ -523,7 +523,7 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True):
         # -should I be fitting with local X values and higher order?
         # -should the original arclamp wavelength solutions use a higher order
         #   cubic seems very low
-        if plt==True:
+        if doplot:
             xglobal = np.zeros(len(thisrow),float)
             g1,=np.where(x[1,:]==1)
             g2,=np.where(x[1,:]==2)

@@ -965,7 +965,7 @@ def mkmodelpsf(name,psfid,sparseid,apred,telescope,nfbin=5,ncbin=200,verbose=Fal
 
     Parameters
     ----------
-    name : int
+    name : str
       Name of the output model PSF file (apPSFModel).
     psfid : int
       ID of apEPSF exposure empirical PSF profiles.
@@ -1084,6 +1084,7 @@ def saveepsf(filename,epsf,compress=True):
     hdu.close()
 
     if compress:
+        if os.path.exists(filename+'.fz'): os.remove(filename+'.fz')
         sout = subprocess.run(['fpack','-D','-Y',filename],shell=False)
         
     # from apmkpsf_epsf.pro

@@ -10,24 +10,15 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
   dirs = getdir()
   caldir = dirs.caldir
 
-  ;file=dirs.prefix+string(format='("EPSF-c-",i8.8)',outid)
   file = apogee_filename('EPSF',num=outid,chip='c')
-  ;;lockfile = file+'.lock'
 
-  ;if another process is alreadying make this file, wait!
-  ;;if not keyword_set(unlock) then begin
-  ;;  while file_test(lockfile) do apwait,lockfile,10
-  ;;endif else begin
-  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
-  ;;endelse
+  ; if another process is alreadying make this file, wait!
   aplock,file,waittime=10,unlock=unlock
  
   ;; does product already exist?
   info = file_info(file)
   if info.exists eq 0 or info.size eq 0 or keyword_set(clobber) then begin
-    ; open .lock filea
-    ;;openw,lock,/get_lun,lockfile
-    ;;free_lun,lock
+    ; open .lock file
     aplock,file,/lock
      
     if keyword_set(cmjd) then $
@@ -35,6 +26,7 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
     else $
       d = approcess(ims,darkid=darkid,flatid=flatid,nfs=1,/nocr,/doap3dproc,maxread=maxread,unlock=unlock)
 
+    print,'Averaging Sparse images'
     for n=0,n_elements(ims)-1 do begin
       ;if keyword_set(cmjd) then frame=apread(ims[n],err,mask,head,cmjd=cmjd,/domask) $
       ;else frame=apread(ims[n],err,mask,head,/domask)
@@ -50,6 +42,7 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
     red /= n_elements(ims)
 
     if keyword_set(darkims) then begin
+      print,'Averaging Dark images'
       d = approcess(darkims,darkid=darkid,/nocr,maxread=maxread,/doap3dproc,unlock=unlock)
       for n=0,n_elements(darkims)-1 do begin
         ;frame=apread(darkims[n],err,mask,head,/domask)
@@ -66,6 +59,7 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
     chips = ['a','b','c']
     ntrace = intarr(3)
     for ichip=0,2 do begin
+       print,'chip ',chips[ichip]
       ;apmkpsf_epsf,red[*,*,ichip],caldir,outid,ichip,dmax=dmax,sparseid=sparseid,scat=2,average=average
        
       if keyword_set(filter) then begin
@@ -89,7 +83,7 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
     sparse = dirs.prefix+string(format='("Sparse-",i8.8)',outid)
     mwrfits,red,file_dirname(file)+'/'+sparse+'.fits',/create
   
-    ;;file_delete,lockfile,/allow
+    ;; file_delete,lockfile,/allow
     aplock,file,/clear    
   endif
   

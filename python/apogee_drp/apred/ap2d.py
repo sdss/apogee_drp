@@ -367,7 +367,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         ###################################################################
         # Need to remove the littrow ghost and secondary ghost here!!!!!!!!
         ###################################################################
-             
+        
         # Restore the trace structure
         tracestr = fits.getdata(ipsffile,1)
              
@@ -1056,7 +1056,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             apexp = planstr['APEXP']
             apexp = dln.addcatcols(apexp,np.dtype([('psfid',int)]))
             planstr['APEXP'] = apexp
-
+            
         if 'modelpsf' in planstr.keys():
             modelpsf = planstr['modelpsf']
         else:
@@ -1082,9 +1082,9 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             # force single domeflat if a short visit or domelibrary=='single'
             observatory = planstr['telescope'][0:3]
             if str(psflibrary) == 'single' or str(planpsflibrary) == 'single' or len(planstr['APEXP']) <= 3: 
-                out = subprocess.check_output(['psflibrary',observatory,'--planfile',planfile,'--s'],shell=False)
+                out = subprocess.check_output(['psflibrary',observatory,'--planfile',planfile,'--apred',load.apred,'--s'],shell=False)
             else: 
-                out = subprocess.check_output(['psflibrary',observatory,'--planfile',planfile],shell=False)
+                out = subprocess.check_output(['psflibrary',observatory,'--planfile',planfile,'--apred',load.apred],shell=False)
             out = out.decode().split('\n')
             nout = len(out) 
             # parse the output parse the output 
@@ -1246,11 +1246,11 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 nbd1 = len(bd1)
                 if nbd1 > 0: 
                     print('halt: ',modelpsffiles[bd1],' not found')
-                    #import pdb; pdb.set_modelpsf()
                     return
         else:
             modelpsffile = None
- 
+
+            
         # Load the Plug Plate Map file
         #-----------------------------
         if 'platetype' in planstr.keys():
@@ -1276,7 +1276,6 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                                             mapper_data=mapper_data,noobject=True)
                 if plugmap is None:
                     print('halt: error with plugmap: ',plugfile)
-                    #import pdb; pdb.set_trace()
                     return
                 plugmap['mjd'] = planstr['mjd']   # enter mjd from the plan file
  
@@ -1289,6 +1288,12 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         # Process each frame
         #-------------------
         for j in range(nframes):
+            # If psfid=0 and using modelpsf, then use modelpsf apEPSF/ETrace files
+            if planstr['APEXP']['psfid'][i]==0 and 'modelpsf' in planstr.keys():
+                # modepsf name is sparseid-psfid
+                planstr['APEXP']['psfid'][i] = planstr['modelpsf'].split('-')[-1]
+                print('psfid=0, using modelpsf='+str(planstr['APEXP']['psfid'][i])+' instead')
+            
             # Get trace files
             tracefiles = load.filename('PSF',num=planstr['APEXP']['psfid'][i],chips=True)
             tracefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
@@ -1298,7 +1303,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 bd1, = np.where(np.array(tracetest)==False)
                 nbd1 = len(bd1)
                 if nbd1 > 0: 
-                    print('halt: ',tracefiles[bd1],' not found')
+                    print('halt: '+'.'.join(np.array(tracefiles)[bd1])+' not found')
                     #import pdb; pdb.set_trace()
                     return
                 for ichip in range(3): 
