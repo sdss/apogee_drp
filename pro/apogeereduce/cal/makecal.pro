@@ -263,7 +263,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
 
   ;; Make PSF calibration file
   ;;--------------------------
-  if keyword_set(psf) and ~keyword_set(flux) then begin
+  if keyword_set(psf) and not keyword_set(flux) and not keyword_set(wave) then begin
     print,'makecal psf: ', psf
     if psf gt 1 then begin
       file = apogee_filename('PSF',num=psf,chip='c')
