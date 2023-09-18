@@ -630,7 +630,11 @@ FOR i=0L,nplanfiles-1 do begin
     header0=finalframe[0].hdr
   endelse
 
-  plate = plugmap.plateid
+  if tag_exist(plugmap,'plateid') then begin
+     plate = plugmap.plateid
+  endif else begin
+     plate = plugmap.plate     
+  endelse
   mjd = plugmap.mjd
   platemjd5 = strtrim(plate,2)+'-'+strtrim(mjd,2)
   if keyword_set(stp) then stop
@@ -673,6 +677,8 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr.mjd = planstr.mjd
     visitstr.telescope = dirs.telescope
     ;; Copy over all relevant columns from plugmap/plateHoles/catalogdb
+    if tag_exist(objdata,'gaiadr2_sourceid') then $
+      if strtrim(objdata[istar].gaiadr2_sourceid,2) eq '' then objdata[istar].gaiadr2_sourceid='-1'
     STRUCT_ASSIGN,objdata[istar],visitstr,/nozero
     GLACTC,visitstr.ra,visitstr.dec,2000.0,glon,glat,1,/deg
     visitstr.glon = glon
@@ -704,10 +710,9 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr.snr = str.snr
     visitstr.starflag = str.starflag
     visitstr.starflags = starflag(str.starflag)
-
     MWRFITS,visitstr,visitfile,/silent
     PUSH,allvisitstr,visitstr
-  endfor
+  endfor  ;; object loop
   writelog,logfile,' aprv '+file_basename(planfile)+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
 
   ; Save all RV info for all stars to apVisitSum file

@@ -64,7 +64,11 @@ end
 
 
 ; Get the frame information
-plate = plugmap.plateid
+if tag_exist(plugmap,'plateid') then begin
+  plate = plugmap.plateid
+endif else begin
+  plate = plugmap.plate   
+endelse
 mjd = plugmap.mjd
 platemjd5 = strtrim(plate,2)+'-'+strtrim(mjd,2)
 locid = plugmap.locationid

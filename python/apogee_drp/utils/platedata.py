@@ -267,7 +267,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         fiber['objtype'] = 'none'
         fiber['holetype'] = 'OBJECT'
         fiber['spectrographid'] = 2
-        platedata = {'plate':plate, 'mjd':mjd, 'locationid':1, 'field':plate, 'programname':'',
+        platedata = {'plate':plate, 'mjd':mjd, 'plateid':str(plate), 'locationid':1, 'field':plate, 'programname':'',
                      'ha':[-99.,-99.,-99.]}
         fiber['fiberid'] = fiberid
         fiber['objtype'] = 'SKY'
