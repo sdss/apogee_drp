@@ -3084,10 +3084,12 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
         return None
 
     # Remove rows with missing or blank apogee_ids
-    bd, = np.where((allvisit['apogee_id']=='') | (allvisit['apogee_id']=='None') | (allvisit['apogee_id']=='2MNone') | (allvisit['apogee_id']=='2M'))
+    apidlen = np.array([len(v['apogee_id']) for v in allvisit])   # 2M name should have 18 characters
+    bd, = np.where((allvisit['apogee_id']=='') | (allvisit['apogee_id']=='None') | (allvisit['apogee_id']=='none') |
+                   (allvisit['apogee_id'] is None) | (allvisit['apogee_id']=='2MNone') | (allvisit['apogee_id']=='2M') | (apidlen != 18))
     if len(bd)>0:
         allvisit = np.delete(allvisit,bd)
-    
+        
     # Pick on the MJDs we want
     ind = []
     for m in mjds:
@@ -3098,7 +3100,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
         logger.info('No visits found for MJDs')
         return None
     allvisit = allvisit[ind]
-
+    
     # Get MAXMJD for each unique star
     if len(mjds)>1:
         star_index = dln.create_index(allvisit['apogee_id'])

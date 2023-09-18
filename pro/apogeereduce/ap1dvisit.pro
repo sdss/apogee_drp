@@ -614,8 +614,9 @@ FOR i=0L,nplanfiles-1 do begin
 
   objind = where(plugmap.fiberdata.spectrographid eq 2 and $
                  plugmap.fiberdata.holetype eq 'OBJECT' and $
-                 plugmap.fiberdata.objtype ne 'SKY' and $
-                 plugmap.fiberdata.objtype ne 'none',nobjind)  
+                 strtrim(plugmap.fiberdata.objtype,2) ne 'SKY' and $
+                 strtrim(plugmap.fiberdata.objtype,2) ne 'none' and $
+                 strtrim(plugmap.fiberdata.tmass_style,2) ne '2MNone',nobjind)  
   objdata = plugmap.fiberdata[objind]
   obj = plugmap.fiberdata[objind].tmass_style
 

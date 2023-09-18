@@ -409,7 +409,7 @@ For i=0,nfibers-1 do begin
   endif else hminus=99.99
 
   if fiberholetype eq 'OBJECT' and (fiberobjtype ne 'SKY') and $
-     (fiberobjtype ne 'none') and tmass_name ne '-' then begin
+     (fiberobjtype ne 'none') and tmass_name ne '-' and tmass_name ne '2MNone' then begin
 
     ; Each extension contains a different data type and is a 2D
     ; array of length [3,4096], although the wavelength coefficients
