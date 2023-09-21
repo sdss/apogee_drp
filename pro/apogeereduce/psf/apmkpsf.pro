@@ -118,7 +118,7 @@ FOR i=0,nflatframe-1 do begin
     ;;  1842 is a bad row
     if j eq 2 then $
       str.(j).flux[*,1842]=(str.(j).flux[*,1841]+str.(j).flux[*,1843])*0.5
-
+    
     ;; Trace the fibers
     APFINDTRACE,str.(j),tracestr,pl=pl,nthreshsig=20,sigkern=1.2,thresh=peakthresh
     if n_elements(tracestr) eq 0 then begin

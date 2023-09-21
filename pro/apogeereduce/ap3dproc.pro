@@ -2437,6 +2437,7 @@ print,'no_checksum: ', no_checksum
     if test eq 0 or keyword_set(clobber) then begin
       if not keyword_set(silent) then print,'Writing output to: ',ioutfile
       if keyword_set(outlong) then print,'Saving FLUX/ERR as LONG instead of FLOAT'
+      file_delete,outfile,/allow
       ; HDU0 - header only
       FITS_WRITE,ioutfile,0,head,/no_abort,message=write_error    
       ; HDU1 - flux

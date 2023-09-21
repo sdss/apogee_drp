@@ -954,6 +954,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                 hdu[5].header['EXTNAME'] = 'WAVECOEF'
                 
             # Write the data to disk
+            if os.path.exists(outfile): os.remove(outfile)  # make sure there's nothing there
             hdu.writeto(outfile,overwrite=True)
             hdu.close()
 
