@@ -386,7 +386,7 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False
     dtype = np.dtype([('logfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),
                       ('instrument',(str,20)),('telescope',(str,10)),('caltype',(str,30)),
                       ('pbskey',(str,50)),('checktime',(str,100)),
-                      ('name',int),('calfile',(str,300)),('success',bool)])
+                      ('name',str,100),('calfile',(str,300)),('success',bool)])
     chkmaster = np.zeros(nnames,dtype=dtype)
     chkmaster['telescope'] = telescope
     if telescope[0:3]=='apo':
@@ -2043,12 +2043,91 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(multiwavedict)):
             name = multiwavedict['name'][i]
             if np.sum((mjds >= multiwavedict['mjd1'][i]) & (mjds <= multiwavedict['mjd2'][i])) > 0:
-                multiwave_names.append(name)
-                wnames = multiwavedict['frames'][i].split(',')
-                wave_names += wnames
+                if load.exists('Wave',num=multiwavedict['name'][i])==False:
+                    multiwave_names.append(name)
+                    wnames = multiwavedict['frames'][i].split(',')
+                    wave_names += wnames
+                else:
+                    logger.info(load.filename('Wave',num=multiwavedict['name'][i],chips=True)+' exists already')
+        logger.info(str(len(multiwave_names))+' multiwave files need to be made')
+        wave_names = list(np.unique(wave_names))
+        wave_names = [n for n in wave_names if load.exists('Wave',num=n)==False]
+        logger.info(str(len(wave_names))+' apWave files need to be made')
+                
+        # Which PSFs are we going to use for the apWave files
+        psf_names = []
+        for i in range(len(wave_names)):
+            name = wave_names[i]
+            mjd = int(load.cmjd(int(name)))            
+            # Use a quartzflat for the PSF, the PSF cal file will automatically be created
+            expinfo1 = info.expinfo(observatory=load.observatory,mjd5=mjd)
+            qtzind, = np.where(expinfo1['exptype']=='QUARTZFLAT')
+            psfid = None
+            if len(qtzind)>0:
+                qtzinfo = expinfo1[qtzind]
+                bestind = np.argsort(np.abs(qtzinfo['num']-int(name)))[0]
+                psfid = qtzinfo['num'][bestind]
+                psf_names.append(psfid)
+        psf_names = list(np.unique(psf_names))
+        psf_names = [n for n in psf_names if load.exists('PSF',num=n)==False]
+        logger.info(str(len(psf_names))+' apPSF files need to be made')
 
-        logger.info(str(len(multiwave_names))+' multiwave calibration files to create')
-        logger.info(str(len(wave_names))+' individual wave calibration files to create')        
+        # Create the apPSF files so we can extract the individual wave files
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),
+              ('dir',str,1000),('num',int),('mjd',int),('observatory',str,10),
+              ('configid',str,50),('designid',str,50),('fieldid',str,50)]
+        # num, mjd, observatory, configid, designid, fieldid        
+        tasks = np.zeros(len(psf_names),dtype=np.dtype(dt))
+        tasks = Table(tasks)
+        docal = np.zeros(len(psf_names),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(psf_names)):
+            name = psf_names[i]
+            mjd = int(load.cmjd(int(name)))
+            outfile = load.filename('PSF',num=name,chips=True)
+            logfile1 = os.path.dirname(outfile)+'/'+load.prefix+'PSF-'+str(name)+'_pbs.'+logtime+'.log'
+            errfile1 = logfile1.replace('.log','.err')
+            if os.path.exists(os.path.dirname(logfile1))==False:
+                os.makedirs(os.path.dirname(logfile1))
+            cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+            cmd1 += ' --psf '+str(name)+' --unlock'
+            if clobber:
+                cmd1 += ' --clobber'
+            # Check if files exist already
+            docal[i] = True
+            if clobber is not True:
+                if load.exists('PSF',num=name):
+                    logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                    docal[i] = False
+            if docal[i]:
+                donames.append(name)
+                logfiles.append(logfile1)                
+                logger.info('PSF file %d : %s' % (i+1,name))
+                logger.info('Command : '+cmd1)
+                logger.info('Logfile : '+logfile1)
+                tasks['cmd'][i] = cmd1
+                tasks['name'][i] = name
+                tasks['outfile'][i] = logfile1
+                tasks['errfile'][i] = errfile1
+                tasks['dir'][i] = os.path.dirname(logfile1)
+                tasks['num'][i] = int(name)
+                tasks['mjd'][i] = load.cmjd(int(name))
+                tasks['observatory'][i] = load.observatory
+                tasks['configid'][i] = ''
+                tasks['designid'][i] = ''
+                tasks['fieldid'][i] =  ''               
+        if np.sum(docal)>0:
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' PSF files to run')
+            key,jobid = slrm.submit(tasks,label='makecal-psf',verbose=True,logger=logger,**slurmpars)
+            slrm.queue_wait('makecal-psf',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if it ran okay and puts the status in the database
+            #  'tasks' doubles as 'expinfo' for check_calib()
+            chkcal = check_calib(tasks,logfiles,key,apred,verbose=True,logger=logger)
+        else:
+            logger.info('No individual PSF calibration files need to be run')
 
         # Creating individual wave files to the multiwave calibration files
         dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),
@@ -2082,7 +2161,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             caldata1 = mkcal.getcal(calfile,mjd,verbose=False)
             if caldata1.get('modelpsf') is not None:
                 cmd1 += ' --modelpsf '+str(caldata1['modelpsf'])
-            cmd1 += ' --wave '+str(name)+' --unlock'
+            cmd1 += ' --wave '+str(name)
+            # Do NOT use --unlock, because the apPSF files will be made on the
+            # fly and the processes will collide.
+            # We want to use the lock files here
             if clobber:
                 cmd1 += ' --clobber'
             # Check if files exist already

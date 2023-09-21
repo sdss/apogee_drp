@@ -66,17 +66,17 @@ pro mkwave,waveid,name=name,darkid=darkid,flatid=flatid,psfid=psfid,$
   ;;gdarc = where(expinfo.arctype eq 'UNE' or expinfo.arctype eq 'THAR',ngdarc)
 
   ;; Process the frame, if necessary
-  chipfiles = apogee_filename('1D',num=waveid,chip=['a','b','c'])
+  chipfiles = apogee_filename('1D',num=waveid[0],chip=['a','b','c'])
   if total(file_test(chipfiles)) ne 3 then begin
     if keyword_set(psfid) then begin
       cmjd = getcmjd(psfid)
       MKPSF,psfid,darkid=darkid,flatid=flatid,fiberid=fiberid,unlock=unlock
     endif
-    w = approcess(waveid,dark=darkid,flat=flatid,psf=psfid,modelpsf=modelpsf,flux=0,/doproc,unlock=unlock)
+    w = approcess(waveid[0],dark=darkid,flat=flatid,psf=psfid,modelpsf=modelpsf,flux=0,/doproc,unlock=unlock)
   endif
 
   ;; Check that the data is okay
-  chfile = apogee_filename('2D',num=waveid,chip='b')
+  chfile = apogee_filename('2D',num=waveid[0],chip='b')
   if file_test(chfile) eq 0 then begin
     print,chfile+' NOT FOUND'
     aplock,wavefile,/clear
