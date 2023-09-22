@@ -2126,9 +2126,12 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             # This should check if it ran okay and puts the status in the database
             #  'tasks' doubles as 'expinfo' for check_calib()
             chkcal = check_calib(tasks,logfiles,key,apred,verbose=True,logger=logger)
+            # Summary
+            indcal, = np.where(chkcal['success']==True)
+            logger.info('%d/%d apPSF successfully processed' % (len(indcal),len(chkcal)))
         else:
             logger.info('No individual PSF calibration files need to be run')
-
+            
         # Creating individual wave files to the multiwave calibration files
         dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),
               ('dir',str,1000),('num',int),('mjd',int),('observatory',str,10),
@@ -2161,10 +2164,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             caldata1 = mkcal.getcal(calfile,mjd,verbose=False)
             if caldata1.get('modelpsf') is not None:
                 cmd1 += ' --modelpsf '+str(caldata1['modelpsf'])
-            cmd1 += ' --wave '+str(name)
-            # Do NOT use --unlock, because the apPSF files will be made on the
-            # fly and the processes will collide.
-            # We want to use the lock files here
+            cmd1 += ' --wave '+str(name)+' --unlock'
             if clobber:
                 cmd1 += ' --clobber'
             # Check if files exist already
@@ -2199,6 +2199,9 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             # This should check if it ran okay and puts the status in the database
             #  'tasks' doubles as 'expinfo' for check_calib()
             chkcal = check_calib(tasks,logfiles,key,apred,verbose=True,logger=logger)
+            # Summary
+            indcal, = np.where(chkcal['success']==True)
+            logger.info('%d/%d apWave successfully processed' % (len(indcal),len(chkcal)))
         else:
             logger.info('No individual wave calibration files need to be run')        
 
