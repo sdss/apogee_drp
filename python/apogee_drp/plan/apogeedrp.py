@@ -608,7 +608,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
             # Should really check fpi/apFPILines-EXPNUM8.fits
             base = load.filename('Wave',num=num,chips=True).replace('Wave-','WaveFPI-'+str(mjd)+'-')
         elif caltype.lower()=='dailywave':
-            base = load.filename('Wave',num=num,chips=True)[0:-13]+str(num)+'.fits'
+            base = load.filename('Wave',num=num,chips=True)[0:-13]+'{:08d}'.format(num)+'.fits'
         else:
             base = load.filename(caltype,num=num,chips=True)
         chkcal['calfile'][i] = base
