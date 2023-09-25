@@ -142,7 +142,7 @@ def readcal(calfile):
     #  mjd1, mjd2, name, frames
     #  multiwave 55800 56130 2380000  02390007,02390008,02500007
     #  multiwave 56130 56512 5680000  05870007,05870008,05870018,05870019
-    dtdict['multiwave'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50),('frames',np.str,500)])
+    dtdict['multiwave'] = np.dtype([('mjd1',int),('mjd2',int),('name',np.str,50),('frames',np.str,1000)])
     
     # -- LSF --
     #  mjd1, mjd2, name, frames, psfid

@@ -196,7 +196,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         print('directory '+fdir+' not found')
         return [],[]
      
-    baseframeid = '%8d' % int(base)
+    baseframeid = '%08d' % int(base)
     files = [fdir+'/'+load.prefix+'2D-'+ch+'-'+baseframeid+'.fits' for ch in chiptag]
     exists = [os.path.exists(f) for f in files]
     framenum = int(base)
@@ -218,7 +218,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         #import pdb; pdb.set_trace() 
         return [],[]
      
-    psfframeid = '%8d' % int(psf_base)
+    psfframeid = '%08d' % int(psf_base)
     psffiles = load.filename('PSF',num=psfframeid,chips=True)
     psffiles = [psffiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
     epsffiles = load.filename('EPSF',num=psfframeid,chips=True)
@@ -291,9 +291,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             return [],[]
          
     # Wait if another process is working on this
-    lockfile = outdir+load.prefix+'1D-'+str(framenum)
+    lockfile = outdir+load.prefix+'1D-'+baseframeid
     if localdir: 
-        lockfile = localdir+'/'+load.prefix+'1D-'+str(framenum)
+        lockfile = localdir+'/'+load.prefix+'1D-'+baseframeid
     lock.lock(lockfile,unlock=unlock)
     #lockfile = outdir+load.prefix+'1D-'+str(framenum) # lock file
     #if localdir: 
@@ -317,10 +317,10 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     #  this required final output to be put off until after all chips are done,
     #  all 3 need to be done here if any at all, so that data from all chips is loaded
     # Output files
-    outfiles = [outdir+load.prefix+'1D-'+ch+'-'+str(framenum)+'.fits' for ch in chiptag]  # output file
+    outfiles = [outdir+load.prefix+'1D-'+ch+'-'+baseframeid+'.fits' for ch in chiptag]  # output file
     outtest = [os.path.exists(f) for f in outfiles]
     if np.sum(outtest)==3 and not clobber:
-        print(outdir+load.prefix+'1D-'+str(framenum)+'.fits already exists and clobber not set')
+        print(outdir+load.prefix+'1D-'+baseframeid+'.fits already exists and clobber not set')
         if os.path.exists(lockfile): os.remove(lockfile)
         return [],[]
 
@@ -349,8 +349,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         ipsffile = psffiles[ichip] 
         iepsffile = epsffiles[ichip] 
              
-        # Cutput file
-        outfile = outdir+load.prefix+'1D-'+chiptag[ichip]+'-'+str(framenum)+'.fits'  # output file output file 
+        # Output file
+        outfile = outdir+load.prefix+'1D-'+chiptag[ichip]+'-'+baseframeid+'.fits'  # output file output file 
              
         if not silent: 
             if i > 0 : 
@@ -711,7 +711,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             outstr,back,ymodel,epsf = psf.extractwing(chstr,modelpsffile1,epsffile1,tracefile,trace2dfile)
             head = outstr['header']
             # Save the EPSF file
-            outepsffile = outdir+load.prefix+'EPSFmodel-'+chiptag[i]+'-'+str(framenum)+'.fits'  # output file
+            outepsffile = outdir+load.prefix+'EPSFmodel-'+chiptag[i]+'-'+baseframeid+'.fits'  # output file
             print('Saving EPSF file to '+outepsffile)
             psf.saveepsf(outepsffile,epsf)
             # add chi-squared to header, mask bad pixels?
@@ -807,7 +807,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
  
         # Output the 2D model spectrum
         if ymodel is not None:
-            modelfile = outdir+load.prefix+'2Dmodel-'+chiptag[ichip]+'-'+str(framenum)+'.fits'  # model output file
+            modelfile = outdir+load.prefix+'2Dmodel-'+chiptag[ichip]+'-'+baseframeid+'.fits'  # model output file
             if not silent: 
                 print('Writing 2D model to: ',modelfile)
             hdu = fits.HDUList()
@@ -856,7 +856,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         del output  # free up memory
         if os.path.exists(outdir)==False:
             os.makedirs(outdir)
-        plotfile = outdir+'/plots/pixshift-'+framenum 
+        plotfile = outdir+'/plots/pixshift-'+baseframeid
         if skywave:
             #wave.getskywave(args.frameid,args.waveid,vers=args.apred,telescope=args.telescope)            
             frame_wave = wave.ap1dwavecal(frame,plugmap=plugmap,verbose=True,plot=True,pfile=plotfile)
@@ -875,7 +875,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         for i in range(len(chips)): 
             ichip = chips[i]   # chip index, 0-first chip
             # output file
-            outfile = outdir+load.prefix+'1D-'+chiptag[ichip]+'-'+str(framenum)+'.fits'  # output file
+            outfile = outdir+load.prefix+'1D-'+chiptag[ichip]+'-'+baseframeid+'.fits'  # output file
             if not silent: 
                 print('writing output to: ',outfile)
  
@@ -1138,7 +1138,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 sout = subprocess.run(cmd,shell=False)
             tracefiles = load.filename('PSF',num=planstr['psfid'],chips=True)
             tracefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
-            tracefile = os.path.dirname(tracefiles[0])+'/%8d' % int(planstr['psfid'])
+            tracefile = os.path.dirname(tracefiles[0])+'/%08d' % int(planstr['psfid'])
             tracetest = [os.path.exists(t) for t in tracefiles]
             if np.sum(tracetest) != 3:
                 bd1, = np.where(np.array(tracetest)==False)
@@ -1194,7 +1194,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 sout = subprocess.run(cmd,shell=False)
             fluxfiles = load.filename('Flux',num=planstr['fluxid'],chips=True)
             fluxfiles = [fluxfiles.replace('Flux-','Flux-'+ch+'-') for ch in chiptag]
-            fluxfile = os.path.dirname(fluxfiles[0])+'/%8d' % int(planstr['fluxid'])
+            fluxfile = os.path.dirname(fluxfiles[0])+'/%08d' % int(planstr['fluxid'])
             fluxtest = [os.path.exists(f) for f in fluxfiles]
             fludtest = True if np.sum(fluxtest)==3 else False
             if np.sum(fluxtest) != 3: 
@@ -1219,7 +1219,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                                        '--vers',load.apred,'--telescope',str(planstr['telescope'])],shell=False)
             responsefiles = load.filename('Response',num=planstr['responseid'],chips=True) 
             responsefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
-            responsefile = os.path.dirname(responsefiles[0])+'/%8d' % planstr['responseid']
+            responsefile = os.path.dirname(responsefiles[0])+'/%08d' % planstr['responseid']
             responsetest = [os.path.exists(f) for f in responsefiles]
             if np.sum(responsetest) != 3:
                 bd1 , = np.where(np.array(responsetest)==False)
@@ -1298,7 +1298,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             # Get trace files
             tracefiles = load.filename('PSF',num=planstr['APEXP']['psfid'][i],chips=True)
             tracefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
-            tracefile = os.path.dirname(tracefiles[0])+'/%8d' % planstr['APEXP']['psfid'][i]
+            tracefile = os.path.dirname(tracefiles[0])+'/%08d' % planstr['APEXP']['psfid'][i]
             tracetest = [os.path.exists(t) for t in tracefiles]
             if np.sum(tracetest) != 3:
                 bd1, = np.where(np.array(tracetest)==False)
@@ -1320,7 +1320,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             #framenum = rawinfo[0].fid8       # the frame number the frame number 
             files = load.filename('2D',num=framenum,chips=True)
             files = [files.replace('2D-','2D-'+ch+'-') for ch in chiptag]
-            inpfile = os.path.dirname(files[0])+'/'+str(framenum)
+            inpfile = os.path.dirname(files[0])+'/{:08d}'.format(framenum)
             #info = apfileinfo(files) 
             okay = load.exists('R',num=planstr['APEXP']['name'][j]) and load.exists('2D',num=planstr['APEXP']['name'][j])
             #okay = (info.exists and info.sp2dfmt and info.allchips and (info.mjd5 == planstr.mjd) and 
@@ -1332,7 +1332,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 
             print('') 
             print('-------------------------------------------')
-            print(str(j+1)+'/'+str(nframes)+'  processing frame number >>'+str(framenum)+'<<')
+            print(str(j+1)+'/'+str(nframes)+'  processing frame number >>'+'{:08d}'.format(framenum)+'<<')
             print('-------------------------------------------')
             
             # Run AP2DPROC

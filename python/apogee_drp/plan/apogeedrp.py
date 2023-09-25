@@ -2061,6 +2061,9 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             mjd = int(load.cmjd(int(name)))            
             # Use a quartzflat for the PSF, the PSF cal file will automatically be created
             expinfo1 = info.expinfo(observatory=load.observatory,mjd5=mjd)
+            if len(expinfo1)==0:
+                print('no quartz for this '+str(mjd))
+                continue
             qtzind, = np.where(expinfo1['exptype']=='QUARTZFLAT')
             psfid = None
             if len(qtzind)>0:
