@@ -1082,10 +1082,11 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             # path of planfile
             # force single domeflat if a short visit or domelibrary=='single'
             observatory = planstr['telescope'][0:3]
-            if str(psflibrary) == 'single' or str(planpsflibrary) == 'single' or len(planstr['APEXP']) <= 3: 
-                out = subprocess.check_output(['psflibrary',observatory,'--planfile',planfile,'--apred',load.apred,'--s'],shell=False)
-            else: 
-                out = subprocess.check_output(['psflibrary',observatory,'--planfile',planfile,'--apred',load.apred],shell=False)
+            if str(psflibrary) == 'single' or str(planpsflibrary) == 'single' or len(planstr['APEXP']) <= 3:
+                cmd = ['psflibrary',observatory,'--planfile',planfile,'--apred',load.apred,'--s']
+            else:
+                cmd = ['psflibrary',observatory,'--planfile',planfile,'--apred',load.apred]
+            out = subprocess.check_output(cmd,shell=False)
             out = out.decode().split('\n')
             nout = len(out) 
             # parse the output parse the output 

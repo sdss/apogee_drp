@@ -28,7 +28,7 @@ pro flatplot,flat,file
  tv,nint(disp)
  device,/close
  spawn,'convert a.eps '+file+'.jpg'
- file_delete,'a.eps'
+ file_delete,'a.eps',/allow
  set_plot,'X'
 
 end

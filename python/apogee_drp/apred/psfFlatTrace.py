@@ -69,7 +69,7 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
         inst = 'S'
         telescope = 'lco25m'
         fpsStart = 59808
-
+        
     # Set up apload
     load = apload.ApLoad(apred=apred, telescope=telescope)
     load_exp = apload.ApLoad(apred=apred_exp, telescope=telescope)
@@ -88,8 +88,11 @@ def findBestFlatSequence(ims=None, imtype='QuartzFlat', libFile=None, planfile=N
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
     apodir = os.environ.get('APOGEE_REDUX') + '/' + apred + '/'
     mdir = apodir + 'monitor/'
-
+    
     # Read in the dome flat lookup table and master exposure table
+    if os.path.exists(mdir + instrument + imtype + 'Trace-all.fits')==False:
+        print(mdir + instrument + imtype + 'Trace-all.fits  not found')
+        return None,None
     flatTable = fits.getdata(mdir + instrument + imtype + 'Trace-all.fits')
     if libFile is not None: flatTable = fits.getdata(mdir + libFile)
     expTable = fits.getdata(mdir + instrument + 'Exp.fits')

@@ -1243,7 +1243,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
        Dictionary of slurmpars settings.
     caltypes : list, optional
        List of master calibration types to run.  The default is all 9 of them.
-       ['detector','dark','flat','bpm','littrow','response','sparse','modelpsf','lsf']
+       ['detector','dark','flat','bpm','sparse','littrow','response','modelpsf','lsf']
     clobber : boolean, optional
        Overwrite any existing files.  Default is False.
     linkvers : str, optional
@@ -1265,7 +1265,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     """
 
     if caltypes is None:
-        caltypes = ['detector','dark','flat','bpm','littrow','response','sparse','modelpsf','multiwave','lsf']
+        caltypes = ['detector','dark','flat','bpm','sparse','littrow','response','modelpsf','multiwave','lsf']
     else:
         caltypes = [c.lower() for c in caltypes]
         
@@ -1762,6 +1762,69 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logger.info('No master BPM calibration files need to be run')
 
 
+    # Make Sparse in parallel
+    #--------------------------
+    if 'sparse' in caltypes:
+        sparsedict = allcaldict['sparse']
+        logger.info('')
+        logger.info('---------------------------------')
+        logger.info('Making master Sparses in parallel')
+        logger.info('=================================')
+        logger.info('Slurm settings: '+str(slurmpars))
+        if sparsedict is None or len(sparsedict)==0:
+            sparsedict = []
+            logger.info('No master Sparse calibration files to make')
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        tasks = np.zeros(len(sparsedict),dtype=np.dtype(dt))
+        tasks = Table(tasks)
+        docal = np.zeros(len(sparsedict),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(sparsedict)):
+            name = sparsedict['name'][i]
+            if np.sum((mjds >= sparsedict['mjd1'][i]) & (mjds <= sparsedict['mjd2'][i])) > 0:
+                outfile = load.filename('Sparse',num=name,chips=True)
+                logfile1 = os.path.dirname(outfile)+'/mksparse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                errfile1 = logfile1.replace('.log','.err')
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
+                cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+                cmd1 += ' --sparse '+str(name)+' --unlock'
+                if clobber:
+                    cmd1 += ' --clobber'
+                # Check if files exist already
+                docal[i] = True
+                if clobber is not True:
+                    if load.exists('Sparse',num=name):
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[i] = False
+                if docal[i]:
+                    donames.append(name)
+                    logfiles.append(logfile1)                
+                    logger.info('Sparse file %d : %s' % (i+1,name))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+        if np.sum(docal)>0:
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Sparse files to run')        
+            key,jobid = slrm.submit(tasks,label='mksparse',verbose=True,logger=logger,**slurmpars1)
+            slrm.queue_wait('mksparse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Sparse',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            if chkmaster is None:
+                chkmaster = chkmaster1
+            else:
+                chkmaster = np.hstack((chkmaster,chkmaster1))
+        else:
+            logger.info('No master Sparse calibration files need to be run')
+            
+
     # Make Littrow in parallel
     #--------------------------
     if 'littrow' in caltypes:
@@ -1887,71 +1950,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
             logger.info('No master Response calibration files need to be run')
-    
 
-    # Make Sparse in parallel
-    #--------------------------
-    if 'sparse' in caltypes:
-        sparsedict = allcaldict['sparse']
-        logger.info('')
-        logger.info('---------------------------------')
-        logger.info('Making master Sparses in parallel')
-        logger.info('=================================')
-        logger.info('Slurm settings: '+str(slurmpars))
-        if sparsedict is None or len(sparsedict)==0:
-            sparsedict = []
-            logger.info('No master Sparse calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
-        tasks = np.zeros(len(sparsedict),dtype=np.dtype(dt))
-        tasks = Table(tasks)
-        docal = np.zeros(len(sparsedict),bool)
-        donames = []
-        logfiles = []
-        for i in range(len(sparsedict)):
-            name = sparsedict['name'][i]
-            if np.sum((mjds >= sparsedict['mjd1'][i]) & (mjds <= sparsedict['mjd2'][i])) > 0:
-                outfile = load.filename('Sparse',num=name,chips=True)
-                logfile1 = os.path.dirname(outfile)+'/mksparse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
-                errfile1 = logfile1.replace('.log','.err')
-                if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
-                cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
-                cmd1 += ' --sparse '+str(name)+' --unlock'
-                if clobber:
-                    cmd1 += ' --clobber'
-                # Check if files exist already
-                docal[i] = True
-                if clobber is not True:
-                    if load.exists('Sparse',num=name):
-                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
-                        docal[i] = False
-                if docal[i]:
-                    donames.append(name)
-                    logfiles.append(logfile1)                
-                    logger.info('Sparse file %d : %s' % (i+1,name))
-                    logger.info('Command : '+cmd1)
-                    logger.info('Logfile : '+logfile1)
-                    tasks['cmd'][i] = cmd1
-                    tasks['name'][i] = name
-                    tasks['outfile'][i] = logfile1
-                    tasks['errfile'][i] = errfile1
-                    tasks['dir'][i] = os.path.dirname(logfile1)                    
-        if np.sum(docal)>0:
-            gd, = np.where(tasks['cmd'] != '')
-            tasks = tasks[gd]
-            logger.info(str(len(tasks))+' Sparse files to run')        
-            key,jobid = slrm.submit(tasks,label='mksparse',verbose=True,logger=logger,**slurmpars1)
-            slrm.queue_wait('mksparse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
-            # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Sparse',logfiles,key,apred,telescope,verbose=True,logger=logger)
-            if chkmaster is None:
-                chkmaster = chkmaster1
-            else:
-                chkmaster = np.hstack((chkmaster,chkmaster1))
-        else:
-            logger.info('No master Sparse calibration files need to be run')
-
-
+            
     # Make Model PSFs in parallel
     #--------------------------
     if 'modelpsf' in caltypes:
@@ -1974,7 +1974,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             name = modelpsfdict['name'][i]
             if np.sum((mjds >= modelpsfdict['mjd1'][i]) & (mjds <= modelpsfdict['mjd2'][i])) > 0:
                 outfile = load.filename('PSFModel',num=name,chips=True)
-                logfile1 = os.path.dirname(outfile)+'/mkmpsfodel-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                logfile1 = os.path.dirname(outfile)+'/mkpsfmodel-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
                     os.makedirs(os.path.dirname(logfile1))

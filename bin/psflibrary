@@ -86,6 +86,7 @@ if __name__ == '__main__' :
 
     # Run the domeFlatTrace code
     psfflatnums,ims = psfFlatTrace.findBestFlatSequence(observatory=observatory, apred=apred, ims=ims, single=single)
+    if psfflatnums is None: sys.exit()
     print('\nPSF FLAT RESULTS:')
     for i in range(len(ims)): 
         if single == False: 

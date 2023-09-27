@@ -364,7 +364,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 if mask != 0:
                     print(num,' has problems')
                     continue
-                print('Finding lines: ', num)
+                print('Finding lines: {:08d}'.format(num))
                 flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1,plot=plot)
                 Table(flinestr).write(linesfile,overwrite=True)
 
@@ -428,7 +428,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             # Add to the full linelist
             if linestr is None: linestr = flinestr
             else: linestr = np.append(linestr,flinestr)
-            print(' Frame: {:d}  Nlines: {:d}  Group: {:d}'.format(num,len(flinestr),maxgroup-1))
+            print(' Frame: {:08d}  Nlines: {:d}  Group: {:d}'.format(num,len(flinestr),maxgroup-1))
             fcnt += 1   # increment good frame counter
         else:
             print('Error reading frame: ', num)
@@ -839,7 +839,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     # Save results in apWave files
     if nosave==False:
         out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
-        if str(name).isnumeric()==False or len(str(name))<8:  # non-ID input
+        if str(name).isnumeric()==False or len(str(name))<6:  # non-ID input
             out = os.path.dirname(out)+'/'+load.prefix+'Wave-'+str(name)+'.fits'
         print('Saving to ',out)
         save_apWave(newpars,out=out,npoly=npoly,rows=rows,frameinfo=frameinfo,
@@ -1256,7 +1256,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                         #  because initial fits to lines in groups can sometimes be way off
                         pars0 = [10.0, np.poly1d(np.flip(coef1))(lines['XPIX'][iline]),
                                  np.poly1d(np.flip(sigcoef1))(lines['XPIX'][iline]), 0.0]
-                        pars0[0] = np.maximum(medspec[int(round(pars0[1]))],50)
+                        pars0[0] = np.maximum(medspec[np.clip(int(round(pars0[1])),0,len(medspec)-1)],50)
                         pars0 = np.array(pars0)
                         # Neighbor parameters
                         neipars = np.zeros(4*nnei,float)
