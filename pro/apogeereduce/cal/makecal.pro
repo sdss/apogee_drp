@@ -289,7 +289,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     if modelpsf gt 0 then begin
       file = apogee_filename('PSFModel',num=modelpsf,chip='c')
       psfdir = file_dirname(file)
-      spsfid = string(modelpsf,format='(i08)')
+      spsfid = strtrim(modelpsf,2)
+      ;;spsfid = string(modelpsf,format='(i08)')
       allfiles = psfdir+'/'+dirs.prefix+'PSFModel-'+chips+'-'+spsfid+'.fits'
       if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
         print,' modelpsf file: ',file, ' already made'
