@@ -297,7 +297,8 @@ outfile = dir+file+'.fits'
 ;;while file_test(dir+file+'.apz.lock') do apwait,dir+file+'.apz.lock',10
 aplock,outfile,waittime=10
 
-fitsdir=getenv('APOGEE_LOCALDIR')+'/'
+fitsdir = getenv('APOGEE_LOCALDIR')+'/'
+fitsdir += dirs.apred+'/'
 if fitsdir eq '' then fitsdir=dir+'/'
 if not file_test(dir+file+'.fits') then apunzip,dir+file+'.apz',/no_checksum,fitsdir=fitsdir
 print,'reading '+file
