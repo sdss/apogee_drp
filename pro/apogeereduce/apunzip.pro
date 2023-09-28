@@ -1,5 +1,3 @@
-pro apunzip,input,clobber=clobber,delete=delete,silent=silent,error=error,no_checksum=no_checksum,fitsdir=fitsdir,nohalt=nohalt
-
 ;+
 ;
 ; APUNZIP
@@ -37,6 +35,8 @@ pro apunzip,input,clobber=clobber,delete=delete,silent=silent,error=error,no_che
 ; Modified:
 ;   SBeland  Aug 2011 - Added the checksum
 ;-
+
+pro apunzip,input,clobber=clobber,delete=delete,silent=silent,error=error,no_checksum=no_checksum,fitsdir=fitsdir,nohalt=nohalt
 
 t0 = systime(1)
 

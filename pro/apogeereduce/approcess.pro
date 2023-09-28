@@ -120,9 +120,12 @@ if keyword_set(doproc) or keyword_set(doap3dproc) then begin
       if file_test(outdir,/directory) eq 0 then file_mkdir,outdir
       if nfs eq 0 then uptheramp=1 else uptheramp=0
       print,'Calling ap3dproc...'
+      localdir = getlocaldir()
+      localdir += strtrim(vers,2)+'/'
+      if file_test(localdir,/directory) eq 0 then file_mkdir,localdir
       AP3DPROC,ifile,ofile,flatcorr=flatcorr,darkcorr=darkcorr,bpmcorr=bpmcorr,$
                littrowcorr=littrowcorr,persistcorr=persistcorr,nocr=nocr,$
-               uptheramp=uptheramp,nfowler=nfs,fitsdir=getlocaldir(),$
+               uptheramp=uptheramp,nfowler=nfs,fitsdir=localdir,$
                clobber=clobber,maxread=maxread[ichip],unlock=unlock
     endfor
   endfor

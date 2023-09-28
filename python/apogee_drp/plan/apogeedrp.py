@@ -1228,6 +1228,12 @@ def mkvers(apred,logger=None):
         logger.info('Copying sorttable.js')
         shutil.copyfile(apogee_drp_dir+'etc/sorttable.js',apogee_redux+apred+'/qa/sorttable.js')
 
+    # Make local scratch directory for this version
+    localdir = os.environ['APOGEE_LOCALDIR']
+    localdir += '/'+apred
+    if os.path.exists(localdir)==False:
+        os.makedirs(localdir)
+        
 
 def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,logger=None):
     """
@@ -1683,7 +1689,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Flat files to run')        
-            key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars1)
+            key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mkflat',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,telescope,verbose=True,logger=logger)
@@ -1750,7 +1756,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' BPM files to run')        
-            key,jobid = slrm.submit(tasks,label='mkbpm',verbose=True,logger=logger,**slurmpars1)
+            key,jobid = slrm.submit(tasks,label='mkbpm',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mkbpm',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'BPM',logfiles,key,apred,telescope,verbose=True,logger=logger)
@@ -1813,7 +1819,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Sparse files to run')        
-            key,jobid = slrm.submit(tasks,label='mksparse',verbose=True,logger=logger,**slurmpars1)
+            key,jobid = slrm.submit(tasks,label='mksparse',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mksparse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Sparse',logfiles,key,apred,telescope,verbose=True,logger=logger)
@@ -1877,7 +1883,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Littrow files to run')        
-            key,jobid = slrm.submit(tasks,label='mklittrow',verbose=True,logger=logger,**slurmpars1)
+            key,jobid = slrm.submit(tasks,label='mklittrow',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mklittrow',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Littrow',logfiles,key,apred,telescope,verbose=True,logger=logger)
@@ -1940,7 +1946,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Response files to run')        
-            key,jobid = slrm.submit(tasks,label='mkresponse',verbose=True,logger=logger,**slurmpars1)
+            key,jobid = slrm.submit(tasks,label='mkresponse',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mkresponse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Response',logfiles,key,apred,telescope,verbose=True,logger=logger)
@@ -2003,7 +2009,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' PSFModel files to run')        
-            key,jobid = slrm.submit(tasks,label='mkpsfmodel',verbose=True,logger=logger,**slurmpars1)
+            key,jobid = slrm.submit(tasks,label='mkpsfmodel',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mkpsfmodel',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'PSFModel',logfiles,key,apred,telescope,verbose=True,logger=logger)
@@ -2310,7 +2316,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' LSF files to run')        
-            key,jobid = slrm.submit(tasks,label='mklsf',verbose=True,logger=logger,**slurmpars1)
+            key,jobid = slrm.submit(tasks,label='mklsf',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mklsf',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'LSF',logfiles,key,apred,telescope,verbose=True,logger=logger)

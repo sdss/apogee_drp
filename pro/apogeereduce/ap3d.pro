@@ -449,11 +449,14 @@ FOR i=0L,nplanfiles-1 do begin
       ; PROCESS the file
       ;-------------------
       ;satfix = 0
+      localdir = getlocaldir()
+      localdir += strtrim(apred_vers,2)+'/'
+      if file_test(localdir,/directory) eq 0 then file_mkdir,localdir
       AP3DPROC,file,outfile,detcorr=detcorr,bpmcorr=bpmcorr,darkcorr=darkcorr,littrowcorr=littrowcorr,$
                persistcorr=persistcorr,flatcorr=flatcorr,nocr=nocr,crfix=crfix,criter=criter,satfix=satfix,$
                rd3satfix=rd3satfix,nfowler=nfowler,cleanuprawfile=1,$
                uptheramp=uptheramp,verbose=verbose,error=procerror,clobber=clobber,logfile=logfile,$
-               fitsdir=getlocaldir(),q3fix=q3fix,maxread=maxread,persistmodelcorr=persistmodelcorr,histcorr=histcorr,$
+               fitsdir=localdir,q3fix=q3fix,maxread=maxread,persistmodelcorr=persistmodelcorr,histcorr=histcorr,$
                usereference=usereference,refonly=refonly,seq=seq,unlock=unlock
 
       BOMB2:

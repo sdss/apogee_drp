@@ -159,7 +159,6 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         outdir += '/'
      
     chiptag = ['a','b','c'] 
-    localdir = os.environ['APOGEE_LOCALDIR']
 
     # Need load or apred+telescope
     if apred is None and telescope is None and load is None:
@@ -167,6 +166,10 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     if load is None:
         load = apload.ApLoad(apred=apred,telescope=telescope)
 
+    localdir = os.environ['APOGEE_LOCALDIR']
+    localdir += '/'+load.apred
+    if os.path.exists(localdir)==False: os.makedirs(localdir)
+        
     # outdir must be a string outdir must be a string 
     #if size(outdir,/type) != 7:if size(outdir,/type) != 7: 
     #  print('outdir must be a string'  print('outdir must be a string' 

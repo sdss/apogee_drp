@@ -228,16 +228,21 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
 
     # Make sure the data is there
     mjddatadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory] + '/'+str(mjd5)
-    if os.path.exists(mjddatadir):
-        #mjdfiles = glob(mjddatadir+'/*.apz')
-        mjdfiles = os.listdir(mjddatadir)
-        mjdfiles = [f for f in mjdfiles if f.endswith('.apz')]  # need apz files
-    else:
-        mjdfiles = []
-    if len(mjdfiles)==0:
-        print('No data for MJD5='+str(mjd5))
+    if os.path.exists(mjddatadir)==False:
+        print('Data for '+str(mjd5)+' has not finished transferring yet')
         return
 
+    # Check if there are apz files to process
+    allfiles = os.listdir(mjddatadir)
+    apzfiles = [f for f in allfiles if f.endswith('.apz')]  # need apz files
+    # If no data was taken, then there's just a dummy and md5sum file
+    md5sumfile = mjddatadir+'/'+str(mjd5)+'.md5sum'
+    dummyfile = mjddatadir+'/'+str(mjd5)+'.dummy'
+    if len(apzfiles)==0 and os.path.exists(md5sumfile) and os.path.exists(dummyfile):
+        print('No data for MJD5='+str(mjd5)+'. Incrementing to next night.')
+        writeNewMJD(observatory,mjd5,apred=apred)        
+        return
+        
     # Set up logging to screen and logfile
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
     rootLogger = logging.getLogger() 
