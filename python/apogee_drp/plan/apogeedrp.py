@@ -1646,7 +1646,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info('-------------------------------')
         logger.info('Making master Flats in parallel')
         logger.info('===============================')
-        logger.info('Slurm settings: '+str(slurmpars1))
+        logger.info('Slurm settings: '+str(slurmpars))
         if flatdict is None or len(flatdict)==0:
             flatdict = []
             logger.info('No master Flat calibration files to make')
