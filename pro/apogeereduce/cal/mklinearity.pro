@@ -80,8 +80,6 @@ if file_test(linfile) and ~keyword_set(clobber) then goto, havefile
 
 print,'Making Linearity: ', frameid
 ;; Open .lock file
-;;openw,lock,/get_lun,lockfile
-;;free_lun,lock
 aplock,linfile,/lock
 
 ;; Loop over the chips
@@ -96,12 +94,12 @@ for ichip=ichip1,ichip2 do begin
   info = apfileinfo(datadir+file)
   if n_elements(nread) gt 0 then info.nreads=nread
 
-  if size(getlocaldir(),/type) eq 7 then outdir = getlocaldir() else outdir='./'
-  if file_test(outdir+'/'+file+'.fits') eq 0 then apunzip,datadir+file,fitsdir=getlocaldir()
+  if size(getlocaldir(),/type) eq 7 then outdir = getlocaldir()+dirs.apred+'/' else outdir='./'
+  if file_test(outdir+'/'+file+'.fits') eq 0 then apunzip,datadir+file,fitsdir=getlocaldir()+dirs.apred+'/'
 
   ;; Read the cube
   for i=1,info.nreads do begin
-    FITS_READ,getlocaldir()+base+'.fits',im,head,exten_no=i,message=message,/no_abort   ; UINT
+    FITS_READ,getlocaldir()+dirs.apred+'/'+base+'.fits',im,head,exten_no=i,message=message,/no_abort   ; UINT
     if i eq 1 then cube=long(im) else cube=[[[cube]],[[im]]] 
     help,cube
   endfor

@@ -88,7 +88,7 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
       ifile = apogee_filename('R',num=num,chip=chip[ichip])
       ofile = apogee_filename('2D',num=num,chip=chip[ichip],/base)
       AP3DPROC,ifile,outdir+ofile,detcorr=detcorr,darkcorr=darkcorr,$
-               nocr=nocr,uptheramp=uptheramp,nfowler=nfs,fitsdir=getlocaldir()
+               nocr=nocr,uptheramp=uptheramp,nfowler=nfs,fitsdir=getlocaldir()+dirs.apred+'/'
     endfor
   endfor
   
