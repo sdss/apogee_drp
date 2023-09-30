@@ -249,7 +249,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                       ('gaiadr2_sourceid',np.str,25),('gaiadr2_ra',float),('gaiadr2_dec',float),
                       ('gaiadr2_plx',float),('gaiadr2_plx_error',float),('gaiadr2_pmra',float),('gaiadr2_pmra_error',float),
                       ('gaiadr2_pmdec',float),('gaiadr2_pmdec_error',float),('gaiadr2_gmag',float),('gaiadr2_gerr',float),
-                      ('gaiadr2_bpmag',float),('gaiadr2_bperr',float),('gaiadr2_rpmag',float),('gaiadr2_rperr',float)])
+                      ('gaiadr2_bpmag',float),('gaiadr2_bperr',float),('gaiadr2_rpmag',float),('gaiadr2_rperr',float)])    
     guide = np.zeros(16,dtype=dtype)
     loc = 0
 
@@ -314,6 +314,15 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         fps = True
 
     fiber = np.zeros(300,dtype=dtype)
+    # default values
+    fiber['holetype'] = 'OBJECT'
+    fiber['spectrographid'] = 2
+    fiber['catalogid'] = -1
+    for c in ['ra','dec','eta','zeta']: fiber[c] = 999999.9
+    gaia_cols = ['gaia_g','gaia_bp','gaia_rp','gaiadr2_ra','gaiadr2_dec','gaiadr2_plx','gaiadr2_plx_error',
+                 'gaiadr2_pmra','gaiadr2_pmra_error','gaiadr2_pmdec','gaiadr2_pmdec_error',
+                 'gaiadr2_gmag','gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr']
+    for c in gaia_cols: fiber[c] = -9999.99
     fiber['mag'] = 99.99  # default to faint magnitudes
     fiber['jmag'] = 99.99  # default to faint magnitudes
     fiber['hmag'] = 99.99  # default to faint magnitudes
@@ -494,7 +503,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             guide['zeta'][i] = plugmap['fiberdata']['zeta'][gi]
             guide['spectrographid'][i] = plugmap['fiberdata']['spectrographId'][gi]
         platedata['guidedata'] = guide
-    
+        
     # Find matching plugged entry for each spectrum and load up the output information from correct source(s)
     nomatch = 0
     for i in range(300):
