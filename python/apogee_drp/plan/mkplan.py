@@ -1066,7 +1066,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         # Sky frame
         #   identify sky frames as object frames with 10<nread<13
         #elif (expinfo['exptype'][i]=='OBJECT') and (expinfo['nread'][i]<13 and expinfo['nread'][i]>10) and (qachk['okay'][i]==True):
-        elif (expinfo['exptype'][i]=='SKYFLAT') and (qachk['okay'][i]==True):
+        elif ((expinfo['exptype'][i]=='SKYFLAT') or (expinfo['designid'][i]=='-999')) and (qachk['okay'][i]==True):
             sky.append(int(expinfo['num'][i]))
         # Object exposure, used to be >15
         elif (expinfo['exptype'][i]=='OBJECT') and (expinfo['nread'][i]>13) and (qachk['okay'][i]==True):
@@ -1189,7 +1189,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                     # Use PSF library during FPS era
                     #   quartzflat PSFID is a "backup" 
                     #skyplan['psflibrary'] = 1  
-                    skyplan['modelpsf'] = true
+                    skyplan['modelpsf'] = True
                     skyplan['configid'] = str(expinfo['configid'][i])
                     skyplan['designid'] = str(expinfo['designid'][i])
                     skyplan['fieldid'] = str(expinfo['fieldid'][i])
