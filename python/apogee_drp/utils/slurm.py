@@ -202,7 +202,7 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
             done = True
 
 def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=True,walltime='336:00:00',
-           notification=False,memory=7500,numpy_num_threads=2,verbose=True,logger=None):
+           notification=False,memory=7500,numpy_num_threads=2,stagger=True,verbose=True,logger=None):
     """
     Submit a bunch of jobs
 
@@ -317,6 +317,8 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
             procfile = 'node%02d_proc%02d.slurm' % (node,proc)
             lines = []
             lines += ['# Auto-generated '+datetime.now().ctime()+' -- '+label+' ['+procfile+']']
+            if stagger:
+                lines += ['sleep '+str(int(np.ceil(np.random.rand()*20)))]
             lines += ['cd '+jobdir]            
             # Loop over the tasks
             for k in range(ncycle):
