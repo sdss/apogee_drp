@@ -483,7 +483,7 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True,doplot=False):
                 print(pars)
         except :
             print('Solution failed for row: ', row)
-            import pdb; pdb.set_trace()
+            #import pdb; pdb.set_trace()
             popt = pars*0.
             rms = 999999.
 
