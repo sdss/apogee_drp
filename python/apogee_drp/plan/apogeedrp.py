@@ -2448,7 +2448,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
     slurmpars : dictionary
        Dictionary of slurmpars settings.
     caltypes : list, optional
-       List of calibration types to run.  The default is all 5 of them.
+       List of calibration types to run.  The default is all of them.
        ['psf','flux','arcs','dailywave','fpi','telluric']
     clobber : boolean, optional
        Overwrite existing files.  Default is False.

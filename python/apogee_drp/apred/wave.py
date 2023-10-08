@@ -152,8 +152,6 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
 
     t0 = time.time()
 
-    #db = apogeedb.DBSession()
-
     print('Getting daily wavelength solution for MJD='+str(mjd))
     
     reduxdir = os.environ['APOGEE_REDUX']+'/'+apred+'/'

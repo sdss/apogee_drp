@@ -44,8 +44,6 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
 
     t0 = time.time()
 
-    db = apogeedb.DBSession()
-
     print('Getting daily FPI wavelengths for MJD='+str(mjd5))
     
     reduxdir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
@@ -111,7 +109,9 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     # but don't include darks
     
     # Get dithering information for this night
+    db = apogeedb.DBSession()
     expinfo = db.query(sql="select * from apogee_drp.exposure where mjd="+str(mjd5)+" and observatory='"+load.observatory+"'")
+    db.close()   # close the database connection
     si = np.argsort(expinfo['num'])
     expinfo = expinfo[si]
     # Loop over the exposures and mark time periods of constant dither position
@@ -268,7 +268,6 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         # wavelength array??
         
     print("elapsed: %0.1f sec." % (time.time()-t0))
-    db.close()   # close the database connection
 
 
 def fitlines(frame,rows=np.arange(300),chips=['a','b','c'],verbose=False):
