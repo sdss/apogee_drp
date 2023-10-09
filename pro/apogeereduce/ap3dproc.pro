@@ -2520,7 +2520,7 @@ print,'no_checksum: ', no_checksum
   if not keyword_set(silent) then print,'dt = ',strtrim(string(dt,format='(F10.1)'),2),' sec'
   if keyword_set(logfile) then writelog,logfile,$
     file_basename(file)+string(format='(f10.2,1x,i8,1x,i8,1x,i8,i8)',dt,totbpm,totcr,totsat,totunf)
-
+  
   BOMB:
 
 ENDFOR  ; file loop

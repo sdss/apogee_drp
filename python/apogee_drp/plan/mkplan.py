@@ -607,7 +607,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             out['mjdfrac'] = 1
 
     # platetype
-    if stars is not None or ap3d or ap2d:
+    if stars is not None:
         out['platetype'] = 'single'
     elif cal==True:
         out['platetype'] = 'cal'
