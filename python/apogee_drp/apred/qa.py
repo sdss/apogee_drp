@@ -2552,25 +2552,47 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     
     apodir = os.environ.get('APOGEE_REDUX') + '/'
 
-    # Get visit info from allVisit
-    if allv1 == None:
-        allvfile = load.filename('allVisit')
-        allv1 = fits.getdata(allvfile)
-    if objid == None: 
-        g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == int(mjd)))
-        if len(g) < 1: 
-            print("----> makeStarHTML: no entries in allVisit for "+plate+", MJD "+mjd)
-            return
-        else:
-            allv = allv1[g]
-            nfiber = len(allv)
-            cnfiber = str(nfiber)
+    # Get the visit files for this star and telescope from the database
+    db = apogeedb.DBSession()
+    cols = 'v.apogee_id,v.plate,v.field,v.mjd,v.glon,v.glat,v.gaiadr2_pmra,v.gaiadr2_pmdec,v.gaiadr2_gmag'
+    cols += ',v.ra,v.dec,v.jmag,v.hmag,v.kmag,v.jd,v.fiberid,v.snr,rv.vrad,rv.rv_teff,rv.rv_logg,rv.rv_feh'
+    sql = "select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "
+    sql += "where v.apogee_id='"+objid+"' and rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"'"    
+    if objid is None:
+        if mjd is not None:
+            sql += " and v.mjd="+str(mjd)+" and rv.starver'"+str(mjd)+"'"
+        allv = db.query(sql=sql)
     else:
         makeplot = True
-        g, = np.where(allv1['apogee_id'] == objid)
-        allv = allv1[g]
-        nfiber = 1
-        cnfiber = '1'
+        if mjd is not None:
+            sql += " and v.mjd="+str(mjd)+" and rv.starver'"+str(mjd)+"'"            
+        allv = db.query(sql=sql)
+    db.close()
+    # Sometimes "field" has leading spaces                                                                                     
+    allv['field'] = np.char.array(allv['field']).strip()
+    nfiber = len(allv)
+    cnfiber = str(nfiber)
+
+    
+    ## Get visit info from allVisit
+    #if allv1 == None:
+    #    allvfile = load.filename('allVisit')
+    #    allv1 = fits.getdata(allvfile)
+    #if objid == None: 
+    #    g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == int(mjd)))
+    #    if len(g) < 1: 
+    #        print("----> makeStarHTML: no entries in allVisit for "+plate+", MJD "+mjd)
+    #        return
+    #    else:
+    #        allv = allv1[g]
+    #        nfiber = len(allv)
+    #        cnfiber = str(nfiber)
+    #else:
+    #    makeplot = True
+    #    g, = np.where(allv1['apogee_id'] == objid)
+    #    allv = allv1[g]
+    #    nfiber = 1
+    #    cnfiber = '1'
 
     # Loop over the fibers
     for j in range(nfiber):
@@ -2639,8 +2661,8 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         txt2 = '&CooDefinedFrames=none&Radius=10&Radius.unit=arcsec&submit=submit+query&CoordList=" target="_blank">SIMBAD Link</A>'
         simbadlink = txt1 + txt2
 
-        visind, = np.where(allv1['apogee_id'] == obj)
-        allvstar = allv1[visind]
+        visind, = np.where(allv['apogee_id'] == obj)
+        allvstar = allv[visind]
         nvis = len(visind)
         cvrad = '----';  cvscatter = '----'
         gd, = np.where(np.absolute(allvstar['vrad']) < 400)
@@ -2971,23 +2993,38 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     xmin = np.array([15130, 15845, 16460])
     xmax = np.array([15825, 16448, 16968])
 
-    # Get visit info from allVisit
-    allvfile = load.filename('allVisit')
-    allv1 = fits.getdata(allvfile)
-    if objid == None: 
-        g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == int(mjd)))
-        if len(g) < 1: 
-            print("----> makeStarHTML: no entries in allVisit for "+plate+", MJD "+mjd)
-            return
-        else:
-            allv = allv1[g]
-            nfiber = len(allv)
-            cnfiber = str(nfiber)
+    # Get the visit files for this star and telescope from the database
+    db = apogeedb.DBSession()
+    if objid is None:
+        allv = db.query('visit',cols='*',where="plate='"+plate+"' and telescope='"+telescope+"' and apred_vers='"+apred+"'")
     else:
-        g, = np.where(allv1['apogee_id'] == objid)
-        allv = allv1[g]
-        nfiber = 1
-        cnfiber = '1'
+        if mjd is None:
+            allv = db.query('visit',cols='*',where="apogee_id='"+objid+"' and telescope='"+telescope+"' and apred_vers='"+apred+"'")
+        else:
+            allv = db.query('visit',cols='*',where="apogee_id='"+objid+"' and telescope='"+telescope+"' and apred_vers='"+apred+"' and mjd<="+str(mjd))
+    db.close()
+    # Sometimes "field" has leading spaces                                                                                     
+    allv['field'] = np.char.array(allv['field']).strip()
+    nfiber = len(allv)
+    cnfiber = str(nfiber)
+    
+    ## Get visit info from allVisit    
+    #allvfile = load.filename('allVisit')
+    #allv1 = fits.getdata(allvfile)
+    #if objid == None: 
+    #    g, = np.where((allv1['plate'] == plate) & (allv1['mjd'] == int(mjd)))
+    #    if len(g) < 1: 
+    #        print("----> makeStarHTML: no entries in allVisit for "+plate+", MJD "+mjd)
+    #        return
+    #    else:
+    #        allv = allv1[g]
+    #        nfiber = len(allv)
+    #        cnfiber = str(nfiber)
+    #else:
+    #    g, = np.where(allv1['apogee_id'] == objid)
+    #    allv = allv1[g]
+    #    nfiber = 1
+    #    cnfiber = '1'
 
     # Loop over the fibers
     for j in range(nfiber):
