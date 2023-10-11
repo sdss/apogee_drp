@@ -615,7 +615,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         out['platetype'] = 'sky'
     elif dark==True:
         out['platetype'] = 'dark'
-    elif extra==True:
+    elif extra==True or ap3d or ap2d:
         out['platetype'] = 'extra'
     elif test==True:
         out['platetype'] = 'test'

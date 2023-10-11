@@ -1259,9 +1259,10 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         # Load the Plug Plate Map file
         #-----------------------------
         if 'platetype' in planstr.keys():
-            if planstr['platetype'] == 'cal' or planstr['platetype'] == 'extra' or planstr['platetype'] == 'single': 
+            if planstr['platetype'] == 'cal' or planstr['platetype'] == 'extra' or planstr['platetype'] == 'single':
                 plugmap = 0 
-            else: 
+            else:
+                # only need plugmap if we are using sky lines for wavelength calibration
                 print('')
                 print('plug map file information:')
                 plugfile = planstr['plugmap']
