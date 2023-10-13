@@ -49,7 +49,10 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0):
                   "join catalogdb.catalog as c on x.catalogid=c.catalogid where x.catalogid in ("+ids+")"
         # Single ID
         else:
-            ids = str(catid)
+            if type(catid)==np.ndarray:
+                ids = str(catid[0])
+            else:
+                ids = str(catid)
             sql = "select "+cols+" from catalogdb.tic_v8 as t join catalogdb.catalog_to_tic_v8 as x on x.target_id=t.id "+\
                   "join catalogdb.catalog as c on x.catalogid=c.catalogid where x.catalogid="+ids
     # Get all targets for a certain design
@@ -86,7 +89,6 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0):
         sql = "select "+cols+" from "+sqlinline+" inner join catalogdb.tic_v8 as t on cat.target_id=t.id"
         # Turning this off improves q3c queries
         sql = 'set enable_seqscan=off; '+sql
-
 
     # Do the query
     data = db.query(sql=sql,fmt="table")

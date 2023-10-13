@@ -2685,6 +2685,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     ftable['dithergroup'] = -1
                     if len(ind3)>0:
                         ftable['dithergroup'][ind3] = allexpinfo['dithergroup'][ind4]
+                    else:
+                        logger.info('ERROR.  No '+str(m)+' exposures matched to the daily wave file '+wfile)
                     # Loop over the FPIs and make sure there is an associated arclamp dither group
                     goodfpiind = []
                     for f in fpiind:

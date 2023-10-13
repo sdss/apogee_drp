@@ -264,7 +264,7 @@ class DBSession(object):
 
         # SQL command input
         else:
-
+            
             # Execute the command
             if verbose:
                 print('CMD = '+sql)
