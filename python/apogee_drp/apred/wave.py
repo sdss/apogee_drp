@@ -1667,20 +1667,12 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
         # SDSS plates
         else:
             plugmjd = p['plugmap'].split('-')[1]
-            if inst == 'apogee-s':
-                mapper_dir = os.environ['MAPPER_DATA_S']
-                datadir = os.environ['APOGEE_DATA_S']
-            else:
-                mapper_dir = os.environ['MAPPER_DATA_N']
-                datadir = os.environ['APOGEE_DATA_N']
-            plugfile = mapper_dir+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par'
-            if os.path.exists(plugfile)==False:
-                plugfile = datadir+'/'+str(p['mjd'])+'/plPlugMapA-'+p['plugmap'].strip("'")+'.par'
-                if os.path.exists(plugfile):
-                    print('plPlugMapM not found.  Using plPlugMapA instead')
-                else:
-                    raise Exception('plugmap file not found '+plugfile)
-            plugmap = yanny.yanny(plugfile)
+            if inst == 'apogee-s' : 
+                plugmap = yanny.yanny(
+                            os.environ['MAPPER_DATA_S']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
+            else :
+                plugmap = yanny.yanny(
+                           os.environ['MAPPER_DATA_N']+'/'+plugmjd+'/plPlugMapM-'+p['plugmap'].strip("'")+'.par')
             skyind = np.where((np.array(plugmap['PLUGMAPOBJ']['objType']) == 'SKY') & 
                               (np.array(plugmap['PLUGMAPOBJ']['holeType']) == 'OBJECT') &
                               (np.array(plugmap['PLUGMAPOBJ']['spectrographId']) == 2) )[0]
