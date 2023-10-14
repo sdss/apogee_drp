@@ -504,6 +504,12 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         else:
             mapper_data = os.environ['MAPPER_DATA_S']
 
+    # Raw data directory
+    if load.instrument=='apogee-n':
+        datadir = os.environ['APOGEE_DATA_N']
+    else:
+        datadir = os.environ['APOGEE_DATA_S']
+            
 
     # Planfile name and directory
     if cal:
@@ -639,6 +645,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         configid = plate
         
     # plugmap
+    mapa = False  # use plugmapM by default
     if ap3d==False and ap2d==False:
         logger.info(str(plugid))
         if plugid is None:
@@ -660,15 +667,19 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         tmp = plugid.split('-')
         if mjd<59556:
             if os.path.exists(mapper_data+'/'+tmp[1]+'/plPlugMapM-'+plugid+'.par')==False:
-                logger.info('Cannot find plugmap file '+str(plugid))
-                #spawn,'"ls" '+mapper_data+'/'+tmp[1]+'/plPlugMapA*'
-                if ignore is False:
-                    raise Exception
+                if os.path.exists(datadir+'/'+str(mjd)+'/plPlugMapA-'+plugid+'.par')==False:
+                    logger.info('Cannot find plugmap file '+str(plugid))
+                    #spawn,'"ls" '+mapper_data+'/'+tmp[1]+'/plPlugMapA*'
+                    if ignore is False:
+                        raise Exception
+                else:
+                    mapa = True                    
+                    logger.info('Cannot find plPlugMapM file in mapper directory.  Using plPlugMapA file in data directory instead.')
         if sky==False:
             if plate != 0:
                 logger.info('getting plate data')
                 plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,
-                                         apred=apred,telescope=telescope)
+                                         apred=apred,telescope=telescope,mapa=mapa)
                 loc = plug['locationid']
                 spectro_dir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
                 if os.path.exists(spectro_dir+'fields/'+telescope+'/'+str(loc))==False:
