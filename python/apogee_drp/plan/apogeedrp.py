@@ -2685,8 +2685,6 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     ftable['dithergroup'] = -1
                     if len(ind3)>0:
                         ftable['dithergroup'][ind3] = allexpinfo['dithergroup'][ind4]
-                    else:
-                        logger.info('ERROR.  No '+str(m)+' exposures matched to the daily wave file '+wfile)
                     # Loop over the FPIs and make sure there is an associated arclamp dither group
                     goodfpiind = []
                     for f in fpiind:
@@ -2916,7 +2914,7 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
             planfiles += planfiles1
         else:
             dln.writelines(logdir+str(m)+'.plans','')   # write blank file
-
+            
         # Start entry in daily_status table
         #daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(str,10)),('nplanfiles',int),
         #                                    ('nexposures',int),('begtime',(str,50)),('success',bool)]))
