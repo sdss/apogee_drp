@@ -576,11 +576,11 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     else:
         out['fpi'] = 0
     if fps:
-        if configid is None: configid=0
+        if configid is None or str(configid)=='': configid=0
         out['configid'] = int(configid)
-        if designid is None: designid=0
+        if designid is None or str(designid)=='': designid=0
         out['designid'] = int(designid)
-        if fieldid is None: fieldid=0
+        if fieldid is None or str(fieldid)=='': fieldid=0
         out['fieldid'] = int(fieldid)
     out['mjd'] = mjd
     out['planfile'] = os.path.basename(planfile)
@@ -1191,8 +1191,12 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                     #skyplan['psflibrary'] = 1  
                     skyplan['modelpsf'] = True
                     skyplan['configid'] = str(expinfo['configid'][i])
+                    if skyplan['configid'] is None or str(skyplan['configid'])=='': skyplan['configid']='0'
                     skyplan['designid'] = str(expinfo['designid'][i])
+                    if skyplan['designid'] is None or str(skyplan['designid'])=='': skyplan['designid']='0'
                     skyplan['fieldid'] = str(expinfo['fieldid'][i])
+                    if skyplan['fieldid'] is None or str(skyplan['fieldid'])=='': skyplan['fieldid']='0'
+                    
                 if waveid:
                     skyplan['waveid'] = str(waveid)
                 out.append(skyplan)
@@ -1227,8 +1231,11 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             #darkplan['psflibrary'] = 1  
             darkplan['modelpsf'] = True
             darkplan['configid'] = str(expinfo['configid'][i])
+            if darkplan['configid'] is None or str(darkplan['configid'])=='': darkplan['configid']='0'
             darkplan['designid'] = str(expinfo['designid'][i])
+            if darkplan['designid'] is None or str(darkplan['designid'])=='': darkplan['designid']='0'
             darkplan['fieldid'] = str(expinfo['fieldid'][i])
+            if darkplan['fieldid'] is None or str(darkplan['fieldid'])=='': darkplan['fieldid']='0'
         out.append(darkplan)
         planfile = load.filename('DarkPlan',mjd=mjd)
         planfiles.append(planfile)
@@ -1254,8 +1261,11 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             #calplan['psflibrary'] = 1  
             calplan['modelpsf'] = True
             calplan['configid'] = str(expinfo['configid'][i])
+            if calplan['configid'] is None or str(calplan['configid'])=='': calplan['configid']='0'
             calplan['designid'] = str(expinfo['designid'][i])
+            if calplan['designid'] is None or str(calplan['designid'])=='': calplan['designid']='0'
             calplan['fieldid'] = str(expinfo['fieldid'][i])
+            if calplan['fieldid'] is None or str(calplan['fieldid'])=='': calplan['fieldid']='0'
         out.append(calplan)
         planfile = load.filename('CalPlan',mjd=mjd)
         planfiles.append(planfile)

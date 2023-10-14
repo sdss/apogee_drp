@@ -2914,7 +2914,7 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
             planfiles += planfiles1
         else:
             dln.writelines(logdir+str(m)+'.plans','')   # write blank file
-
+            
         # Start entry in daily_status table
         #daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(str,10)),('nplanfiles',int),
         #                                    ('nexposures',int),('begtime',(str,50)),('success',bool)]))

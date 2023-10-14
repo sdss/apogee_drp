@@ -492,9 +492,9 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         onedfile = load.filename('1D', num=ims[0], mjd=mjd, chips=True)
 
     tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
-    ra = tothdr['RADEG']
-    dec = tothdr['DECDEG']
-    DateObs = tothdr['DATE-OBS']
+    ra = tothdr.get('RADEG')
+    dec = tothdr.get('DECDEG')
+    DateObs = tothdr.get('DATE-OBS')
 
     #import pdb; pdb.set_trace()
 
@@ -532,6 +532,13 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     rows = 300 - fiber['fiberid']
     guide = plug['guidedata']
 
+    # There are some instances where RA/DEC were missing from headers
+    #  get it from the plugmap information
+    if ra is None:
+        ra = np.median(fiber['ra'])
+    if dec is None:
+        dec = np.median(fiber['dec'])
+    
     # Add sn and obsmag columns to fiber structure
     dtype =        np.dtype([('sn', np.float64, (nfiber, n_exposures,3))])
     snColumn =     np.zeros(nfiber, dtype=[('sn', 'float32', (n_exposures, nchips))])
@@ -843,7 +850,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
         seeing = 0
         if ims[0] != 0: 
             if 'ALT' in dhdr: secz = 1. / np.cos((90. - dhdr['ALT']) * (math.pi/180.))
-            seeing = dhdr['SEEING']
+            seeing = dhdr.get('SEEING')
             if str(seeing).lower().find('nan') != -1: seeing=np.nan
         ### NOTE:'ha' is not in the plugfile, but values are ['-', '-', '-']. Setting design_ha=0 for now
 #        design_ha = plug['ha']
@@ -2557,16 +2564,16 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     cols = 'v.apogee_id,v.plate,v.field,v.mjd,v.glon,v.glat,v.gaiadr2_pmra,v.gaiadr2_pmdec,v.gaiadr2_gmag'
     cols += ',v.ra,v.dec,v.jmag,v.hmag,v.kmag,v.jd,v.fiberid,v.snr,rv.vrad,rv.rv_teff,rv.rv_logg,rv.rv_feh'
     sql = "select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "
-    sql += "where v.apogee_id='"+objid+"' and rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"'"    
+    sql += "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"'"    
     if objid is None:
         if mjd is not None:
-            sql += " and v.mjd="+str(mjd)+" and rv.starver'"+str(mjd)+"'"
-        allv = db.query(sql=sql)
+            sql += " and v.mjd="+str(mjd)+" and rv.starver='"+str(mjd)+"'"
     else:
         makeplot = True
+        sql += " and v.apogee_id='"+objid+"'"
         if mjd is not None:
-            sql += " and v.mjd="+str(mjd)+" and rv.starver'"+str(mjd)+"'"            
-        allv = db.query(sql=sql)
+            sql += " and v.mjd="+str(mjd)+" and rv.starver='"+str(mjd)+"'"
+    allv = db.query(sql=sql)
     db.close()
     # Sometimes "field" has leading spaces                                                                                     
     allv['field'] = np.char.array(allv['field']).strip()
