@@ -90,7 +90,11 @@ if nstars gt 0 then begin
   ;; offset the stars and take median over all stars
   deltalogmedflux = logmedflux
   for istar=0,nstars-1 do deltalogmedflux[*,*,istar]-=staroff[istar]
-  f = median(deltalogmedflux,dim=3)
+  if nstars gt 1 then begin
+    f = median(deltalogmedflux,dim=3)
+  endif else begin
+    f = deltalogmedflux  
+  endelse
   x1 = outframe.(0).wavelength[xlo:xhi:10,150] - 16000.
   x2 = outframe.(1).wavelength[xlo:xhi:10,150] - 16000.
   x3 = outframe.(2).wavelength[xlo:xhi:10,150] - 16000.
