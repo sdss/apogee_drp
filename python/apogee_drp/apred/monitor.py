@@ -545,7 +545,11 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
     fpi, = np.where(allcal['FPI'] == 1)
     dome, = np.where(allexp['IMAGETYP'] == 'DomeFlat')
     qrtzexp, = np.where(allexp['IMAGETYP'] == 'QuartzFlat')
-    dark, = np.where(alldark['EXPTYPE'] == 'DARK')
+    if alldark is not None:
+        dark, = np.where(alldark['EXPTYPE'] == 'DARK')
+    else:
+        dark = None
+                         
 
     ###############################################################################################
     # MAKE THE MONITOR HTML
