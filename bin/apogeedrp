@@ -20,6 +20,7 @@ if __name__ == "__main__":
     parser.add_argument('--steps', type=str, nargs=1, help='Processing steps (setup, master, 3d, cal, plan, apred, rv, summary, unified, qa)')    
     parser.add_argument('--caltypes', type=str, nargs=1, help='Calibration types to run (master/daily cal)')
     parser.add_argument('--nodes', type=int, nargs=1, default=5, help='How many nodes to use')
+    parser.add_argument('--alloc', type=str, nargs=1, default='', help='Which SDSS slurm partition to use.')
     parser.add_argument('--walltime', type=str, nargs=1, default='336:00:00', help='Maximum slurm run time')
     parser.add_argument('--fresh', action='store_true', help='Start fresh.')
     parser.add_argument('--linkvers', type=str, nargs=1, help='Link master calibration files to this reduction version.')
@@ -51,6 +52,10 @@ if __name__ == "__main__":
         nodes = args.nodes[0]
     else:
         nodes = args.nodes
+    if isinstance(args.alloc,list):
+        alloc = args.alloc[0]
+    else:
+        alloc = 'sdss-np'
     if isinstance(args.walltime,list):
         walltime = args.walltime[0]
     else:
@@ -60,6 +65,12 @@ if __name__ == "__main__":
     else:
         linkvers = None
 
+    # Set unix environment variables for kingspeak
+    #  we use notchpea by default
+    if alloc=='sdss-kp':
+        # run setslurm script
+        
     # Run data reduction
-    apogeedrp.run(observatory,apred,mjd=mjd,steps=steps,caltypes=caltypes,clobber=args.clobber,
-                  nodes=nodes,walltime=walltime,fresh=args.fresh,linkvers=linkvers,debug=args.debug)
+    apogeedrp.run(observatory,apred,mjd=mjd,steps=steps,caltypes=caltypes,
+                  clobber=args.clobber,alloc=alloc,nodes=nodes,walltime=walltime,
+                  fresh=args.fresh,linkvers=linkvers,debug=args.debug)
