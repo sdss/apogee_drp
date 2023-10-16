@@ -146,7 +146,8 @@ def summary_email(observatory,apred,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=N
     email.send(address,subject,message,files=logfiles)
 
 
-def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,debug=False):
+def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
+              qos='sdss-fast',clobber=False,debug=False):
     """
     Perform daily APOGEE data reduction.
 
@@ -159,6 +160,8 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
           of data.
     apred : str, optional
        APOGEE reduction version.  Default is 'daily'.
+    alloc : str, optional
+       The slurm partition to use.  Default is 'sdss-np'.
     qos : str, optional
        The type of slurm queue to use.  Default is "sdss-fast".
     clobber : boolean, optional
@@ -185,7 +188,7 @@ def run_daily(observatory,mjd5=None,apred=None,qos='sdss-fast',clobber=False,deb
 
     nodes = 1
     #alloc = 'sdss-kp'
-    alloc = 'sdss-np'
+    #alloc = 'sdss-np'
     shared = True
     #ppn = 64
     cpus = 32
