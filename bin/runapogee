@@ -19,6 +19,7 @@ if __name__ == "__main__":
     parser.add_argument('observatory', type=str, nargs=1, default='apo', help='Observatory (apo or lco)')
     parser.add_argument('--mjd', type=str, nargs=1, default='', help='MJD to run')
     parser.add_argument('--qos', type=str, nargs=1, default='', help='Which SDSS queue to use.')
+    parser.add_argument('--alloc', type=str, nargs=1, default='', help='Which SDSS slurm partition to use.')
     parser.add_argument('-v', '--vers', type=str, nargs=1, default='daily', help='APOGEE Reduction version')
     parser.add_argument('-c', '--clobber', action='store_true', help='Overwrite any existing data')
 
@@ -39,11 +40,15 @@ if __name__ == "__main__":
         qos = args.qos[0]
     else:
         qos = 'sdss-fast'
+    if isinstance(args.alloc,list):
+        alloc = args.alloc[0]
+    else:
+        alloc = 'sdss-np'        
     clobber = args.clobber
         
     # Run daily reduction
     try:
-        runapogee.run_daily(observatory,mjd5=mjd,apred=vers,qos=qos,clobber=clobber)
+        runapogee.run_daily(observatory,mjd5=mjd,apred=vers,alloc=alloc,qos=qos,clobber=clobber)
     except KeyboardInterrupt:
         print('Quitting')
         # quit
