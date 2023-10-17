@@ -202,7 +202,7 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
             done = True
 
 def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=True,walltime='336:00:00',
-           notification=False,memory=7500,numpy_num_threads=2,stagger=True,verbose=True,logger=None):
+           notification=False,memory=7500,numpy_num_threads=2,stagger=True,ppn=None,verbose=True,logger=None):
     """
     Submit a bunch of jobs
 
@@ -214,8 +214,13 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
 
     if logger is None:
         logger = dln.basiclogger()
-    
-    ppn = 64
+
+    if alloc=='sdss-kp':
+        ppn = 16
+        memory = np.minimum(memory,3750)
+    else:
+        ppn = 64
+        memory = np.minimum(memory,7500)        
     slurmpars = {'nodes':nodes, 'alloc':alloc, 'ppn':ppn, 'qos':qos, 'shared':shared,
                  'cpus':cpus, 'walltime':walltime, 'notification':False}
 
@@ -249,7 +254,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     # Figure out number of tasks
     ntasks = len(tasks)
     if ntasks < nodes*ppn:
-        nodes = int(np.ceil(ntasks / 64))
+        nodes = int(np.ceil(ntasks / ppn))
         ncycle = 1
     else:
         ncycle = int(np.ceil(ntasks / (nodes * ppn)))
@@ -282,7 +287,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
         lines += ['#SBATCH --account='+alloc]
         lines += ['#SBATCH --partition='+partition]
         lines += ['#SBATCH --nodes=1']
-        lines += ['#SBATCH --ntasks=64']
+        lines += ['#SBATCH --ntasks='+str(nproc)]
         lines += [' ']
         lines += ['#SBATCH --mem-per-cpu='+str(memory)]
         lines += [' ']
@@ -354,7 +359,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     lines += ['#SBATCH --account='+alloc]
     lines += ['#SBATCH --partition='+partition]
     lines += ['#SBATCH --nodes=1']
-    lines += ['#SBATCH --ntasks=64']
+    lines += ['#SBATCH --ntasks='+str(nproc)]
     lines += [' ']
     lines += [' ']
     lines += ['#SBATCH --mem-per-cpu='+str(memory)]

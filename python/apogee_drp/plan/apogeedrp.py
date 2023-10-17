@@ -2393,7 +2393,7 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
     ntorun = len(torun)
     if ntorun>0:
         slurmpars1 = slurmpars.copy()
-        if ntorun<64:
+        if ntorun<slurmpars1['ppn']:
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
@@ -2778,7 +2778,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
             ntorun = len(torun)
             if ntorun>0:
                 slurmpars1 = slurmpars.copy()
-                if ntorun<64:
+                if ntorun<slurmpars1['ppn']:
                     slurmpars1['cpus'] = ntorun
                 slurmpars1['numpy_num_threads'] = 2
                 logger.info('Slurm settings: '+str(slurmpars1))
@@ -3060,7 +3060,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
     ntorun = len(torun)
     if ntorun>0:
         slurmpars1 = slurmpars.copy()
-        if ntorun<64:
+        if ntorun<slurmpars['ppn']:
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
@@ -3250,7 +3250,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     ntorun = len(torun)
     if ntorun>0:
         slurmpars1 = slurmpars.copy()
-        if ntorun<64:
+        if ntorun<slurmpars1['ppn']:
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
@@ -3381,7 +3381,7 @@ def rununified(load,mjds,slurmpars,clobber=False,logger=None):
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
     
     slurmpars1 = slurmpars.copy()
-    if len(mjds)<64:
+    if len(mjds)<slurmpars1['ppn']:
         slurmpars1['cpus'] = len(mjds)
     slurmpars1['numpy_num_threads'] = 2    
     logger.info('Slurm settings: '+str(slurmpars1))
@@ -3465,7 +3465,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     # Run apqa on each plate visit
     if nplans>0:
         slurmpars1 = slurmpars.copy()
-        if nplans<64:
+        if nplans<slurmpars['ppn']:
             slurmpars1['cpus'] = nplans
         slurmpars1['numpy_num_threads'] = 2    
         logger.info('Slurm settings: '+str(slurmpars1))
@@ -3711,13 +3711,15 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     #alloc = 'sdss-np'
     if alloc == 'sdss-kp':
         shared = False
+        ppn = 16
     else:
         shared = True
+        ppn = 64
     #ppn = 64
     #walltime = '336:00:00'
     # Only set cpus if you want to use less than 64 cpus
-    slurmpars = {'nodes':nodes, 'alloc':alloc, 'qos':qos, 'shared':shared,
-                 'walltime':walltime, 'notification':False}
+    slurmpars = {'nodes':nodes, 'alloc':alloc, 'qos':qos, 'ppn':ppn, 'cpus':ppn,
+                 'shared':shared, 'walltime':walltime, 'notification':False}
     
     # Get software version (git hash)
     gitvers = plan.getgitvers()
