@@ -45,7 +45,7 @@ def slurmstatus(label,jobid,username=None):
     try:
         # previously long jobnames got truncated, make sure to get the full name
         form = 'jobid,jobname%30,partition%30,account,alloccpus,state,exitcode,nodelist'
-        res = subprocess.check_output(['sacct','-u',username,'-j',str(jobid),'--format='+form])
+        res = subprocess.check_output(['sacct','-u',username,'-j',str(jobid),'--allclusters','--format='+form])
     except:
         print('Failed to get Slurm status')
         #traceback.print_exc()
