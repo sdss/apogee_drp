@@ -4123,7 +4123,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
                     ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
                     ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
 
-            if os.path.exists(platesumfile) is False:
+            if os.path.exists(platesumfile) == False:
                 tmp = glob.glob(platesumfile.replace('None','*'))
                 if len(tmp) > 0: 
                     platesumfile = tmp[0]
@@ -4317,13 +4317,13 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
     if instrument == 'apogee-s': prefix = 'as'
 
     outfile = load.filename('QAcal', mjd=mjd)
-    if (os.path.exists(outfile) is False) | (clobber is True):
+    if (os.path.exists(outfile) == False) | (clobber == True):
         print("--------------------------------------------------------------------")
         print("Running MAKECALFITS for MJD " + mjd)
         print(outfile)
 
         # Make directory if it doesn't exist
-        if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
+        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile))
 
         n_exposures = len(ims)
 
@@ -4472,11 +4472,11 @@ def makeDarkFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
     if instrument == 'apogee-s': prefix = 'as'
 
     outfile = load.filename('QAcal', mjd=mjd).replace('QAcal','QAdarkflat')
-    if (os.path.exists(outfile) is False) | (clobber is True):
+    if (os.path.exists(outfile) == False) | (clobber == True):
         print("--------------------------------------------------------------------")
         print("Running MAKEDARKFITS for MJD "+mjd)
 
-        if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
+        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile))
 
         n_exposures = len(ims)
 
@@ -4558,11 +4558,11 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
 
     expdir = apodir + apred + '/exposures/' + instrument + '/' + mjd + '/'
     outfile = expdir + mjd + 'exp.fits'
-    if (os.path.exists(outfile) is False) | (clobber is True):
+    if (os.path.exists(outfile) == False) | (clobber == True):
         print("--------------------------------------------------------------------")
         print("Running MAKEEXPFITS for MJD "+mjd)
 
-        if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
+        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile))
 
         ims = glob.glob(rawdir + prefix+'R-a-*')
         ims.sort()
