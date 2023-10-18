@@ -187,15 +187,17 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
 
     nodes = 1
-    #alloc = 'sdss-kp'
-    #alloc = 'sdss-np'
-    shared = True
-    #ppn = 64
-    cpus = 32
+    # Slurm settings
+    if alloc == 'sdss-kp':
+        shared = False
+        ppn = 16
+    else:
+        shared = True
+        ppn = 64
     walltime = '23:00:00'
     chips = ['a','b','c']
 
-    slurm = {'nodes':nodes, 'alloc':alloc, 'cpus':cpus, 'qos':qos, 'shared':shared,
+    slurm = {'nodes':nodes, 'alloc':alloc, 'ppn':ppn, 'cpus':ppn, 'qos':qos, 'shared':shared,
              'numpy_num_threads':2,'walltime':walltime,'notification':False}
 
     # No version input, use 'daily'
