@@ -3782,6 +3782,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
         html.write('<TR bgcolor="#eaeded"><TH>(1)<BR>Date <TH>(2)<BR>Observer Log <TH>(3)<BR>Exposure Log <TH>(4)<BR>Raw Data <TH>(5)<BR>Night QA')
         html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Spectra Plots <TH>(8)Nsky, Ntel, Nsci <TH>(9)<BR>Summary Files <TH>(10)<BR>Moon<BR>Phase\n')
+
+        # Get all yaml and apQA files
+        allplatePlanFiles = np.char.array(glob.glob(apodir+apred+'/visit/??o25m/*/*/*/a?Plan-*.yaml'))
+        allplateQAfiles = np.char.array(glob.glob(apodir+apred+'/visit/??o25m/*/*/*/html/a?QA-*.html'))
+
         for i in range(nmjd):
             fps = False
             if mjd[i] > 59556: fps = True
@@ -3839,13 +3844,25 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
             html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
 
+            import pdb; pdb.set_trace()
+            
             # Column 5: Night QA
-            platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/'+prefix+'Plan-*'+cmjd+'.yaml'
-            platePlanFiles = np.array(glob.glob(platePlanPaths))
+            ind, = np.where(allplatePlanFiles.find(cmjd)>-1)
+            if len(ind)>0:
+                platePlanFiles = allplatePlanFiles[ind]
+            else:
+                platePlanFiles = []
+            #platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/'+prefix+'Plan-*'+cmjd+'.yaml'
+            #platePlanFiles = np.array(glob.glob(platePlanPaths))
             nplatesall = len(platePlanFiles)
 
-            plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/'+prefix+'QA-*'+cmjd+'.html'
-            plateQAfiles = np.array(glob.glob(plateQApaths))
+            ind, = np.where(allplateQAFiles.find(cmjd)>-1)
+            if len(ind)>0:
+                plateQAFiles = allplateQAFiles[ind]
+            else:
+                plateQAFiles = []
+            #plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/'+prefix+'QA-*'+cmjd+'.html'
+            #plateQAfiles = np.array(glob.glob(plateQApaths))
             nplates = len(plateQAfiles)
             if nplates >= 1:
                 html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
