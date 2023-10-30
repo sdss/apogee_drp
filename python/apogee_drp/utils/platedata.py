@@ -358,14 +358,16 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 tplugid = base
             plugfile = root+'-'+tplugid+'.par'
         else:
-            tplugid = root+'-'+str(plate)
-            plugfile = tplugid+'.par'
+            #tplugid = root+'-'+str(plate)
+            #plugfile = tplugid+'.par'            
+            tplugid = str(plate)+'-'+str(mjd)+'-01'
+            plugfile = root+'-'+tplugid+'.par'
         if mapa==True:
             plugdir = datadir+'/'+str(mjd)+'/'
         else:
             plugmjd = tplugid.split('-')[1]
             plugdir = mapper_data+'/'+plugmjd+'/'
-
+            
     # Does the plugfile exist? If so, load it
     if os.path.exists(plugdir+'/'+plugfile):
         plugmap = plmap.load(plugdir+'/'+plugfile,fixfiberid=fixfiberid)
@@ -374,7 +376,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             return None
         else:
             raise Exception('Cannot find plugmap/fibermap file '+plugdir+'/'+plugfile)
-
+        
     if fps:
         plugmap['locationId'] = plugmap['field_id']
     platedata['locationid'] = plugmap['locationId']
@@ -702,10 +704,11 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 signind = posind
                                 if posind == -1: signind = negind
                                 if signind != -1:
-                                    objname = tmp[signind-8:16]  # trim extra characters
+                                    objname = tmp[signind-8:signind+8]  # trim extra characters
                                 else:
                                     objname = tmp[-16:]   # not sure what else to do
                             # sometimes objname can be "None", try to fix with catalogdb info below
+                            # add prefix
                             if tmp.find('A')==0:
                                 objname = 'AP'+objname
                             else:
