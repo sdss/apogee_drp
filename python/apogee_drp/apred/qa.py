@@ -3785,7 +3785,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
 
         # Get all yaml and apQA files
         allplatePlanFiles = np.char.array(glob.glob(apodir+apred+'/visit/??o25m/*/*/*/a?Plan-*.yaml'))
-        allplateQAfiles = np.char.array(glob.glob(apodir+apred+'/visit/??o25m/*/*/*/html/a?QA-*.html'))
+        allplateQAFiles = np.char.array(glob.glob(apodir+apred+'/visit/??o25m/*/*/*/html/a?QA-*.html'))
 
         for i in range(nmjd):
             fps = False
@@ -3843,8 +3843,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
 
             html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
             html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
-
-            import pdb; pdb.set_trace()
             
             # Column 5: Night QA
             ind, = np.where(allplatePlanFiles.find(cmjd)>-1)
