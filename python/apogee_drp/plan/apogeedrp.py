@@ -3156,23 +3156,16 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     mjdstop = np.max(mjds)
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
 
-    # Get the stars that were observed in the MJD range and the MAXIMUM MJD for each star
-    #if daily==False:
-    #    sql = "WITH mv as (SELECT apogee_id, apred_vers, telescope, max(mjd) as maxmjd FROM apogee_drp.visit"
-    #    sql += " WHERE apred_vers='%s' and telescope='%s'" % (apred,telescope)
-    #    sql += " GROUP BY apogee_id, apred_vers, telescope)"
-    #    sql += " SELECT v.*,mv.maxmjd from apogee_drp.visit AS v LEFT JOIN mv on mv.apogee_id=v.apogee_id"
-    #    sql += " Where v.apred_vers='%s' and v.mjd>=%d and v.mjd<=%d and v.telescope='%s'" % (apred,mjdstart,mjdstop,telescope)
-    #else:
-    #    sql = "SELECT * from apogee_drp.visit WHERE apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjds[0],telescope)
-
-    if len(mjds)>1:
-        sql = "SELECT apogee_id,mjd,apred_vers,telescope from apogee_drp.visit WHERE apred_vers='%s' and mjd>=%d and mjd<=%d and telescope='%s'" % (apred,mjdstart,mjdstop,telescope)        
+    # Get the visit information from the database
+    logger.info('Getting visit information from the database')
+    if daily:
+        sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and mjd<=%d and telescope='%s'" % (apred,mjdstop,telescope)        
     else:
-        sql = "SELECT apogee_id,mjd,apred_vers,telescope from apogee_drp.visit WHERE apred_vers='%s' and mjd=%d and telescope='%s'" % (apred,mjds[0],telescope)
+        sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and telescope='%s'" % (apred,telescope)
     db = apogeedb.DBSession()
     allvisit = db.query(sql=sql)
     db.close()
+
     if len(allvisit)==0:
         logger.info('No visits found for MJDs')
         return None
@@ -3183,8 +3176,8 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
                    (allvisit['apogee_id'] is None) | (allvisit['apogee_id']=='2MNone') | (allvisit['apogee_id']=='2M') | (apidlen != 18))
     if len(bd)>0:
         allvisit = np.delete(allvisit,bd)
-        
-    # Pick on the MJDs we want
+
+    # Find the visits for the input MJDs
     ind = []
     for m in mjds:
         gd, = np.where(allvisit['mjd']==m)
@@ -3193,56 +3186,55 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     if len(ind)==0:
         logger.info('No visits found for MJDs')
         return None
-    allvisit = allvisit[ind]
+    visits = allvisit[ind]
+
+    # Make table for all the stars we are interested in
+    apogee_id = np.unique(visits['apogee_id'])             # get the IDs of the stars for the input MJDs
+    star_index = dln.create_index(allvisit['apogee_id'])    # visit index for all stars
+    vind1,vind2 = dln.match(apogee_id,star_index['value'])  # match up our star IDs with the visit index
+    dtype = [('apogee_id',(str,50)),('mjd',int),('maxmjd',int),('nvisits',int),('apred_vers',(str,50)),('telescope',(str,50))]
+    vcat = np.zeros(len(apogee_id),dtype=np.dtype(dtype))
+    vcat['apogee_id'] = apogee_id
+    vcat['nvisits'][vind1] = star_index['num'][vind2]
     
     # Get MAXMJD for each unique star
-    if len(mjds)>1:
-        star_index = dln.create_index(allvisit['apogee_id'])
-        dtype = [('apogee_id',(str,50)),('mjd',int),('maxmjd',int),('nvisits',int),('apred_vers',(str,50)),('telescope',(str,50))]
-        vcat = np.zeros(len(star_index['value']),dtype=np.dtype(dtype))
-        vcat['apogee_id'] = star_index['value']
-        vcat['nvisits'] = star_index['num']
-        for i in range(len(star_index['value'])):
-            ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
-            maxmjd = np.max(allvisit['mjd'][ind])
-            vcat['mjd'][i] = maxmjd
-            vcat['maxmjd'][i] = maxmjd
-            vcat['apred_vers'][i] = allvisit['apred_vers'][ind][0]
-            vcat['telescope'][i] = allvisit['telescope'][ind][0]            
-    else:
-        dtype = [('apogee_id',(str,50)),('mjd',int),('maxmjd',int),('nvisits',int),('apred_vers',(str,50)),('telescope',(str,50))]
-        vcat = np.zeros(len(allvisit),dtype=np.dtype(dtype))
-        vcat['apogee_id'] = allvisit['apogee_id']
-        vcat['mjd'] = allvisit['mjd']
-        vcat['maxmjd'] = allvisit['mjd']
-        vcat['nvisits'] = 1
-        vcat['apred_vers'] = allvisit['apred_vers']
-        vcat['telescope'] = allvisit['telescope'] 
+    for i in range(len(vind1)):
+        v1 = vind1[i]
+        v2 = vind2[i]
+        sind = star_index['index'][star_index['lo'][v2]:star_index['hi'][v2]+1]
+        maxmjd = np.max(allvisit['mjd'][sind])
+        vcat['mjd'][v1] = maxmjd
+        vcat['maxmjd'][v1] = maxmjd
+        vcat['apred_vers'][v1] = apred
+        vcat['telescope'][v1] = telescope
             
     logger.info(str(len(vcat))+' stars to run')
     
     # Change MJD to MAXMJD because the apStar file will have MAXMJD in the name
     if daily==False and len(mjds)>1:
         vcat['mjd'] = vcat['maxmjd']    
-        
+
     # Loop over the stars and figure out the ones that need to be run
-    dorv = np.zeros(len(vcat),bool)
-    for i,obj in enumerate(vcat['apogee_id']):
-        # We are going to run RV on ALL the visits
-        # Use the MAXMJD in the table, now called MJD
-        mjd = vcat['mjd'][i]
-        apstarfile = load.filename('Star',obj=obj)
-        if daily:
-            # Want all visits up to this day
-            apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
-        else:
-            apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
-        # Check if file exists already
-        dorv[i] = True
-        if clobber==False:
+    if clobber==False:
+        logger.info('Checking which stars need to be run')
+        dorv = np.zeros(len(vcat),bool)
+        for i,obj in enumerate(vcat['apogee_id']):
+            # We are going to run RV on ALL the visits
+            # Use the MAXMJD in the table, now called MJD
+            mjd = vcat['mjd'][i]
+            apstarfile = load.filename('Star',obj=obj)
+            if daily:
+                # Want all visits up to this day
+                apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
+            else:
+                apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
+            # Check if file exists already
+            dorv[i] = True
             if os.path.exists(apstarfile):
                 logger.info(str(i+1)+' '+os.path.basename(apstarfile)+' already exists and clobber==False')
                 dorv[i] = False
+    else:
+        dorv = np.ones(len(vcat),bool)
     logger.info(str(np.sum(dorv))+' objects to run')
     
     # Loop over the objects and make the commands for the ones that we will run
@@ -3256,8 +3248,6 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
         logger.info('Slurm settings: '+str(slurmpars1))
         tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
-        #queue = pbsqueue(verbose=True)
-        #queue.create(label='rv', **slurmpars1)
         for i in range(ntorun):
             obj = vcat['apogee_id'][torun[i]]
             # We are going to run RV on ALL the visits
@@ -3266,7 +3256,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             apstarfile = load.filename('Star',obj=obj)
             if daily:
                 # Want all visits up to this day
-                apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
+                apstarfile = apstarfile.replace('.fits','-'+str(mjdstop)+'.fits')
             else:
                 apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
