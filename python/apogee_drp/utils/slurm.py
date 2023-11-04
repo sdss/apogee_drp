@@ -60,6 +60,7 @@ def slurmstatus(label,jobid,username=None):
     out = np.zeros(len(lines),dtype=np.dtype([('JobID',str,30),('JobName',str,30),('Partition',str,30),
                                               ('Account',str,30),('AllocCPUS',int),('State',str,30),
                                               ('ExitCode',str,20),('Nodelist',str,30),('done',bool)]))
+    # Each node gets its own line/row
     for i in range(len(lines)):
         dum = lines[i].split()
         out['JobID'][i] = dum[0]
@@ -70,7 +71,7 @@ def slurmstatus(label,jobid,username=None):
         out['State'][i] = dum[5]
         out['ExitCode'][i] = dum[6]
         out['Nodelist'][i] = dum[7]        
-        if dum[5] == 'COMPLETED':
+        if dum[5] == 'COMPLETED' or dum[5]=='TIMEOUT' or dum[5]=='CANCELLED':
             out['done'][i] = True
 
     return out
@@ -198,7 +199,8 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
                 logger.info('NOT Running  percent complete = %2d   %d / %d tasks' % (percent,ncomplete,ntasks))                
                 
         # Are we done
-        if noderunning==0 and taskrunning==0:
+        #  if the slurm job was canceled then we need to stop even if some tasks are not done yet
+        if noderunning==0 or taskrunning==0:
             done = True
 
 def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=True,walltime='336:00:00',
@@ -251,13 +253,8 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     # nodeXX.slurm that sources the procXX.slurm files    
     # nodeXX_procXX.slurm files with the actual commands in them
 
-    # Figure out number of tasks
+    # Figure out number of tasks per cpu
     ntasks = len(tasks)
-    if ntasks < nodes*ppn:
-        nodes = int(np.ceil(ntasks / ppn))
-        ncycle = 1
-    else:
-        ncycle = int(np.ceil(ntasks / (nodes * ppn)))
 
     # Add column to tasks table
     if isinstance(tasks,Table)==False:
@@ -265,20 +262,36 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     tasks['task'] = -1
     tasks['node'] = -1
     tasks['proc'] = -1
-        
+    
+    # Parcel out the tasks to the nodes+procs
+    #  -try to use as many cpus as possible
+    #  -loop over all the nodes+procs until we've
+    #    exhausted all of the tasks
+    count = 0
+    while (count<ntasks):
+        for i in range(nodes):
+            node = i+1
+            for j in range(ppn):
+                proc = j+1
+                if count>=ntasks: break
+                tasks['task'][count] = count+1
+                tasks['node'][count] = node
+                tasks['proc'][count] = proc
+                count += 1
+                
     # Node loop
+    node_index = dln.create_index(tasks['node'])    
     tasknum = 0
     inventory = []
     for i in range(nodes):
-        node = i+1
+        nind = node_index['index'][node_index['lo'][i]:node_index['hi'][i]+1]
+        nind = np.sort(nind)
+        node = node_index['value'][i]
         nodefile = 'node%02d.slurm' % node
-        nodename = 'node%02d' % node
-        
+        nodename = 'node%02d' % node        
         # Number of proc files
-        nproc = ppn
-        ntaskleft = ntasks-tasknum
-        if ntaskleft < ppn:
-            nproc = ntaskleft
+        proc_index = dln.create_index(tasks['proc'][nind])
+        nproc = len(proc_index['value'])
 
         # Create the lines
         lines = []
@@ -305,7 +318,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
         lines += ['export CLUSTER=1']
         lines += [' ']
         for j in range(nproc):
-            proc = j+1
+            proc = proc_index['value'][j]
             procfile = 'node%02d_proc%02d.slurm' % (node,proc)
             lines += ['source '+jobdir+procfile+' &']
         lines += ['wait']
@@ -316,8 +329,9 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
         
         # Create the proc files
         for j in range(nproc):
-            if tasknum>=ntasks: break
-            proc = j+1
+            proc = proc_index['value'][j]
+            pind = proc_index['index'][proc_index['lo'][j]:proc_index['hi'][j]+1]   # proc index, subset of nind
+            pind = np.sort(pind)
             procname = 'proc%02d' % proc
             procfile = 'node%02d_proc%02d.slurm' % (node,proc)
             lines = []
@@ -326,25 +340,22 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
                 lines += ['sleep '+str(int(np.ceil(np.random.rand()*20)))]
             lines += ['cd '+jobdir]            
             # Loop over the tasks
-            for k in range(ncycle):
-                if tasknum>=ntasks: break
+            for k in range(len(pind)):
+                tind = nind[pind][k]   # task index into "tasks" table
                 lines += ['# ------------------------------------------------------------------------------']
-                lines += ['echo "Running task '+str(tasknum+1)+' '+nodename+' '+procname+'" `date`']                
+                lines += ['echo "Running task '+str(tasks['task'][tind])+' '+nodename+' '+procname+'" `date`']                
                 if 'dir' in tasks.colnames:
-                    lines += ['cd '+tasks['dir'][tasknum]]
-                cmd = tasks['cmd'][tasknum]+' > '+tasks['outfile'][tasknum]+' 2> '+tasks['errfile'][tasknum]
+                    lines += ['cd '+tasks['dir'][tind]]
+                cmd = tasks['cmd'][tind]+' > '+tasks['outfile'][tind]+' 2> '+tasks['errfile'][tind]
                 lines += [cmd]
-                lines += ['echo "Task '+str(tasknum+1)+' '+nodename+' '+procname+' Completed" `date`']
+                lines += ['echo "Task '+str(tasks['task'][tind])+' '+nodename+' '+procname+' Completed" `date`']
                 lines += ['echo "Done"']
-                if os.path.exists(os.path.dirname(tasks['outfile'][tasknum]))==False:  # make sure output directory exists
+                if os.path.exists(os.path.dirname(tasks['outfile'][tind]))==False:  # make sure output directory exists
                     try:
-                        os.makedirs(os.path.dirname(tasks['outfile'][tasknum]))
+                        os.makedirs(os.path.dirname(tasks['outfile'][tind]))
                     except:
-                        logger.info('Problems making directory '+os.path.dirname(tasks['outfile'][tasknum]))
-                inventory += [str(tasknum+1)+' '+str(node)+' '+str(proc)]
-                tasks['task'][tasknum] = tasknum+1
-                tasks['node'][tasknum] = node
-                tasks['proc'][tasknum] = proc
+                        logger.info('Problems making directory '+os.path.dirname(tasks['outfile'][tind]))
+                inventory += [str(tasks['task'][tind])+' '+str(node)+' '+str(proc)]
                 tasknum += 1
             lines += ['cd '+jobdir]                            
             if verbose:

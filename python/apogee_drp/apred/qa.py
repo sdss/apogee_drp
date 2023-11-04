@@ -2562,7 +2562,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     # Get the visit files for this star and telescope from the database
     db = apogeedb.DBSession()
     cols = 'v.apogee_id,v.plate,v.field,v.mjd,v.glon,v.glat,v.gaiadr2_pmra,v.gaiadr2_pmdec,v.gaiadr2_gmag'
-    cols += ',v.ra,v.dec,v.jmag,v.hmag,v.kmag,v.jd,v.fiberid,v.snr,rv.vrad,rv.rv_teff,rv.rv_logg,rv.rv_feh'
+    cols += ',v.ra,v.dec,v.jmag,v.hmag,v.kmag,v.jd,v.fiberid,v.snr,rv.vrad,rv.rv_teff,rv.rv_logg,rv.rv_feh,rv.starver'
     sql = "select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "
     sql += "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"'"    
     if objid is None:
@@ -2575,11 +2575,21 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
             sql += " and v.mjd="+str(mjd)+" and rv.starver='"+str(mjd)+"'"
     allv = db.query(sql=sql)
     db.close()
-    # Sometimes "field" has leading spaces                                                                                     
+
+    # Only keep the starver that we want
+    if mjd is None:
+        starver = np.max(allv['starver'].astype(int)).astype(str)
+        ind, = np.where(allv['starver']==starver)
+        allv = allv[ind]
+    
+    # Sometimes "field" has leading spaces          
     allv['field'] = np.char.array(allv['field']).strip()
     nfiber = len(allv)
     cnfiber = str(nfiber)
 
+    if objid is not None:
+        nfiber = 1
+        cnfiber = '1'
     
     ## Get visit info from allVisit
     #if allv1 == None:
@@ -2613,8 +2623,11 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
 
         if obj == '2MNone' or obj == '2M' or obj == '' or obj == None or obj == 'None': continue
 
-        print("----> makeStarHTML:   making html for " + obj + " (" + str(j+1) + "/" + cnfiber + ")")
-
+        if objid is None:
+            print("----> makeStarHTML:   making html for " + obj + " (" + str(j+1) + "/" + cnfiber + ")")
+        else:
+            print("----> makeStarHTML:   making html for " + obj)            
+            
         # Find the associated html directories; make them if they don't already exist
         apStarPath = load.filename('Star', obj=obj)
         starDir = os.path.dirname(apStarPath)+'/'
@@ -3012,7 +3025,10 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     db.close()
     # Sometimes "field" has leading spaces                                                                                     
     allv['field'] = np.char.array(allv['field']).strip()
-    nfiber = len(allv)
+    if objid is None:
+        nfiber = len(allv)
+    else:
+        nfiber = 1
     cnfiber = str(nfiber)
     
     ## Get visit info from allVisit    
