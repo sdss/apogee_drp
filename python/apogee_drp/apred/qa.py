@@ -3726,7 +3726,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         nlogsN = len(logsN)
         hemN = np.full(nlogsN, 'N').astype(str)
         print("----> makeMasterQApages: Found "+str(nlogsN)+" APOGEE-N log files.")
-        mjdN = np.empty(nlogsN)
+        mjdN = np.empty(nlogsN,int)
         for i in range(nlogsN): mjdN[i] = int(os.path.basename(logsN[i]).split('.')[0])
 
 
@@ -3736,7 +3736,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         logsS = np.array([f for f in logfilesS if os.path.exists(f)])
         nlogsS = len(logsS)
         hemS = np.full(nlogsS, 'S').astype(str)
-        mjdS = np.empty(nlogsS)
+        mjdS = np.empty(nlogsS,int)
         for i in range(nlogsS): mjdS[i] = int(os.path.basename(logsS[i]).split('.')[0])
         g, = np.where(mjdS > 59808)
         mdirsS = np.array(mdirsS)[g]
@@ -3800,13 +3800,18 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Spectra Plots <TH>(8)Nsky, Ntel, Nsci <TH>(9)<BR>Summary Files <TH>(10)<BR>Moon<BR>Phase\n')
 
         # Get all yaml and apQA files
+        print('Getting all yaml and apQA files')
         allplatePlanFiles = np.char.array(glob.glob(apodir+apred+'/visit/??o25m/*/*/*/a?Plan-*.yaml'))
         allplateQAFiles = np.char.array(glob.glob(apodir+apred+'/visit/??o25m/*/*/*/html/a?QA-*.html'))
 
+        print(nmjd,' nights')
+        fivepercent = int(np.round(nmjd/20))
         for i in range(nmjd):
+            # print % status, in 5% increments
+            if i % fivepercent == 0: print('{:3d}% done'.format((i//fivepercent)*5))
             fps = False
             if mjd[i] > 59556: fps = True
-
+            
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
             date = tt.fits[0:10]
@@ -3861,7 +3866,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
             
             # Column 5: Night QA
-            ind, = np.where(allplatePlanFiles.find(cmjd)>-1)
+            ind, = np.where((allplatePlanFiles.find(cmjd)>-1) & (allplatePlanFiles.find(telescope)>-1))
             if len(ind)>0:
                 platePlanFiles = allplatePlanFiles[ind]
             else:
@@ -3869,15 +3874,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             #platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/'+prefix+'Plan-*'+cmjd+'.yaml'
             #platePlanFiles = np.array(glob.glob(platePlanPaths))
             nplatesall = len(platePlanFiles)
-
-            ind, = np.where(allplateQAFiles.find(cmjd)>-1)
+            
+            ind, = np.where((allplateQAFiles.find(cmjd)>-1) & (allplateQAFiles.find(telescope)>-1))
             if len(ind)>0:
                 plateQAFiles = allplateQAFiles[ind]
             else:
                 plateQAFiles = []
             #plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/'+prefix+'QA-*'+cmjd+'.html'
             #plateQAfiles = np.array(glob.glob(plateQApaths))
-            nplates = len(plateQAfiles)
+            nplates = len(plateQAFiles)
             if nplates >= 1:
                 html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
             else:
@@ -3928,6 +3933,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
                             html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT>\n')
 
             # Column 8: Number of skies, telluric, and science targets.
+            #  this is slow because it has to load the PlateSum files from disk
             html.write('<TD align="left">')
             if nobj > 0 and nplatesall == 0:
                 html.write('<FONT COLOR="red">Reduction failed!!!</FONT>\n')
@@ -3961,7 +3967,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
                             html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT><BR>\n')
                         else:
                             html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT>\n')
-
 
             # Column 7: Combined files for this night
             #html.write('<TD>\n')
