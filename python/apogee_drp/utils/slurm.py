@@ -242,11 +242,15 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     if os.path.exists(jobdir)==False:
         os.makedirs(jobdir)
 
+    # notchpeak can do shared, but kingspeak cannot
     if alloc=='sdss-np' and shared:
         partition = 'sdss-shared-np'
     else:
         partition = alloc
-
+    if qos=='sdss-fast':
+        account = alloc+'-fast'
+    else:
+        account = alloc
         
     # Start .slurm files
 
@@ -297,7 +301,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
         lines = []
         lines += ['#!/bin/bash']
         lines += ['# Auto-generated '+datetime.now().ctime()+' -- '+label+' ['+nodefile+']']
-        lines += ['#SBATCH --account='+alloc]
+        lines += ['#SBATCH --account='+account]
         lines += ['#SBATCH --partition='+partition]
         lines += ['#SBATCH --nodes=1']
         lines += ['#SBATCH --ntasks='+str(nproc)]
@@ -367,7 +371,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     lines = []
     lines += ['#!/bin/bash']
     lines += ['# Auto-generated '+datetime.now().ctime()+' ['+masterfile+']']
-    lines += ['#SBATCH --account='+alloc]
+    lines += ['#SBATCH --account='+account]
     lines += ['#SBATCH --partition='+partition]
     lines += ['#SBATCH --nodes=1']
     lines += ['#SBATCH --ntasks='+str(nproc)]

@@ -1,17 +1,30 @@
 import os
+import numpy as np
+from .utils import lock,apload
 
-def mkbpm(bpmid, darkid=None, flatid=None, badrow=None, clobber=False, unlock=False):
+def mkbpm(bpmid, apred='daily', telescope='apo25m', darkid=None, flatid=None, badrow=None,
+          clobber=False, unlock=False):
     """
     Create an APOGEE bad pixel mask calibration file.
 
     Parameters
     ----------
-    bpmid     ID8 number for this bad pixel mask.
-    =darkid   ID8 number for the dark to use.
-    =flatid   ID8 number for the flat to use.
-    =badrow   Array of known bad rows
-    /clobber  Overwrite existing files.
-    /unlock   Delete lock file and start fresh 
+    bpmid : int
+       ID8 number for this bad pixel mask.
+    apred : str, optional
+       APOGEE reduction version.  Default is 'daily'.
+    telescope : str, optional
+       Telescope name, 'apo25m' or 'lco25m'.  Default is 'apo25m'.
+    darkid : int, optional
+       ID8 number for the dark to use.
+    flatid : int, optional
+       ID8 number for the flat to use.
+    badrow : list, optional
+       List/array of known bad rows.
+    clobber : bool, optional
+       Overwrite existing files.  Default is False.
+    unlock : bool, optional
+       Delete lock file and start fresh.   Default is False.
 
     Returns
     -------
@@ -21,18 +34,22 @@ def mkbpm(bpmid, darkid=None, flatid=None, badrow=None, clobber=False, unlock=Fa
     Example
     -------
 
-    mkbpm,12345678,darkid=00110012,flatid=00110013
+    mkbpm(12345678,'daily','apo25m',darkid=00110012,flatid=00110013)
 
     By J. Holtzman, 2011?
     Added doc strings and cleanup.  D. Nidever, Sep 2020
     """
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    filename = load.filename('BPM',num=bpmid, chip='c')
+    lockfile = filename+'.lock'
     
-    dirs = getdir()
-    file = apogee_filename('BPM', num=bpmid, chip='c')
-    lockfile = file + '.lock'
+    #dirs = getdir()
+    #file = apogee_filename('BPM', num=bpmid, chip='c')
+    #lockfile = file + '.lock'
 
     # If another process is already making this file, wait!
-    aplock(file, waittime=10, unlock=unlock)
+    lock.lock(filename, waittime=10, unlock=unlock)
 
     # Does the product already exist?
     # Check all three chip files
@@ -40,18 +57,17 @@ def mkbpm(bpmid, darkid=None, flatid=None, badrow=None, clobber=False, unlock=Fa
     chips = ['a', 'b', 'c']
     bpmdir = apogee_filename('BPM', num=bpmid, chip='c', dir=True)
     allfiles = [os.path.join(bpmdir, dirs.prefix + f'BPM-{chip}-{sbpmid}.fits') for chip in chips]
-    if all([os.path.exists(file) for file in allfiles]) and not clobber:
-        print('BPM file:', file, 'already made')
+    if all([os.path.exists(f) for f in allfiles]) and not clobber:
+        print('BPM file:', filename, 'already made')
         return
     # Delete any existing files to start fresh
-    for file in allfiles:
-        if os.path.exists(file):
-            os.remove(file)
+    for f in allfiles:
+        if os.path.exists(f): os.remove(f)
 
     print('Making BPM:', bpmid)
 
     # Open .lock file
-    aplock(file, lock=True)
+    lock.lock(filename, lock=True)
 
     for ichip in range(3):
         chip = chips[ichip]
@@ -59,7 +75,7 @@ def mkbpm(bpmid, darkid=None, flatid=None, badrow=None, clobber=False, unlock=Fa
         mask = np.zeros((2048, 2048), dtype=int)
 
         # Bad pixels from dark frame
-        file = apogee_filename("Dark", chip=chip, num=darkid)
+        file = load.filename("Dark", chip=chip, num=darkid)
         darkmask = mrdfits(file, 3)
         bad = np.where(darkmask > 0)
         mask[bad] = mask[bad] | maskval('BADDARK')
@@ -89,4 +105,4 @@ def mkbpm(bpmid, darkid=None, flatid=None, badrow=None, clobber=False, unlock=Fa
         SXADDPAR(head1, 'EXTNAME', 'BPM')
         MWRFITS(mask, file, head1, create=True)
 
-    aplock(file, clear=True)
+    lock.unlock(filename, clear=True)

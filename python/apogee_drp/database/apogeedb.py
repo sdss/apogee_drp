@@ -131,13 +131,22 @@ def register_date_typecasters(connection):
 
 class DBSession(object):
 
-    def __init__(self):
+    def __init__(self,host='operations'):
         """ Initialize the database session object. The connection is opened."""
+        self.host = host
+        if host=='operations':
+            self.dbhost = 'operations.sdss.org'
+            self.dbuser = 'sdss'
+        elif host=='pipelines':
+            self.dbhost = 'pipelines.sdss.org'
+            self.dbuser = os.getlogin()
+        else:
+            raise ValueError(str(host)+' not supported')
         self.open()
 
     def open(self):
         """ Open the database connection."""
-        connection = pg.connect(user="sdss",host="operations.sdss.org",
+        connection = pg.connect(user=self.dbuser,host=self.dbhost,
                                 password="",port = "5432",database = "sdss5db")
         self.connection = connection
 
