@@ -49,6 +49,7 @@ if __name__ == "__main__":
     # Set unix environment variables for kingspeak
     #  we use notchpea by default
     if alloc=='sdss-kp':
+        qos = None   # kingspeak does not have fast qos
         # run setslurm script        
         os.environ['SLURM_CLUSTER'] = 'kingspeak.peaks'
         os.environ['SLURM_CLUSTERS'] = 'kingspeak'
