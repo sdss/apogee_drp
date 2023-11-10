@@ -194,6 +194,8 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     else:
         shared = True
         ppn = 64
+        if qos=='sdss-fast':
+            ppn = 25
     walltime = '23:00:00'
     chips = ['a','b','c']
 
