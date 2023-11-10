@@ -131,7 +131,7 @@ def register_date_typecasters(connection):
 
 class DBSession(object):
 
-    def __init__(self,host='operations'):
+    def __init__(self,host='pipelines'):
         """ Initialize the database session object. The connection is opened."""
         self.host = host
         if host=='operations':
