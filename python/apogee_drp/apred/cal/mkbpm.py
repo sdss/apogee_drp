@@ -38,25 +38,26 @@ def mkbpm(bpmid, apred='daily', telescope='apo25m', darkid=None, flatid=None, ba
 
     By J. Holtzman, 2011?
     Added doc strings and cleanup.  D. Nidever, Sep 2020
+    Translated to python. D. Nidever, Nov 2023
     """
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
-    filename = load.filename('BPM',num=bpmid, chip='c')
-    lockfile = filename+'.lock'
+    filename = load.filename('BPM',num=bpmid, chips=True)
+    lockfile = filename.replace('BPM-','BPM-c-')
     
     #dirs = getdir()
     #file = apogee_filename('BPM', num=bpmid, chip='c')
     #lockfile = file + '.lock'
 
     # If another process is already making this file, wait!
-    lock.lock(filename, waittime=10, unlock=unlock)
+    lock.lock(lockfile, waittime=10, unlock=unlock)
 
     # Does the product already exist?
     # Check all three chip files
-    sbpmid = str(bpmid).zfill(8)
+    sbpmid = '{:08d}'.format(bpmid)
     chips = ['a', 'b', 'c']
-    bpmdir = apogee_filename('BPM', num=bpmid, chip='c', dir=True)
-    allfiles = [os.path.join(bpmdir, dirs.prefix + f'BPM-{chip}-{sbpmid}.fits') for chip in chips]
+    bpmdir = os.path.dirname(load.filename('BPM', num=bpmid, chips=True))
+    allfiles = [bpmdir+load.prefix + 'BPM-{:s}-{:s}.fits'.format(chip,sbpmid) for chip in chips]
     if all([os.path.exists(f) for f in allfiles]) and not clobber:
         print('BPM file:', filename, 'already made')
         return
@@ -67,22 +68,22 @@ def mkbpm(bpmid, apred='daily', telescope='apo25m', darkid=None, flatid=None, ba
     print('Making BPM:', bpmid)
 
     # Open .lock file
-    lock.lock(filename, lock=True)
+    lock.lock(lockfile, lock=True)
 
     for ichip in range(3):
         chip = chips[ichip]
-
         mask = np.zeros((2048, 2048), dtype=int)
 
         # Bad pixels from dark frame
-        file = load.filename("Dark", chip=chip, num=darkid)
+        outfile = load.filename("Dark", num=darkid, chips=True).replace('Dark-','Dark-'+chip+'-')
+        
         darkmask = mrdfits(file, 3)
         bad = np.where(darkmask > 0)
         mask[bad] = mask[bad] | maskval('BADDARK')
 
         # Bad pixels from flat frame
         if flatid is not None:
-            file = apogee_filename("Flat", chip=chip, num=flatid)
+            file = load.filename("Flat", chip=chip, num=flatid)
             flatmask = mrdfits(file, 3)
             bad = np.where(flatmask > 0)
             mask[bad] = mask[bad] | maskval('BADFLAT')
@@ -98,11 +99,11 @@ def mkbpm(bpmid, apred='daily', telescope='apo25m', darkid=None, flatid=None, ba
                 if row.chip == ichip:
                     mask[:, row.row] = mask[:, row.row] | maskval('BADPIX')
 
-        file = apogee_filename('BPM', chip=chip, num=bpmid)
+        file = load.filename('BPM', chip=chip, num=bpmid)
         head1 = MRDFITS(file, 0, header=True)
         head1['EXTNAME'] = 'BPM'
         MKHDR(head1, mask)
         SXADDPAR(head1, 'EXTNAME', 'BPM')
         MWRFITS(mask, file, head1, create=True)
 
-    lock.unlock(filename, clear=True)
+    lock.unlock(lockfile, clear=True)

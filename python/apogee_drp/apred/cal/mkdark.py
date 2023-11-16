@@ -1,9 +1,11 @@
 import os
 import time
 import numpy as np
-#from ..utils import apload
+from astropy.io import fits
+from ..utils import apload,lock
+from . import process
 
-def mkdark(ims, cmjd=None, step=0, psfid=None, clobber=False, unlock=False):
+def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
     """
     Makes APOGEE superdark calibration product.
 
@@ -30,32 +32,32 @@ def mkdark(ims, cmjd=None, step=0, psfid=None, clobber=False, unlock=False):
     
     i1 = ims[0]
     nframes = len(ims)
-
-    dirs = getdir()
-    caldir = dirs.caldir
-
-    adarkfile = apogee_filename('Dark', num=i1, chip='a')
-    darkdir = file_dirname(adarkfile)
-    prefix = strmid(file_basename(adarkfile), 0, 2)
-    darkfile = os.path.join(darkdir, load.prefix + 'Dark-{:08d}.tab'.format(i1))
-    lockfile = darkfile + '.lock'
     chips = ['a', 'b', 'c']
+    
+    #dirs = getdir()
+    #caldir = dirs.caldir
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    adarkfile = load.filename('Dark',num=i1, chips=True)
+    adarkfile = adarkfile.replace('Dark-','Dark-a-')
+    darkdir = os.path.dirname(filename)
+    darkfile = darkdir + load.prefix + 'Dark-{:08d}.tab'.format(i1)
 
     # Does the file already exist?
     # Check all three chip files and the .tab file
-    sdarkid = str(ims[0]).zfill(8)
-    allfiles = [os.path.join(darkdir, dirs.prefix + f'Dark-{chip}-{sdarkid}.fits') for chip in chips]
-    allfiles.append(os.path.join(darkdir, dirs.prefix + f'Dark-{sdarkid}.tab'))
-    if all([os.path.exists(file) for file in allfiles]) and not clobber:
+    sdarkid = '{:08d}'.format(ims[0])
+
+    allfiles = [darkdir+load.prefix + 'Dark-{:s}-{:s}.fits'.format(chip,sdarkid) for chip in chips]
+    allfiles.append(darkdir+load.prefix+'Dark-'+sdarkid+'.tab')
+    if all([os.path.exists(f) for f in allfiles]) and not clobber:
         print('Dark file:', darkfile, 'already made')
         return
     # Delete any existing files to start fresh
-    for file in allfiles:
-        if os.path.exists(file):
-            os.remove(file)
+    for f in allfiles:
+        if os.path.exists(f): os.remove(f)
 
     # Is another process already creating the file?
-    aplock(darkfile, waittime=10, unlock=unlock)
+    lock.lock(darkfile, waittime=10, unlock=unlock)
 
     # Initialize summary structure
     dt = [('num',int), ('nframes',int), ('nreads',int), ('nsat',int), ('nhot',int),
@@ -63,55 +65,45 @@ def mkdark(ims, cmjd=None, step=0, psfid=None, clobber=False, unlock=False):
     darklog = np.zeros(3,dtype=np.dtype(dt))
     darklog['num'] = i1
 
-    if not step:
+    if step is None:
         step = 0
 
     # Loop over the chips
     for ichip in range(3):
         chip = chips[ichip]
-
-        time0 = systime(seconds=True)
-        ii = 0
-
-        for jj in range(nframes):
-            i = ims[jj]
-
-            if not cmjd:
-                cm = getcmjd(i)
+        time0 = time.time()
+        # Image loop
+        for j,im in enumerate(ims):
+            if cmjd is None:
+                cm = load.cmjd(im)
             else:
                 cm = cmjd
-
-            print(f'{jj}/{nframes} {chip} {i}')
+            print('{:d}/{:d} {:s} {:s}'.format(j,len(ims),chip,im))
 
             # Process (bias-only) each individual frame
-            d = process(cm, i, chip, head, r, step=step, nofs=True, nofix=True, nocr=True)
+            d = process.process(cm, im, chip, head, r, step=step, nofs=True, nofix=True, nocr=True)
             print('Done process')
-            sz = np.shape(d)
-
-            if sz[0] != 2048:
+            if d.shape[0] != 2048:
                 raise Exception('Not 2048')
 
-            mask = np.zeros(sz[0], sz[1], dtype=np.byte)
+            mask = np.zeros(d.shape, dtype=np.byte)
 
             # Construct cube of reads minus second read
-            if jj == 0:
-                head0 = head
+            if j == 0:
+                head0 = head.copy()
 
             sz = np.shape(r)
 
-            if jj == 0:
+            if j == 0:
                 if ichip == 0:
                     red = np.zeros((2048, 2048, sz[2], nframes), dtype=float)
                 else:
                     red *= 0.0
 
-            red[:, :, :, ii] = r
+            red[:,:,:,j] = r
             del r
             for iread in range(sz[2] - 1, 0, -1):
                 red[:, :, iread, ii] -= red[:, :, 1, ii]
-
-            ii += 1
-
 
         # Median them all
         print('Median...')
@@ -121,28 +113,28 @@ def mkdark(ims, cmjd=None, step=0, psfid=None, clobber=False, unlock=False):
         if psfid:
             darklog[ichip]['psfid'] = psfid
             print('Reading epsf')
-            epsffile = apogee_filename('EPSF', psfid, chip=chip)
-            tmp = mrdfits(epsffile, 0, head)
-            ntrace = sxpar(head, 'NTRACE')
+            epsffile = load.filename('EPSF', num=psfid, chip=chip)
+            thdu = fits.open(epsffile)
+            head = thdu[0].header
+            ntrace = head['NTRACE']
             img = [None] * ntrace
 
             for i in range(ntrace):
-                ptmp = mrdfits(epsffile, i + 1, silent=True)
-                img[i] = ptmp.img
+                ptmp = thdu[i+1].data
+                #ptmp = mrdfits(epsffile, i + 1, silent=True)
+                img[i] = ptmp['img']
                 p = {'lo': ptmp.lo, 'hi': ptmp.hi, 'img': img[i]}
-
                 if i == 0:
                     psf = [p] * ntrace
-
                 psf[i] = p
 
             nread = sz[2]
 
-            for iread in range(1, nread):
+            for iread in np.arange(1, nread):
                 var = dark[:, :, iread]
                 # Want to subtract off mean background dark level before fitting traces
                 # Iterate once for this
-                back = median(dark[:, :, iread], 10)
+                back = np.median(dark[:, :, iread], 10)
 
                 niter = 2
 
@@ -164,7 +156,7 @@ def mkdark(ims, cmjd=None, step=0, psfid=None, clobber=False, unlock=False):
                         d[:, lo:hi] += sub * img
 
                     if iter < niter - 1:
-                        back = median(dark[:, :, iread] - d, 10)
+                        back = np.median(dark[:, :, iread] - d, 10)
 
                 dark[:, :, iread] -= d
 
@@ -174,14 +166,14 @@ def mkdark(ims, cmjd=None, step=0, psfid=None, clobber=False, unlock=False):
 
         # Create mask array
         # NaN is bad!
-        bad = np.where(np.isnan(rate))
-        nsat = len(bad)
+        bad = (np.isnan(rate))
+        nsat = np.sum(bad)
         mask[bad] = mask[bad] | 1
 
         # Flux accumulating very fast is bad!
         maxrate = 10.0
-        hot = np.where(rate > maxrate)
-        nhot = len(hot)
+        hot = (rate > maxrate)
+        nhot = np.sum(hot)
         mask[hot] = mask[hot] | 2
 
         # Flag adjacent pixels to hot pixels as bad at 1/4 the maximum rate
@@ -219,24 +211,24 @@ def mkdark(ims, cmjd=None, step=0, psfid=None, clobber=False, unlock=False):
         chi2 = chi2.reshape((2048, 2048, nread))
 
         # Set nans to 0 before writing
-        bad = np.where(np.isnan(dark))
+        bad = (np.isnan(dark))
         dark[bad] = 0
-        medrate = median(rate)
+        medrate = np.median(rate)
 
         # Median filter along reads dimension
         for i in range(2048):
-            slice = dark[i, :, :]
-            dark[i, :, :] = medfilt2d(slice, 7, dim=2)
+            slc = dark[i, :, :]
+            dark[i, :, :] = medfilt2d(slc, 7, dim=2)
 
         # Set negative pixels to zero
-        neg = np.where(dark < -10)
+        neg = (dark < -10)
         dark[neg] = 0
 
         # Write them out
         if step:
-            file = prefix + 'Dark{:d}-{:s}-{:08d}'.format(step,chip,i1)
+            outfile = load.prefix + 'Dark{:d}-{:s}-{:08d}'.format(step,chip,i1)
         else:
-            file = prefix + 'Dark-{:s}-{:08d}'.format(chip,i1)
+            outfile = load.prefix + 'Dark-{:s}-{:08d}'.format(chip,i1)
 
         leadstr = 'APMKDARK: '
         head['HISTORY'] = leadstr+time.asctime()
@@ -261,7 +253,7 @@ def mkdark(ims, cmjd=None, step=0, psfid=None, clobber=False, unlock=False):
         if not os.path.exists(os.path.join(darkdir, 'plots')):
             os.makedirs(os.path.join(darkdir, 'plots'))
 
-        DARKPLOT(dark, mask, os.path.join(darkdir, 'plots', file), hard=True)
+        darkplot(dark, mask, os.path.join(darkdir, 'plots', file), hard=True)
 
         # Summary data table
         darklog[ichip]['num'] = i1
@@ -275,21 +267,21 @@ def mkdark(ims, cmjd=None, step=0, psfid=None, clobber=False, unlock=False):
         darklog[ichip]['nneg'] = nneg
 
         # Save the rate file
-        file = prefix + 'DarkRate-{:s}-{:08d}'.format(chip,i1)
-        MWRFITS(rate, os.path.join(darkdir, file + '.fits'), create=True)
+        outfile = load.prefix + 'DarkRate-{:s}-{:08d}'.format(chip,i1)
+        MWRFITS(rate, darkdir+outfile+'.fits', create=True)
 
         dark = 0
-        time = systime(seconds=True)
+        time = time.time()
         print('Done', chip, time - time0)
 
     del red
 
     # Write the summary log information
-    file = prefix + 'Dark-{:08d}'.format(i1)
-    MWRFITS(darklog, os.path.join(darkdir, file + '.tab'), create=True)
+    outfile = prefix + 'Dark-{:08d}'.format(i1)
+    MWRFITS(darklog, darkdir+outfile + '.tab', create=True)
 
     # Remove lock file
-    aplock(darkfile, clear=True)
+    lock.lock(darkfile, clear=True)
 
     # Compile summary web page
-    DARKHTML(darkdir)
+    darkhtml(darkdir)

@@ -1,15 +1,27 @@
 import os
 import numpy as np
+from astropy.io import fits
+from ..utils import apload,lock
 
-def mkdet(detid, linid=None, unlock=False):
+def mkdet(detid,apred='daily',telescope='apo25m',linid=None,
+          unlock=False,clobber=False):
     """
     Make an APOGEE detector calibration product.
 
     Parameters
     ----------
-    detid    ID8 number for the detector file.
-    linid    ID8 number for the linearity file.
-    /unlock  Delete lock file and start fresh 
+    detid : int
+       ID8 number for the detector file.
+    apred : str, optional
+       APOGEE reduction version.  Default is 'daily'.
+    telescope : str, optional
+       Telescope name, 'apo25m' or 'lco25m'.  Default is 'apo25m'.
+    linid : str, optional
+       ID8 number for the linearity file.
+    unlock : bool, optional
+       Delete lock file and start fresh.  Default is False.
+    clobber : bool, optional
+       Overwrite any existing files.  Default is False.
 
     Returns
     -------
@@ -19,37 +31,36 @@ def mkdet(detid, linid=None, unlock=False):
     Example
     -------
 
-    mkdet,detid,linid
+    mkdet(detid,linid,apred='daily',telescope='apo25m')
 
     By J. Holtzman, 2011?
     Added doc strings, updates to use data model  D. Nidever, Sep 2020
+    Translated to Python  D. Nidever, Nov 2023
     """
     
-    dirs = getdir()
-    caldir = dirs.caldir
-    detfile = apogee_filename('Detector', num=detid, chip='c')
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    detfile = load.filename('Detector', num=detid, chips=True)
 
     # If another process is already making this file, wait!
-    aplock(detfile, waittime=10, unlock=unlock)
+    lock.lock(detfile, waittime=10, unlock=unlock)
 
     # Does the product already exist?
     print('Testing detector file:', detfile)
     # check all three chip files
-    sdetid = str(detid).zfill(8)
+    sdetid = '{:08d}'.format(detid)
     chips = ['a', 'b', 'c']
-    detdir = apogee_filename('Detector', num=detid, chip='c', _dir=True)
-    allfiles = [os.path.join(detdir, dirs.prefix + f'Detector-{chip}-{sdetid}.fits') for chip in chips]
-    if all([os.path.exists(file) for file in allfiles]) and not clobber:
+    detdir = os.path.dirname(load.filename('Detector', num=detid, chips=True))
+    allfiles = [detdir+load.prefix + 'Detector-{:s}-{:s}.fits'.format(chip,sdetid) for chip in chips]
+    if all([os.path.exists(f) for f in allfiles]) and not clobber:
         print('Detector file:', detfile, 'already made')
         return
     # Delete any existing files to start fresh
-    for file in allfiles:
-        if os.path.exists(file):
-            os.remove(file)
+    for f in allfiles:
+        if os.path.exists(f): os.remove(f)
 
     print('Making Detector:', detid)
     # open .lock file
-    aplock(detfile,lock=True)
+    lock.lock(detfile,lock=True)
     
     lincorr = np.zeros((4, 3), dtype=float)
     for iquad in range(4):
@@ -60,7 +71,7 @@ def mkdet(detid, linid=None, unlock=False):
         for iquad in range(4):
             lincorr[iquad, :] = linpar
 
-    if dirs.instrument == 'apogee-n':
+    if telescope[0:3] == 'apo':
         g = 1.9
         # These are supposed to be CDS DN!
         r = [20.,11.,16.]/np.sqrt(2.)
@@ -85,19 +96,31 @@ def mkdet(detid, linid=None, unlock=False):
     for ichip in range(3):
         gain = [g, g, g, g]
         rn = [r[ichip] * gain[i] for i in range(4)]
-        file = apogee_filename('Detector', num=detid, chip=chips[ichip])
+        outfile = load.filename('Detector',num=detid,chips=True)
+        outfile = outfile.replace('Detector-','Detector-'+chips[ichip]+'-')
+        #file = apogee_filename('Detector', num=detid, chip=chips[ichip])
         # Create FITS headers and write the data to files
-        head = mkhdr(0)
-        MWRFITS(0, file, head, create=True)
-        head1 = MKHDR(rn)
-        sxaddpar(head1, 'EXTNAME', 'READNOISE')
-        MWRFITS(rn, file, head1)
-        head2 = MKHDR(gain)
-        sxaddpar(head2, 'EXTNAME', 'GAIN')
-        MWRFITS(gain, file, head2)
-        head3 = MKHDR(lincorr)
-        sxaddpar(head3, 'EXTNAME', 'LINEARITY CORRECTION')
-        MWRFITS(lincorr, file, head3)
+        hdulist = fits.HDUList()
+        hdulist.append(fits.PrimaryHDU())
+        hdulist.append(fits.PrimaryHDU(rn))
+        hdulist[1].header['EXTNAME'] = 'READNOISE'
+        hdulist.append(fits.ImageHDU(gain))
+        hdustli[2].header['EXTNAME'] = 'GAIN'
+        hdulist.append(fits.ImageHDU(lincorr))
+        hdustli[3].header['EXTNAME'] = 'LINEARITY CORRECTION'
+        hdulist.writeto(outfile,overwrite=True)
+        
+        #head = mkhdr(0)
+        #MWRFITS(0, file, head, create=True)
+        #head1 = MKHDR(rn)
+        #sxaddpar(head1, 'EXTNAME', 'READNOISE')
+        #MWRFITS(rn, file, head1)
+        #head2 = MKHDR(gain)
+        #sxaddpar(head2, 'EXTNAME', 'GAIN')
+        #MWRFITS(gain, file, head2)
+        #head3 = MKHDR(lincorr)
+        #sxaddpar(head3, 'EXTNAME', 'LINEARITY CORRECTION')
+        #MWRFITS(lincorr, file, head3)
 
     # Clear the lock file
-    aplock(detfile, clear=True)
+    lock.lock(detfile, clear=True)
