@@ -2888,7 +2888,7 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
         os.makedirs(logdir)
 
     # Should we parallelise this?  it can take a while to run for many nights
-
+    
     # Loop over MJDs
     planfiles = []
     for m in mjds:

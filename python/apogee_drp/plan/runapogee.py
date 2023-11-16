@@ -201,7 +201,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
 
     slurm = {'nodes':nodes, 'alloc':alloc, 'ppn':ppn, 'cpus':ppn, 'qos':qos, 'shared':shared,
              'numpy_num_threads':2,'walltime':walltime,'notification':False}
-
+    
     # No version input, use 'daily'
     if apred is None:
         apred = 'daily'

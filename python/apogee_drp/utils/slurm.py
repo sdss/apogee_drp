@@ -218,10 +218,16 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
         logger = dln.basiclogger()
 
     if alloc=='sdss-kp':
-        ppn = 16
+        if ppn is not None:
+            ppn = np.minimum(ppn,16)
+        else:
+            ppn = 16
         memory = np.minimum(memory,3750)
     else:
-        ppn = 64
+        if ppn is not None:
+            ppn = np.minimum(ppn,64)
+        else:
+            ppn = 64
         memory = np.minimum(memory,7500)        
     slurmpars = {'nodes':nodes, 'alloc':alloc, 'ppn':ppn, 'qos':qos, 'shared':shared,
                  'cpus':cpus, 'walltime':walltime, 'notification':False}
