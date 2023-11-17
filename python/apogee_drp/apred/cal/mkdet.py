@@ -1,7 +1,7 @@
 import os
 import numpy as np
 from astropy.io import fits
-from ..utils import apload,lock
+from ...utils import apload,lock
 
 def mkdet(detid,apred='daily',telescope='apo25m',linid=None,
           unlock=False,clobber=False):
@@ -62,9 +62,9 @@ def mkdet(detid,apred='daily',telescope='apo25m',linid=None,
     # open .lock file
     lock.lock(detfile,lock=True)
     
-    lincorr = np.zeros((4, 3), dtype=float)
+    lincorr = np.zeros((3, 4), dtype=float)
     for iquad in range(4):
-        lincorr[iquad, :] = [1.0, 0.0, 0.0]
+        lincorr[:, iquad] = [1.0, 0.0, 0.0]
 
     if linid is not None and linid > 0:
         linpar = mklinearity(linid)
@@ -105,9 +105,9 @@ def mkdet(detid,apred='daily',telescope='apo25m',linid=None,
         hdulist.append(fits.PrimaryHDU(rn))
         hdulist[1].header['EXTNAME'] = 'READNOISE'
         hdulist.append(fits.ImageHDU(gain))
-        hdustli[2].header['EXTNAME'] = 'GAIN'
+        hdulist[2].header['EXTNAME'] = 'GAIN'
         hdulist.append(fits.ImageHDU(lincorr))
-        hdustli[3].header['EXTNAME'] = 'LINEARITY CORRECTION'
+        hdulist[3].header['EXTNAME'] = 'LINEARITY CORRECTION'
         hdulist.writeto(outfile,overwrite=True)
         
         #head = mkhdr(0)

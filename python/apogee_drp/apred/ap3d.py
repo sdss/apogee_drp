@@ -39,9 +39,9 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 
 
-def ap3dproc_lincorr(slc_in,lindata,linhead):
+def lincorr(slc_in,lindata,linhead):
     """
-    This subroutine does the Linearity Correction for a slice
+    This function does the Linearity Correction for a slice.
 
     The lindata array gives a quadratic polynomial either for
     each pixel or for each output (512 pixels)
@@ -111,10 +111,9 @@ def ap3dproc_lincorr(slc_in,lindata,linhead):
     return slc_out
 
 
-
-def ap3dproc_darkcorr(slc_in,darkslc,darkhead):
+def darkcorr(slc_in,darkslc,darkhead):
     """
-    This subroutine does the Dark correction for a slice
+    This subroutine does the Dark correction for a slice.
     darkslc is a 2048xNreads array that gives the dark counts
 
     To get the dark current just multiply the dark count rate
@@ -132,7 +131,7 @@ def ap3dproc_darkcorr(slc_in,darkslc,darkhead):
     return slc_out
 
 
-def ap3dproc_crfix(dCounts,satmask,sigthresh=10,onlythisread=False,noise=17.0,crfix=False):
+def crfix(dCounts,satmask,sigthresh=10,onlythisread=False,noise=17.0,crfix=False):
     """
     This subroutine fixes cosmic rays in a slice of the datacube.
     The last dimension in the slice should be the Nreads, i.e.
@@ -649,7 +648,7 @@ def loadflat(flatcorr,silent=True):
 
 
 # refsub subtracts the reference array from each quadrant with proper flipping
-def aprefcorr_sub(image,ref):
+def refcorr_sub(image,ref):
     revref = np.flip(ref,axis=1)
     image[:,0:512] -= ref
     image[:,512:1024] -= revref
@@ -657,9 +656,9 @@ def aprefcorr_sub(image,ref):
     image[:,1536:2048] -= revref
     return image
 
-def aprefcorr(cube,head,mask,indiv=3,vert=1,horz=1,noflip=False,silent=False,
-              readmask=None,lastgood=None,cds=1,plot=False,fix=False,
-              q3fix=False,keepref=False):
+def refcorr(cube,head,mask,indiv=3,vert=1,horz=1,noflip=False,silent=False,
+            readmask=None,lastgood=None,cds=1,plot=False,fix=False,
+            q3fix=False,keepref=False):
     """
     This corrects a raw APOGEE datacube for the reference pixels
     and reference output
@@ -1668,7 +1667,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             else:
                 linslc = lindata
             slc_orig1 = slc           # temporary copy since we'll be overwriting it
-            slc = aplincorr(slc_orig1,linslc)
+            slc = lincorr(slc_orig1,linslc)
   
         #-----------------
         # Dark correction
@@ -1677,7 +1676,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
         if darkcube is not None:
             darkslc = darkcube[:,i,:]
             slc_orig2 = slc  # temporary copy since we'll be overwriting it
-            slc = ap3dproc_darkcorr(slc_orig2,darkslc,darkhead)
+            slc = darkcorr(slc_orig2,darkslc,darkhead)
   
         #------------------------------------------------
         # Find difference of neighboring reads, dCounts
@@ -1697,7 +1696,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             dCounts_orig = dCounts  # temporary copy since we'll be overwriting it
             dCounts = None
             satmask_slc = satmask[:,i,:]
-            out = ap3dproc_crfix(dCounts_orig,satmask_slc,noise=noise,crfix=crfix)
+            out = crfix(dCounts_orig,satmask_slc,noise=noise,crfix=crfix)
             crstr_slc, dCounts, med_dCounts, mask, crindex, crnum, variability_slc = out
             
             variability_im[:,i] = variability_slc
