@@ -3,7 +3,7 @@ import numpy as np
 from astropy.io import fits
 from scipy.optimize import curve_fit
 import matplotlib.pyplot as plt
-from ...utils import apzip,apload
+from ...utils import apzip,apload,lock,info,utils
 from ...apred import ap3d,mkcal
 
 def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=None,
@@ -74,13 +74,13 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
 
     # Get calibration file names for this MJD
     cmjd = load.cmjd(frameid)
-    mjd = float(cmjd)
+    mjd = int(cmjd)
     libdir = os.environ['APOGEE_DRP_DIR']+'/data'
     caldata = mkcal.getcal(libdir + '/cal/' + load.instrument + '.par', mjd)
     if darkid is None: darkid = caldata['dark']
     if bpmid is None: bpmid = caldata['bpm']
     if detid is None: detid = caldata['det']
-
+    
     # chip= keyword specifies single chip, else use all 3 chips
     chips = ['a', 'b', 'c']
     if chip is not None:
@@ -126,23 +126,33 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
         else:
             nreads = einfo['nread']
 
-        localdir = os.environ['APOGEE_LOCALDIR']
-        #if os.path.isdir(getlocaldir()):
-        #    outdir = getlocaldir()
-        #else:
-        #    outdir = './'
-
-        if not os.path.exists(outdir + base + '.fits')):
-            unzip.unzip(datafile, fitsdir=outdir)
+        localdir = utils.localdir()
+        if os.path.isdir(localdir):
+            outdir = localdir+'/'+apred+'/'
+        else:
+            outdir = './'
+        if os.path.exists(outdir)==False:
+            os.makedirs(outdir)
+            
+        if os.path.exists(outdir + base + '.fits')==False:
+            print('Uncompressing')
+            apzip.unzip(datafile, fitsdir=outdir)
 
         # Read the cube
-        cube = np.zeros((2048, 2048, nreads), dtype=np.uint)
-        for i in range(1, nreads + 1):
-            im, head = fits.getdata(outdir + base + f'_r{i:02d}.fits'), header=True)
-            cube[:,:,i-1] = im.astype(np.uint)
+        print('Reading the data cube')
+        hdu = fits.open(outdir + base + '.fits')
+        head = hdu[0].header
+        cube = np.zeros((2048, 2560, nreads), dtype=np.uint)
+        for i in np.arange(1, nreads + 1):
+            cube[:,:,i-1] = hdu[i].data.astype(np.uint)
+        hdu.close()
 
+        # Delete the uncompressed fits file
+        # if os.path.exists(outdir + base + '.fits'):
+        #     os.remove(outdir + base + '.fits')
+        
         # Do reference correction (assuming aprefcorr is defined)
-        tmp = ap3d.refcorr(cube, head, mask, indiv=False, cds=True)
+        tmp = ap3d.refcorr(cube, head, indiv=0, cds=True)
         cube = tmp
 
         # If we have input linearity data, we will use it to test that things are working!
@@ -233,7 +243,7 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
         # all regions. Do a fit to get rate at cref DN
         plt.scatter(data['cts'][gd], data['rate'][gd], marker='s')
         plt.ylim(0.8, 1.2)
-        plt.xim(0, max(data['cts'])])
+        plt.xim(0, max(data['cts']))
         plt.xlabel('DN',fontsize=18)
         plt.ylabel('Relative count rate',fontsize=18)
 

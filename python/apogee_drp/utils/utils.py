@@ -1,6 +1,7 @@
 from astropy.time import Time
 import numpy as np
 import os
+from scipy.ndimage import median_filter,generic_filter
 
 def getmjd5(dateobs):
     """ Convert a DATE-OBS string to 5-digit MJD number."""
@@ -65,3 +66,7 @@ def smooth(y, box_pts,boundary='wrap'):
                 y_smooth = np.apply_along_axis(convfunc, axis=0, arr=y)
                 
     return y_smooth
+
+def nanmedfilt(x,size,mode='reflect'):
+    # 1D median filtering with NaN rejectin
+    return generic_filter(x, np.nanmedian, size=size)

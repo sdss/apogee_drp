@@ -1,6 +1,7 @@
 import os
 import numpy as np
 from astropy.io import fits
+from . import mklinearity
 from ...utils import apload,lock
 
 def mkdet(detid,apred='daily',telescope='apo25m',linid=None,
@@ -67,7 +68,7 @@ def mkdet(detid,apred='daily',telescope='apo25m',linid=None,
         lincorr[:, iquad] = [1.0, 0.0, 0.0]
 
     if linid is not None and linid > 0:
-        linpar = mklinearity(linid)
+        linpar = mklinearity.mklinearity(linid,apred=apred,telescope=telescope,unlock=unlock)
         for iquad in range(4):
             lincorr[iquad, :] = linpar
 

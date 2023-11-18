@@ -19,7 +19,7 @@ from astropy.io import fits
 from astropy.table import Table, Column
 from astropy import modeling
 from glob import glob
-from scipy.signal import medfilt
+from scipy.signal import medfilt,medfilt2d
 from scipy.ndimage.filters import median_filter,gaussian_filter1d
 from scipy.optimize import curve_fit, least_squares
 from scipy.special import erf
@@ -30,14 +30,14 @@ from scipy.interpolate import interp1d
 #from sdss_access.path import path
 import traceback
 from dlnpyutils import utils as dln,bindata
-from ..utils import plan,apload,utils,apzip
+from ..utils import plan,apload,utils,apzip,bitmask
 from . import mjdcube
 
 # Ignore these warnings, it's a bug
 warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
-
+pixelmask = bitmask.PixelBitMask()
 
 def lincorr(slc_in,lindata,linhead):
     """
@@ -656,32 +656,58 @@ def refcorr_sub(image,ref):
     image[:,1536:2048] -= revref
     return image
 
-def refcorr(cube,head,mask,indiv=3,vert=1,horz=1,noflip=False,silent=False,
-            readmask=None,lastgood=None,cds=1,plot=False,fix=False,
-            q3fix=False,keepref=False):
+
+def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,noflip=False,
+            silent=False,readmask=None,lastgood=None,plot=False,q3fix=False,keepref=False):
     """
     This corrects a raw APOGEE datacube for the reference pixels
     and reference output
 
-    Parameters:
-    cube       The raw APOGEE datacube with reference array.  This
-                will be updated with the reference subtracted cube.
-    head       The header for CUBE.
-    indiv=n    Subtract the individual reference arrays after nxn median filter. If 
-                If <0, subtract mean reference array. If ==0, no reference array subtraction
-    /noflip    Do not flip the reference array.
-    /silent    Don't print anything to the screen.
+    Parameters
+    ----------
+    cube : numpy array
+       The raw APOGEE datacube with reference array.  This
+         will be updated with the reference subtracted cube.
+    head : Header
+       The header for CUBE.
+    mask : numpy array, optional
+       Input bad pixel mask.
+    indiv : int, optional
+       Subtract the individual reference arrays after NxN median filter. If 
+        If <0, subtract mean reference array. If ==0, no reference array subtraction
+        Default is indiv=3.
+    vert : bool, optional
+       Use vertical ramp.  Default is True.
+    horz : bool, optional
+       Use horizontal ramp.  Default is True.
+    cds : bool, optional
+       Perform double-correlated sampling.  Default is True.
+    noflip : bool, optional
+       Do not flip the reference array.
+    q3fix : bool, optional
+       Fix issued with the third quadrant for MJD XXX.
+    keepref : bool, optional
+       Return the reference array in the output.
+    silent : bool, optional
+       Don't print anything to the screen.
 
-    Returns:
-    cube is updated with the reference subtracted cube to save memory.
-    mask       The flag mask.
-    =readmask  Mask indicating if reads are bad (0-good, 1-bad)
+    Returns
+    -------
+    out : numpy array
+       The reference-subtracted cube.
+    mask : numpy array
+       The flag mask array.
+    readmask : numpy array
+       Mask indicating if reads are bad (0-good, 1-bad).
 
-    USAGE:
-    >>>aprefcorr,cube,head,mask
+    Example
+    -------
+
+    out,mask,readmask = refcorr(cube,head)
 
     By J. Holtzman   2011
     Incorporated into ap3dproc.pro  D.Nidever May 2011
+    Translated to Python  D.Nidever  Nov 2023
     """
 
     # refcorr does the "bias" subtraction, using the reference array and
@@ -690,220 +716,209 @@ def refcorr(cube,head,mask,indiv=3,vert=1,horz=1,noflip=False,silent=False,
     #    reference pixels, then subtract smoothed horizontal ramps
 
     # Number of reads
-    nx,ny,nread = cube.shape
+    ny,nx,nread = cube.shape
 
-    # create long output
+    # Create long output
     out = np.zeros((2048,2048,nread),int)
     if keepref:
         refout = np.zeros((512,2048,nread),int)
 
     # Ignore reference array by default
     # Default is to do CDS, vertical, and horizontal correction
-    print('in aprefcorr, indiv: '+str(indiv))
+    print('in refcorr, indiv: '+str(indiv))
 
     satval = 55000
-
     snmin = 10
     if indiv>0:
         hmax = 1e10
     else:
         hmax = 65530
 
-    if len(mask)<=1:
+    # Initalizing some output arrays
+    if mask is None:
         mask = np.zeros((2048,2048),int)
     readmask = np.zeros(nread,int)
+
+    # Calculate the mean reference array
     if silent==False:
         print('Calculating mean reference')
-    meanref = np.zeros((512,2048),float)
-    nref = np.zeros((512,2048),int)
+    meanref = np.zeros((2048,512),float)
+    nref = np.zeros((2048,512),int)
     for i in range(nread):
-        ref = cube[2048:2560,:,i]
-
-        m = np.mean(ref[128:512-128,128:2048-128].astype(np.float64))
-        s = np.std(ref[128:512-128,128:2048-128].astype(np.float64))
-        h = np.max(ref[128:512-128,128:2048-256])
-        ref[ref>=sat] = np.nan        
+        ref = cube[:,2048:2560,i].astype(float)
+        # Calculate the relevant statistics
+        mn = np.mean(ref[128:2048-128,128:512-128])
+        std = np.std(ref[128:2048-128,128:512-128])
+        hm = np.max(ref[128:2048-128,128:512-128])
+        ref[ref>=satval] = np.nan        
         # SLICE business is just for special fast handling, ignored if
         #   not in header
         card = 'SLICE%03d' % i
-        iread = head.getval(card)
-        count = len(icard)
-        if count==0:
+        iread = head.get(card)
+        if iread is None:
             iread = i+1
         if silent==False:
-            print('reading ref: %3d %3d\r' % (i,iread))
+            print('reading ref: {:3d} {:3d}'.format(i,iread))
         # skip first read and any bad reads
-        if (iread > 1) and (m/s > snmin) and (h < hmax):
-            good, = np.where(np.isfinite(ref))
-            meanref[good] += (ref[good]-m)
+        if (iread > 1) and (mn/std > snmin) and (hm < hmax):
+            good = (np.isfinite(ref))
+            meanref[good] += (ref[good]-mn)
             nref[good] += 1
             readmask[i] = 0
         else:
-            print('Rejecting: ',i,m,s,h)
+            if silent==False:
+                print('Rejecting: ',i,mn,std,hm)
             readmask[i] = 1
-
+            
     meanref /= nref
 
     if silent == False:
         print('Reference processing ')
-
-
-#### DLN got to here
-
         
     # Create vertical and horizontal ramp images
     rows = np.arange(2048,dtype=float)
     cols = np.ones(512,dtype=int)
-    vramp = (cols.reshape(-1,1)*rows.reshape(1,-1))/2048
-    vrramp = 1-vramp
+    vramp = (rows.reshape(-1,1)*cols.reshape(1,-1))/2048
+    vrramp = 1-vramp   # reverse
     cols = np.arange(2048,dtype=float)
     rows = np.ones(2048,dtype=int)
-    hramp = (cols.reshape(-1,1)*rows.reshape(1,-1))/2048
+    hramp = (rows.reshape(-1,1)*cols.reshape(1,-1))/2048
     hrramp = 1-hramp
     clo = np.zeros(2048,float)
     chi = np.zeros(2048,float)
 
     if cds:
-        cdsref = cube[0:2048,:,1]
+        cdsref = cube[:,:2048,1]
 
     # Loop over the reads
     lastgood = nread-1
     for iread in range(nread):
 
         # Subtract mean reference array
-        red = cube[0:2048,:,iread].astype(int)
+        im = cube[:,0:2048,iread].astype(float)
 
-        ### I GOT TO HERE !!!!
-    
-        sat, = np.where(red > satval)
-        nsat = len(sat)
+        # Deal with saturated pixels
+        sat = (im > satval)
+        nsat = np.sum(sat)
         if nsat > 0:
             if iread == 0:
                 nsat0 = nsat
-            red[sat] = 65535
-            mask[sat] = (mask[sat] or maskval('SATPIX'))
-            # if we have a lot of saturated pixels, note this read (but don't do anything)
+            im[sat] = 65535
+            mask[sat] = (mask[sat] | pixelmask.getval('SATPIX'))
+            # If we have a lot of saturated pixels, note this read (but don't do anything)
             if nsat > nsat0+2000:
                 if lastgood == nread-1:
                     lastgood = iread-1
         else:
             nsat0 = 0
-        # pixels that are identically zero are bad, see these in first few reads
-        bad, = np.where(red == 0)
-        nbad = len(bad)
-        if nbad > 0:
-            mask[bad] = (mask[bad] or maskval('BADPIX'))
-        if silent==False:
-            print('Ref processing: %3d  nsat: %5d' % (iread+1,len(sat)))
-        if readmask[iread] > 0:
-            red = np.nan
-            goto,nextread
-  
             
-        # with cds keyword, subtract off first read before getting reference pixel values
+        # Pixels that are identically zero are bad, see these in first few reads
+        bad = (im == 0)
+        nbad = np.sum(bad)
+        if nbad > 0:
+            mask[bad] = (mask[bad] | pixelmask.getval('BADPIX'))
+
+        if silent==False:
+            print('Ref processing: {:3d}  nsat: {:5d}'.format(iread+1,len(sat)))
+
+        # Skip this read
+        if readmask[iread] > 0:
+            im = np.nan
+            out[:,:,iread] = im
+            if keepref:
+                refout[:,:,iread] = 0
+            continue
+
+        # With cds keyword, subtract off first read before getting reference pixel values
         if cds:
-            red -= cdsref
+            im -= cdsref.astype(int)
 
-        ref = cube[2048:2559,:,iread]
-        if indiv==1:
-            red = aprefcorr_sub(red,ref)
+        # Use the reference array information
+        ref = cube[:,2048:2560,iread].astype(int)
+        # No reference array subtraction
+        if indiv is None or indiv==0:
+            pass
+        # Subtract full reference array
+        elif indiv==1:
+            im = refcorr_sub(im,ref)
             ref -= ref
+        # Subtract median-filtered reference array
         elif indiv>1:
-            ref = aprefcorr_sub(red,median(ref,indiv))
-            ref -= np.median(ref,indiv)
+            mdref = medfilt2d(ref,[indiv,indiv])
+            im = refcorr_sub(im,mdref)
+            ref -= mdred
+        # Subtract mean reference array
         elif indiv<0:
-            red = aprefcorr_sub(red,meanref)
+            im = refcorr_sub(im,meanref)
             ref -= meanref
-  
+        
+        # Subtract vertical ramp, using edges
         if vert:
-            # Subtract vertical ramp
             for j in range(4):
-                rlo = np.nanmean(red[2:4,j*512:(j+1)*512])
-                rhi = np.nanmean(red[2045:2048,j*512:(j+1)*512])
-                red[:,j*512:(j+1)*512] -= rlo*vrramp
-                red[:,j*512:(j+1)*512] -= rhi*vramp     
-                #if keyword_set(plot):
-                #  plot,rlo*vrramp[0,:]+rhi*vramp[0,:]
-                #  print(j,rlo,rhi 
-                #  atv,cube[0:2048,:,iread]-cube[0:2048,:,1]
-                #  atv,red
-                #  import pdb; pdb.set_trace()
-                #
+                rlo = np.nanmean(im[2:4,j*512:(j+1)*512])
+                rhi = np.nanmean(im[2045:2048,j*512:(j+1)*512])
+                im[:,j*512:(j+1)*512] -= rlo*vrramp
+                im[:,j*512:(j+1)*512] -= rhi*vramp
 
-        # Subtract smoothed horizontal ramp
+        # Subtract horizontal ramp, using smoothed left/right edges
         if horz:
-            clo = np.nanmean(im[:,1:4],axis=0)
-            chi = np.nanmean(im[:,2044:2048],axis=0)
-            #clo = total(red[1:3,:],1,/nan) / ( total(finite(red[1:3,:]),1) > 1)
-            #chi = total(red[2044:2046,:],1,/nan) / ( total(finite(red[2044:2046,:]),1) > 1)
+            clo = np.nanmean(im[:,1:4],axis=1)
+            chi = np.nanmean(im[:,2044:2047],axis=1)
+            sm = 7
+            slo = utils.nanmedfilt(clo,sm)
+            shi = utils.nanmedfilt(chi,sm)
+            
+            if noflip:
+                im -= slo.reshape(-1,1)*hrramp
+                im -= shi.reshape(-1,1)*hramp
+                #red -= (rows#slo)*hrramp
+                #red -= (rows#shi)*hramp
+            else:
+                #bias = (rows#slo)*hrramp+(rows#shi)*hramp
+                # just use single bias value of minimum of left and right to avoid bad regions in one
+                bias = np.min([slo,shi],axis=0).reshape(-1,1) * np.ones((1,2048))
+                fbias = bias.copy()
+                fbias[:,512:1024] = np.flip(bias[:,512:1024],axis=1)
+                fbias[:,1536:2048] = np.flip(bias[:,1536:2048],axis=1)
+                im -= fbias
 
-        sm = 7
-        slo = medfilt(clo,sm)
-        shi = medfilt(chi,sm)
-
-        if noflip:
-            red -= (rows.reshape(-1,1)*slo.reshape(1,-1))*hrramp
-            red -= (rows.reshape(-1,1)*shi.reshape(1,-1))*hramp
-            #red -= (rows#slo)*hrramp
-            #red -= (rows#shi)*hramp
-        else:
-            #bias = (rows#slo)*hrramp+(rows#shi)*hramp
-            # just use single bias value of minimum of left and right to avoid bad regions in one
-            bias = rows.reshape(-1,1) * np.min([[slo],[shi]],axis=2).reshape(-1,1)
-            fbias = bias
-            fbias[512:1024,:] = reverse(bias[512:1024,:])
-            fbias[1536:2048,:] = reverse(bias[1536:2048,:])
-            red -= fbias
-
+        # Fix quandrant 3 issue
         if q3fix:
-            #fix=red
-            q3offset = np.zeros(2048,float)
-            for irow in range(2048):
-                q2m = np.median(red[923:1023,irow])
-                q3a = np.median(red[1024:1124,irow])
-                q3b = np.median(red[1435:1535,irow])
-                q4m = np.median(red[1536:1636,irow])
-                #fix[1024:1535,irow]+=((q2m-q3a)+(q4m-q3b))/2.
-                q3offset[irow] = ((q2m-q3a)+(q4m-q3b))/2.
-            #plot,q3offseta
-            #oplot,medfilt1d(q3offset,7,/edge),color=2
-            #red=fix
-            red[1024:1535,:] += medfilt1d(q3offset,7)##(fltarr(512)+1))
-            #atv,red,min=-200,max=200,/linear
-            #import pdb; pdb.set_trace()
+            q2m = np.median(im[:,923:1024],axis=1)
+            q3a = np.median(im[:,1024:1125],axis=1)
+            q3b = np.median(im[:,1435:1536],axis=1)
+            q4m = np.median(im[:,1536:1637],axis=1)
+            q3offset = ((q2m-q3a)+(q4m-q3b))/2.
+            im[:,1024:1536] += medfilt(q3offset,7).reshape(-1,1)*np.ones((1,512))
 
         # Make sure saturated pixels are set to 65535
         #  removing the reference values could have
         #  bumped them lower
         if nsat > 0:
-            red[sat] = 65535
+            im[sat] = 65535
 
-        #nextread:
-        #reduced[:,:,iread] = red
-        #cube[0:2048,:,iread] = red  # overwrite with the ref-subtracted image
-        out[:,:,iread] = red
+        # Stuff final values into our output arrays
+        out[:,:,iread] = im
         if keepref:
             refout[:,:,iread] = ref
 
-    # Trim off the reference array
-    #cube = cube[0:2048,:,:]
-
-    # mask the reference pixels
-    mask[0:4,:] = (mask[0:4,:] or maskval('BADPIX'))
-    mask[2044:2048,:] = (mask[2044:2048,:] or maskval('BADPIX'))
-    mask[:,0:4] = (mask[:,0:4] or maskval('BADPIX'))
-    mask[:,2044:2048] = (mask[:,2044:2048] or maskval('BADPIX'))
+    # Mask the reference pixels
+    mask[0:4,:] = (mask[0:4,:] | pixelmask.getval('BADPIX'))
+    mask[2044:2048,:] = (mask[2044:2048,:] | pixelmask.getval('BADPIX'))
+    mask[:,0:4] = (mask[:,0:4] | pixelmask.getval('BADPIX'))
+    mask[:,2044:2048] = (mask[:,2044:2048] | pixelmask.getval('BADPIX'))
 
     if silent==False:
         print('')
         print('lastgood: ',lastgood)
 
-
+    # Keep the reference array in the output
     if keepref:
-        return [out,refout]
-    else:
-        return out
+        out = np.hstack((out,refout))
 
+    return out,mask,readmask
+    
+    
 def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=None,
              persistcorr=None,persistmodelcorr=None,histcorr=None,
              flatcorr=None,crfix=True,satfix=True,rd3satfix=False,saturation=65000,
@@ -1443,7 +1458,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
   
         # Reference pixel subtraction
         #----------------------------
-        tmp = aprefcorr(cube,head,mask,readmask=readmask,q3fix=q3fix,keepref=usereference)
+        tmp = refcorr(cube,head,mask,readmask=readmask,q3fix=q3fix,keepref=usereference)
         cube = tmp
         
         bdreads2, = np.where(readmask == 1)
