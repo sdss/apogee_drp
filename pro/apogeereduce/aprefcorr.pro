@@ -201,7 +201,7 @@ for iread=0,nread-1 do begin
    ;shi = SMOOTH(chi,sm,/edge_truncate,/nan)
    slo = medfilt1d(clo,sm,/edge)
    shi = medfilt1d(chi,sm,/edge)
-
+   
    if keyword_set(plot) then begin
     plot,slo
     oplot,shi
@@ -253,7 +253,7 @@ for iread=0,nread-1 do begin
   ;cube[0:2047,*,iread] = red  ; overwrite with the ref-subtracted image
   out[*,*,iread] = red
   if keyword_set(keepref) then refout[*,*,iread] = ref
-
+  
 endfor ; read loop
 
 ; Trim off the reference array

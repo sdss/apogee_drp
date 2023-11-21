@@ -8,7 +8,7 @@
 from __future__ import print_function
 
 __authors__ = 'David Nidever <dnidever@montana.edu>'
-__version__ = '20200404'  # yyyymmdd                                                                                                                           
+__version__ = '20200404'  # yyyymmdd
 
 import os
 import sys
@@ -710,6 +710,8 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,noflip=Fals
     Translated to Python  D.Nidever  Nov 2023
     """
 
+    t0 = time.time()
+    
     # refcorr does the "bias" subtraction, using the reference array and
     #    the reference pixels. Subtract a mean reference array (or individual
     #    with /indiv), then subtract vertical ramps from each quadrant using
@@ -758,7 +760,7 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,noflip=Fals
         if iread is None:
             iread = i+1
         if silent==False:
-            print('reading ref: {:3d} {:3d}'.format(i,iread))
+            print("\rreading ref: {:3d} {:3d}".format(i,iread), end='')
         # skip first read and any bad reads
         if (iread > 1) and (mn/std > snmin) and (hm < hmax):
             good = (np.isfinite(ref))
@@ -767,13 +769,13 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,noflip=Fals
             readmask[i] = 0
         else:
             if silent==False:
-                print('Rejecting: ',i,mn,std,hm)
+                print('\nRejecting: ',i,mn,std,hm)
             readmask[i] = 1
             
     meanref /= nref
 
     if silent == False:
-        print('Reference processing ')
+        print('\nReference processing ')
         
     # Create vertical and horizontal ramp images
     rows = np.arange(2048,dtype=float)
@@ -789,11 +791,12 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,noflip=Fals
 
     if cds:
         cdsref = cube[:,:2048,1]
-
+        
     # Loop over the reads
     lastgood = nread-1
     for iread in range(nread):
-
+        # Do all operations as floats, then convert to int at the end
+        
         # Subtract mean reference array
         im = cube[:,0:2048,iread].astype(float)
 
@@ -817,18 +820,18 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,noflip=Fals
         nbad = np.sum(bad)
         if nbad > 0:
             mask[bad] = (mask[bad] | pixelmask.getval('BADPIX'))
-
+        
         if silent==False:
-            print('Ref processing: {:3d}  nsat: {:5d}'.format(iread+1,len(sat)))
+            print("\rRef processing: {:3d}  nsat: {:5d}".format(iread+1,nsat), end='')            
 
         # Skip this read
         if readmask[iread] > 0:
             im = np.nan
-            out[:,:,iread] = im
+            out[:,:,iread] = int(-1e10)   # np.nan, int cannot be NaN
             if keepref:
                 refout[:,:,iread] = 0
             continue
-
+        
         # With cds keyword, subtract off first read before getting reference pixel values
         if cds:
             im -= cdsref.astype(int)
@@ -851,28 +854,31 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,noflip=Fals
         elif indiv<0:
             im = refcorr_sub(im,meanref)
             ref -= meanref
-        
+            
         # Subtract vertical ramp, using edges
         if vert:
             for j in range(4):
                 rlo = np.nanmean(im[2:4,j*512:(j+1)*512])
-                rhi = np.nanmean(im[2045:2048,j*512:(j+1)*512])
-                im[:,j*512:(j+1)*512] -= rlo*vrramp
-                im[:,j*512:(j+1)*512] -= rhi*vramp
-
+                rhi = np.nanmean(im[2045:2047,j*512:(j+1)*512])
+                im[:,j*512:(j+1)*512] = (im[:,j*512:(j+1)*512].astype(float) - rlo*vrramp).astype(int)
+                im[:,j*512:(j+1)*512] = (im[:,j*512:(j+1)*512].astype(float) - rhi*vramp).astype(int)
+                #im[:,j*512:(j+1)*512] -= rlo*vrramp
+                #im[:,j*512:(j+1)*512] -= rhi*vramp                
+                
         # Subtract horizontal ramp, using smoothed left/right edges
         if horz:
             clo = np.nanmean(im[:,1:4],axis=1)
             chi = np.nanmean(im[:,2044:2047],axis=1)
             sm = 7
-            slo = utils.nanmedfilt(clo,sm)
-            shi = utils.nanmedfilt(chi,sm)
-            
+            slo = utils.nanmedfilt(clo,sm,mode='edgecopy')
+            shi = utils.nanmedfilt(chi,sm,mode='edgecopy')
+
+            # in the IDL code, this step converts "im" from int to float
             if noflip:
-                im -= slo.reshape(-1,1)*hrramp
-                im -= shi.reshape(-1,1)*hramp
-                #red -= (rows#slo)*hrramp
-                #red -= (rows#shi)*hramp
+                im = im.astype(float) - slo.reshape(-1,1)*hrramp
+                im = im.astype(float) - shi.reshape(-1,1)*hramp
+                #im -= slo.reshape(-1,1)*hrramp
+                #im -= shi.reshape(-1,1)*hramp                
             else:
                 #bias = (rows#slo)*hrramp+(rows#shi)*hramp
                 # just use single bias value of minimum of left and right to avoid bad regions in one
@@ -880,8 +886,9 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,noflip=Fals
                 fbias = bias.copy()
                 fbias[:,512:1024] = np.flip(bias[:,512:1024],axis=1)
                 fbias[:,1536:2048] = np.flip(bias[:,1536:2048],axis=1)
-                im -= fbias
-
+                im = im.astype(float) - fbias
+                #im -= fbias.astype(int)                
+                
         # Fix quandrant 3 issue
         if q3fix:
             q2m = np.median(im[:,923:1024],axis=1)
@@ -890,7 +897,7 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,noflip=Fals
             q4m = np.median(im[:,1536:1637],axis=1)
             q3offset = ((q2m-q3a)+(q4m-q3b))/2.
             im[:,1024:1536] += medfilt(q3offset,7).reshape(-1,1)*np.ones((1,512))
-
+            
         # Make sure saturated pixels are set to 65535
         #  removing the reference values could have
         #  bumped them lower
@@ -898,10 +905,11 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,noflip=Fals
             im[sat] = 65535
 
         # Stuff final values into our output arrays
-        out[:,:,iread] = im
+        #   and convert form float to int
+        out[:,:,iread] = im.astype(int)
         if keepref:
             refout[:,:,iread] = ref
-
+            
     # Mask the reference pixels
     mask[0:4,:] = (mask[0:4,:] | pixelmask.getval('BADPIX'))
     mask[2044:2048,:] = (mask[2044:2048,:] | pixelmask.getval('BADPIX'))
@@ -911,11 +919,11 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,noflip=Fals
     if silent==False:
         print('')
         print('lastgood: ',lastgood)
-
+        
     # Keep the reference array in the output
     if keepref:
         out = np.hstack((out,refout))
-
+        
     return out,mask,readmask
     
     

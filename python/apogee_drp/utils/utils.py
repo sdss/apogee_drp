@@ -67,6 +67,23 @@ def smooth(y, box_pts,boundary='wrap'):
                 
     return y_smooth
 
-def nanmedfilt(x,size,mode='reflect'):
-    # 1D median filtering with NaN rejectin
-    return generic_filter(x, np.nanmedian, size=size)
+def nanmedfilt(x,size,mode='reflect',check=True):
+    out = None
+    if mode=='edgecopy':
+        edgecopy = True
+        mode = 'reflect'
+    else:
+        edgecopy = False
+    # 1D median filtering with NaN rejection
+    if check:  # check if there are any NaNs in the data
+        if np.sum(~np.isfinite(x))==0:
+            out = median_filter(x, size, mode=mode)
+    # Use nan-median filter
+    if out is None:
+        out = generic_filter(x, np.nanmedian, size=size, mode=mode)
+    # "edgecopy" mode
+    if edgecopy:
+        # Copy the last "good" median value for the last and first size/2 pixels
+        out[:size//2] = out[size//2]
+        out[-size//2:] = out[-size//2-1]
+    return out

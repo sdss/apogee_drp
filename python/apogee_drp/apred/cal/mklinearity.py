@@ -104,7 +104,8 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
     lock.lock(linfile, waittime=10, unlock=unlock)
 
     # Does the file already exist?
-    if os.path.exists(linfile) and not clobber:
+    if os.path.exists(linfile) and os.stat(linfile).st_size>0 and not clobber:
+        print(linfile,' exists and clobber not set')
         return None
 
     print('Making Linearity:', frameid)
@@ -112,6 +113,7 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
     lock.lock(linfile, lock=True)
 
     # Loop over the chips
+    lines = []
     for ichip in np.arange(ichip1, ichip2 + 1):
         chip_name = chips[ichip]
 
@@ -152,9 +154,10 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
         #     os.remove(outdir + base + '.fits')
         
         # Do reference correction (assuming aprefcorr is defined)
-        tmp = ap3d.refcorr(cube, head, indiv=0, cds=True)
-        cube = tmp
-
+        out,mask,readmask = ap3d.refcorr(cube, head, indiv=0, cds=True)
+        del cube
+        cube = out
+        
         # If we have input linearity data, we will use it to test that things are working!
         if lindata is not None:
             oldcube = cube.copy()
@@ -164,7 +167,7 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
                 slcim = cube[:, iy, :]
                 slcim_out = ap3d.lincorr(slcim, lindata)
                 cube[:, iy, :] = slcim_out.reshape((2048, 1, nreads))
-
+                
         # Loop over different sections on chip
         for ix in range(0, 40, 5):
             ix1 = 24 + ix * 50
@@ -173,39 +176,52 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
                 # Counts in section
                 iy1 = 24 + iy * 50
                 iy2 = iy1 + 10
-
                 # Get median in region
                 cts = np.zeros(nreads-2, dtype=float)
                 rate = np.zeros(nreads-2, dtype=float)
                 instrate = np.zeros(nreads-2, dtype=float)
                 for i in np.arange(2, nreads, nskip):
-                    cts[i-2] = np.median(cube[ix1:ix2, iy1:iy2, i] - cube[ix1:ix2, iy1:iy2, 0])
-                    rate[i-2] = cts[i - 2] / (i - 1)
+                    cts[i-2] = np.median(cube[iy1:iy2,ix1:ix2,i].astype(float) - cube[iy1:iy2,ix1:ix2,0])
+                    rate[i-2] = cts[i-2]/(i-1)
                     # Correct to "zero" read
-                    cts[i-2] *= (i + 1) / (i - 1)
-                    instrate[i-2] = np.median(cube[ix1:ix2, iy1:iy2, i] - cube[ix1:ix2, iy1:iy2, i - 1])
+                    cts[i-2] *= (i+1)/(i-1)
+                    instrate[i-2] = np.median(cube[iy1:iy2,ix1:ix2,i].astype(float) - cube[iy1:iy2,ix1:ix2,i-1])
 
+                if ix==0 and iy==5:
+                    print('ix=0 and iy=5')
+                    import pdb; pdb.set_trace()
+                    
                 # Normalize to rate at cref DN
-                j = np.where((cts > cref - 2000) & (cts < cref + 2000))[0]
+                j = np.where((cts > cref-2000) & (cts < cref+2000))[0]
                 if len(j) > 2:
                     par = np.polyfit(cts[j], rate[j], 2)
-                    ref = par[0] + par[1] * cref + par[2] * cref ** 2
+                    ref = par[2] + par[1]*cref + par[0]*cref**2
                     for i in np.range(2, nreads, nskip):
-                        print(i, ichip, ix, iy, cts[i - 2], rate[i - 2] / ref, instrate[i - 2] / ref)
+                        data1 = (i, ichip, ix, iy, cts[i-2], rate[i-2]/ref, instrate[i-2]/ref)
+                        line1 = '{:3d} {:3d} {:5d} {:5d} {:12.4f} {:12.4f} {:12.4f}'.format(data1)
+                        lines += [line1]
+                        print(line1)
 
+
+        import pdb; pdb.set_trace()
+                    
+
+                        
     lock.lock(linfile, clear=True)
 
     # Read the linearity data
     data = np.genfromtxt(linfile, dtype=[('chip', int), ('ix', int), ('iy', int),
                                          ('cts', float), ('rate', float), ('rate2', float)])
 
-    if not lindata:
-        set_plot('PS')
-    else:
-        set_plot('X')
+    #if not lindata:
+    #    set_plot('PS')
+    #else:
+    #    set_plot('X')
     # !p.multi = [0,1,2]
-    smcolor()
-
+    #smcolor()
+    backend = matplotlib.rcParams['backend']
+    matplotlib.use('Agg')
+    
     ichip1, ichip2 = 0, 2  # Set your ichip1 and ichip2 values
 
     for ichip in range(ichip1, ichip2 + 1):
@@ -223,7 +239,7 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
                 figfile = lindir + 'plots/' + load.prefix + 'LinearityTest-' + cframeid + '_' + str(ichip) + '.png'
             else:
                 figfile = lindir + 'plots/' + load.prefix + 'Linearity-' + cframeid + '_' + str(ichip) + '.png'
-            device(file=file, encap=True, color=True, xsize=12, ysize=12, _in=True)
+            #device(file=file, encap=True, color=True, xsize=12, ysize=12, _in=True)
 
         # Plot of instantaneous rate vs counts
         plt.scatter(data['cts'][gd], data['rate2'][gd], marker='s')
@@ -251,12 +267,13 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
         for i in range(0, 36, 5):
             ind, = np.where((data['ix'][gd] == i) & (data['iy'][gd] < ymax))
             if len(ind) > 1:
-                oplot(data['cts'][gd][ind], data['rate'][gd][ind], marker='s', color=(ii % 6) + 1)
+                plt.plot(data['cts'][gd][ind], data['rate'][gd][ind], marker='s', color=(ii % 6) + 1)
             ii += 1
 
         if not lindata:
-            device(close=True)
-            ps2jpg(file, eps=True)
+            plt.savefig(figfile,bbox_inches='tight')
+            #device(close=True)
+            #ps2jpg(file, eps=True)
 
 
     # Now do the final linearity fit using all regions in chip a and non-persistence; region of chip c
@@ -286,9 +303,9 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
         figfile = lindir + 'plots/' + load.prefix + 'LinearityTest-' + cframeid + '.png'
     else:
         figfile = lindir + 'plots/' + load.prefix + 'Linearity-' + cframeid + '.png'
-    set_plot('PS')
-    device(file=file, encap=True, color=True, xsize=12, ysize=8, _in=True)
-    p.multi = [0, 0, 0]
+    #set_plot('PS')
+    #device(file=file, encap=True, color=True, xsize=12, ysize=8, _in=True)
+    #p.multi = [0, 0, 0]
 
     plt.scatter(x, y, marker='s')
     plt.ylim(0.9,1.1)
@@ -304,12 +321,13 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
         yy += par[iorder] * tmp
         tmp *= xx
     plt.plot(xx,yy,c='r',linewidth=10)
-    plt.savefig(figfile,bbox_inches='tght')
+    plt.savefig(figfile,bbox_inches='tight')
 
-    #set_plot('X')
-
+    matplotlib.use(backend)  # back to the original backend
+    
     # Commented out in the original code
-    # file_delete(lockfile, allow=True)
     lock.lock(linfile, clear=True)
 
     return par
+
+
