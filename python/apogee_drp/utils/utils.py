@@ -87,3 +87,106 @@ def nanmedfilt(x,size,mode='reflect',check=True):
         out[:size//2] = out[size//2]
         out[-size//2:] = out[-size//2-1]
     return out
+
+def median(data,axis=None,even=False,high=True,nan=False):
+    """
+    Return the median of the data.
+    This is similar to the numpy version, but it
+    does NOT average the central two values if there are
+    an even number of elements.
+
+    Parameters
+    ----------
+    data : numpy array
+       The data array to take the median of.
+    axis : int, optional
+       Take the median along this axis.
+    even : bool, optional
+       Return the average of the two central values if there
+         are an even number of elements.  Default is False.
+    high : bool, optional
+       If not averaging the two central values, then take
+         the higher value.  Default high is True.
+    nan : bool, optional
+       Ignore NaNs.  Default is False.
+
+    Returns
+    -------
+    med : float or numpy array
+       The median of the data.
+
+    Example
+    -------
+
+    med = median(data,axis=0)
+    
+    By D. Nidever  Nov 2023
+    """
+
+    # No axis
+    if axis is None:
+        iseven = data.size % 2 == 0
+    # Along axis
+    else:
+        iseven = data.shape[axis] % 2 == 0
+        
+    # Even selected or odd number of elements
+    #  use normal numpy median()
+    if even or iseven==False:
+        if nan:
+            return np.nanmedian(data,axis=axis)
+        else:
+            return np.median(data,axis=axis)
+
+    # Calculate median with no averaging of central
+    # two elements.  Use argsort() to do this
+
+    # Ignore the NaNs
+    #  np.argsort() puts NaNs at the end of the list
+    #  Use np.sum(np.isfinite()) to get the number of
+    #  finite points and adjust the indexing accordingly
+    
+    # No axis
+    if axis is None:
+        si = np.argsort(data.ravel())        
+        npts = len(si)
+        if nan:
+            npts = np.sum(np.isfinite(data))
+        half = npts // 2
+        # Pick low or high point of the two middle values        
+        if high:
+            midind = half
+        else:
+            midind = half-1
+        index = si[midind]
+        med = data.ravel()[index]
+
+    # Along axis
+    else:
+        si = np.argsort(data,axis=axis)
+        if nan:
+            npts = np.sum(np.isfinite(data),axis=axis)
+        else:
+            npts = data.shape[axis]
+        half = npts // 2
+        # Pick low or high point of the two middle values
+        if high:
+            midind = half
+        else:
+            midind = half-1
+        # Use slice object
+        slc = [slice(None)]*data.ndim   # one slice object per dimension
+        slc[axis] = midind
+        slc = tuple(slc)
+        index = si[slc]
+        # Add dimension
+        newshape = list(data.shape)
+        newshape[axis] = 1
+        index = index.reshape(newshape)
+        med = np.take_along_axis(data,index,axis=axis)
+        # Remove extra axis
+        newshape = list(data.shape)
+        del newshape[axis]
+        med = med.reshape(newshape)
+
+    return med
