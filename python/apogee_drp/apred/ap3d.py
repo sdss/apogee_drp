@@ -30,7 +30,7 @@ from scipy.interpolate import interp1d
 #from sdss_access.path import path
 import traceback
 from dlnpyutils import utils as dln,bindata
-from ..utils import plan,apload,utils,apzip,bitmask
+from ..utils import plan,apload,utils,apzip,bitmask,lock
 from . import mjdcube
 
 # Ignore these warnings, it's a bug
@@ -1061,12 +1061,12 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
     im = ap3dproc('apR-a-test3.fits','ap2D-a-test3.fits')
 
     SUBROUTINES:
-    ap3dproc_lincorr   Does the linearity correction
-    ap3dproc_darkcorr  Does the dark correction
-    ap3dproc_crfix     Detects and fixes CRs
-    ap3dproc_plotting  Plots original and fixed data for pixels
-                        affected by CRs or saturation (for debugging
-                        purposes)
+    lincorr()   Does the linearity correction
+    darkcorr()  Does the dark correction
+    crfix()     Detects and fixes CRs
+    plotting()  Plots original and fixed data for pixels
+                  affected by CRs or saturation (for debugging
+                  purposes)
 
     How this program should be run for various file types:
     DARK - detcorr, bpmcorr, crfix, satfix, uptheramp
@@ -1093,18 +1093,16 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
     -use reference pixels
     
     By D.Nidever  Jan 2010
-    translated to python by D.Nidever 2021/2022
+    translated to python by D.Nidever 2021/2022/2023
     """
-
     
     t00 = time.time()
     
     nfiles = np.char.array(files).size
     if type(files) is str:
         files = [files]
-
-    if outfile is None:
-        raise ValueError('OUTFILE must have same number of elements as FILES')
+    if type(outfile) is str:
+        outfile = [outfile] 
 
     # Default parameters
     if (nfowler is None or nfowler==0) and (uptheramp is None or uptheramp==False):      # number of reads to use at beg and end
@@ -1137,7 +1135,6 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
         print('')
     print(str(nfiles),' File(s) input')
 
-
     # File loop
     #------------
     for f in range(nfiles):
@@ -1149,61 +1146,37 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
                 print('')
             print(str(f+1),'/',str(nfiles),' Filename = ',ifile)
             print('----------------------------------')
+            
+        # If another job is working on this file, wait
+        lock.lock(outfile[f],waittime=10,unlock=unlock)
 
-        # if another job is working on this file, wait
-        if len(outfile) > 0:
-            if utils.localdir() is not None:
-                lockfile = utils.localdir()+'/'+os.path.basename((outfile[f])+'.lock')
-            else:
-                lockfile = outfile[f]+'.lock'
-            if not unlock and not clobber:
-                while os.path.exists(lockfile):
-                    print('Waiting for lockfile '+lockfile)
-                    time.sleep(10)
-            else: 
-                if os.path.exists(lockfile): 
-                    os.remove(lockfile)
+        # Test if the output file already exists
+        if (os.path.exists(outfile[f]) or os.path.exists(outfile[f]+'.fz')) and clobber==False:                    
+            if silent==False:                                    
+                print('OUTFILE = ',outfile[f],' ALREADY EXISTS. Set clobber to overwrite')                         
+                continue  
 
-            if os.path.exists(os.path.dirname(lockfile))==False:
-                os.makedirs(os.path.dirname(lockfile))
-            open(lockfile,'w').close()
-
-
-            ## Test if the output file already exists
-            #if (os.path.exists(outfile[f]) or os.path.exists(outfile[f]+'.fz')) and clobber==False:
-            #    if silent==False:
-            #        print('OUTFILE = ',outfile[f],' ALREADY EXISTS. Set clobber to overwrite')
-            #    continue
-            pass
-
-            # set lock to notify other jobs that this file is being worked on
-            #openw,lock,/get_lun,lockfile
-            #free_lun,lock
+        # Set lock to notify other jobs that this file is being worked on
+        lock.lock(outfile[f],lock=True)
 
         # Check the file
         fdir = os.path.dirname(ifile)
         base = os.path.basename(ifile)
         nbase = len(base)
-        basesplit = os.path.splitext(base)
-        extension = basesplit[-1][1:]
-        #if strmid(base,0,4) != 'apR-' or strmid(base,len-5,5) != '.fits':
-        #  error = 'FILE must be of the form >>apR-a/b/c-XXXXXXXX.fits<<'
-        #  if silent==False then print(error)
-        #  return
-        #
+        _,extension = os.path.splitext(base)
+        extension = extension[1:]  # remove leading .
 
         # Wrong extension
         if extension != 'fits' and extension != 'apz':
             error = 'FILE must have a ".fits" or ".apz" extension'
-            if silent==False:
-                print(error)
+            if silent==False: print(error)
             continue
   
         # Compressed file input
         if extension == 'apz':
             if silent==False:
                 print(ifile,' is a COMPRESSED file')
-
+                
             # Check if the decompressed file already exists
             nbase = len(base)
             if fitsdir is not None:
@@ -1211,11 +1184,11 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             else:
                 fitsfile = fdir+'/'+base[0:nbase-4]+'.fits'
                 fitsdir = None
-  
+                
             # Need to decompress
             if os.path.exists(fitsfile)==False:
                 if silent==False:
-                    print('Decompressing with APUNZIP')
+                    print('Decompressing '+ifile)
                 num = int(base[6:6+8])
                 if num < 2490000:
                     no_checksum = 1
@@ -1226,8 +1199,6 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
                     apzip.unzip(ifile,clobber=True,fitsdir=fitsdir,no_checksum=True)
                 except:
                     traceback.print_exc()
-                    print('ERROR in APUNZIP')
-                    import pdb; pdb.set_trace()
                     continue
                 print('')
                 doapunzip = True     # we ran apunzip
@@ -1239,9 +1210,9 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
                 doapunzip = False     # we didn't run apunzip
 
             ifile = fitsfile  # using the decompressed FITS from now on
-
+            
             # Cleanup by default
-            if cleanuprawfile==False and extension=='apz' and doapunzip==1:   # remove recently decompressed file
+            if cleanuprawfile==False and extension=='apz' and doapunzip:   # remove recently decompressed file
                 cleanuprawfile = True
 
         # Regular FITS file input
@@ -1250,16 +1221,13 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             doapunzip = False
  
         if silent==False:
-            if extension == 'apz' and cleanuprawfile and doapunzip == 1:
+            if extension == 'apz' and cleanuprawfile and doapunzip:
                 print('Removing recently decompressed FITS file at end of processing')
-
   
-        # Check that the file exists
+        # Double-check that the file exists
         if os.path.exists(ifile)==False:
             error = 'FILE '+ifile+' NOT FOUND'
-            if silent==False:
-                print('halt: '+error)
-            import pdb; pdb.set_trace()
+            if silent==False: print(error)
             continue
  
         # Get header
@@ -1267,11 +1235,10 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             head = fits.getheader(ifile)
         except:
             error = 'There was an error loading the HEADER for '+ifile
-            if silent==False:
-                print('halt: '+error)
-            import pdb; pdb.set_trace()
+            if silent==False: print(error)
+            traceback.print_exc()            
             continue
-  
+        
         # Check that this is a data CUBE
         naxis = head['NAXIS']
         try:
@@ -1281,25 +1248,21 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             readokay = False
         if naxis != 3 and readokay==False:
             error = 'FILE must contain a 3D DATACUBE OR image extensions'
-            if silent==False:
-                print('halt: '+error)
-            import pdb; pdb.set_trace()
+            if silent==False: print(error)
             continue
 
         # Test if the output file already exists
-        if outfile is not None:
-            if os.path.exists(outfile[f]) and clobber==False:
-                print('OUTFILE = ',outfile[f],' ALREADY EXISTS.  Set /clobber to overwrite.')
-                continue
+        if os.path.exists(outfile[f]) and clobber==False:
+            print('OUTFILE = ',outfile[f],' ALREADY EXISTS.  Set clobber to overwrite.')
+            continue
 
         # Read in the File
         #-------------------
         if os.path.exists(ifile)==False:
             error = ifile+' NOT FOUND'
-            if silent==False:
-                print('halt: '+error)
-            import pdb; pdb.set_trace()
+            if silent==False: print(error)
             continue
+        
         # DATACUBE
         if naxis==3:
             cube,head = fits.getdata(ifile,header=True)  # uint
@@ -1334,13 +1297,14 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
                 # We could make a header structure or array
             hdu.close()
 
-
         # Dimensions of the cube
         ny,nx,nreads = cube.shape
         #type = size(cube,/type)  # UINT
         chip = head.get('CHIP')
         if chip is None:
-            raise ValueError('CHIP not found in header')
+            error = 'CHIP not found in header'
+            if silent==False: print(error)
+            continue
 
         # File dimensions
         if silent==False:
@@ -1355,33 +1319,33 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             print('Only 2 READS. CANNOT do CR detection/fixing')
         if nreads == 2 and satfix and silent==False:
             print('Only 2 READS. CANNOT fix Saturated pixels')
-
+            
         # Load the detector file
         rdnoiseim,gainim,lindata = loaddetector(detcorr)
         # Load the bad pixel mask
-        if bpmcorr:
+        if bpmcorr is not None:
             bpmim,bpmhead = loadbpm(bpmcorr)
         # Load the littrow mask file
-        if littrowcorr:
+        if littrowcorr is not None:
             littrowim,littrowhead = loadlittrow(littrowcorr)
         # Load the persistence file
-        if persistcorr:
+        if persistcorr is not None:
             persistim,persisthead = loadpersist(persistcorr)
         # Load the dark cube
         darkcube,darkhead = loaddark(darkcorr)
         # Load the flat image
         flatim,flathead = loadflat(flatcorr)
-
-        # Check that it has enough reads
-        _,_,nreads_dark = darkcube.shape
+        
+        # Check that the dark has enough reads for this exposure
+        nreads_dark = darkcube.shape[2]
         if nreads_dark < nreads:
             error = 'SUPERDARK file '+darkcorr+' does not have enough READS. Have '+str(nreads_dark)+\
                     ' but need '+str(nreads)
-            raise ValueError(error)
+            if silent==False: print(error)
+            continue
 
-        if len(detcorr) > 0 or len(darkcorr) > 0 or len(flatcorr) > 0 and silent==False:
+        if detcorr is not None or darkcorr is not None or flatcorr is not None and silent==False:
             print('')
-  
   
         #---------------------
         # Check for BAD READS
@@ -1390,52 +1354,46 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             print('Checking for bad reads')
   
         # Use the reference pixels and reference output for this
-
-        import pdb; pdb.set_trace()
-    
-        if sz[1] == 2560:
-            refout1 = np.median(cube[2048:,:,0:3<(nreads-1)],dim=3)
+        if nx == 2560:
+            refout1 = np.median(cube[:,2048:,:np.minimum(3,nreads)],axis=2)
             sig_refout_arr = np.zeros(nreads,float)
             rms_refout_arr = np.zeros(nreads,float)
   
   
-        refpix1 = [[ np.median(cube[0:2048,0:3,0:4<nreads],axis=2) ], 
-                   [transpose( np.median(cube[0:4,:,0:4<nreads],axis=2) ) ],
-                   [transpose( np.median(cube[2044:2048,:,0:4<nreads],axis=2) ) ],
-                   [ median(cube[0:2048,2044:2048,0:4<(nreads-1)],axis=2) ]]
+        refpix1 = np.concatenate([np.median(cube[0:4,0:2048,:np.minimum(4,nreads)],axis=2), 
+                                  np.median(cube[:,0:4,:np.minimum(4,nreads)],axis=2).T,
+                                  np.median(cube[:,2044:2048,:np.minimum(4,nreads)],axis=2).T,
+                                  np.median(cube[2044:2048,0:2048,:np.minimum(4,nreads)],axis=2)])
         sig_refpix_arr = np.zeros(nreads,float)
         rms_refpix_arr = np.zeros(nreads,float)
 
+        # Loop over the reads
         for k in range(nreads):
-            refpix = [[cube[0:2048,0:4,k]], [transpose(cube[0:4,:,k])],
-                      [transpose(cube[2044:2048,:,k])], [cube[0:2048,2044:2048,k]]]
-            refpix = float(refpix)
+            refpix = np.concatenate([cube[0:4,0:2048,k],cube[:,0:4,k].T,
+                                     cube[:,2044:2048,k].T,cube[2044:2048,0:2048,k]]).astype(float)
   
             # The top reference pixels are normally bad
             diff_refpix = refpix - refpix1
-            sig_refpix = dln.mad(diff_refpix[:,0:11],zero=True)
-            rms_refpix = np.sqrt(np.mean(diff_refpix[:,0:11]**2))
-            
+            sig_refpix = dln.mad(diff_refpix[0:12,:],zero=True)
+            rms_refpix = np.sqrt(np.mean(diff_refpix[0:12,:]**2))
             sig_refpix_arr[k] = sig_refpix
             rms_refpix_arr[k] = rms_refpix
   
             # Using reference pixel output (5th output)
-            if sz[1] == 2560:
-                refout = float(cube[2048:,:,k])
-  
+            if nx == 2560:
+                refout = cube[:,2048:,k].astype(float)
                 # The top and bottom are bad
                 diff_refout = refout - refout1
-                sig_refout = dln.mad(diff_refout[:,100:1950],zero=True)
-                rms_refout = np.sqrt(np.mean(diff_refout[:,100:1950]**2))
-                
+                sig_refout = dln.mad(diff_refout[100:1951,:],zero=True)
+                rms_refout = np.sqrt(np.mean(diff_refout[100:1951,:]**2))
                 sig_refout_arr[k] = sig_refout
                 rms_refout_arr[k] = rms_refout
-
+                
         # Use reference output and pixels
-        if sz[1] == 2560:
+        if nx == 2560:
             if nreads>2:
-                med_rms_refpix_arr = medfilt(rms_refpix_arr,11<nreads)
-                med_rms_refout_arr = medfilt(rms_refout_arr,11<nreads)
+                med_rms_refpix_arr = utils.nanmedfilt(rms_refpix_arr,np.minimum(11,nreads),mode='edgecopy')
+                med_rms_refout_arr = utils.nanmedfilt(rms_refout_arr,np.minimum(11,nreads),mode='edgecopy')
             else:
                 med_rms_refpix_arr = np.zeros(nreads,float)+np.median(rms_refpix_arr)
                 med_rms_refout_arr = np.zeros(nreads,float)+np.median(rms_refout_arr)
@@ -1448,7 +1406,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
         # Only use reference pixels
         else:
             if nreads > 2:
-                med_rms_refpix_arr = medfilt(rms_refpix_arr,11<nreads)
+                med_rms_refpix_arr = utils.nanmedfilt(rms_refpix_arr,np.minimum(11,nreads),mode='edgecopy')
             else:
                 med_rms_refpix_arr = np.zeros(nreads,float)+np.median(rms_refpix_arr)
                 
@@ -1457,17 +1415,19 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             nbdreads = len(bdreads)
     
         if nbdreads == 0:
-            bdreads = None
+            bdreads = []
         
         # Too many bad reads
         if nreads-nbdreads < 2:
             raise ValueError('ONLY '+str(nreads-nbdreads)+' good reads.  Need at least 2.')
 
-  
+        import pdb; pdb.set_trace()
+        
         # Reference pixel subtraction
         #----------------------------
-        tmp = refcorr(cube,head,mask,readmask=readmask,q3fix=q3fix,keepref=usereference)
-        cube = tmp
+        out,mask,readmask = refcorr(cube,head,q3fix=q3fix,keepref=usereference)
+        cube = out
+        del out
         
         bdreads2, = np.where(readmask == 1)
         nbdreads2 = len(bdreads2)
@@ -1479,7 +1439,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
             raise ValueError('Not enough good reads')
 
         gdreads = np.arange(nreads)
-        REMOVE,bdreads,gdreads
+        gdreads = np.delete(gdreads,bdreads)
         ngdreads = len(gdreads)
 
         # Interpolate bad reads
@@ -1554,7 +1514,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
   
         # READ NOISE
         #-----------
-        if rdnoiseim.shape>0:
+        if rdnoiseim is not None:
             noise = np.median(rdnoiseim)
         else:
             noise = 12.0  # default value
@@ -2527,16 +2487,23 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,littrowcorr=N
 
 def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=False):
     """
-    This program processes all of the APOGEE RAW datacubes for
-    a single night.
+    This program processe raw APOGEE datacubes.
 
     Parameters
     ----------
-    planfiles  Input list of plate plan files
-    apred      
-    /verbose  Print a lot of information to the screen
-    /stp      Stop at the end of the prrogram
-    /unlock      Delete lock file and start fresh
+    planfiles : str
+       Input list of plate plan files
+    verbose : bool, optional
+       Print a lot of information to the screen.  Default is False.
+    rogue : bool, optional
+       Run Holtzman's "rogue" reduction code.  Default is False.
+    clobber : bool, optional
+       Overwrite any existing files.  Default is False.
+    refonly : bool, optional
+       Only do reference subtraction of the cube and return.
+         This is used for creating superdarks.  Default is False.
+    unlock : bool, optional
+       Delete lock file and start fresh.  Default is False.
 
     Returns
     -------
@@ -2546,7 +2513,7 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
     Example
     -------
 
-    ap3d(planfiles,'apred')
+    ap3d(planfiles)
 
     Written by D.Nidever  Feb. 2010
     Modifications J. Holtzman 2011+
@@ -2813,10 +2780,10 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 #if os.path.exists(outfile) and clobber==False:
                 #    print(outfile,' exists already and clobber not set')
                 #    continue
-
+                
                 # PROCESS the file
                 #-------------------
-                ap3dproc(chfile,outfile,cleanuprawfile=1,verbose=verbose,clobber=clobber,
+                ap3dproc(chfile,outfile,cleanuprawfile=True,verbose=verbose,clobber=clobber,
                          logfile=logfile,q3fix=q3fix,maxread=maxread,fitsdir=fitsdir,
                          usereference=usereference,refonly=refonly,seq=seq,unlock=unlock,**kws)
 

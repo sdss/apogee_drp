@@ -1340,7 +1340,7 @@ print,'no_checksum: ', no_checksum
              [ median(cube[0:2047,2044:2047,0:3<(nreads-1)],dim=3) ]]
   sig_refpix_arr = fltarr(nreads)
   rms_refpix_arr = fltarr(nreads)
-  
+
   for k=0,nreads-1 do begin
   
     refpix = [[cube[0:2047,0:3,k]], [transpose(cube[0:3,*,k])],$
