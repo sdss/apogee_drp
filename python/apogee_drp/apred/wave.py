@@ -1652,9 +1652,11 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
         # SDSS-V FPS
         if fps:
             configid = p['plateid']
-            configgrp = '{:0>4d}XX'.format(int(configid) // 100)
-            plugdir = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/'
-            plugmap = yanny.yanny(plugdir+'confSummary-'+str(configid)+'.par')
+            #configgrp = '{:0>4d}XX'.format(int(configid) // 100)
+            #plugdir = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/'
+            #plugmapfile = plugdir+'confSummary-'+str(configid)+'.par'
+            plugmapfile = load.filename('confSummary',configid=int(configid))
+            plugmap = yanny.yanny(plugmapfile)
             skyind = np.where(((np.char.array(plugmap['FIBERMAP']['category']).upper() == 'SKY_APOGEE') | 
                                (np.char.array(plugmap['FIBERMAP']['category']).upper() == 'SKY_BOSS')) & 
                               (np.array(plugmap['FIBERMAP']['spectrographId']) == 2) &
