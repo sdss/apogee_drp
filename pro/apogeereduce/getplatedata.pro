@@ -257,15 +257,34 @@ if keyword_set(obj1m) then begin
   planfile = apogee_filename('Plan',plate=plate,reduction=objid,mjd=mjd)
 endif else begin
   if long(mjd) ge 59556 then begin  ;; FPS
-    ;; get fieldid from confSummary file
-    ;; at least 6 characters (0036XX), but potentially more 10036XX
-    if plate gt 999999 then begin
-      configgrp = string(plate/100,format='(I0)')+'XX'
-    endif else begin
-      configgrp = string(plate/100,format='(I04)')+'XX'
-    endelse 
-    plugdir = getenv('SDSSCORE_DIR')+'/'+observatory+'/summary_files/'+configgrp+'/'
-    configfile = 'confSummary-'+strtrim(plate,2)+'.par'     
+    ;;;; get fieldid from confSummary file
+    ;;;; at least 6 characters (0036XX), but potentially more 10036XX
+    ;;if plate gt 999999 then begin
+    ;;  configgrp = string(plate/100,format='(I0)')+'XX'
+    ;;endif else begin
+    ;;  configgrp = string(plate/100,format='(I04)')+'XX'
+    ;;endelse 
+    ;;plugdir = getenv('SDSSCORE_DIR')+'/'+observatory+'/summary_files/'+configgrp+'/'
+    ;;configfile = 'confSummary-'+strtrim(plate,2)+'.par'
+
+    ;; Use python code to get the confSummary file
+    temp = MKTEMP('cfgfl',outdir='/tmp/')
+    cmd = '#!/usr/bin/env python'
+    push,cmd,'from apogee_drp.utils import apload'
+    push,cmd,'load = apload.ApLoad(apred="'+dirs.apred+'",telescope="'+dirs.telescope+'")'
+    push,cmd,'filename = load.filename("confSummary",configid='+strtrim(plate,2)+')'
+    push,cmd,'with open("'+temp+'.txt","w") as f:'
+    push,cmd,'    f.write(filename+"\n")'
+    writeline,temp+'.py',cmd
+    file_chmod,temp+'.py','755'o
+    spawn,temp+'.py',/noshell
+    if file_test(temp+'.txt') eq 0 then begin
+      print,'Problem getting the confSummary filename'
+      return
+    endif
+    readline,temp+'.txt',configfile
+    configfile = configfile[0]
+    file_delete,[temp+'.py',temp+'.txt'],/allow
     readline,plugdir+configfile,configlines
     ind = where(stregex(configlines,'field_id',/boolean) eq 1,nind)
     fieldid = (strsplit(configlines[ind[0]],/extract))[1]
