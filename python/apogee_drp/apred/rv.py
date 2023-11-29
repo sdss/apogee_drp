@@ -219,7 +219,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     starvisits.add_column(rv_components)
     rvtab = Column(name='rvtab',dtype=Table,length=len(starvisits))
     starvisits.add_column(rvtab)
-
+    
     # Run Doppler with dorv() on the good visits
     try:
         dopsumstr,dopvisitstr,gaussout = dorv(starvisits,starver,clobber=clobber,verbose=verbose,tweak=tweak,
@@ -228,7 +228,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     except:
         logger.info('Doppler failed for {:s}'.format(star))
         raise
-
 
     # Now load the Doppler results
     visits = []
@@ -386,7 +385,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Run QA code to make final plot and HTML page
     qa.apStarPlots(objid=star,apred=apred,telescope=telescope)
     qa.makeStarHTML(objid=star,apred=apred,telescope=telescope) 
-
+    
     return
 
 

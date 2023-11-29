@@ -2562,7 +2562,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     # Get the visit files for this star and telescope from the database
     db = apogeedb.DBSession()
     cols = 'v.apogee_id,v.plate,v.field,v.mjd,v.glon,v.glat,v.gaiadr2_pmra,v.gaiadr2_pmdec,v.gaiadr2_gmag'
-    cols += ',v.ra,v.dec,v.jmag,v.hmag,v.kmag,v.jd,v.fiberid,v.snr,rv.vrad,rv.rv_teff,rv.rv_logg,rv.rv_feh'
+    cols += ',v.ra,v.dec,v.jmag,v.hmag,v.kmag,v.jd,v.fiberid,v.snr,rv.vrad,rv.rv_teff,rv.rv_logg,rv.rv_feh,rv.starver'
     sql = "select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "
     sql += "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"'"    
     if objid is None:
@@ -2575,11 +2575,21 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
             sql += " and v.mjd="+str(mjd)+" and rv.starver='"+str(mjd)+"'"
     allv = db.query(sql=sql)
     db.close()
-    # Sometimes "field" has leading spaces                                                                                     
+
+    # Only keep the starver that we want
+    if mjd is None:
+        starver = np.max(allv['starver'].astype(int)).astype(str)
+        ind, = np.where(allv['starver']==starver)
+        allv = allv[ind]
+    
+    # Sometimes "field" has leading spaces          
     allv['field'] = np.char.array(allv['field']).strip()
     nfiber = len(allv)
     cnfiber = str(nfiber)
 
+    if objid is not None:
+        nfiber = 1
+        cnfiber = '1'
     
     ## Get visit info from allVisit
     #if allv1 == None:
@@ -2613,8 +2623,11 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
 
         if obj == '2MNone' or obj == '2M' or obj == '' or obj == None or obj == 'None': continue
 
-        print("----> makeStarHTML:   making html for " + obj + " (" + str(j+1) + "/" + cnfiber + ")")
-
+        if objid is None:
+            print("----> makeStarHTML:   making html for " + obj + " (" + str(j+1) + "/" + cnfiber + ")")
+        else:
+            print("----> makeStarHTML:   making html for " + obj)            
+            
         # Find the associated html directories; make them if they don't already exist
         apStarPath = load.filename('Star', obj=obj)
         starDir = os.path.dirname(apStarPath)+'/'
@@ -3012,7 +3025,10 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
     db.close()
     # Sometimes "field" has leading spaces                                                                                     
     allv['field'] = np.char.array(allv['field']).strip()
-    nfiber = len(allv)
+    if objid is None:
+        nfiber = len(allv)
+    else:
+        nfiber = 1
     cnfiber = str(nfiber)
     
     ## Get visit info from allVisit    
@@ -3710,7 +3726,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         nlogsN = len(logsN)
         hemN = np.full(nlogsN, 'N').astype(str)
         print("----> makeMasterQApages: Found "+str(nlogsN)+" APOGEE-N log files.")
-        mjdN = np.empty(nlogsN)
+        mjdN = np.empty(nlogsN,int)
         for i in range(nlogsN): mjdN[i] = int(os.path.basename(logsN[i]).split('.')[0])
 
 
@@ -3720,7 +3736,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         logsS = np.array([f for f in logfilesS if os.path.exists(f)])
         nlogsS = len(logsS)
         hemS = np.full(nlogsS, 'S').astype(str)
-        mjdS = np.empty(nlogsS)
+        mjdS = np.empty(nlogsS,int)
         for i in range(nlogsS): mjdS[i] = int(os.path.basename(logsS[i]).split('.')[0])
         g, = np.where(mjdS > 59808)
         mdirsS = np.array(mdirsS)[g]
@@ -3782,10 +3798,20 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         html.write('<TABLE BORDER=2 CLASS=sortable>\n')
         html.write('<TR bgcolor="#eaeded"><TH>(1)<BR>Date <TH>(2)<BR>Observer Log <TH>(3)<BR>Exposure Log <TH>(4)<BR>Raw Data <TH>(5)<BR>Night QA')
         html.write('<TH>(6)<BR>Visit QA <TH>(7)<BR>Spectra Plots <TH>(8)Nsky, Ntel, Nsci <TH>(9)<BR>Summary Files <TH>(10)<BR>Moon<BR>Phase\n')
+
+        # Get all yaml and apQA files
+        print('Getting all yaml and apQA files')
+        allplatePlanFiles = np.char.array(glob.glob(apodir+apred+'/visit/??o25m/*/*/*/a?Plan-*.yaml'))
+        allplateQAFiles = np.char.array(glob.glob(apodir+apred+'/visit/??o25m/*/*/*/html/a?QA-*.html'))
+
+        print(nmjd,' nights')
+        fivepercent = int(np.round(nmjd/20))
         for i in range(nmjd):
+            # print % status, in 5% increments
+            if i % fivepercent == 0: print('{:3d}% done'.format((i//fivepercent)*5))
             fps = False
             if mjd[i] > 59556: fps = True
-
+            
             cmjd = str(int(round(mjd[i])))
             tt = Time(mjd[i], format='mjd')
             date = tt.fits[0:10]
@@ -3838,15 +3864,25 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
 
             html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
             html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
-
+            
             # Column 5: Night QA
-            platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/'+prefix+'Plan-*'+cmjd+'.yaml'
-            platePlanFiles = np.array(glob.glob(platePlanPaths))
+            ind, = np.where((allplatePlanFiles.find(cmjd)>-1) & (allplatePlanFiles.find(telescope)>-1))
+            if len(ind)>0:
+                platePlanFiles = allplatePlanFiles[ind]
+            else:
+                platePlanFiles = []
+            #platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/'+prefix+'Plan-*'+cmjd+'.yaml'
+            #platePlanFiles = np.array(glob.glob(platePlanPaths))
             nplatesall = len(platePlanFiles)
-
-            plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/'+prefix+'QA-*'+cmjd+'.html'
-            plateQAfiles = np.array(glob.glob(plateQApaths))
-            nplates = len(plateQAfiles)
+            
+            ind, = np.where((allplateQAFiles.find(cmjd)>-1) & (allplateQAFiles.find(telescope)>-1))
+            if len(ind)>0:
+                plateQAFiles = allplateQAFiles[ind]
+            else:
+                plateQAFiles = []
+            #plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/'+prefix+'QA-*'+cmjd+'.html'
+            #plateQAfiles = np.array(glob.glob(plateQApaths))
+            nplates = len(plateQAFiles)
             if nplates >= 1:
                 html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
             else:
@@ -3897,6 +3933,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
                             html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') '+plate+': '+field+'</FONT>\n')
 
             # Column 8: Number of skies, telluric, and science targets.
+            #  this is slow because it has to load the PlateSum files from disk
             html.write('<TD align="left">')
             if nobj > 0 and nplatesall == 0:
                 html.write('<FONT COLOR="red">Reduction failed!!!</FONT>\n')
@@ -3930,7 +3967,6 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
                             html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT><BR>\n')
                         else:
                             html.write('<FONT COLOR="black">('+str(j+1).rjust(2)+') </FONT>\n')
-
 
             # Column 7: Combined files for this night
             #html.write('<TD>\n')
@@ -4123,7 +4159,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
                     ilon[i] = str("%.6f" % round(c_icrs.galactic.l.deg,6))
                     ilat[i] = str("%.6f" % round(c_icrs.galactic.b.deg,6))
 
-            if os.path.exists(platesumfile) is False:
+            if os.path.exists(platesumfile) == False:
                 tmp = glob.glob(platesumfile.replace('None','*'))
                 if len(tmp) > 0: 
                     platesumfile = tmp[0]
@@ -4317,13 +4353,13 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
     if instrument == 'apogee-s': prefix = 'as'
 
     outfile = load.filename('QAcal', mjd=mjd)
-    if (os.path.exists(outfile) is False) | (clobber is True):
+    if (os.path.exists(outfile) == False) | (clobber == True):
         print("--------------------------------------------------------------------")
         print("Running MAKECALFITS for MJD " + mjd)
         print(outfile)
 
         # Make directory if it doesn't exist
-        if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
+        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile))
 
         n_exposures = len(ims)
 
@@ -4472,11 +4508,11 @@ def makeDarkFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
     if instrument == 'apogee-s': prefix = 'as'
 
     outfile = load.filename('QAcal', mjd=mjd).replace('QAcal','QAdarkflat')
-    if (os.path.exists(outfile) is False) | (clobber is True):
+    if (os.path.exists(outfile) == False) | (clobber == True):
         print("--------------------------------------------------------------------")
         print("Running MAKEDARKFITS for MJD "+mjd)
 
-        if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
+        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile))
 
         n_exposures = len(ims)
 
@@ -4558,11 +4594,11 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
 
     expdir = apodir + apred + '/exposures/' + instrument + '/' + mjd + '/'
     outfile = expdir + mjd + 'exp.fits'
-    if (os.path.exists(outfile) is False) | (clobber is True):
+    if (os.path.exists(outfile) == False) | (clobber == True):
         print("--------------------------------------------------------------------")
         print("Running MAKEEXPFITS for MJD "+mjd)
 
-        if os.path.exists(os.path.dirname(outfile)) is False: os.makedirs(os.path.dirname(outfile))
+        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile))
 
         ims = glob.glob(rawdir + prefix+'R-a-*')
         ims.sort()
