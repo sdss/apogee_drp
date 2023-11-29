@@ -90,7 +90,6 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0):
         # Turning this off improves q3c queries
         sql = 'set enable_seqscan=off; '+sql
 
-
     # Do the query
     data = db.query(sql=sql,fmt="table")
 

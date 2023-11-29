@@ -131,13 +131,20 @@ def register_date_typecasters(connection):
 
 class DBSession(object):
 
-    def __init__(self):
+    def __init__(self,host='pipelines'):
         """ Initialize the database session object. The connection is opened."""
+        self.host = host
+        if host=='operations':
+            self.dbhost = 'operations.sdss.org'
+        elif host=='pipelines':
+            self.dbhost = 'pipelines.sdss.org'
+        else:
+            raise ValueError(str(host)+' not supported')
         self.open()
 
     def open(self):
         """ Open the database connection."""
-        connection = pg.connect(user="sdss",host="operations.sdss.org",
+        connection = pg.connect(user="",host=self.dbhost,
                                 password="",port = "5432",database = "sdss5db")
         self.connection = connection
 
@@ -264,7 +271,7 @@ class DBSession(object):
 
         # SQL command input
         else:
-
+            
             # Execute the command
             if verbose:
                 print('CMD = '+sql)
