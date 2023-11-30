@@ -776,6 +776,8 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
             hdu[4].header['EXTNAME'] = 'WAVELENGTH'
             hdu.append(fits.ImageHDU(newchippars[ichip,:,:]))   # wave coefficients
             hdu[5].header['EXTNAME'] = 'WAVEPARS'
+            hdu.append(fits.table_to_hdu(linestr))              # FPI 2-fiber lines table
+            hdu[6].header['EXTNAME'] = 'FPITABLE'
             hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
             hdu.close()
             
