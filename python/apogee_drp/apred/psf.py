@@ -1485,14 +1485,6 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
                 outmask[i,fibers[bad]] = maskval['NOT_ENOUGH_PSF'] | badmasked[bad,i]
             # put the warning bits into the mask
             outmask[i,fibers] = outmask[i,fibers] | warnmasked[:,i]
-
-            if i==1000:
-                import pdb; pdb.set_trace()
-
-            # Is "fibers" is fiberIndex!
-            # The EPSF only has 298 fibers,
-            # so fiberID=180 is fiberIndex=120 and that's one of the two missing
-            # why is it missing??
             
         # No good fibers for this column
         else:
@@ -1502,8 +1494,6 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
 
         if doback:
             back[i] = x[ngood-1]
-
-    import pdb; pdb.set_trace()
             
     # Catch any NaNs (shouldn't be there, but ....)
     bad = ~np.isfinite(spec)
