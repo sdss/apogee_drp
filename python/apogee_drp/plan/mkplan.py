@@ -1015,7 +1015,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         flux = []
         fluxpluggroup = []
         logger.info('No apFlux files exist')
-        
+
     if len(psfdome)==0 and len(psfquartz)==0:
         logger.info('No apPSF files for this night exist.  They will be created as needed')
     if len(flux)==0:
