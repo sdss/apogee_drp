@@ -218,6 +218,8 @@ for ichip=0,n_elements(chips)-1 do begin
   sxaddhist,leadstr+info.user_name+' on '+info.machine_name,head0
   sxaddhist,leadstr+'IDL '+!version.release+' '+!version.os+' '+!version.arch,head0
   sxaddhist,leadstr+' APOGEE Reduction Pipeline Version: '+getvers(),head0
+  sxaddpar,head0,'V_APRED',getgitvers(),'apogee software version'
+  sxaddpar,head0,'APRED',getvers(),'apogee reduction version'
   MWRFITS,0,darkdir+'/'+file+'.fits',head0,/create
   MKHDR,head1,dark
   sxaddpar,head1,'EXTNAME','DARK'

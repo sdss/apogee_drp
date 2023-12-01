@@ -90,6 +90,9 @@ pro mkpersist,persistid,dark,flat,cmjd=cmjd,darkid=darkid,flatid=flatid,$
     bad = where(rz gt thresh,nbad)
     if nbad gt 0 then persist[bad]=1
     file = apogee_filename('Persist',num=persistid,chip=chip[ichip])
+    MKHDR,head,persist
+    sxaddpar,head,'V_APRED',getgitvers(),'apogee software version'
+    sxaddpar,head,'APRED',getvers(),'apogee reduction version'
     MWRFITS,persist,file,/create
     MWRFITS,rz,file
   endfor

@@ -87,6 +87,8 @@ pro mkdet,detid,linid,unlock=unlock
    rn = [r[ichip],r[ichip],r[ichip],r[ichip]]*gain
    file = apogee_filename('Detector',num=detid,chip=chips[ichip])
    mkhdr,head,0
+   sxaddpar,head,'V_APRED',getgitvers(),'apogee software version'
+   sxaddpar,head,'APRED',getvers(),'apogee reduction version'   
    MWRFITS,0,file,head,/create
    MKHDR,head1,rn
    sxaddpar,head1,'EXTNAME','READNOISE'

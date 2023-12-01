@@ -262,7 +262,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         # Save the results
         #-----------------
         print('  Writing new FPI wavelength information to '+fpiwavefile)
-        save_fpiwave(fpiwavefile,mjd5,fpinum1,fpiwcoef,fpiwaves,fpilinestr,fpilines)
+        save_fpiwave(fpiwavefile,mjd5,fpinum1,fpiwcoef,fpiwaves,fpilinestr,fpilines,apred=apred)
         # table of FPI lines data: chip, gauss center, Gaussian parameters, wavelength, flux
         # wavelength coefficients
         # wavelength array??
@@ -547,7 +547,7 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True,doplot=False):
 
     return newwcoef,newwaves,fpilines
     
-def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines):
+def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines,apred='daily'):
     """
     Save the FPI wavelength information
     outfile: output file name (with no chip tag in name)
@@ -571,6 +571,8 @@ def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines):
         hdu[0].header['COMMENT'] = 'HDU#2 : wavelength calibration array [300,2048]'
         hdu[0].header['COMMENT'] = 'HDU#3 : table of unique FPI lines and wavelengths'
         hdu[0].header['COMMENT'] = 'HDU#4 : table of full-frame FPI line measurements'
+        hdu[0].header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
+        hdu[0].header['APRED'] = (apred, 'APOGEE reduction version')
         hdu.append(fits.ImageHDU(fpiwcoef[ichip,:,:]))
         hdu[1].header['COMMENT'] = 'Wavelength calibration parameters [5,300]'
         hdu[1].header['EXTNAME'] = 'WAVEPARS'
@@ -766,6 +768,8 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
         for ichip,chip in enumerate(chips) :
             hdu = fits.HDUList()
             hdu.append(frame[chip][0])           # header
+            hdu[0].header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
+            hdu[0].header['APRED'] = (load.apred, 'APOGEE reduction version')
             hdu.append(frame[chip][1])           # flux
             hdu[1].header['EXTNAME'] = 'FLUX'
             hdu.append(frame[chip][2])           # err

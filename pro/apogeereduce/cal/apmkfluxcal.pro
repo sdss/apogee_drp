@@ -231,6 +231,7 @@ sz = size(frame.(0).flux)
 npix = sz[1]
 nfibers = sz[2]
 
+stop
 
 ;; What type of lamp is it
 exptype = sxpar(frame.(0).header,'EXPTYPE',count=nexptype)
@@ -474,7 +475,9 @@ For i=0,2 do begin
     sxaddhist,leadstr+line2,head
   endif else sxaddhist,leadstr+line,head
   sxaddhist,'LAMPTYPE='+exptype,head
-
+  sxaddpar,head,'V_APRED',getgitvers(),'apogee software version'
+  sxaddpar,head,'APRED',getvers(),'apogee reduction version'
+  
   ;; HDU0 - header only
   FITS_WRITE,outfile,0,head,/no_abort     ; write the header
   ;; HDU1 - flux calibration

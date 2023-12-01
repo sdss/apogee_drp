@@ -171,6 +171,10 @@ pro mkfpipeaks,ims,clobber=clobber
     outfile = 'fpi_peaks-'+obstag+'.fits'
     print,'Writing to ',outfile
     MWRFITS,peakstr,outfile,/create
+    head0 = headfits(outfile,exten=0)
+    sxaddpar,head0,'V_APRED',getgitvers(),'apogee software version'
+    sxaddpar,head0,'APRED',getvers(),'apogee reduction version'
+    MODFITS,outfile,0,head0
     
     stop
     

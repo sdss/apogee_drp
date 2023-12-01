@@ -85,6 +85,8 @@ pro mklittrow,littrowid,darkid=darkid,flatid=flatid,sparseid=sparseid,$
   sxaddhist,leadstr+'IDL '+!version.release+' '+!version.os+' '+!version.arch,head
   sxaddhist,leadstr+' APOGEE Reduction Pipeline Version: '+getvers(),head
   sxaddpar,head,'EXTNAME','LITTROW MASK'
+  sxaddpar,head,'V_APRED',getgitvers(),'apogee software version'
+  sxaddpar,head,'APRED',getvers(),'apogee reduction version'
   MWRFITS,litt,file,head,/create
 
   ;; Move PSFs to littrow directory since they are not a standard PSF!

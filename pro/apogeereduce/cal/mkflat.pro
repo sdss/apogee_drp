@@ -226,6 +226,8 @@ pro mkflat,ims,cmjd=cmjd,darkid=darkid,clobber=clobber,kludge=kludge,nrep=nrep,d
     sxaddhist,leadstr+info.user_name+' on '+info.machine_name,head0
     sxaddhist,leadstr+'IDL '+!version.release+' '+!version.os+' '+!version.arch,head0
     sxaddhist,leadstr+' APOGEE Reduction Pipeline Version: '+getvers(),head0
+    sxaddpar,head0,'V_APRED',getgitvers(),'apogee software version'
+    sxaddpar,head0,'APRED',getvers(),'apogee reduction version'
     MWRFITS,0,file,head0,/create
     MKHDR,head1,flat,/image
     sxaddpar,head1,'EXTNAME','FLAT'
