@@ -231,7 +231,6 @@ sz = size(frame.(0).flux)
 npix = sz[1]
 nfibers = sz[2]
 
-
 ;; What type of lamp is it
 exptype = sxpar(frame.(0).header,'EXPTYPE',count=nexptype)
 if nexptype eq 0 then exptype = 'UNKNOWN'
@@ -354,6 +353,8 @@ ENDCASE
 ;----------------------------------------
 
 ;; Loop through the chips
+allfluxcal = fltarr(2048,300,3)
+allthru = fltarr(300,3)
 For i=0,2 do begin
   flux = frame.(i).flux
 
@@ -437,13 +438,15 @@ For i=0,2 do begin
 
   ;; Keep the flux calibration images
   fluxcal = sm_ratio
-  ; Calculate the throughput
+  allfluxcal[*,*,i] = fluxcal
+  ;; Calculate the throughput
   thru = median(sm_ratio,dim=1)
   thru /= median(thru)
+  allthru[*,i] = thru
   ;; Plotting
   if keyword_set(pl) then $
     displayc,sm_ratio,/z,xtit='X',ytit='Y',tit='Relative Flux Calibration for Chip '+chiptag[i]
-
+  
   ;; Output the Flux calibration to file
   ;;-------------------------------------
   ;;outfile = addslash(outdir)+dirs.prefix+'Flux-'+strtrim(info[0].mjd5,2)+'-'+info[0].fid8+'.fits'
@@ -474,7 +477,9 @@ For i=0,2 do begin
     sxaddhist,leadstr+line2,head
   endif else sxaddhist,leadstr+line,head
   sxaddhist,'LAMPTYPE='+exptype,head
-
+  sxaddpar,head,'V_APRED',getgitvers(),'apogee software version'
+  sxaddpar,head,'APRED',getvers(),'apogee reduction version'
+  
   ;; HDU0 - header only
   FITS_WRITE,outfile,0,head,/no_abort     ; write the header
   ;; HDU1 - flux calibration
@@ -485,7 +490,8 @@ For i=0,2 do begin
   sxaddpar,head1,'BUNIT','Relative Flux'
   if exptype eq 'BLACKBODY' and keyword_set(absolute) then $
     sxaddpar,head1,'BUNIT','Absolute Flux (ergs/cm2/s/A)'
-  MWRFITS,fluxcal,outfile,head1,/silent   ; Flux calibration array
+  sxaddpar,head1,'EXTNAME','RELATIVE FLUX'
+  MWRFITS,fluxcal,outfile,head1,/silent ; Flux calibration array
   ;; HDU2 - throughput
   MKHDR,head2,thru,/image
   sxaddpar,head2,'CTYPE1','Fiber'
@@ -511,6 +517,36 @@ For i=0,2 do begin
   MWRFITS,refspec0[*,i],outfile,head4,/silent    
 
 Endfor ; chip loop
+
+;; Check missing fibers
+;;  sometimes fibers will be missing in some chips but not others
+;;  this can cause "jumps" in the spectra because the flux corrections
+;;   are "missing" for some chips
+fmed = fltarr(300,3)
+for i=0,2 do fmed[*,i] = median(frame.(i).flux,dim=1)
+goodchip = total(fmed ne 0,2,/integer)
+fiberstofix = where(goodchip lt 3 and goodchip gt 0,nfiberstofix)
+if nfiberstofix gt 0 then $
+  print,'Fixing ',strtrim(nfiberstofix,2),' fibers that have missing chips: ',strjoin(strtrim(fiberstofix,2),',')
+for i=0,nfiberstofix-1 do begin
+  ifiber = fiberstofix[i]
+  gdchip = where(fmed[ifiber,*] ne 0,ngdchip)
+  bdchip = where(fmed[ifiber,*] eq 0,nbdchip)
+  medfluxcal = median([allfluxcal[*,ifiber,gdchip]])
+  allthru[ifiber,bdchip] = medfluxcal
+  for j=0,nbdchip-1 do begin
+    allfluxcal[*,ifiber,bdchip[j]] *= medfluxcal/median(allfluxcal[*,ifiber,bdchip[j]])
+  endfor
+endfor
+if nfiberstofix gt 0 then begin
+  for i=0,2 do begin
+    outfile = addslash(outdir)+dirs.prefix+'Flux-'+chiptag[i]+'-'+info[0].fid8+'.fits'
+    header1 = headfits(outfile,exten=1)
+    MODFITS,outfile,allfluxcal[*,*,i],header1,exten_no=1
+    header2 = headfits(outfile,exten=2)
+    MODFITS,outfile,allthru[*,i],header2,exten_no=2    
+  endfor
+endif
 
 print,''
 print,'APMKFLUXCAL Finished'
