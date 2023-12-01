@@ -1,7 +1,12 @@
 import os
+import numpy as np
+from astropy.io import fits
+from ..utils import apload,lock,plan
 import subprocess
 
-def mkmodelpsf(modelpsf, sparseid=None, psfid=None, clobber=False, unlock=False):
+
+def mkmodelpsf(modelpsf,apred='daily',telescope='apo25m',sparseid=None,
+               psfid=None,clobber=False,unlock=False):
     """
     Procedure to make an APOGEE model PSF master calibration file.
     This is a wrapper around the python mkmodelpsf program.
@@ -32,13 +37,14 @@ def mkmodelpsf(modelpsf, sparseid=None, psfid=None, clobber=False, unlock=False)
     if not isinstance(name, str):
         name = str(modelpsf[0])
 
-    dirs = getdir(apodir, caldir, spectrodir, vers)
+    load = apload.ApLoad(apred=apred,telescope=telescops)
+    #dirs = getdir(apodir, caldir, spectrodir, vers)
     psfdir = apogee_filename('PSFModel', num=name, chip='a', dir=True)
     file = dirs.prefix + "PSFModel-" + str(name).zfill(8)
     psffile = os.path.join(psfdir, file)
 
     # If another process is alreadying make this file, wait!
-    aplock(psffile, waittime=10, unlock=unlock)
+    lock.lock(psffile, waittime=10, unlock=unlock)
 
     # Does product already exist?
     # check all three chip files
@@ -59,7 +65,7 @@ def mkmodelpsf(modelpsf, sparseid=None, psfid=None, clobber=False, unlock=False)
 
     print('Making modelpsf:', modelpsf)
     # Open .lock file
-    aplock(psffile, lock=True)
+    lock.lock(psffile, lock=True)
 
     # New Python version! 
     cmd = ['mkmodelpsf',str(modelpsf).strip(),str(sparseid).strip(),
@@ -73,4 +79,4 @@ def mkmodelpsf(modelpsf, sparseid=None, psfid=None, clobber=False, unlock=False)
         openw, lock, lun = True, False, 0  # Assuming these are functions you've defined elsewhere
         free_lun(lock)
 
-    aplock(psffile, clear=True)
+    lock.lock(psffile, clear=True)

@@ -2,10 +2,11 @@ import os
 import time
 import numpy as np
 from astropy.io import fits
-from ..utils import apload,lock
+from ..utils import apload,lock,plan
 from . import process
 
-def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
+def mkdark(ims,apred='daily',telescope='apo25m',mjd=None,step=None,
+           psfid=None,clobber=False,unlock=False):
     """
     Makes APOGEE superdark calibration product.
 
@@ -238,16 +239,27 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
         head['HISTORY'] = leadstr+'Python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
         # add reduction pipeline version to the header
         head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+load.apred
-        MWRFITS(0, os.path.join(darkdir, file + '.fits'), head0, create=True)
-        MKHDR(head1, dark)
-        sxaddpar(head1, 'EXTNAME', 'DARK')
-        MWRFITS(dark, os.path.join(darkdir, file + '.fits'), head1)
-        MKHDR(head2, chi2)
-        sxaddpar(head2, 'EXTNAME', 'CHI-SQUARED')
-        MWRFITS(chi2, os.path.join(darkdir, file + '.fits'), head2)
-        MKHDR(head3, mask)
-        sxaddpar(head3, 'EXTNAME', 'MASK')
-        MWRFITS(mask, os.path.join(darkdir, file + '.fits'), head3)
+        head['V_APRED'] = plan.getgitvers(),'APOGEE software version' 
+        head['APRED'] = load.apred,'APOGEE Reduction version'
+        hdu = fits.HDUList()
+        hdu.append(fits.PrimaryHDU(header=head))
+        hdu.append(fits.ImageHDU(dark))
+        hdu[1].header['EXTNAME'] = 'DARK'
+        hdu.append(fits.ImageHDU(chi))
+        hdu[2].header['EXTNAME'] = 'CHI-SQUARED'        
+        hdu.append(fits.ImageHDU(mask))
+        hdu[3].header['EXTNAME'] = 'MASK'
+        hdu.writeto(outfile,overwrite=True)
+        #MWRFITS(0, os.path.join(darkdir, file + '.fits'), head0, create=True)
+        #MKHDR(head1, dark)
+        #sxaddpar(head1, 'EXTNAME', 'DARK')
+        #MWRFITS(dark, os.path.join(darkdir, file + '.fits'), head1)
+        #MKHDR(head2, chi2)
+        #sxaddpar(head2, 'EXTNAME', 'CHI-SQUARED')
+        #MWRFITS(chi2, os.path.join(darkdir, file + '.fits'), head2)
+        #MKHDR(head3, mask)
+        #sxaddpar(head3, 'EXTNAME', 'MASK')
+        #MWRFITS(mask, os.path.join(darkdir, file + '.fits'), head3)
 
         # Make some plots/images
         if not os.path.exists(os.path.join(darkdir, 'plots')):

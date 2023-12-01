@@ -1,6 +1,10 @@
 import os
+import numpy as np
+from astropy.io import fits
+from ..utils import apload,plan
 
-def mktelluric(tellid, clobber=False, nowait=False, unlock=False):
+def mktelluric(tellid, apred='daily', telescope='apo25m',
+               clobber=False, nowait=False, unlock=False):
     """
     Procedure to make an APOGEE daily telluric calibration file.
 
@@ -24,7 +28,8 @@ def mktelluric(tellid, clobber=False, nowait=False, unlock=False):
 
     Made from mkwave.pro by D.Nidever, March 2022
     """
-    
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
     name = str(tellid).zfill(2)
     dirs = getdir(apodir, caldir, spectrodir, vers)
     telldir = apogee_filename('Telluric', num=0, chip='a', dir=True)

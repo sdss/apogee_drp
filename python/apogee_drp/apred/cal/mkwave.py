@@ -3,8 +3,10 @@ import subprocess
 import numpy as np
 from astropy.io import fits
 from scipy.signal import medfilt2d
+from ..utils import plan,apload
 
-def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
+def mkwave(waveid, apred='daily', telescope='apo25m', name=None,
+           arkid=None, flatid=None, psfid=None,
            modelpsf=None, fiberid=None, clobber=False, nowait=False,
            nofit=False, unlock=False, plot=False):
     """
@@ -45,6 +47,7 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
     if name is None:
         name = str(waveid[0])
 
+    load = apload.ApLoad(apred=apred,telescope=telescope)
     dirs = getdir(apodir, caldir, spectrodir, vers)
     wavedir = apogee_filename('Wave', num=name, chip='a', dir=True)
     file = os.path.join(dirs.prefix, f"Wave-{name:08d}")

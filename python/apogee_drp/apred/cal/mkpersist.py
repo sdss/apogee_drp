@@ -1,7 +1,10 @@
 import os
 import numpy as np
+from astropy.io import fits
+from ..utils import apload,lock,plan
 
-def mkpersist(persistid, dark, flat, cmjd=None, darkid=None, flatid=None,
+def mkpersist(persistid, apred='daily', telescope='apo25m', dark=None,
+              flat=None, mjd=None, darkid=None, flatid=None,
               sparseid=None, fiberid=None, clobber=False, thresh=0.1, unlock=False):
     """
     Procedure to make an APOGEE persistence calibration file from
@@ -38,14 +41,16 @@ def mkpersist(persistid, dark, flat, cmjd=None, darkid=None, flatid=None,
     if thresh is None:
         thresh = 0.1
 
-    dirs = getdir()
+    chips = ['a','b','c']        
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    #dirs = getdir()
 
-    perdir = apogee_filename('Persist', num=persistid, chip='c', dir=True)
-    file = apogee_filename('Persist', num=persistid, chip='c', base=True)
-    perfile = os.path.join(perdir, file)
+    perdir = load.filename('Persist', num=persistid, chip='c', dir=True)
+    file = load.filename('Persist', num=persistid, chip='c', base=True)
+    lockfile = os.path.join(perdir, file)
 
     # If another process is alreadying making this file, wait!
-    aplock(perfile, waittime=10, unlock=unlock)
+    lock.lock(lockfile, waittime=10, unlock=unlock)
 
     # Does product already exist?
     # check all three chip files
@@ -63,9 +68,9 @@ def mkpersist(persistid, dark, flat, cmjd=None, darkid=None, flatid=None,
             os.remove(file)
 
     # Open .lock file
-    aplock(perfile, lock=True)
+    lock.lock(lockfile, lock=True)
 
-    if cmjd is not None:
+    if mjd is not None:
         d = approcess([dark, flat], cmjd=cmjd, darkid=darkid, flatid=flatid, psfid=psfid, nfs=1,
                       doap3dproc=True, unlock=unlock)
     else:
@@ -77,6 +82,7 @@ def mkpersist(persistid, dark, flat, cmjd=None, darkid=None, flatid=None,
 
     # Write out an integer mask
     for ichip in range(3):
+        chip = chips[ichip]
         persist = np.zeros((2048, 2048), dtype=int)
         r = d[ichip].flux / f[ichip].flux
         bad = np.where((d[ichip].mask & badmask()) | (f[ichip].mask & badmask()))
@@ -89,9 +95,18 @@ def mkpersist(persistid, dark, flat, cmjd=None, darkid=None, flatid=None,
         persist[bad] = 2
         bad = np.where(rz > thresh)
         persist[bad] = 1
-        file = apogee_filename('Persist', num=persistid, chip=chip[ichip])
-        MWRFITS(persist, file, create=True)
-        MWRFITS(rz, file)
+        outfile = apogee_filename('Persist', num=persistid, chips=True)
+        outfile = outfile.replace('Persis-','Persist-'+chip+'-')
+        hdu = fits.HDUList()
+        hdu.append(fits.PrimaryHDU())
+        hdu[0].header['V_APRED'] = plan.getgitvers(),'APOGEE software version' 
+        hdu[0].header['APRED'] = load.apred,'APOGEE Reduction version' 
+        hdu.append(fits.ImageHDU(persist))
+        hdu[1].header['EXTNAME'] = 'PERSIST'
+        hdu.append(fits.ImageHDU(rz))
+        hdu[1].header['EXTNAME'] = 'PERSRATE'
+        hdu.writeto(outfile,overwrite=True)
+        #MWRFITS(persist, file, create=True)
+        #MWRFITS(rz, file)
 
-    file = apogee_filename('Persist', num=persistid, chip='c', base=True)
-    aplock(perfile, clear=True)
+    lock.lock(lockfile, clear=True)

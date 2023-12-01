@@ -1,5 +1,6 @@
 import os
 import numpy as np
+from . import plan
 from .utils import lock,apload
 
 def mkbpm(bpmid, apred='daily', telescope='apo25m', darkid=None, flatid=None, badrow=None,
@@ -99,11 +100,13 @@ def mkbpm(bpmid, apred='daily', telescope='apo25m', darkid=None, flatid=None, ba
                 if row.chip == ichip:
                     mask[:, row.row] = mask[:, row.row] | maskval('BADPIX')
 
-        file = load.filename('BPM', chip=chip, num=bpmid)
-        head1 = MRDFITS(file, 0, header=True)
-        head1['EXTNAME'] = 'BPM'
-        MKHDR(head1, mask)
-        SXADDPAR(head1, 'EXTNAME', 'BPM')
-        MWRFITS(mask, file, head1, create=True)
-
+        outfile = load.filename('BPM', num=bpmidf, chips=True)
+        outfile = outfile.replace('BPM-','BPM-'+chip+'-')
+        hdu = fits.HDUList()
+        hdu.append(fits.PrimaryHDU(mask))
+        hdu[0].header['EXTNAME'] = 'BPM'
+        hdu[0].header['V_APRED'] = plan.getgitvers(),'APOGEE software version' 
+        hdu[0].header['APRED'] = load.apred,'APOGEE Reduction version' 
+        hdu.writeto(outfile,overwrite=True)
+        
     lock.unlock(lockfile, clear=True)

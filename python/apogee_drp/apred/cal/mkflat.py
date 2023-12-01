@@ -3,8 +3,10 @@ import time
 import numpy as np
 from scipy.signal import medfilt
 from scipy.ndimage import uniform_filter
+from ..utils import apload,lock,plan
 
-def mkflat(ims, cmjd=None, darkid=None, clobber=False, kludge=False, nrep=None,
+def mkflat(ims, apred='daily', telescope='apo25m', mjd=None, darkid=None,
+           clobber=False, kludge=False, nrep=None,
            dithered=False, unlock=False):
     """
     Makes APOGEE superflat calibration files from dithered individual frames.
@@ -39,12 +41,13 @@ def mkflat(ims, cmjd=None, darkid=None, clobber=False, kludge=False, nrep=None,
     if nrep is None:
         nrep = 1
 
-    dirs = getdir(apodir, caldir, specdir, apovers, libdir, datadir=datadir)
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    #dirs = getdir(apodir, caldir, specdir, apovers, libdir, datadir=datadir)
 
     flatdir = apogee_filename('Flat', num=i1, chip='c', _dir=True)
     flatfile = os.path.join(flatdir, dirs.prefix + f"Flat-{i1:08}.tab")
     # Is another process already creating file?
-    aplock(flatfile, waittime=10, unlock=unlock)
+    lock.lock(flatfile, waittime=10, unlock=unlock)
 
     # Does the file already exist?
     # check all three chip files
@@ -61,7 +64,7 @@ def mkflat(ims, cmjd=None, darkid=None, clobber=False, kludge=False, nrep=None,
             os.remove(file)
 
     # Open lock file
-    aplock(flatfile, lock=True)
+    lock.lock(flatfile, lock=True)
 
     dt = [('name',str,100), ('num',int), ('nframes',int)]
     flatlog = np.zeros(3,dtype=np.dtype(dt))
@@ -232,16 +235,27 @@ def mkflat(ims, cmjd=None, darkid=None, clobber=False, kludge=False, nrep=None,
         head['HISTORY'] = leadstr+'Python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
         # add reduction pipeline version to the header
         head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+load.apred
-        MWRFITS(0, file, head0, create=True)
-        MKHDR(head1, flat, image=True)
-        sxaddpar(head1, 'EXTNAME', 'FLAT')
-        MWRFITS(flat, file, head1)
-        MKHDR(head2, sflat, image=True)
-        sxaddpar(head2, 'EXTNAME', 'SPECTRAL FLAT')
-        MWRFITS(sflat, file, head2)
-        MKHDR(head3, mask, image=True)
-        sxaddpar(head3, 'EXTNAME', 'MASK')
-        MWRFITS(mask, file, head3)
+        hdu = fits.HDUList()
+        hdu.append(fits.PrimaryHDU(header=head))
+        hdu[0].header['V_APRED'] = plan.getgitvers(),'APOGEE software version' 
+        hdu[0].header['APRED'] = load.apred,'APOGEE Reduction version' 
+        hdu.append(fits.ImageHDU(flat))
+        hdu[1].header['EXTNAME'] = 'FLAT'
+        hdu.append(fits.ImageHDU(slat))
+        hdu[2].header['EXTNAME'] = 'SPECTRAL FLAT')        
+        hdu.append(fits.ImageHDU(mask))
+        hdu[3].header['EXTNAME'] = 'MASK'
+        hdu.writeto(outfile,overwrite=True)
+        #MWRFITS(0, file, head0, create=True)
+        #MKHDR(head1, flat, image=True)
+        #sxaddpar(head1, 'EXTNAME', 'FLAT')
+        #MWRFITS(flat, file, head1)
+        #MKHDR(head2, sflat, image=True)
+        #sxaddpar(head2, 'EXTNAME', 'SPECTRAL FLAT')
+        #MWRFITS(sflat, file, head2)
+        #MKHDR(head3, mask, image=True)
+        #sxaddpar(head3, 'EXTNAME', 'MASK')
+        #MWRFITS(mask, file, head3)
 
         # Make a jpg of the flat
         if not os.path.exists(flatdir + 'plots'):
@@ -256,7 +270,7 @@ def mkflat(ims, cmjd=None, darkid=None, clobber=False, kludge=False, nrep=None,
     MWRFITS(flatlog, flatdir + file, create=True)
 
     # Remove lock file
-    aplock(flatfile, clear=True)
+    lock.lock(flatfile, clear=True)
 
     # Compile summary web page (Python equivalent)
-    FLATHTML(flatdir)
+    flathtml(flatdir)

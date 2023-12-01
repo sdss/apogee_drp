@@ -2,7 +2,7 @@ import os
 import numpy as np
 from astropy.io import fits
 from . import mklinearity
-from ...utils import apload,lock
+from ...utils import apload,lock,plan
 
 def mkdet(detid,apred='daily',telescope='apo25m',linid=None,
           unlock=False,clobber=False):
@@ -103,7 +103,9 @@ def mkdet(detid,apred='daily',telescope='apo25m',linid=None,
         # Create FITS headers and write the data to files
         hdulist = fits.HDUList()
         hdulist.append(fits.PrimaryHDU())
-        hdulist.append(fits.PrimaryHDU(rn))
+        hdulist[0].header['V_APRED'] = plan.getgitvers(),'APOGEE software version' 
+        hdulist[0].header['APRED'] = load.apred,'APOGEE Reduction version'
+        hdulist.append(fits.ImageHDU(rn))
         hdulist[1].header['EXTNAME'] = 'READNOISE'
         hdulist.append(fits.ImageHDU(gain))
         hdulist[2].header['EXTNAME'] = 'GAIN'

@@ -3,8 +3,10 @@ import numpy as np
 from astropy.io import fits
 from astropy.io.fits import Header
 from scipy.ndimage import median_filter
+from ..utils import apload,lock,plan
 
-def mklittrow(littrowid, darkid=None, flatid=None, sparseid=None, fiberid=None, clobber=False,
+def mklittrow(littrowid, apred='daily', telescope='apo25m', darkid=None,
+              flatid=None, sparseid=None, fiberid=None, clobber=False,
               cmjd=None, unlock=None):
     """
     Procedure to derive the APOGEE Littrow calibration file.
@@ -34,7 +36,8 @@ def mklittrow(littrowid, darkid=None, flatid=None, sparseid=None, fiberid=None, 
     Added doc strings, updates to use data model  D. Nidever, Sep 2020 
     """
 
-    dirs = getdir()
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    #dirs = getdir()
     caldir = dirs.caldir
 
     litdir = apogee_filename('Littrow', num=littrowid, chip='b', dir=True)
@@ -43,7 +46,7 @@ def mklittrow(littrowid, darkid=None, flatid=None, sparseid=None, fiberid=None, 
     litfile = apogee_filename('Littrow', num=littrowid, chip='b', base=True)
 
     # If another process is already making this file, wait!
-    aplock(litfile, waittime=10, unlock=unlock)
+    lock.lock(litfile, waittime=10, unlock=unlock)
 
     # Does product already exist? We only use the 'b' detector file
     if os.path.exists(litfile) and not clobber:
@@ -55,7 +58,7 @@ def mklittrow(littrowid, darkid=None, flatid=None, sparseid=None, fiberid=None, 
         if os.path.exists(file_path):
             os.remove(file_path)
     # Open .lock file
-    aplock(litfile, lock=True)
+    lock.lock(litfile, lock=True)
 
     # Make empirical PSF with broader smoothing in columns so that Littrow ghost is not incorporated as much
     mkpsf(littrowid, darkid=darkid, flatid=flatid, sparseid=sparseid, fiberid=fiberid,
@@ -98,7 +101,10 @@ def mklittrow(littrowid, darkid=None, flatid=None, sparseid=None, fiberid=None, 
     sxaddhist(leadstr + 'Python ' + sys.version, head)
     sxaddhist(leadstr + 'APOGEE Reduction Pipeline Version: ' + getvers(), head)
 
-    hdu = fits.PrimaryHDU(data=litt, header=head)
+    hdu = fits.HDUList()
+    hdu.append(fits.PrimaryHDU(litt,head))
+    hdu[0].header['V_APRED'] = plan.getgitvers(),'APOGEE software version' 
+    hdu[0].header['APRED'] = load.apred,'APOGEE Reduction version' 
     hdu.writeto(file_path, overwrite=True)
 
     # Move PSFs to the littrow directory since they are not a standard PSF

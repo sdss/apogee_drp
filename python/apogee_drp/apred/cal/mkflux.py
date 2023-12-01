@@ -2,8 +2,9 @@ import os
 import time
 import numpy as np
 from astropy.io import fits
+from ..utils import plan
 
-def mkflux(ims, cmjd=None, darkid=None, flatid=None, psfid=None, modelpsf=None,
+def mkflux(ims, apred, telescope, cmjd=None, darkid=None, flatid=None, psfid=None, modelpsf=None,
            waveid=None, littrowid=None, persistid=None, clobber=False,
            onedclobber=False, bbtemp=None, plate=0, plugid=None, holtz=False,
            temp=None, unlock=False):
@@ -39,7 +40,7 @@ def mkflux(ims, cmjd=None, darkid=None, flatid=None, psfid=None, modelpsf=None,
       Added doc strings, updates to use data model  D. Nidever, Sep 2020 
     """
 
-    
+    load = apload.ApLoad(apred=apred,telescope=telescope)
     dirs = getdir(apodir, caldir, spectrodir, vers)
     caldir = dirs.caldir
 
@@ -204,7 +205,9 @@ def mkflux(ims, cmjd=None, darkid=None, flatid=None, psfid=None, modelpsf=None,
             head['HISTORY'] = leadstr+'Python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
             # add reduction pipeline version to the header
             head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+load.apred
-            file = apogee_filename('Response', num=ims[0], chip=chipos[i], base=True, nochip=True)
+            head['V_APRED'] = plan.getgitvers(),'APOGEE software version'
+	    head['APRED'] = load.apred,'APOGEE Reduction version'
+            outfile = apogee_filename('Response', num=ims[0], chip=chipos[i], base=True, nochip=True)
             MWRFITS(bbflux / flux, os.path.join(fluxdir, file), head)
 
         # Remove lock file
