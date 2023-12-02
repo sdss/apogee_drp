@@ -299,7 +299,7 @@ def fitlines(frame,rows=np.arange(300),chips=['a','b','c'],verbose=False):
             else:
                 if verbose:
                     print(chip,f,0,' lines')
-
+                    
     return linestr
 
 
@@ -381,7 +381,7 @@ def getfpiwave(fpilines,wcoef,fpipeaks,verbose=True):
                 print('%3s %8s %10.4f %11.4f %11.4f %11.4f %8.4f %5d' % (chip,str(i+1)+'/'+str(len(ind)),
                       fpilinestr1['x'][i],fpilinestr1['height'][i],fpilinestr1['flux'][i],
                       fpilinestr1['wave'][i],fpilinestr1['wsig'][i],fpilinestr1['nfiber'][i]))
-
+                
         # stuff back into large structure
         fpilinestr[ind] = fpilinestr1
         fpilines[lineind] = fpilines1
@@ -404,7 +404,7 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True,doplot=False):
         # chip loop
         #  not entirely necessary, but speeds up the where statements a bit
         for ichip,chip in enumerate(['a','b','c']):
-            ind, = np.where(fpilinestr['chip']==chip)
+            ind, = np.where(fpilinestr['chip']==chip)  # unique lines for this chip
             fpilinestr1 = fpilinestr[ind]
             lineind, = np.where(fpilines['chip']==chip)
             fpilines1 = fpilines[lineind]
@@ -414,6 +414,23 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True,doplot=False):
                     fpilines1['linewave'][ind1] = fpilinestr1['wave'][i]
                     fpilines1['lineid'][ind1] = fpilinestr1['id'][i]
             fpilines[lineind] = fpilines1
+
+        # Check for duplicate LineIDs per row
+        for i,row in enumerate(np.unique(fpilines['row'])):
+            ind, = np.where(fpilines['row']==row)
+            index = dln.create_index(fpilines['lineid'][ind].data)
+            bad, = np.where(index['num']>1)
+            #if len(bad)>0:
+            #    print('row: ',row,' nbad: ',len(bad))
+            for j,b in enumerate(bad):
+                badrow = index['value'][b]
+                ind1 = index['index'][index['lo'][b]:index['hi'][b]+1]
+                wdiff = fpilines['wave'][ind[ind1]] - fpilines['linewave'][ind[ind1]]
+                si = np.argsort(np.abs(wdiff))
+                # only keep the first one, set the others to "bad"
+                #  the bad ones will be removed below
+                fpilines['lineid'][ind[ind1[si[1:]]]] = -1
+                fpilines['linewave'][ind[ind1[si[1:]]]] = 999999.
             
     # Prune out lines that had unsuccessful fits or no mean wavelength
     bd, = np.where((fpilines['success']==False) | (fpilines['lineid']==-1))
