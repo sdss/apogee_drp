@@ -293,7 +293,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     node_index = dln.create_index(tasks['node'])    
     tasknum = 0
     inventory = []
-    for i in range(nodes):
+    for i in range(len(node_index['value'])):
         nind = node_index['index'][node_index['lo'][i]:node_index['hi'][i]+1]
         nind = np.sort(nind)
         node = node_index['value'][i]
