@@ -1575,7 +1575,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logger.info('No master Dark calibration files to make')
         # Give each job LOTS of memory
         slurmpars1 = slurmpars.copy()
-        slurmpars1['nodes'] = 2
+        slurmpars1['nodes'] = np.minimum(slurmpars1['nodes'],2)
         slurmpars1['cpus'] = 4
         #slurmpars1['memory'] = 20000  # in MB
         logger.info('Slurm settings: '+str(slurmpars1))
