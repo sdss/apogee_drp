@@ -285,7 +285,7 @@ endif else begin
     readline,temp+'.txt',configfile
     configfile = configfile[0]
     file_delete,[temp+'.py',temp+'.txt'],/allow
-    readline,plugdir+configfile,configlines
+    readline,configfile,configlines
     ind = where(stregex(configlines,'field_id',/boolean) eq 1,nind)
     fieldid = (strsplit(configlines[ind[0]],/extract))[1]
     planfile = apogee_filename('Plan',plate=plate,mjd=mjd,field=strtrim(fieldid,2))
