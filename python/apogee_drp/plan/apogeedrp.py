@@ -1577,7 +1577,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         slurmpars1 = slurmpars.copy()
         slurmpars1['nodes'] = np.minimum(slurmpars1['nodes'],2)
         slurmpars1['cpus'] = 4
-        #slurmpars1['memory'] = 20000  # in MB
+        slurmpars1['memory'] = 55000  # in MB
         logger.info('Slurm settings: '+str(slurmpars1))
         dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(darkdict),dtype=np.dtype(dt))
