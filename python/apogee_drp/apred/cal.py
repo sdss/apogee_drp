@@ -148,7 +148,10 @@ def darkplot(apred='r14',telescope='apo25m'):
     try: os.makedirs(darkdir)
     except: pass
     files = np.sort(glob.glob(darkdir+'/'+prefix+'Dark-a-*.fits'))
-
+    if len(files)==0:
+        print('No Dark files found')
+        return
+    
     ny = len(files)//2
     if ny==0: ny=1
     fig,ax = plots.multi(2,3,hspace=0.001,wspace=0.001,figsize=(8,12))
