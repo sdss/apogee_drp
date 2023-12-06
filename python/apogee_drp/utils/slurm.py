@@ -230,7 +230,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
             ppn = 64
         #memory = np.minimum(memory,7500)
         if memory>7500:
-            print(memory,' is a lot of memory.  You might hit the memory limit.')
+            logger.info(str(memory)+' is a lot of memory.  You might hit the limit.')
     slurmpars = {'nodes':nodes, 'alloc':alloc, 'ppn':ppn, 'qos':qos, 'shared':shared,
                  'cpus':cpus, 'walltime':walltime, 'notification':False}
 
