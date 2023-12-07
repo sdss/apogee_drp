@@ -286,7 +286,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   ;;--------------------------------
   if keyword_set(modelpsf) and (not keyword_set(fpi) and not keyword_set(flux) and not keyword_set(wave)) then begin
     print,'makecal modelpsf: ',modelpsf
-    if modelpsf gt 0 then begin
+    if modelpsf gt 1 or size(modelpsf,/type) eq 7 then begin 
       file = apogee_filename('PSFModel',num=modelpsf,chip='c')
       psfdir = file_dirname(file)
       spsfid = strtrim(modelpsf,2)
