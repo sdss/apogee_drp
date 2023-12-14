@@ -367,6 +367,14 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         else:
             plugmjd = tplugid.split('-')[1]
             plugdir = mapper_data+'/'+plugmjd+'/'
+
+        # Rare cases where the plugmap exists in the data directory but NOT in the mapper directory
+        if os.path.exists(plugdir+'/'+plugfile)==False:
+            if os.path.exists(datadir+'/'+str(mjd)+'/'+plugfile.replace('MapM','MapA'))==True:
+                print('Cannot find plPlugMapM file in mapper directory.  Using plPlugMapA file in data directory instead.')
+                plugdir = datadir+'/'+str(mjd)+'/'
+                root = 'plPlugMapA'
+                plugfile = plugfile.replace('MapM','MapA')
             
     # Does the plugfile exist? If so, load it
     if os.path.exists(plugdir+'/'+plugfile):
