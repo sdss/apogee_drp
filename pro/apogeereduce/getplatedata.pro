@@ -407,6 +407,15 @@ if keyword_set(mapa) then plugdir=datadir+cmjd+'/' else begin
   plugmjd = tmp[1]
   plugdir = mapper_data+'/'+plugmjd+'/'
 endelse
+;; Rare cases where the plugmap exists in the data directory but NOT in the mapper directory                          
+if file_test(plugdir+'/'+plugfile) eq 0 then begin
+  if file_test(datadir+cmjd+'/'+repstr(plugfile,'MapM','MapA')) eq 1 then begin
+    print,'Cannot find plPlugMapM file in mapper directory.  Using plPlugMapA file in data directory instead.'
+    plugdir = datadir+cmjd+'/'
+    root = 'plPlugMapA'
+    plugfile = repstr(plugfile,'MapM','MapA')
+ endif
+endif
 if keyword_set(fps) then begin
   ;; at least 6 characters (0036XX), but potentially more 10036XX
   if plate gt 999999 then begin
