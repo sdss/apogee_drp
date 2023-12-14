@@ -280,7 +280,7 @@ endif else begin
     spawn,temp+'.py',/noshell
     if file_test(temp+'.txt') eq 0 then begin
       print,'Problem getting the confSummary filename'
-      return
+      return,-1
     endif
     readline,temp+'.txt',configfile
     configfile = configfile[0]
