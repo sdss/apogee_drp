@@ -427,6 +427,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     #  if that happens, retry
     scount = 0
     success = False
+    res = None
     while (success==False) and (scount < 5):
         if scount>0:
             logger.info('Trying to submit to SLURM again')
