@@ -427,8 +427,8 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     #  if that happens, retry
     scount = 0
     success = False
-    res = None
-    while (success==False) and (scount < 5):
+    res = ''
+    while (success==False) and (scount < 10):
         if scount>0:
             logger.info('Trying to submit to SLURM again')
         try:
@@ -439,7 +439,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
             success = False
             tb = traceback.format_exc()
             logger.info(tb)
-            time.sleep(10)
+            time.sleep(60)
         scount += 1
     os.chdir(curdir)   # move back
     if type(res)==bytes: res = res.decode()
