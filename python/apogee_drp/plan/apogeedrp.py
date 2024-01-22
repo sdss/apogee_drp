@@ -2607,9 +2607,6 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     if len(ind1)==0:
                         logger.info(str(m)+' No Flux calibration products')
                         continue
-                    # Multiple exposures, pick two
-                    if len(ind1)>2:
-                        ind1 = ind1[0:2]
                     ind = np.append(ind,ind1)
                     logger.info(str(m)+' '+','.join(expinfo['num'][ind1].astype(str)))
                 ncal = len(ind)
