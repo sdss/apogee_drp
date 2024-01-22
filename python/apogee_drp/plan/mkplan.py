@@ -1282,6 +1282,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         planfiles.append(planfile)
     # "extra" frames information
     if len(extra)>0:
+        # sometimes there is no cal dict, need to check for lsfpsfid, calfluxid
         extraplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                      'plate':0, 'psfid':calpsfid, 'fluxid':str(calfluxid), 'ims':extra, 'fps':fps,
                      'extra':True}
