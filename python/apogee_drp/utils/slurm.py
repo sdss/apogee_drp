@@ -230,7 +230,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
             ppn = 64
         #memory = np.minimum(memory,7500)
         if memory>7500:
-            logger.info(str(memory)+' is a lot of memory.  You might hit the limit.')
+            logger.info(str(memory)+' is a lot of memory.  You may hit the limit.')
     slurmpars = {'nodes':nodes, 'alloc':alloc, 'ppn':ppn, 'qos':qos, 'shared':shared,
                  'cpus':cpus, 'walltime':walltime, 'notification':False}
 
@@ -427,7 +427,8 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     #  if that happens, retry
     scount = 0
     success = False
-    while (success==False) and (scount < 5):
+    res = ''
+    while (success==False) and (scount < 30):
         if scount>0:
             logger.info('Trying to submit to SLURM again')
         try:
@@ -438,7 +439,12 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
             success = False
             tb = traceback.format_exc()
             logger.info(tb)
-            time.sleep(10)
+            if scount<10:
+                time.sleep(60)    # 1 min wait time
+            elif scount>=10 and scount<20:
+                time.sleep(300)   # 5 min wait time
+            else:
+                time.sleep(1800)  # 30 min wait time       
         scount += 1
     os.chdir(curdir)   # move back
     if type(res)==bytes: res = res.decode()
