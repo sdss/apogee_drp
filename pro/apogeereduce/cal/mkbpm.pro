@@ -85,6 +85,10 @@ pro mkbpm,bpmid,darkid=darkid,flatid=flatid,badrow=badrow,clobber=clobber,unlock
    file = apogee_filename('BPM',chip=chip,num=bpmid)
    MKHDR,head1,mask
    sxaddpar,head1,'EXTNAME','BPM'
+   sxaddpar,head1,'V_APRED',getgitvers(),'apogee software version'
+   sxaddpar,head1,'APRED',getvers(),'apogee reduction version'
+   sxaddpar,head1,'V_APRED',getgitvers(),'apogee software version'
+   sxaddpar,head1,'APRED',getvers(),'apogee reduction version'
    MWRFITS,mask,file,head1,/create
  endfor
 
