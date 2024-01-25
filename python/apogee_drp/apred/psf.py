@@ -477,6 +477,7 @@ class PSF(object):
         hdu[0].header['TYPE'] = self.kind
         hdu[0].header['LOG'] = self._log
         hdu[0].header['COMMENT'] = 'Data (log)'
+        hdu[0].header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
         hdu.append(fits.ImageHDU(self._labels))
         hdu[1].header['COMMENT'] = 'Labels'
         hdu[1].header['EXTNAME'] = 'LABELS'
@@ -1493,7 +1494,7 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
 
         if doback:
             back[i] = x[ngood-1]
-
+            
     # Catch any NaNs (shouldn't be there, but ....)
     bad = ~np.isfinite(spec)
     nbad = np.sum(bad)
@@ -1501,7 +1502,6 @@ def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=Non
         spec[bad] = 0.
         err[bad] = BADERR
         outmask[bad] = 1
-
 
     # Put together the output dictionary
     outstr = {'flux':spec, 'err':err, 'mask':outmask, 'header':frame['header'].copy()}

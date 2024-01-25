@@ -262,7 +262,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         # Save the results
         #-----------------
         print('  Writing new FPI wavelength information to '+fpiwavefile)
-        save_fpiwave(fpiwavefile,mjd5,fpinum1,fpiwcoef,fpiwaves,fpilinestr,fpilines)
+        save_fpiwave(fpiwavefile,mjd5,fpinum1,fpiwcoef,fpiwaves,fpilinestr,fpilines,apred=apred)
         # table of FPI lines data: chip, gauss center, Gaussian parameters, wavelength, flux
         # wavelength coefficients
         # wavelength array??
@@ -299,7 +299,7 @@ def fitlines(frame,rows=np.arange(300),chips=['a','b','c'],verbose=False):
             else:
                 if verbose:
                     print(chip,f,0,' lines')
-
+                    
     return linestr
 
 
@@ -381,7 +381,7 @@ def getfpiwave(fpilines,wcoef,fpipeaks,verbose=True):
                 print('%3s %8s %10.4f %11.4f %11.4f %11.4f %8.4f %5d' % (chip,str(i+1)+'/'+str(len(ind)),
                       fpilinestr1['x'][i],fpilinestr1['height'][i],fpilinestr1['flux'][i],
                       fpilinestr1['wave'][i],fpilinestr1['wsig'][i],fpilinestr1['nfiber'][i]))
-
+                
         # stuff back into large structure
         fpilinestr[ind] = fpilinestr1
         fpilines[lineind] = fpilines1
@@ -404,7 +404,7 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True,doplot=False):
         # chip loop
         #  not entirely necessary, but speeds up the where statements a bit
         for ichip,chip in enumerate(['a','b','c']):
-            ind, = np.where(fpilinestr['chip']==chip)
+            ind, = np.where(fpilinestr['chip']==chip)  # unique lines for this chip
             fpilinestr1 = fpilinestr[ind]
             lineind, = np.where(fpilines['chip']==chip)
             fpilines1 = fpilines[lineind]
@@ -414,6 +414,23 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True,doplot=False):
                     fpilines1['linewave'][ind1] = fpilinestr1['wave'][i]
                     fpilines1['lineid'][ind1] = fpilinestr1['id'][i]
             fpilines[lineind] = fpilines1
+
+        # Check for duplicate LineIDs per row
+        for i,row in enumerate(np.unique(fpilines['row'])):
+            ind, = np.where(fpilines['row']==row)
+            index = dln.create_index(fpilines['lineid'][ind].data)
+            bad, = np.where(index['num']>1)
+            #if len(bad)>0:
+            #    print('row: ',row,' nbad: ',len(bad))
+            for j,b in enumerate(bad):
+                badrow = index['value'][b]
+                ind1 = index['index'][index['lo'][b]:index['hi'][b]+1]
+                wdiff = fpilines['wave'][ind[ind1]] - fpilines['linewave'][ind[ind1]]
+                si = np.argsort(np.abs(wdiff))
+                # only keep the first one, set the others to "bad"
+                #  the bad ones will be removed below
+                fpilines['lineid'][ind[ind1[si[1:]]]] = -1
+                fpilines['linewave'][ind[ind1[si[1:]]]] = 999999.
             
     # Prune out lines that had unsuccessful fits or no mean wavelength
     bd, = np.where((fpilines['success']==False) | (fpilines['lineid']==-1))
@@ -547,7 +564,7 @@ def fpiwavesol(fpilinestr,fpilines,wcoef,verbose=True,doplot=False):
 
     return newwcoef,newwaves,fpilines
     
-def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines):
+def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines,apred='daily'):
     """
     Save the FPI wavelength information
     outfile: output file name (with no chip tag in name)
@@ -571,6 +588,8 @@ def save_fpiwave(outfile,mjd5,fpinum,fpiwcoef,fpiwaves,fpilinestr,fpilines):
         hdu[0].header['COMMENT'] = 'HDU#2 : wavelength calibration array [300,2048]'
         hdu[0].header['COMMENT'] = 'HDU#3 : table of unique FPI lines and wavelengths'
         hdu[0].header['COMMENT'] = 'HDU#4 : table of full-frame FPI line measurements'
+        hdu[0].header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
+        hdu[0].header['APRED'] = (apred, 'APOGEE reduction version')
         hdu.append(fits.ImageHDU(fpiwcoef[ichip,:,:]))
         hdu[1].header['COMMENT'] = 'Wavelength calibration parameters [5,300]'
         hdu[1].header['EXTNAME'] = 'WAVEPARS'
@@ -766,6 +785,8 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
         for ichip,chip in enumerate(chips) :
             hdu = fits.HDUList()
             hdu.append(frame[chip][0])           # header
+            hdu[0].header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
+            hdu[0].header['APRED'] = (load.apred, 'APOGEE reduction version')
             hdu.append(frame[chip][1])           # flux
             hdu[1].header['EXTNAME'] = 'FLUX'
             hdu.append(frame[chip][2])           # err
@@ -776,6 +797,8 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
             hdu[4].header['EXTNAME'] = 'WAVELENGTH'
             hdu.append(fits.ImageHDU(newchippars[ichip,:,:]))   # wave coefficients
             hdu[5].header['EXTNAME'] = 'WAVEPARS'
+            hdu.append(fits.table_to_hdu(linestr))              # FPI 2-fiber lines table
+            hdu[6].header['EXTNAME'] = 'FPITABLE'
             hdu.writeto(outname.replace('1D-','1D-'+chip+'-'),overwrite=True)
             hdu.close()
             

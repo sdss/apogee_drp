@@ -840,7 +840,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         if str(name).isnumeric()==False or len(str(name))<6:  # non-ID input
             out = os.path.dirname(out)+'/'+load.prefix+'Wave-'+str(name)+'.fits'
         print('Saving to ',out)
-        save_apWave(newpars,out=out,npoly=npoly,rows=rows,frameinfo=frameinfo,
+        save_apWave(newpars,out=out,apred=vers,npoly=npoly,rows=rows,frameinfo=frameinfo,
                     rms=rms,sig=sig,allpars=allpars,linestr=linestr)
 
     if plot and nosave==False: 
@@ -1005,7 +1005,7 @@ def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
       for i in range(4) : plt.close()
 
 
-def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frameinfo=[],
+def save_apWave(pars,out=None,apred='daily',group=0,rows=np.arange(300),npoly=4,frameinfo=[],
                 rms=None,sig=None,allpars=None,linestr=None):
     """ Write the apWave files in standard format given the wavecal parameters
     """
@@ -1039,6 +1039,8 @@ def save_apWave(pars,out=None,group=0,rows=np.arange(300),npoly=4,frameinfo=[],
         hdu[0].header['COMMENT']='HDU#6 : wavecal fit parameter array [npoly+3*ngroup,300]'
         hdu[0].header['COMMENT']='HDU#7 : table with frames/group information'
         hdu[0].header.add_comment('APOGEE_DRP_VER:'+str(os.environ.get('APOGEE_DRP_VER')))
+        hdu[0].header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
+        hdu[0].header['APRED'] = (apred, 'APOGEE reduction version')
         hdu.append(fits.ImageHDU(chippars))
         hdu[1].header['EXTNAME'] = 'WAVEPARS'
         hdu.append(fits.ImageHDU(chipwaves))
@@ -1652,9 +1654,11 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
         # SDSS-V FPS
         if fps:
             configid = p['plateid']
-            configgrp = '{:0>4d}XX'.format(int(configid) // 100)
-            plugdir = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/'
-            plugmap = yanny.yanny(plugdir+'confSummary-'+str(configid)+'.par')
+            #configgrp = '{:0>4d}XX'.format(int(configid) // 100)
+            #plugdir = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/'
+            #plugmapfile = plugdir+'confSummary-'+str(configid)+'.par'
+            plugmapfile = load.filename('confSummary',configid=int(configid))
+            plugmap = yanny.yanny(plugmapfile)
             skyind = np.where(((np.char.array(plugmap['FIBERMAP']['category']).upper() == 'SKY_APOGEE') | 
                                (np.char.array(plugmap['FIBERMAP']['category']).upper() == 'SKY_BOSS')) & 
                               (np.array(plugmap['FIBERMAP']['spectrographId']) == 2) &
@@ -1679,7 +1683,6 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
                     print('Cannot find plPlugMapM file in mapper directory.  Using plPlugMapA file in data directory instead.')
                     plugfile = datadir+'/'+str(p['mjd'])+'/plPlugMapA-'+p['plugmap']+'.par'
             plugmap = yanny.yanny(plugfile)
-
             skyind = np.where((np.array(plugmap['PLUGMAPOBJ']['objType']) == 'SKY') & 
                               (np.array(plugmap['PLUGMAPOBJ']['holeType']) == 'OBJECT') &
                               (np.array(plugmap['PLUGMAPOBJ']['spectrographId']) == 2) )[0]
@@ -1814,6 +1817,8 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
                 frame[chip][0].header['WAVEHDU'] = 5
 
                 hdu.append(frame[chip][0])    # 0-header only
+                hdu[0].header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
+                hdu[0].header['APRED'] = (load.apred, 'APOGEE reduction version')
                 hdu.append(frame[chip][1])    # 1-flux
                 hdu[1].header['EXTNAME'] = 'FLUX'
                 hdu.append(frame[chip][2])    # 2-error
