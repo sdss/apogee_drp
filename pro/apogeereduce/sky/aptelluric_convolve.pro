@@ -215,6 +215,8 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
         sxaddpar,hdr,'NSPECIES',nspecies
         sxaddpar,hdr,'NSCALE',nscale
         sxaddpar,hdr,'EXTNAME','WAVELENGTH'
+        sxaddpar,hdr,'V_APRED',getgitvers(),'apogee software version'
+        sxaddpar,hdr,'APRED',getvers(),'apogee reduction version'
         mwrfits,twave,outfile[j],hdr,/create
       endif
 
@@ -240,6 +242,8 @@ if keyword_set(clobber) or (total(file_test(outfile)) ne 3) then begin
       sxaddpar,head,'CRPIX4',1  
       sxaddpar,head,'AIRMASS',air0+iair*dair
       sxaddpar,head,'EXTNAME','TELLURIC'
+      sxaddpar,head,'V_APRED',getgitvers(),'apogee software version'
+      sxaddpar,head,'APRED',getvers(),'apogee reduction version'
       mwrfits,out,outfile[j]
 
     endfor   ; end airmass
