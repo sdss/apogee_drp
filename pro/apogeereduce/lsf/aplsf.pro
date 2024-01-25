@@ -2263,6 +2263,8 @@ For i=0,2 do begin
   sxaddhist,'2-all lines per chip/fiber fit together',head1
   sxaddhist,'3-all lines per fiber (all three chips) fir together',head1
   sxaddpar,head1,'EXTNAME','LSFPARS'
+  sxaddpar,head1,'V_APRED',getgitvers(),'apogee software version'
+  sxaddpar,head1,'APRED',getvers(),'apogee reduction version'
   
   ; Header for the first extension with the LSF array
   ;head2 = combframe.(0).header
