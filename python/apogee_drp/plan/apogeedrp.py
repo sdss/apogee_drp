@@ -1507,6 +1507,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logger.info('No master Detector calibration files to make')
         slurmpars1 = slurmpars.copy()
         slurmpars1['nodes'] = 1
+        slurmpars1['memory'] = 55000  # in MB
         logger.info('Slurm settings: '+str(slurmpars1))
         dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(detdict),dtype=np.dtype(dt))
