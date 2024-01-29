@@ -203,6 +203,28 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
         if noderunning==0 or taskrunning==0:
             done = True
 
+    # Check Slurm exit status for failure
+    # Slurm exit codes:
+    # 0 -> success
+    # non-zero -> failure
+    # Exit code 1 indicates a general failure
+    # Exit code 2 indicates incorrect use of shell builtins
+    # Exit codes 3-124 indicate some error in job (check software exit codes)
+    # Exit code 125 indicates out of memory
+    # Exit code 126 indicates command cannot execute
+    # Exit code 127 indicates command not found
+    # Exit code 128 indicates invalid argument to exit
+    # Exit codes 129-192 indicate jobs terminated by Linux signals
+    # For these, subtract 128 from the number and match to signal code
+    # Enter kill -l to list signal codes
+    # Enter man signal for more information
+    if state['ExitCode'][0] == '0:0':
+        logger.info('Slurm job succeeded')
+    else:
+        msg = 'Slurm job failed with State='+str(state['State'][0])
+        msg += ' and ExitCode='+str(state['ExitCode'][0])
+        logger.info(msg)
+        
 def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=True,walltime='336:00:00',
            notification=False,memory=7500,numpy_num_threads=2,stagger=True,ppn=None,verbose=True,logger=None):
     """
@@ -222,7 +244,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
             ppn = np.minimum(ppn,16)
         else:
             ppn = 16
-        #memory = np.minimum(memory,3750)
+        memory = np.minimum(memory,3750)
     else:
         if ppn is not None:
             ppn = np.minimum(ppn,64)
