@@ -12,7 +12,7 @@ from scipy.signal import argrelextrema
 from scipy.optimize import curve_fit
 from astropy.table import Table
 import statsmodels.api as sm
-from ..utils import peakfit, mmm, apload, utils
+from ..utils import peakfit, mmm, apload, utils, plan
 from numba import njit
 import copy
 import matplotlib
