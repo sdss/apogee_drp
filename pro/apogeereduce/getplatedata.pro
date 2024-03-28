@@ -753,7 +753,7 @@ for i=0,299 do begin
           endif
           ;; APOGEE-1/2 target types
           if platenum lt 15000 and not keyword_set(fps) then begin
-            objtype = 'OBJECT'
+            objtype = 'STAR'
             if is_bit_set(fiber[i].target2,9) eq 1 then objtype='HOT_STD'
             if is_bit_set(fiber[i].target2,4) eq 1 then objtype='SKY'
           endif
@@ -811,7 +811,8 @@ endfor
 ;;----------------------------------
 if platenum ge 15000 then begin
   print,'Getting catalogdb information'
-  objind = where(fiber.objtype eq 'OBJECT' or fiber.objtype eq 'HOT_STD',nobjind)
+  objind = where(fiber.objtype eq 'OBJECT' or fiber.objtype eq 'STAR' or $
+                 fiber.objtype eq 'HOT_STD',nobjind)  
   objdata = fiber[objind]
   add_tag,objdata,'dbresults',0,objdata
   gdid = where(objdata.catalogid gt 0,ngdid,comp=bdid,ncomp=nbdid)
@@ -946,7 +947,7 @@ if platenum ge 15000 then begin
       fiber[istar].gaiadr2_rpmag = catalogdb[ind1[0]].gaiarp
       fiber[istar].gaiadr2_rperr = catalogdb[ind1[0]].e_gaiarp
     endif else begin
-      print,'WARNING: no catalogdb match for ',fiber[istar].object
+      print,'WARNING: no catalogdb match for ',fiber[istar].object 
     endelse
   endfor ; object loop
 

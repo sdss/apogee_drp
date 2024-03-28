@@ -658,8 +658,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 fiber['firstcarton'][i] = ph['firstcarton'][match][0].astype(str)
                                 fiber['pmra'][i] = ph['pmra'][match]
                                 fiber['pmdec'][i] = ph['pmdec'][match]
-                                # objtype: OBJECT, HOT_STD, or SKY
-                                objtype = 'OBJECT'
+                                # objtype: STAR, HOT_STD, or SKY
+                                objtype = 'STAR'
                                 if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],0)==1: objtype='SKY'
                                 if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],1)==1: objtype='HOT_STD'
                             else:
@@ -741,7 +741,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     #----------------------------------
     if plate >= 15000:
         print('Getting catalogdb information')
-        objind, = np.where((fiber['objtype']=='OBJECT') | (fiber['objtype']=='HOT_STD'))
+        objind, = np.where((fiber['objtype']=='OBJECT') | (fiber['objtype']=='STAR') |
+                           (fiber['objtype']=='HOT_STD'))
         nobjind = len(objind)
         objdata = fiber[objind]
         gdid,ngdid,bdid,nbdid = dln.where(objdata['catalogid'] > 0,comp=True)

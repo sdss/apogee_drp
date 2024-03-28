@@ -372,7 +372,7 @@ For i=0,nfibers-1 do begin
   ;iplugind = where(plugmap.fiberdata.fiberid eq ifiber+1,niplugind)
   iplugind = where(plugmap.fiberdata.spectrographid eq 2 and $
                    plugmap.fiberdata.fiberid eq ifiberid,niplugind)
-
+  
   ; No information for this fiber
   if niplugind eq 0 then begin
     print,'No information for Fiber=',strtrim(ifiberid,2),' in the plugmap file'
@@ -407,7 +407,7 @@ For i=0,nfibers-1 do begin
     if plugmap.fiberdata[iplugind1].mag[1] lt 0.01 then hminus=99.99 else $
        hminus = plugmap.fiberdata[iplugind1].mag[1]-fiber_mag[1] 
   endif else hminus=99.99
-
+  
   if fiberholetype eq 'OBJECT' and (fiberobjtype ne 'SKY') and $
      (fiberobjtype ne 'none') and tmass_name ne '-' and tmass_name ne '2MNone' then begin
 
@@ -594,7 +594,7 @@ For i=0,nfibers-1 do begin
     ; HDU #0 = Header only
     ;----------------------
     FITS_WRITE,outfile,0,header
-
+    
     ; HDU #1 = Flux in units of 10^(-17) erg/s/cm^2/Ang [FLOAT]
     ;------------------------------------------------------------
     flux = fltarr(npix,3)
@@ -608,7 +608,7 @@ For i=0,nfibers-1 do begin
     sxaddpar,header1,'BUNIT','Flux (10^-17 erg/s/cm^2/Ang)'
     sxaddpar,header1,'EXTNAME','FLUX'
     MWRFITS,flux,outfile,header1,/silent
-
+    
     ; HDU #2 = Error in units of 10^(-17) erg/s/cm^2/Ang [FLOAT]
     ;------------------------------------------------------------
     err = fltarr(npix,3)
