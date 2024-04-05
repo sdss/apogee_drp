@@ -238,18 +238,19 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     
     # Create the output fiber structure
     dtype = np.dtype([('fiberid',int),('ra',np.float64),('dec',np.float64),('eta',np.float64),('zeta',np.float64),
-                      ('objtype',np.str,10),('holetype',np.str,10),('object',np.str,30),('assigned',int),('on_target',int),
-                      ('valid',int),('tmass_style',np.str,30),('target1',int),('target2',int),('target3',int),('target4',int),
-                      ('spectrographid',int),('mag',float,5),('alt_id',np.str,30),('twomass_designation',np.str,30),
+                      ('objtype',str,10),('holetype',str,10),('object',str,30),('assigned',int),('on_target',int),
+                      ('valid',int),('tmass_style',str,30),('sdss_id',int),
+                      ('target1',int),('target2',int),('target3',int),('target4',int),
+                      ('spectrographid',int),('mag',float,5),('alt_id',str,30),('twomass_designation',str,30),
                       ('jmag',float),('jerr',float),('hmag',float),('herr',float),('kmag',float),('kerr',float),
-                      ('phflag',np.str,50),('src_h',np.str,50),('pmra',float),('pmdec',float),('pm_src',np.str,50),
-                      ('catalogid',int),('sdssv_apogee_target0',int),('firstcarton',np.str,100),
-                      ('cadence',np.str,100),('program',np.str,100),('category',np.str,100),
+                      ('phflag',str,50),('src_h',str,50),('pmra',float),('pmdec',float),('pm_src',str,50),
+                      ('catalogid',int),('sdssv_apogee_target0',int),('firstcarton',str,100),
+                      ('cadence',str,100),('program',str,100),('category',str,100),
                       ('gaia_g',float),('gaia_bp',float),('gaia_rp',float),
-                      ('gaiadr2_sourceid',np.str,25),('gaiadr2_ra',float),('gaiadr2_dec',float),
-                      ('gaiadr2_plx',float),('gaiadr2_plx_error',float),('gaiadr2_pmra',float),('gaiadr2_pmra_error',float),
-                      ('gaiadr2_pmdec',float),('gaiadr2_pmdec_error',float),('gaiadr2_gmag',float),('gaiadr2_gerr',float),
-                      ('gaiadr2_bpmag',float),('gaiadr2_bperr',float),('gaiadr2_rpmag',float),('gaiadr2_rperr',float)])    
+                      ('gaia_release',str,10),('gaia_sourceid',str,25),('gaia_ra',float),('gaia_dec',float),
+                      ('gaia_plx',float),('gaia_plx_error',float),('gaia_pmra',float),('gaia_pmra_error',float),
+                      ('gaia_pmdec',float),('gaia_pmdec_error',float),('gaia_gmag',float),('gaia_gerr',float),
+                      ('gaia_bpmag',float),('gaia_bperr',float),('gaia_rpmag',float),('gaia_rperr',float)])    
     guide = np.zeros(16,dtype=dtype)
     loc = 0
 
@@ -319,9 +320,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     fiber['spectrographid'] = 2
     fiber['catalogid'] = -1
     for c in ['ra','dec','eta','zeta']: fiber[c] = 999999.9
-    gaia_cols = ['gaia_g','gaia_bp','gaia_rp','gaiadr2_ra','gaiadr2_dec','gaiadr2_plx','gaiadr2_plx_error',
-                 'gaiadr2_pmra','gaiadr2_pmra_error','gaiadr2_pmdec','gaiadr2_pmdec_error',
-                 'gaiadr2_gmag','gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr']
+    gaia_cols = ['gaia_g','gaia_bp','gaia_rp','gaia_ra','gaia_dec','gaia_plx','gaia_plx_error',
+                 'gaia_pmra','gaia_pmra_error','gaia_pmdec','gaia_pmdec_error',
+                 'gaia_gmag','gaia_gerr','gaia_bpmag','gaia_bperr','gaia_rpmag','gaia_rperr']
     for c in gaia_cols: fiber[c] = -9999.99
     fiber['mag'] = 99.99  # default to faint magnitudes
     fiber['jmag'] = 99.99  # default to faint magnitudes
@@ -463,6 +464,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             if len(ind1)>0:
                 ph['tmass_id'] = '                      '
                 ph['tmass_id'][ind1] = catinfo['twomass'][ind2]
+                ph['sdss_id'] = 0
+                ph['sdss_id'][ind1] = catinfo['sdss_id'][ind2]
                 ph['e_jmag'] = 0.0
                 ph['e_jmag'][ind1] = catinfo['e_jmag'][ind2]
                 ph['e_hmag'] = 0.0
@@ -471,36 +474,38 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 ph['e_kmag'][ind1] = catinfo['e_kmag'][ind2]
                 ph['phflag'] = '                                  '
                 ph['phflag'][ind1] = catinfo['twomflag'][ind2]
-                ph['gaiadr2_sourceid'] = '                                  '
-                ph['gaiadr2_sourceid'][ind1] = catinfo['gaia'][ind2]
-                ph['gaiadr2_ra'] = 0.0
-                ph['gaiadr2_ra'][ind1] = catinfo['ra'][ind2]
-                ph['gaiadr2_dec'] = 0.0
-                ph['gaiadr2_dec'][ind1] = catinfo['dec'][ind2]
-                ph['gaiadr2_pmra'] = 0.0
-                ph['gaiadr2_pmra'][ind1] = catinfo['pmra'][ind2]
-                ph['gaiadr2_pmdec'] = 0.0
-                ph['gaiadr2_pmdec'][ind1] = catinfo['pmdec'][ind2]
-                ph['gaiadr2_pmra_error'] = 0.0
-                ph['gaiadr2_pmra_error'][ind1] = catinfo['e_pmra'][ind2]
-                ph['gaiadr2_pmdec_error'] = 0.0
-                ph['gaiadr2_pmdec_error'][ind1] = catinfo['e_pmdec'][ind2]
-                ph['gaiadr2_plx'] = 0.0
-                ph['gaiadr2_plx'][ind1] = catinfo['plx'][ind2]
-                ph['gaiadr2_plx_error'] = 0.0
-                ph['gaiadr2_plx_error'][ind1] = catinfo['e_plx'][ind2]
-                ph['gaiadr2_gmag'] = 0.0
-                ph['gaiadr2_gmag'][ind1] = catinfo['gaiamag'][ind2]
-                ph['gaiadr2_gerr'] = 0.0
-                ph['gaiadr2_gerr'][ind1] = catinfo['e_gaiamag'][ind2]
-                ph['gaiadr2_bpmag'] = 0.0
-                ph['gaiadr2_bpmag'][ind1] = catinfo['gaiabp'][ind2]
-                ph['gaiadr2_bperr'] = 0.0
-                ph['gaiadr2_bperr'][ind1] = catinfo['e_gaiabp'][ind2]
-                ph['gaiadr2_rpmag'] = 0.0
-                ph['gaiadr2_rpmag'][ind1] = catinfo['gaiarp'][ind2]
-                ph['gaiadr2_rperr'] = 0.0
-                ph['gaiadr2_rperr'][ind1] = catinfo['e_gaiarp'][ind2]
+                #ph['gaia_release'] = '          '
+                #ph['gaia_release'][ind1] = catinfo['gaia_release'][ind2]
+                ph['gaia_sourceid'] = '                                  '
+                ph['gaia_sourceid'][ind1] = catinfo['gaia'][ind2]
+                ph['gaia_ra'] = 0.0
+                ph['gaia_ra'][ind1] = catinfo['ra'][ind2]
+                ph['gaia_dec'] = 0.0
+                ph['gaia_dec'][ind1] = catinfo['dec'][ind2]
+                ph['gaia_pmra'] = 0.0
+                ph['gaia_pmra'][ind1] = catinfo['pmra'][ind2]
+                ph['gaia_pmdec'] = 0.0
+                ph['gaia_pmdec'][ind1] = catinfo['pmdec'][ind2]
+                ph['gaia_pmra_error'] = 0.0
+                ph['gaia_pmra_error'][ind1] = catinfo['e_pmra'][ind2]
+                ph['gaia_pmdec_error'] = 0.0
+                ph['gaia_pmdec_error'][ind1] = catinfo['e_pmdec'][ind2]
+                ph['gaia_plx'] = 0.0
+                ph['gaia_plx'][ind1] = catinfo['plx'][ind2]
+                ph['gaia_plx_error'] = 0.0
+                ph['gaia_plx_error'][ind1] = catinfo['e_plx'][ind2]
+                ph['gaia_gmag'] = 0.0
+                ph['gaia_gmag'][ind1] = catinfo['gaiamag'][ind2]
+                ph['gaia_gerr'] = 0.0
+                ph['gaia_gerr'][ind1] = catinfo['e_gaiamag'][ind2]
+                ph['gaia_bpmag'] = 0.0
+                ph['gaia_bpmag'][ind1] = catinfo['gaiabp'][ind2]
+                ph['gaia_bperr'] = 0.0
+                ph['gaia_bperr'][ind1] = catinfo['e_gaiabp'][ind2]
+                ph['gaia_rpmag'] = 0.0
+                ph['gaia_rpmag'][ind1] = catinfo['gaiarp'][ind2]
+                ph['gaia_rperr'] = 0.0
+                ph['gaia_rperr'][ind1] = catinfo['e_gaiarp'][ind2]
 
     # Load guide stars
     if fps==False:
@@ -592,7 +597,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     fiber['objtype'][i] = 'SKY'
                     fiber['hmag'][i] = -99.999
 
-            # Normal plate
+            # Normal plate/configuration
             else:
                 fiber['objtype'][i] = plugmap['fiberdata']['objType'][m].astype(str)
                 # Fix up objtype
@@ -646,11 +651,12 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             fiber['target1'][i] = ph['apogee_target1'][match]
                             fiber['target2'][i] = ph['apogee_target2'][match]
                             apogee2 = 0
-                        # SDSS-V plate
+                        # SDSS-V plate or configuration
                         if (plate >= 15000) or fps:
                             sdss5 = True
                             if fps==False:   # SDSS-V plate data
                                 fiber['catalogid'][i] = ph['catalogid'][match]
+                                fiber['sdss_id'][i] = ph['sdss_id'][match]
                                 fiber['gaia_g'][i] = ph['gaia_g'][match]
                                 fiber['gaia_bp'][i] = ph['gaia_bp'][match]
                                 fiber['gaia_rp'][i] = ph['gaia_rp'][match]
@@ -664,6 +670,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],1)==1: objtype='HOT_STD'
                             else:
                                 fiber['catalogid'][i] = ph['catalogid'][match]
+                                fiber['sdss_id'][i] = ph['sdss_id'][match]                                
                                 fiber['twomass_designation'][i] = ph['tmass_id'][match][0].astype(str)
                                 fiber['gaia_g'][i] = ph['gaia_gmag'][match]
                                 fiber['gaia_bp'][i] = ph['gaia_bpmag'][match]
@@ -680,11 +687,12 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 fiber['category'][i] = plugmap['fiberdata']['category'][m]
                                 fiber['pmra'][i] = ph['pmra'][match]
                                 fiber['pmdec'][i] = ph['pmdec'][match]
-                                fiber['gaiadr2_sourceid'][i] = ph['gaiadr2_sourceid'][match][0].astype(str)
-                                for n in ['gaiadr2_ra','gaiadr2_dec','gaiadr2_plx','gaiadr2_plx_error',
-                                          'gaiadr2_pmra','gaiadr2_pmra_error','gaiadr2_pmdec','gaiadr2_pmdec_error',
-                                          'gaiadr2_gmag','gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag',
-                                          'gaiadr2_rperr']:
+                                fiber['gaia_sourceid'][i] = ph['gaia_sourceid'][match][0].astype(str)
+                                fiber['gaia_release'][i] = ph['gaia_release'][match][0].astype(str)
+                                for n in ['gaia_ra','gaia_dec','gaia_plx','gaia_plx_error',
+                                          'gaia_pmra','gaia_pmra_error','gaia_pmdec','gaia_pmdec_error',
+                                          'gaia_gmag','gaia_gerr','gaia_bpmag','gaia_bperr','gaia_rpmag',
+                                          'gaia_rperr']:
                                     fiber[n][i] = ph[n][match]
 
                         # APOGEE-1/2 target types
@@ -761,7 +769,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         if nbdid>0:
             print('Querying catalogdb using coordinates for ',str(nbdid)+' stars')
             catdb2 = catalogdb.getdata(ra=objdata['ra'][bdid],dec=objdata['dec'][bdid])
-            # this returns a q3c_dist columns that we don't want to keep
+            # this returns a q3c_dist column that we don't want to keep
             if len(catdb2)>0:
                 print('Got results for '+str(len(catdb2))+' stars')
                 del catdb2['q3c_dist']
@@ -812,10 +820,14 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 if len(cat)>0:
                     addcat = catdb[0]
                     for n in addcat.colnames:  # initialize
-                        if isinstance(addcat[n],np.str_): addcat[n]='None'
+                        if isinstance(addcat[n],str): addcat[n]='None'
                         if isinstance(addcat[n],np.floating): addcat[n]=np.nan
                         if isinstance(addcat[n],np.int): addcat[n]=-1
                     addcat['catalogid'] = cat['catalogid']
+                    try:
+                        addcat['sdss_id'] = catalogdb.get_sdssid([cat['catalogid'][0]])
+                    except:
+                        pass
                     addcat['ra'] = cat['ra']
                     addcat['dec'] = cat['dec']
                     addcat['hmag'] = 99.99
@@ -836,6 +848,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 if fiber['catalogid'][istar]<0:
                     fiber['catalogid'][istar]=catdb['catalogid'][ind1[0]]
                 fiber['twomass_designation'][istar] = catdb['twomass'][ind1[0]]
+                fiber['sdss_id'][istar] = catdb['sdss_id'][ind1[0]]
                 fiber['jmag'][istar] = catdb['jmag'][ind1[0]]
                 fiber['jerr'][istar] = catdb['e_jmag'][ind1[0]]
                 fiber['hmag'][istar] = catdb['hmag'][ind1[0]]
@@ -843,21 +856,22 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 fiber['kmag'][istar] = catdb['kmag'][ind1[0]]
                 fiber['kerr'][istar] = catdb['e_kmag'][ind1[0]]
                 fiber['phflag'][istar] = catdb['twomflag'][ind1[0]]
-                fiber['gaiadr2_sourceid'][istar] = catdb['gaia'][ind1[0]]
-                fiber['gaiadr2_ra'][istar] = catdb['ra'][ind1[0]]
-                fiber['gaiadr2_dec'][istar] = catdb['dec'][ind1[0]]
-                fiber['gaiadr2_pmra'][istar] = catdb['pmra'][ind1[0]]
-                fiber['gaiadr2_pmra_error'][istar] = catdb['e_pmra'][ind1[0]]
-                fiber['gaiadr2_pmdec'][istar] = catdb['pmdec'][ind1[0]]
-                fiber['gaiadr2_pmdec_error'][istar] = catdb['e_pmdec'][ind1[0]]
-                fiber['gaiadr2_plx'][istar] = catdb['plx'][ind1[0]]
-                fiber['gaiadr2_plx_error'][istar] = catdb['e_plx'][ind1[0]]
-                fiber['gaiadr2_gmag'][istar] = catdb['gaiamag'][ind1[0]]
-                fiber['gaiadr2_gerr'][istar] = catdb['e_gaiamag'][ind1[0]]
-                fiber['gaiadr2_bpmag'][istar] = catdb['gaiabp'][ind1[0]]
-                fiber['gaiadr2_bperr'][istar] = catdb['e_gaiabp'][ind1[0]]
-                fiber['gaiadr2_rpmag'][istar] = catdb['gaiarp'][ind1[0]]
-                fiber['gaiadr2_rperr'][istar] = catdb['e_gaiarp'][ind1[0]]
+                fiber['gaia_release'][istar] = catdb['gaia_release'][ind1[0]]
+                fiber['gaia_sourceid'][istar] = catdb['gaia'][ind1[0]]                
+                fiber['gaia_ra'][istar] = catdb['ra'][ind1[0]]
+                fiber['gaia_dec'][istar] = catdb['dec'][ind1[0]]
+                fiber['gaia_pmra'][istar] = catdb['pmra'][ind1[0]]
+                fiber['gaia_pmra_error'][istar] = catdb['e_pmra'][ind1[0]]
+                fiber['gaia_pmdec'][istar] = catdb['pmdec'][ind1[0]]
+                fiber['gaia_pmdec_error'][istar] = catdb['e_pmdec'][ind1[0]]
+                fiber['gaia_plx'][istar] = catdb['plx'][ind1[0]]
+                fiber['gaia_plx_error'][istar] = catdb['e_plx'][ind1[0]]
+                fiber['gaia_gmag'][istar] = catdb['gaiamag'][ind1[0]]
+                fiber['gaia_gerr'][istar] = catdb['e_gaiamag'][ind1[0]]
+                fiber['gaia_bpmag'][istar] = catdb['gaiabp'][ind1[0]]
+                fiber['gaia_bperr'][istar] = catdb['e_gaiabp'][ind1[0]]
+                fiber['gaia_rpmag'][istar] = catdb['gaiarp'][ind1[0]]
+                fiber['gaia_rperr'][istar] = catdb['e_gaiarp'][ind1[0]]
             else:
                 print('no match catalogdb match for ',fiber['object'][istar])
 

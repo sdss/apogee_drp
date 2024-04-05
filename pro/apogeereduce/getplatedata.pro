@@ -224,6 +224,7 @@ function readplatedata,filename
 end
 
 
+
 ;; Main function
 function getplatedata,plate,cmjd,plugid=plugid,asdaf=asdaf,mapa=mapa,obj1m=obj1m,fixfiberid=fixfiberid,$
                       noobject=noobject,stp=stp,skip=skip,twilight=twilight,badfiberid=badfiberid,$
@@ -249,6 +250,11 @@ endif else begin
 endelse
 if keyword_set(fps) then cplate=strtrim(long(plate),2)  ;; no zero padding for FPS config
 
+;; Deal with null values from yaml file
+if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then $
+  if (strtrim(fixfiberid,2) eq 'null' or strtrim(strlowcase(fixfiberid),2) eq 'none') then undefine,fixfiberid  ;; null/none  
+if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
+  if (strtrim(badfiberid,2) eq 'null' or strtrim(strlowcase(badfiberid),2) eq 'none') then undefine,badfiberid  ;; null/none  
 
 ;; Check if the apPlateData file already exists
 ;;  if yes, load it unless clobber is set
@@ -300,12 +306,57 @@ if file_test(platedatafile) eq 1 and not keyword_set(clobber) then begin
   return,readplatedata(platedatafile)
 endif
 
+;; -------- CALL THE PYTHON ROUTINE ----------
+print,'Running Python platedata.py'
+; use temporary files and symlinks
+tbase = MKTEMP('pltdata',outdir=getlocaldir())    ; create base, leave so other processes won't take it
+tempfile = tbase+'.fits'
+file_delete,tempfile,/allow
+;; defaults
+if keyword_set(mapa) then mapa='True' else mapa='False'
+if keyword_set(fixfiberid) then fixfiberid='True' else fixfiberid='False'
+if keyword_set(noobject) then noobject='True' else noobject='False'
+if keyword_set(skip) then skip='True' else skip='False'
+if keyword_set(twilight) then twilight='True' else twilight='False'
+if keyword_set(clobber) then clobber='True' else clobber='False'
+if n_elements(plugid) eq 0 then plugid='None' else plugid='"'+strtrim(plugid,2)+'"'
+if n_elements(asdaf) eq 0 then asdaf='None' else asdaf='"'+strtrim(asdaf,2)+'"'
+if n_elements(obj1m) eq 0 then obj1m='None' else obj1dm='"'+strtrim(obj1m,2)+'"'
+if n_elements(badfiberid) eq 0 then badfiberid='None' else badfiberid='"'+strtrim(badfiberid,2)+'"'
+if n_elements(mapper_data) eq 0 then mapper_data='None' else mapper_data='"'+strtrim(mapper_data,2)+'"'
+if n_elements(starfiber) eq 0 then starfiber='None' else starfiber='"'+strtrim(starfiber,2)+'"'
+;; Call the python code
+cmd = '#!/usr/bin/env python'
+push,cmd,'from astropy.table import Table'
+push,cmd,'from apogee_drp.utils import platedata'
+pars = strtrim(plate,2)+','+strtrim(cmjd,2)+',"'+strtrim(dirs.apred,2)+'","'+strtrim(dirs.telescope,2)+'"'
+pars += ',plugid='+plugid+',asdaf='+asdaf+',mapa='+mapa
+pars += ',obj1m='+obj1m+',fixfiberid='+fixfiberid+',noobject='+noobject
+pars += ',skip='+skip+',twilight='+twilight+',badfiberid='+badfiberid
+pars += ',mapper_data='+mapper_data+',starfiber='+starfiber+',clobber='+clobber
+push,cmd,'tab=platedata.getdata('+pars+')'
+;;push,cmd,'if len(tab)>0: Table(tab).write("'+tempfile+'")'
+scriptfile = tbase+'.py'
+WRITELINE,scriptfile,cmd
+FILE_CHMOD,scriptfile,'755'o
+SPAWN,scriptfile,out,errout,/noshell
+if errout[0] ne '' or n_elements(errout) gt 1 then begin
+  print,'Problems with the platedata.py call'
+  for i=0,n_elements(errout)-1 do print,errout[i]
+endif
+;; The python code will save it to the apPlateData file
+if file_test(platedatafile) eq 1 then begin
+  return,readplatedata(platedatafile)
+endif else begin
+  print,platedatafile,' NOT FOUND'
+  return,-1
+endelse
 
-;; Deal with null values from yaml file
-if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then $
-  if (strtrim(fixfiberid,2) eq 'null' or strtrim(strlowcase(fixfiberid),2) eq 'none') then undefine,fixfiberid  ;; null/none  
-if size(badfiberid,/type) eq 7 and n_elements(badfiberid) eq 1 then $
-  if (strtrim(badfiberid,2) eq 'null' or strtrim(strlowcase(badfiberid),2) eq 'none') then undefine,badfiberid  ;; null/none  
+  
+;;;---------------------------- IDL code ------------------------------  
+
+
+
 
 ;; Create the output fiber structure
 tmp = create_struct('fiberid',-1, 'ra',999999.d0, 'dec',999999.d0, 'eta',999999.d0, 'zeta',999999.d0, 'objtype','none', $
@@ -313,11 +364,11 @@ tmp = create_struct('fiberid',-1, 'ra',999999.d0, 'dec',999999.d0, 'eta',999999.
                     'target3',0L, 'target4',0L, 'spectrographid',2, 'mag',fltarr(5), catalog_info_blank(),$
                     'catalogid',-1LL, 'sdssv_apogee_target0',0LL, 'firstcarton','', 'cadence','','program','','category','',$
                     'gaia_g',-9999.99, 'gaia_bp',-9999.99, 'gaia_rp',-9999.99,$
-                    'gaiadr2_sourceid','', 'gaiadr2_ra',-9999.99d0, 'gaiadr2_dec',-9999.99d0,$
-                    'gaiadr2_plx',-9999.99, 'gaiadr2_plx_error',-9999.99, 'gaiadr2_pmra',-9999.99,$
-                    'gaiadr2_pmra_error',-9999.99, 'gaiadr2_pmdec',-9999.99, 'gaiadr2_pmdec_error',-9999.99, 'gaiadr2_gmag',-9999.99,$
-                    'gaiadr2_gerr',-9999.99, 'gaiadr2_bpmag',-9999.99, 'gaiadr2_bperr',-9999.99, 'gaiadr2_rpmag',-9999.99,$
-                    'gaiadr2_rperr',-9999.99)
+                    'gaia_release','','gaia_sourceid','', 'gaia_ra',-9999.99d0, 'gaia_dec',-9999.99d0,$
+                    'gaia_plx',-9999.99, 'gaia_plx_error',-9999.99, 'gaia_pmra',-9999.99,$
+                    'gaia_pmra_error',-9999.99, 'gaia_pmdec',-9999.99, 'gaia_pmdec_error',-9999.99, 'gaia_gmag',-9999.99,$
+                    'gaia_gerr',-9999.99, 'gaia_bpmag',-9999.99, 'gaia_bperr',-9999.99, 'gaia_rpmag',-9999.99,$
+                    'gaia_rperr',-9999.99)
 tmp.mag = 99.99  ;; default to faint magnitudes
 tmp.jmag = 99.99 ;; default to faint magnitudes
 tmp.hmag = 99.99 ;; default to faint magnitudes
@@ -507,11 +558,11 @@ if keyword_set(fps) then begin
     if nmatch gt 0 then begin
        orig = p
        undefine,p
-       tagnames = ['tmass_id','e_jmag','e_hmag','e_kmag','phflag','gaiadr2_sourceid','gaiadr2_ra','gaiadr2_dec',$
-                   'gaiadr2_pmra','gaiadr2_pmdec','gaiadr2_pmra_error','gaiadr2_pmdec_error','gaiadr2_plx',$
-                   'gaiadr2_plx_error','gaiadr2_gmag','gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr',$
-                   'gaiadr2_rpmag','gaiadr2_rperr']
-       tagvals = ['" "','0.0','0.0','0.0','" "','0LL','0.0d0','0.0d0','0.0','0.0','0.0','0.0','0.0','0.0','0.0',$
+       tagnames = ['tmass_id','e_jmag','e_hmag','e_kmag','phflag','gaia_release','gaia_sourceid','gaia_ra','gaia_dec',$
+                   'gaia_pmra','gaia_pmdec','gaia_pmra_error','gaia_pmdec_error','gaia_plx',$
+                   'gaia_plx_error','gaia_gmag','gaia_gerr','gaia_bpmag','gaia_bperr',$
+                   'gaia_rpmag','gaia_rperr']
+       tagvals = ['" "','0.0','0.0','0.0','" "','" "','0LL','0.0d0','0.0d0','0.0','0.0','0.0','0.0','0.0','0.0','0.0',$
                   '0.0','0.0','0.0','0.0','0.0']
        add_tags,orig,tagnames,tagvals,p
        undefine,orig
@@ -523,24 +574,25 @@ if keyword_set(fps) then begin
        ; Deal with instances of Gaia source ID = 'None'
        if typename(catinfo[ind2].gaia) eq 'STRING' then begin
           g = where(strtrim(catinfo[ind2].gaia,2) ne 'None',ng)
-          p[ind1[g]].gaiadr2_sourceid = catinfo[ind2[g]].gaia
+          p[ind1[g]].gaia_sourceid = catinfo[ind2[g]].gaia
        endif else begin
-          p[ind1].gaiadr2_sourceid = catinfo[ind2].gaia
+          p[ind1].gaia_sourceid = catinfo[ind2].gaia
        endelse
-       p[ind1].gaiadr2_ra = catinfo[ind2].ra
-       p[ind1].gaiadr2_dec = catinfo[ind2].dec
-       p[ind1].gaiadr2_pmra = catinfo[ind2].pmra
-       p[ind1].gaiadr2_pmdec = catinfo[ind2].pmdec
-       p[ind1].gaiadr2_pmra_error = catinfo[ind2].e_pmra
-       p[ind1].gaiadr2_pmdec_error = catinfo[ind2].e_pmdec
-       p[ind1].gaiadr2_plx = catinfo[ind2].plx
-       p[ind1].gaiadr2_plx_error = catinfo[ind2].e_plx
-       p[ind1].gaiadr2_gmag = catinfo[ind2].gaiamag
-       p[ind1].gaiadr2_gerr = catinfo[ind2].e_gaiamag
-       p[ind1].gaiadr2_bpmag = catinfo[ind2].gaiabp
-       p[ind1].gaiadr2_bperr = catinfo[ind2].e_gaiabp
-       p[ind1].gaiadr2_rpmag = catinfo[ind2].gaiarp
-       p[ind1].gaiadr2_rperr = catinfo[ind2].e_gaiarp
+       p[ind1].gaia_release = catinfo[ind2].gaia_release
+       p[ind1].gaia_ra = catinfo[ind2].ra
+       p[ind1].gaia_dec = catinfo[ind2].dec
+       p[ind1].gaia_pmra = catinfo[ind2].pmra
+       p[ind1].gaia_pmdec = catinfo[ind2].pmdec
+       p[ind1].gaia_pmra_error = catinfo[ind2].e_pmra
+       p[ind1].gaia_pmdec_error = catinfo[ind2].e_pmdec
+       p[ind1].gaia_plx = catinfo[ind2].plx
+       p[ind1].gaia_plx_error = catinfo[ind2].e_plx
+       p[ind1].gaia_gmag = catinfo[ind2].gaiamag
+       p[ind1].gaia_gerr = catinfo[ind2].e_gaiamag
+       p[ind1].gaia_bpmag = catinfo[ind2].gaiabp
+       p[ind1].gaia_bperr = catinfo[ind2].e_gaiabp
+       p[ind1].gaia_rpmag = catinfo[ind2].gaiarp
+       p[ind1].gaia_rperr = catinfo[ind2].e_gaiarp
     endif
   endif
 endif
@@ -739,10 +791,11 @@ for i=0,299 do begin
               fiber[i].category = plugmap.fiberdata[m].category
               fiber[i].pmra = p[match].pmra
               fiber[i].pmdec = p[match].pmdec
-              fiber[i].gaiadr2_sourceid = p[match].gaiadr2_sourceid
-              fnames = ['gaiadr2_ra','gaiadr2_dec','gaiadr2_pmra','gaiadr2_pmdec','gaiadr2_pmra_error',$
-                        'gaiadr2_pmdec_error','gaiadr2_plx','gaiadr2_plx_error','gaiadr2_gmag','gaiadr2_gerr',$
-                        'gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr']
+              fiber[i].gaia_sourceid = p[match].gaia_sourceid
+              fiber[i].gaia_release = p[match].gaia_release              
+              fnames = ['gaia_ra','gaia_dec','gaia_pmra','gaia_pmdec','gaia_pmra_error',$
+                        'gaia_pmdec_error','gaia_plx','gaia_plx_error','gaia_gmag','gaia_gerr',$
+                        'gaia_bpmag','gaia_bperr','gaia_rpmag','gaia_rperr']
               for k=0,n_elements(fnames)-1 do begin
                 mind1 = where(tag_names(fiber) eq strupcase(fnames[k]),nmind1)
                 mind2 = where(tag_names(p) eq strupcase(fnames[k]),nmind2)
@@ -915,7 +968,7 @@ if platenum ge 15000 then begin
         ;; Use catalogdb.tic_v8 twomass name
         if catalogdb[ind1[0]].twomass ne 'None' then begin
           fiber[istar].tmass_style = '2M'+catalogdb[ind1[0]].twomass
-        ;; Construct 2MASS-style name from GaiaDR2 RA/DEC
+        ;; Construct 2MASS-style name from Gaia RA/DEC
         endif else begin
           fiber[istar].tmass_style = '2M'+coords2tmass(catalogdb[ind1[0]].ra,catalogdb[ind1[0]].dec)
         endelse
@@ -931,21 +984,22 @@ if platenum ge 15000 then begin
       fiber[istar].kmag = catalogdb[ind1[0]].kmag
       fiber[istar].kerr = catalogdb[ind1[0]].e_kmag
       fiber[istar].phflag = catalogdb[ind1[0]].twomflag
-      fiber[istar].gaiadr2_sourceid = catalogdb[ind1[0]].gaia
-      fiber[istar].gaiadr2_ra = catalogdb[ind1[0]].ra
-      fiber[istar].gaiadr2_dec = catalogdb[ind1[0]].dec
-      fiber[istar].gaiadr2_pmra = catalogdb[ind1[0]].pmra
-      fiber[istar].gaiadr2_pmra_error = catalogdb[ind1[0]].e_pmra
-      fiber[istar].gaiadr2_pmdec = catalogdb[ind1[0]].pmdec
-      fiber[istar].gaiadr2_pmdec_error = catalogdb[ind1[0]].e_pmdec
-      fiber[istar].gaiadr2_plx = catalogdb[ind1[0]].plx
-      fiber[istar].gaiadr2_plx_error = catalogdb[ind1[0]].e_plx
-      fiber[istar].gaiadr2_gmag = catalogdb[ind1[0]].gaiamag
-      fiber[istar].gaiadr2_gerr = catalogdb[ind1[0]].e_gaiamag
-      fiber[istar].gaiadr2_bpmag = catalogdb[ind1[0]].gaiabp
-      fiber[istar].gaiadr2_bperr = catalogdb[ind1[0]].e_gaiabp
-      fiber[istar].gaiadr2_rpmag = catalogdb[ind1[0]].gaiarp
-      fiber[istar].gaiadr2_rperr = catalogdb[ind1[0]].e_gaiarp
+      fiber[istar].gaia_release = catalogdb[ind1[0]].gaia_release
+      fiber[istar].gaia_sourceid = catalogdb[ind1[0]].gaia      
+      fiber[istar].gaia_ra = catalogdb[ind1[0]].ra
+      fiber[istar].gaia_dec = catalogdb[ind1[0]].dec
+      fiber[istar].gaia_pmra = catalogdb[ind1[0]].pmra
+      fiber[istar].gaia_pmra_error = catalogdb[ind1[0]].e_pmra
+      fiber[istar].gaia_pmdec = catalogdb[ind1[0]].pmdec
+      fiber[istar].gaia_pmdec_error = catalogdb[ind1[0]].e_pmdec
+      fiber[istar].gaia_plx = catalogdb[ind1[0]].plx
+      fiber[istar].gaia_plx_error = catalogdb[ind1[0]].e_plx
+      fiber[istar].gaia_gmag = catalogdb[ind1[0]].gaiamag
+      fiber[istar].gaia_gerr = catalogdb[ind1[0]].e_gaiamag
+      fiber[istar].gaia_bpmag = catalogdb[ind1[0]].gaiabp
+      fiber[istar].gaia_bperr = catalogdb[ind1[0]].e_gaiabp
+      fiber[istar].gaia_rpmag = catalogdb[ind1[0]].gaiarp
+      fiber[istar].gaia_rperr = catalogdb[ind1[0]].e_gaiarp
     endif else begin
       print,'WARNING: no catalogdb match for ',fiber[istar].object 
     endelse

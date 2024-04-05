@@ -119,10 +119,11 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
                          ('src_h','U16'),('targ_pmra',float),('targ_pmdec',float),('targ_pm_src','U16'),
                          ('apogee_target1',int),('apogee_target2',int),
                          ('apogee2_target1',int),('apogee2_target2',int),('apogee2_target3',int),('apogee2_target4',int),
-                         ('catalogid',int),('gaiadr2_sourceid',int),('gaiadr2_plx',float),('gaiadr2_plx_error',float),
-                         ('gaiadr2_pmra',float),('gaiadr2_pmra_error',float),('gaiadr2_pmdec',float),('gaiadr2_pmdec_error',float),
-                         ('gaiadr2_gmag',float),('gaiadr2_gerr',float),('gaiadr2_bpmag',float),('gaiadr2_bperr',float),
-                         ('gaiadr2_rpmag',float),('gaiadr2_rperr',float),('sdssv_apogee_target0',int),('firstcarton','U50'),
+                         ('catalogid',int),('sdss_id',int),('gaia_release',str,10),
+                         ('gaia_sourceid',int),('gaia_plx',float),('gaia_plx_error',float),
+                         ('gaia_pmra',float),('gaia_pmra_error',float),('gaia_pmdec',float),('gaia_pmdec_error',float),
+                         ('gaia_gmag',float),('gaia_gerr',float),('gaia_bpmag',float),('gaia_bperr',float),
+                         ('gaia_rpmag',float),('gaia_rperr',float),('sdssv_apogee_target0',int),('firstcarton','U50'),
                          ('cadence','U50'),('program','U50'),('category','U50'),
                          ('targflags','U132'),('nvisits',int),('ngoodvisits',int),('ngoodrvs',int),
                          ('starflag',np.uint64),('starflags','U132'),('andflag',np.uint64),('andflags','U132'),
@@ -144,9 +145,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['nvisits'] = nallvisits
     # Copy data from visit
     tocopy = ['ra','dec','glon','glat','jmag','jerr','hmag','herr','kmag','kerr','src_h','catalogid',
-              'gaiadr2_sourceid','gaiadr2_plx','gaiadr2_plx_error','gaiadr2_pmra','gaiadr2_pmra_error',
-              'gaiadr2_pmdec','gaiadr2_pmdec_error','gaiadr2_gmag','gaiadr2_gerr','gaiadr2_bpmag',
-              'gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr','sdssv_apogee_target0','firstcarton',
+              'sdss_id','gaia_release','gaia_sourceid','gaia_plx','gaia_plx_error','gaia_pmra','gaia_pmra_error',
+              'gaia_pmdec','gaia_pmdec_error','gaia_gmag','gaia_gerr','gaia_bpmag',
+              'gaia_bperr','gaia_rpmag','gaia_rperr','sdssv_apogee_target0','firstcarton',
               'targflags']
     for c in tocopy:
         startab[c] = allvisits[c][0]
@@ -901,23 +902,26 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
 
     # SDSS-V info
     apstar.header['CATID'] = (allvisit['catalogid'][0], 'SDSS-V catalog ID')
+    apstar.header['SDSSID'] = (allvisit['sdss_id'][0], 'SDSS_ID')
     apstar.header['SVTARG0'] = (allvisit['sdssv_apogee_target0'][0], 'SDSS-V APG targeting bitmask')
     apstar.header['CARTON1'] = (allvisit['firstcarton'][0], 'SDSS-V firstcarton')
     apstar.header['CADENCE'] = (allvisit['cadence'][0], 'SDSS-V target cadence')
     apstar.header['PROGRAM'] = (allvisit['program'][0], 'SDSS-V target program')
     apstar.header['CATEGORY'] = (allvisit['category'][0], 'SDSS-V target category')    
-    apstar.header['PLX'] = (allvisit['gaiadr2_plx'].max(), 'GaiaDR2 parallax')
-    apstar.header['EPLX'] = (allvisit['gaiadr2_plx_error'].max(), 'GaiaDR2 parallax uncertainty')
-    apstar.header['PMRA'] = (allvisit['gaiadr2_pmra'].max(), 'GaiaDR2 proper motion in RA')
-    apstar.header['EPMRA'] = (allvisit['gaiadr2_pmra_error'].max(), 'GaiaDR2 proper motion in RA uncertainty')
-    apstar.header['PMDEC'] = (allvisit['gaiadr2_pmdec'].max(), 'GaiaDR2 proper motion in DEC')
-    apstar.header['EPMDEC'] = (allvisit['gaiadr2_pmdec_error'].max(), 'GaiaDR2 proper motion in DEC uncertainty')
-    apstar.header['GMAG'] = (allvisit['gaiadr2_gmag'].max(), 'GaiaDR2 G magnitude')
-    apstar.header['GERR'] = (allvisit['gaiadr2_gerr'].max(), 'GaiaDR2 G magnitude uncertainty')
-    apstar.header['BPMAG'] = (allvisit['gaiadr2_bpmag'].max(), 'GaiaDR2 Bp magnitude')
-    apstar.header['BPERR'] = (allvisit['gaiadr2_bperr'].max(), 'GaiaDR2 Bp magnitude uncertainty')
-    apstar.header['RPMAG'] = (allvisit['gaiadr2_rpmag'].max(), 'GaiaDR2 Rp magnitude')
-    apstar.header['RPERR'] = (allvisit['gaiadr2_rperr'].max(), 'GaiaDR2 Rp magnitude uncertainty')
+    apstar.header['GSRCID'] = (allvisit['gaia_sourceid'].max(), 'Gaia Source ID')
+    apstar.header['GRELEASE'] = (allvisit['gaia_release'][0], 'Gaia Data Release')    
+    apstar.header['PLX'] = (allvisit['gaia_plx'].max(), 'Gaia parallax')    
+    apstar.header['EPLX'] = (allvisit['gaia_plx_error'].max(), 'Gaia parallax uncertainty')
+    apstar.header['PMRA'] = (allvisit['gaia_pmra'].max(), 'Gaia proper motion in RA')
+    apstar.header['EPMRA'] = (allvisit['gaia_pmra_error'].max(), 'Gaia proper motion in RA uncertainty')
+    apstar.header['PMDEC'] = (allvisit['gaia_pmdec'].max(), 'Gaia proper motion in DEC')
+    apstar.header['EPMDEC'] = (allvisit['gaia_pmdec_error'].max(), 'Gaia proper motion in DEC uncertainty')
+    apstar.header['GMAG'] = (allvisit['gaia_gmag'].max(), 'Gaia G magnitude')
+    apstar.header['GERR'] = (allvisit['gaia_gerr'].max(), 'Gaia G magnitude uncertainty')
+    apstar.header['BPMAG'] = (allvisit['gaia_bpmag'].max(), 'Gaia Bp magnitude')
+    apstar.header['BPERR'] = (allvisit['gaia_bperr'].max(), 'Gaia Bp magnitude uncertainty')
+    apstar.header['RPMAG'] = (allvisit['gaia_rpmag'].max(), 'Gaia Rp magnitude')
+    apstar.header['RPERR'] = (allvisit['gaia_rperr'].max(), 'Gaia Rp magnitude uncertainty')
     apstar.header['SVAPTRG0'] = (allvisit['sdssv_apogee_target0'].max(),'SDSS-V APOGEE TARGET0 targeting flag')
     apstar.header['FRSTCRTN'] = (allvisit['sdssv_apogee_target0'][0],'SDSS-V MWM priorrity carton')
 
@@ -1077,13 +1081,14 @@ def dbingest(startab,starvisits):
                            "and telescope='"+startab['telescope'][0]+"' and starver='"+startab['starver'][0]+"'")
         starvisits['star_pk'] = starout['pk'][0]
         # Remove some unnecessary columns (duplicates what's in visit table)
-        delcols = ['target_id','objtype','survey', 'field', 'programname', 'alt_id', 'location_id', 'glon','glat',
+        delcols = ['target_id','objtype','survey', 'field', 'design', 'sdss_id', 'programname',
+                   'alt_id', 'location_id', 'glon','glat',
                    'assigned','on_target','valid','cadence','program','category','exptime','nframes',
                    'jmag','jerr', 'herr', 'kmag', 'kerr', 'src_h','pmra', 'pmdec', 'pm_src','apogee_target1',
-                   'apogee_target2', 'apogee_target3', 'apogee_target4','gaiadr2_sourceid',
-                   'gaiadr2_plx','gaiadr2_plx_error','gaiadr2_pmra','gaiadr2_pmra_error','gaiadr2_pmdec',
-                   'gaiadr2_pmdec_error','gaiadr2_gmag',
-                   'gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr',
+                   'apogee_target2', 'apogee_target3', 'apogee_target4','gaia_release','gaia_sourceid',
+                   'gaia_plx','gaia_plx_error','gaia_pmra','gaia_pmra_error','gaia_pmdec',
+                   'gaia_pmdec_error','gaia_gmag',
+                   'gaia_gerr','gaia_bpmag','gaia_bperr','gaia_rpmag','gaia_rperr',
                    'sdssv_apogee_target0','firstcarton',
                    'targflags', 'starflag', 'starflags','created','rvtab']
         visits = starvisits.copy()  # make a local copy
@@ -1093,7 +1098,7 @@ def dbingest(startab,starvisits):
         # Rename columns
         visits['pk'].name = 'visit_pk'
         visits['starver'] = starout['starver'][0]
-
+        
         db.ingest('rv_visit',np.array(visits))   # Load the visit information into the table  
 
     # Close db session

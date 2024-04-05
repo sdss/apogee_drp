@@ -408,7 +408,7 @@ For i=0,nfibers-1 do begin
        hminus = plugmap.fiberdata[iplugind1].mag[1]-fiber_mag[1] 
   endif else hminus=99.99
   
-  if fiberholetype eq 'OBJECT' and (fiberobjtype ne 'SKY') and $
+  if fiberholetype eq 'OBJECT' and (fiberobjtype eq 'STAR' or fiberobjtype eq 'HOT_STD') and $
      (fiberobjtype ne 'none') and tmass_name ne '-' and tmass_name ne '2MNone' then begin
 
     ; Each extension contains a different data type and is a 2D
@@ -481,12 +481,15 @@ For i=0,nfibers-1 do begin
     sxaddpar,header,'TARG4',targ4,' Fourth APOGEE targeting flag (bitwise, see docs)'
     sxaddpar,header,'SVAPTRG0',plugmap.fiberdata[iplugind].sdssv_apogee_target0,' SDSS-V APOGEE target0'
     sxaddpar,header,'CATID',plugmap.fiberdata[iplugind].catalogid,' SDSS-V catalogdb ID'
-    sxaddpar,header,'G2PLX',plugmap.fiberdata[iplugind].gaiadr2_plx,' Gaia DR2 parallax'
-    sxaddpar,header,'G2PMRA',plugmap.fiberdata[iplugind].gaiadr2_pmra,' Gaia DR2 pmra'
-    sxaddpar,header,'G2PMDEC',plugmap.fiberdata[iplugind].gaiadr2_pmdec,' Gaia DR2 pmdec'
-    sxaddpar,header,'G2GMAG',plugmap.fiberdata[iplugind].gaiadr2_gmag,' Gaia DR2 G magnitude'
-    sxaddpar,header,'G2BPMAG',plugmap.fiberdata[iplugind].gaiadr2_bpmag,' Gaia DR2 Rp magnitude'
-    sxaddpar,header,'G2RPMAG',plugmap.fiberdata[iplugind].gaiadr2_rpmag,' Gaia DR2 Bp magnitude'
+    sxaddpar,header,'SDSSID',plugmap.fiberdata[iplugind].sdss_id,' SDSS_ID'
+    sxaddpar,header,'GRELEASE',plugmap.fiberdata[iplugind].gaia_release,' Gaia data release'
+    sxaddpar,header,'GSRCID',plugmap.fiberdata[iplugind].gaia_sourceid,' Gaia source_id'    
+    sxaddpar,header,'GPLX',plugmap.fiberdata[iplugind].gaia_plx,' Gaia parallax'    
+    sxaddpar,header,'GPMRA',plugmap.fiberdata[iplugind].gaia_pmra,' Gaia pmra'
+    sxaddpar,header,'GPMDEC',plugmap.fiberdata[iplugind].gaia_pmdec,' Gaia pmdec'
+    sxaddpar,header,'GGMAG',plugmap.fiberdata[iplugind].gaia_gmag,' Gaia G magnitude'
+    sxaddpar,header,'GBPMAG',plugmap.fiberdata[iplugind].gaia_bpmag,' Gaia Rp magnitude'
+    sxaddpar,header,'GRPMAG',plugmap.fiberdata[iplugind].gaia_rpmag,' Gaia Bp magnitude'
     sxaddpar,header,'HPLUS',hplus,' Delta H (neigh-obj) mag of neighboring (+1) fiber'
     sxaddpar,header,'HMINUS',hminus,' Delta H (neigh-obj) mag of neighboring (-1) fiber'
     ;; FPS data
@@ -495,6 +498,7 @@ For i=0,nfibers-1 do begin
       sxaddpar,header,'ONTARGET',plugmap.fiberdata[iplugind].on_target,' FPS fiber on target'
       sxaddpar,header,'VALID',plugmap.fiberdata[iplugind].valid,' Valid FPS target'
       sxaddpar,header,'CATID',plugmap.fiberdata[iplugind].catalogid,' SDSS-V catalogID'
+      sxaddpar,header,'SDSSID',plugmap.fiberdata[iplugind].sdss_id,' SDSS_ID'
       sxaddpar,header,'SVTARG0',plugmap.fiberdata[iplugind].sdssv_apogee_target0,' SDSS-V APG targeting bitmask'
       sxaddpar,header,'CARTON1',plugmap.fiberdata[iplugind].firstcarton,' SDSS-V firstcarton'
       sxaddpar,header,'CADENCE',plugmap.fiberdata[iplugind].cadence,' SDSS-V target cadence'
