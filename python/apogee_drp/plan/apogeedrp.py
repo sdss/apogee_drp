@@ -637,7 +637,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
     return chkcal
 
 
-def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
+def check_apred(expinfo,planfiles,pbskey,verbose=False,dbload=True,logger=None):
     """ Check that apred ran okay and load into database."""
 
     if logger is None:
@@ -895,12 +895,12 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,logger=None):
         else:
             chkap = chkap1.copy()
 
-
     # Load everything into the database
-    db = apogeedb.DBSession()
-    db.ingest('exposure_status',chkexp)
-    db.ingest('visit_status',chkap)
-    db.close()
+    if dbload:
+        db = apogeedb.DBSession()
+        db.ingest('exposure_status',chkexp)
+        db.ingest('visit_status',chkap)
+        db.close()
 
     return chkexp,chkap
 
