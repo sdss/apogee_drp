@@ -657,7 +657,7 @@ FOR i=0L,nplanfiles-1 do begin
 
   ;; Loop over the objects
   apgundef,allvisitstr
-  for istar=0,n_elements(objind)-1 do begin
+  for istar=0,nobjind-1 do begin
     visitfile = apogee_filename('Visit',plate=planstr.plateid,mjd=planstr.mjd,$
                                 fiber=objdata[istar].fiberid,reduction=obj,field=planstr.field)
     if tag_exist(planstr,'mjdfrac') then if planstr.mjdfrac eq 1 then begin
@@ -763,9 +763,13 @@ FOR i=0L,nplanfiles-1 do begin
   MWRFITS,allvisitstr,visitstrfile,/silent
 
   ;; Insert the apVisitSum information into the apogee_drp database
-  print,'Loading visit data into the database'
-  DBINGEST_VISIT,allvisitstr
-
+  if nobjind gt 0 then begin
+    print,'Loading visit data into the database'
+    DBINGEST_VISIT,allvisitstr
+  endif else begin
+    print,'No data to load into the database'  
+  endelse
+    
   BOMB:
 ENDFOR   ; plan files
 
