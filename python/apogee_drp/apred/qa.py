@@ -2199,7 +2199,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # fluxid might equal 0 for some reason.
     try:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
-        flux = load.apFlux(fluxid)
+        flux = load.apFlux(int(fluxid))
         medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
         throughput = medflux / np.nanmax(medflux)
     except:
@@ -2342,12 +2342,17 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             jk0 = -9.999
             apStarRelPath = None
             starHTMLrelPath = None
-            if objtype == 'SKY': 
+            if objtype.strip() == '':
+                bgcolor = '#D6EAF8'
+                firstcarton = 'None'
+                starflags = 'None'
+            elif objtype == 'SKY':
                 bgcolor = '#D6EAF8'
                 firstcarton = 'SKY'
                 starflags = 'None'
             else:
                 if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
+                if jdata['ASSIGNED'] == 0 or jdata['ON_TARGET'] == 0 or jdata['VALID'] == 0: continue
                 assigned = 1
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 if len(vcatind) < 1: pdb.set_trace()
@@ -2420,7 +2425,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     #    apStarRelPath = '../' + starRelPath + apStarNewest
 
             # Write data to HTML table
-            if objtype != 'SKY':
+            if objtype != 'SKY' and objtype != '':
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
                 vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
                 vishtml.write('<TD>' + objid + '\n')
