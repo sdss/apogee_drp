@@ -2491,6 +2491,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(rvfeh,3)))
                 vishtml.write('<TD align ="center">' + str(int(round(photteff))))
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(jk0,3)))
+                plotwidth = '1000'
             else:
                 snr = '-9.9'
                 relsnr = '-1%'
@@ -2532,10 +2533,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
-
+                plotwidth = '10'
+                
             tmp2 = plotdir + os.path.basename(visitplotfile)
             if (firstcarton != 'UNASSIGNED!!!') & (starflags != 'BAD_PIXELS'):# & (os.path.exists(tmp2)):
-                vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
+                vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH='+plotwidth+'></A>\n')
             else:
                 vishtml.write('<TD align="center">')
     vishtml.close()
