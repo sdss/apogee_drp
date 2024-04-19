@@ -656,7 +656,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             sdss5 = True
                             if fps==False:   # SDSS-V plate data
                                 fiber['catalogid'][i] = ph['catalogid'][match]
-                                fiber['sdss_id'][i] = ph['sdss_id'][match]
+                                #fiber['sdss_id'][i] = ph['sdss_id'][match]
                                 fiber['gaia_g'][i] = ph['gaia_g'][match]
                                 fiber['gaia_bp'][i] = ph['gaia_bp'][match]
                                 fiber['gaia_rp'][i] = ph['gaia_rp'][match]
@@ -759,6 +759,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         if ngdid>0:
             print('Querying catalogdb using catalogID for '+str(ngdid)+' stars')
             catdb1 = catalogdb.getdata(catid=objdata['catalogid'][gdid])
+
             # Got some results
             if len(catdb1)>0:
                 print('Got results for '+str(len(catdb1))+' stars')
