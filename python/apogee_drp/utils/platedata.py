@@ -474,8 +474,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 ph['e_kmag'][ind1] = catinfo['e_kmag'][ind2]
                 ph['phflag'] = '                                  '
                 ph['phflag'][ind1] = catinfo['twomflag'][ind2]
-                #ph['gaia_release'] = '          '                                                                                                             
-                #ph['gaia_release'][ind1] = catinfo['gaia_release'][ind2]                                                                                      
+                #ph['gaia_release'] = '          '
+                #ph['gaia_release'][ind1] = catinfo['gaia_release'][ind2]
                 ph['gaia_sourceid'] = '                                  '
                 ph['gaia_sourceid'][ind1] = catinfo['gaia'][ind2]
                 ph['gaia_ra'] = 0.0
@@ -597,7 +597,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     fiber['objtype'][i] = 'SKY'
                     fiber['hmag'][i] = -99.999
 
-            # Normal plate
+            # Normal plate/configuration
             else:
                 fiber['objtype'][i] = plugmap['fiberdata']['objType'][m].astype(str)
                 # Fix up objtype
@@ -651,7 +651,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             fiber['target1'][i] = ph['apogee_target1'][match]
                             fiber['target2'][i] = ph['apogee_target2'][match]
                             apogee2 = 0
-                        # SDSS-V plate/configuration
+                        # SDSS-V plate or configuration
                         if (plate >= 15000) or fps:
                             sdss5 = True
                             if fps==False:   # SDSS-V plate data
@@ -663,7 +663,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 fiber['firstcarton'][i] = ph['firstcarton'][match][0].astype(str)
                                 fiber['pmra'][i] = ph['pmra'][match]
                                 fiber['pmdec'][i] = ph['pmdec'][match]
-                                # objtype: OBJECT, HOT_STD, or SKY
+                                # objtype: STAR, HOT_STD, or SKY
                                 objtype = 'STAR'
                                 if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],0)==1: objtype='SKY'
                                 if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],1)==1: objtype='HOT_STD'
@@ -819,10 +819,14 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 if len(cat)>0:
                     addcat = catdb[0]
                     for n in addcat.colnames:  # initialize
-                        if isinstance(addcat[n],np.str_): addcat[n]='None'
+                        if isinstance(addcat[n],str): addcat[n]='None'
                         if isinstance(addcat[n],np.floating): addcat[n]=np.nan
                         if isinstance(addcat[n],np.int): addcat[n]=-1
                     addcat['catalogid'] = cat['catalogid']
+                    try:
+                        addcat['sdss_id'] = catalogdb.get_sdssid([cat['catalogid'][0]])
+                    except:
+                        pass
                     addcat['ra'] = cat['ra']
                     addcat['dec'] = cat['dec']
                     addcat['hmag'] = 99.99
@@ -843,6 +847,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 if fiber['catalogid'][istar]<0:
                     fiber['catalogid'][istar]=catdb['catalogid'][ind1[0]]
                 fiber['twomass_designation'][istar] = catdb['twomass'][ind1[0]]
+                fiber['sdss_id'][istar] = catdb['sdss_id'][ind1[0]]
                 fiber['jmag'][istar] = catdb['jmag'][ind1[0]]
                 fiber['jerr'][istar] = catdb['e_jmag'][ind1[0]]
                 fiber['hmag'][istar] = catdb['hmag'][ind1[0]]
@@ -851,15 +856,15 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 fiber['kerr'][istar] = catdb['e_kmag'][ind1[0]]
                 fiber['phflag'][istar] = catdb['twomflag'][ind1[0]]
                 fiber['gaia_release'][istar] = catdb['gaia_release'][ind1[0]]
-	        fiber['gaia_sourceid'][istar] = catdb['gaia'][ind1[0]]
+                fiber['gaia_sourceid'][istar] = catdb['gaia'][ind1[0]]
                 fiber['gaia_ra'][istar] = catdb['ra'][ind1[0]]
                 fiber['gaia_dec'][istar] = catdb['dec'][ind1[0]]
                 fiber['gaia_pmra'][istar] = catdb['pmra'][ind1[0]]
                 fiber['gaia_pmra_error'][istar] = catdb['e_pmra'][ind1[0]]
                 fiber['gaia_pmdec'][istar] = catdb['pmdec'][ind1[0]]
                 fiber['gaia_pmdec_error'][istar] = catdb['e_pmdec'][ind1[0]]
-		fiber['gaia_plx'][istar] = catdb['plx'][ind1[0]]
-	        fiber['gaia_plx_error'][istar] = catdb['e_plx'][ind1[0]]
+                fiber['gaia_plx'][istar] = catdb['plx'][ind1[0]]
+                fiber['gaia_plx_error'][istar] = catdb['e_plx'][ind1[0]]
                 fiber['gaia_gmag'][istar] = catdb['gaiamag'][ind1[0]]
                 fiber['gaia_gerr'][istar] = catdb['e_gaiamag'][ind1[0]]
                 fiber['gaia_bpmag'][istar] = catdb['gaiabp'][ind1[0]]
