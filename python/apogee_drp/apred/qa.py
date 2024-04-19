@@ -2199,7 +2199,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # fluxid might equal 0 for some reason.
     try:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
-        flux = load.apFlux(fluxid)
+        flux = load.apFlux(int(fluxid))
         medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
         throughput = medflux / np.nanmax(medflux)
     except:
@@ -2231,12 +2231,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                    ('KSMAG_ERR', np.float64)])
     colorteffarr = np.zeros(nustars,dtype=dt)
     #colorteffarr['APOGEE_ID'] = ustars
-    colorteffarr['GMAG'] = vcat['gaiadr2_gmag'][stars][uind]
-    colorteffarr['GMAG_ERR'] = vcat['gaiadr2_gerr'][stars][uind]
-    colorteffarr['BPMAG'] = vcat['gaiadr2_bpmag'][stars][uind]
-    colorteffarr['BPMAG_ERR'] = vcat['gaiadr2_bperr'][stars][uind]
-    colorteffarr['RPMAG'] = vcat['gaiadr2_rpmag'][stars][uind]
-    colorteffarr['RPMAG_ERR'] = vcat['gaiadr2_rperr'][stars][uind]
+    colorteffarr['GMAG'] = vcat['gaia_gmag'][stars][uind]
+    colorteffarr['GMAG_ERR'] = vcat['gaia_gerr'][stars][uind]
+    colorteffarr['BPMAG'] = vcat['gaia_bpmag'][stars][uind]
+    colorteffarr['BPMAG_ERR'] = vcat['gaia_bperr'][stars][uind]
+    colorteffarr['RPMAG'] = vcat['gaia_rpmag'][stars][uind]
+    colorteffarr['RPMAG_ERR'] = vcat['gaia_rperr'][stars][uind]
     colorteffarr['JMAG'] = vcat['jmag'][stars][uind]
     colorteffarr['JMAG_ERR'] = vcat['jerr'][stars][uind]
     colorteffarr['HMAG'] = vcat['kmag'][stars][uind]
@@ -2342,12 +2342,17 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
             jk0 = -9.999
             apStarRelPath = None
             starHTMLrelPath = None
-            if objtype == 'SKY': 
+            if objtype.strip() == '':
+                bgcolor = '#D6EAF8'
+                firstcarton = 'None'
+                starflags = 'None'
+            elif objtype == 'SKY':
                 bgcolor = '#D6EAF8'
                 firstcarton = 'SKY'
                 starflags = 'None'
             else:
                 if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
+                if jdata['ASSIGNED'] == 0 or jdata['ON_TARGET'] == 0 or jdata['VALID'] == 0: continue
                 assigned = 1
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 if len(vcatind) < 1: pdb.set_trace()
@@ -2420,7 +2425,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     #    apStarRelPath = '../' + starRelPath + apStarNewest
 
             # Write data to HTML table
-            if objtype != 'SKY':
+            if objtype != 'SKY' and objtype != '':
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
                 vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
                 vishtml.write('<TD>' + objid + '\n')
@@ -2486,6 +2491,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(rvfeh,3)))
                 vishtml.write('<TD align ="center">' + str(int(round(photteff))))
                 vishtml.write('<TD align ="center">' + str("%.3f" % round(jk0,3)))
+                plotwidth = '1000'
             else:
                 snr = '-9.9'
                 relsnr = '-1%'
@@ -2527,10 +2533,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
-
+                plotwidth = '10'
+                
             tmp2 = plotdir + os.path.basename(visitplotfile)
             if (firstcarton != 'UNASSIGNED!!!') & (starflags != 'BAD_PIXELS'):# & (os.path.exists(tmp2)):
-                vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH=1000></A>\n')
+                vishtml.write('<TD><A HREF=' + visitplotfile + ' target="_blank"><IMG SRC=' + visitplotfile + ' WIDTH='+plotwidth+'></A>\n')
             else:
                 vishtml.write('<TD align="center">')
     vishtml.close()
@@ -2561,7 +2568,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
 
     # Get the visit files for this star and telescope from the database
     db = apogeedb.DBSession()
-    cols = 'v.apogee_id,v.plate,v.field,v.mjd,v.glon,v.glat,v.gaiadr2_pmra,v.gaiadr2_pmdec,v.gaiadr2_gmag'
+    cols = 'v.apogee_id,v.plate,v.field,v.mjd,v.glon,v.glat,v.gaia_pmra,v.gaia_pmdec,v.gaia_gmag'
     cols += ',v.ra,v.dec,v.jmag,v.hmag,v.kmag,v.jd,v.fiberid,v.snr,rv.vrad,rv.rv_teff,rv.rv_logg,rv.rv_feh,rv.starver'
     sql = "select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "
     sql += "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"'"    
@@ -2665,9 +2672,9 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         # Get visit info from DB
         cgl = str("%.5f" % round(jdata['glon'],5))
         cgb = str("%.5f" % round(jdata['glat'],5))
-        cpmra = str("%.2f" % round(jdata['gaiadr2_pmra'],2))
-        cpmde = str("%.2f" % round(jdata['gaiadr2_pmdec'],2))
-        cgmag = str("%.3f" % round(jdata['gaiadr2_gmag'],3))
+        cpmra = str("%.2f" % round(jdata['gaia_pmra'],2))
+        cpmde = str("%.2f" % round(jdata['gaia_pmdec'],2))
+        cgmag = str("%.3f" % round(jdata['gaia_gmag'],3))
         hmag = jdata['hmag']
         cjmag = str("%.3f" % round(jdata['jmag'], 3))
         chmag = str("%.3f" % round(jdata['hmag'], 3))
@@ -4786,9 +4793,9 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
         vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
                  'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
                  'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
-                 'apogee_target4', 'catalogid', 'gaiadr2_plx', 'gaiadr2_plx_error', 'gaiadr2_pmra', 'gaiadr2_pmra_error',
-                 'gaiadr2_pmdec', 'gaiadr2_pmdec_error', 'gaiadr2_gmag', 'gaiadr2_gerr', 'gaiadr2_bpmag', 'gaiadr2_bperr',
-                 'gaiadr2_rpmag', 'gaiadr2_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
+                 'apogee_target4', 'catalogid', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
+                 'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
+                 'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag',
                  'starflags','dateobs','jd']
         rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
                   'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'n_components', 'rv_components']
