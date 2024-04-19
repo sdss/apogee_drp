@@ -146,5 +146,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
         sout = get_sdssid(data['catalogid'].tolist())
         data['sdss_id'] = 0
         data['sdss_id'] = sout['sdss_id']
-    
+        data['version_id'] = 0
+        data['version_id'] = sout['version_id']
+        
     return data
