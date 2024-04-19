@@ -133,7 +133,7 @@ if not keyword_set(fps) then begin
     sci[i] = isscience(plugmap.fiberdata[i].target1,plugmap.fiberdata[i].target2) 
   endfor
 endif else begin
-  gstar = where(plugmap.fiberdata.objtype eq 'STAR',ngstar)
+  gstar = where(plugmap.fiberdata.objtype eq 'STAR' or plugmap.fiberdata.objtype eq 'HOT_STD',ngstar)
   if ngstar gt 0 then sci[gstar] = 1
   gsky = where(plugmap.fiberdata.objtype eq 'SKY',ngsky)
   if ngsky gt 0 then sky[gsky] = 1
