@@ -612,11 +612,26 @@ FOR i=0L,nplanfiles-1 do begin
   outdir = file_dirname(visitstrfile)
   if file_test(outdir,/directory) eq 0 then FILE_MKDIR,outdir
 
-  objind = where(plugmap.fiberdata.spectrographid eq 2 and $
-                 plugmap.fiberdata.holetype eq 'OBJECT' and $
-                 strtrim(plugmap.fiberdata.objtype,2) ne 'SKY' and $
-                 strtrim(plugmap.fiberdata.objtype,2) ne 'none' and $
-                 strtrim(plugmap.fiberdata.tmass_style,2) ne '2MNone',nobjind)  
+  if keyword_set(fps) then begin
+    objind = where(plugmap.fiberdata.spectrographid eq 2 and $
+                   plugmap.fiberdata.holetype eq 'OBJECT' and $
+                   plugmap.fiberdata.assigned eq 1 and $
+                   plugmap.fiberdata.on_target eq 1 and $
+                   plugmap.fiberdata.valid eq 1 and $
+                   (strtrim(plugmap.fiberdata.objtype,2) eq 'STAR' or $
+                    strtrim(plugmap.fiberdata.objtype,2) eq 'HOT_STD') and $
+                   strtrim(plugmap.fiberdata.objtype,2) ne 'SKY' and $
+                   strtrim(plugmap.fiberdata.objtype,2) ne 'none' and $
+                   strtrim(plugmap.fiberdata.tmass_style,2) ne '2MNone',nobjind)
+  endif else begin
+    objind = where(plugmap.fiberdata.spectrographid eq 2 and $
+                   plugmap.fiberdata.holetype eq 'OBJECT' and $
+                   (strtrim(plugmap.fiberdata.objtype,2) eq 'STAR' or $
+                    strtrim(plugmap.fiberdata.objtype,2) eq 'HOT_STD') and $
+                   strtrim(plugmap.fiberdata.objtype,2) ne 'SKY' and $
+                   strtrim(plugmap.fiberdata.objtype,2) ne 'none' and $
+                   strtrim(plugmap.fiberdata.tmass_style,2) ne '2MNone',nobjind)
+  endelse
   objdata = plugmap.fiberdata[objind]
   obj = plugmap.fiberdata[objind].tmass_style
 
@@ -642,7 +657,7 @@ FOR i=0L,nplanfiles-1 do begin
 
   ;; Loop over the objects
   apgundef,allvisitstr
-  for istar=0,n_elements(objind)-1 do begin
+  for istar=0,nobjind-1 do begin
     visitfile = apogee_filename('Visit',plate=planstr.plateid,mjd=planstr.mjd,$
                                 fiber=objdata[istar].fiberid,reduction=obj,field=planstr.field)
     if tag_exist(planstr,'mjdfrac') then if planstr.mjdfrac eq 1 then begin
@@ -652,14 +667,15 @@ FOR i=0L,nplanfiles-1 do begin
     endif
 
     visitstr = {apogee_id:'',target_id:'',file:'',uri:'',apred_vers:'',fiberid:0,plate:'0',exptime:0.0,nframes:0L,$
-                mjd:0L,telescope:'',survey:'',field:'',programname:'',objtype:'',assigned:0,on_target:0,valid:0,$
-                ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,$
+                mjd:0L,telescope:'',survey:'',field:'',design:'',programname:'',objtype:'',assigned:0,on_target:0,$
+                valid:0,ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,$
                 jmag:0.0,jerr:0.0,hmag:0.0,herr:0.0,kmag:0.0,kerr:0.0,src_h:'',$
                 pmra:0.0,pmdec:0.0,pm_src:'',$
                 apogee_target1:0L,apogee_target2:0L,apogee_target3:0L,apogee_target4:0L,$
-                catalogid:0LL, gaiadr2_sourceid:0LL,gaiadr2_plx:0.0, gaiadr2_plx_error:0.0, gaiadr2_pmra:0.0, gaiadr2_pmra_error:0.0,$
-                gaiadr2_pmdec:0.0, gaiadr2_pmdec_error:0.0, gaiadr2_gmag:0.0, gaiadr2_gerr:0.0,$
-                gaiadr2_bpmag:0.0, gaiadr2_bperr:0.0, gaiadr2_rpmag:0.0, gaiadr2_rperr:0.0, sdssv_apogee_target0:0LL,$
+                catalogid:0LL, sdss_id:0LL, gaia_release:'',gaia_sourceid:0LL,gaia_plx:0.0,$
+                gaia_plx_error:0.0, gaia_pmra:0.0, gaia_pmra_error:0.0,$
+                gaia_pmdec:0.0, gaia_pmdec_error:0.0, gaia_gmag:0.0, gaia_gerr:0.0,$
+                gaia_bpmag:0.0, gaia_bperr:0.0, gaia_rpmag:0.0, gaia_rperr:0.0, sdssv_apogee_target0:0LL,$
                 firstcarton:'',cadence:'',program:'',category:'',$
                 targflags:'',snr: 0.0, starflag:0L,starflags: '',dateobs:'',jd:0.0d0}
 
@@ -673,13 +689,15 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr.apred_vers = apred_vers
     visitstr.fiberid = objdata[istar].fiberid
     visitstr.plate = strtrim(planstr.plateid,2)
+    visitstr.field = strtrim(planstr.fieldid,2)
+    visitstr.design = strtrim(planstr.designid,2)
     visitstr.exptime = sxpar(finalframe[0].hdr,'exptime')
     visitstr.nframes = nframes
     visitstr.mjd = planstr.mjd
     visitstr.telescope = dirs.telescope
     ;; Copy over all relevant columns from plugmap/plateHoles/catalogdb
-    if tag_exist(objdata,'gaiadr2_sourceid') then $
-      if strtrim(objdata[istar].gaiadr2_sourceid,2) eq '' then objdata[istar].gaiadr2_sourceid='-1'
+    if tag_exist(objdata,'gaia_sourceid') then $
+      if strtrim(objdata[istar].gaia_sourceid,2) eq '' then objdata[istar].gaia_sourceid='-1'
     STRUCT_ASSIGN,objdata[istar],visitstr,/nozero
     GLACTC,visitstr.ra,visitstr.dec,2000.0,glon,glat,1,/deg
     visitstr.glon = glon
@@ -744,10 +762,14 @@ FOR i=0L,nplanfiles-1 do begin
   ; HDU1 - structure
   MWRFITS,allvisitstr,visitstrfile,/silent
 
-  ;; Insert the apVisitSum information into the apogee_drp database
-  print,'Loading visit data into the database'
-  DBINGEST_VISIT,allvisitstr
-
+  ;; Insert the apVisitSum information into the apogee_drp database                                                              
+  if nobjind gt 0 then begin
+    print,'Loading visit data into the database'
+    DBINGEST_VISIT,allvisitstr
+  endif else begin
+    print,'No data to load into the database'
+  endelse
+  
  BOMB:
 ENDFOR   ; plan files
 
