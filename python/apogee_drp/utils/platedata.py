@@ -841,9 +841,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     # Use catalogdb.tic_v8 twomass name
                     if catdb['twomass'][ind1[0]] != 'None':
                         fiber['tmass_style'][istar] = '2M'+catdb['twomass'][ind1[0]]
-                    # Construct 2MASS-style name from GaiaDR2 RA/DEC
+                    # Construct 2MASS-style name from catalog ra/dec
                     else:
-                        fiber['tmass_style'][istar] = '2M'+coords2tmass(catdb['ra'][ind1[0]],catdb['dec'][ind1[0]])
+                        fiber['tmass_style'][istar] = 'AP'+coords2tmass(catdb['ra'][ind1[0]],catdb['dec'][ind1[0]])
                     print('Fixing tmass_style ID for '+fiber['tmass_style'][istar])
                 if fiber['catalogid'][istar]<0:
                     fiber['catalogid'][istar]=catdb['catalogid'][ind1[0]]

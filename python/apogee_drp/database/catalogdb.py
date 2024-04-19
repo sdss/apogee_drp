@@ -33,7 +33,7 @@ def get_sdssid(catalogid):
     data = db.query(sql=sql,fmt="table")
 
     if len(data)==0:
-	print('no matches')
+        print('no matches')
     else:
         _,ind1,ind2 = np.intersect1d(catalogid,data['catalogid'],return_indices=True)
         out = np.zeros(dln.size(catalogid),dtype=data.dtype)
@@ -84,7 +84,8 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
               'gaia','pmra','e_pmra','pmdec','e_pmdec','plx','e_plx','gaiamag',
               'e_gaiamag','gaiabp','e_gaiabp','gaiarp','e_gaiarp']
     cols = 'c.catalogid,c.ra,c.dec,' + ','.join('t.'+np.char.array(colarr))
-
+    cols += ",'dr2' as gaia_release"
+    
     # Use catalogid
     if catid is not None:
         # Multiple IDs
@@ -103,7 +104,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
     # Get all targets for a certain design
     elif designid is not None:
         sql = "select t.catalogid,t.ra,t.dec,t.pmra,t.pmdec,t.epoch,m.bp as gaia_bpmag,m.rp as gaia_rpmag,m.gaia_g as gaia_gmag,"+\
-              "m.j as jmag,m.h as hmag,m.k as kmag,c.carton,c.program "+\
+              "'dr2' as gaia_release, m.j as jmag,m.h as hmag,m.k as kmag,c.carton,c.program "+\
               "from targetdb.carton_to_target as ct "+\
               "join targetdb.assignment as a on a.carton_to_target_pk=ct.pk "+\
               "join magnitude as m on m.carton_to_target_pk=a.carton_to_target_pk "+\
@@ -142,8 +143,8 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
 
     # Get SDSS_IDs
     if sdssid and len(data)>0:
-	sout = get_sdssid(data['catalogid'].tolist())
-	data['sdss_id'] = 0
-	data['sdss_id'] = sout['sdss_id']
+        sout = get_sdssid(data['catalogid'].tolist())
+        data['sdss_id'] = 0
+        data['sdss_id'] = sout['sdss_id']
     
     return data
