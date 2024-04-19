@@ -2,9 +2,52 @@
 import numpy as np
 from . import apogeedb
 from dlnpyutils import utils as dln
+from astropy.coordinates import SkyCoord
+import astropy.units as u
+import traceback
 
+def get_sdssid(catalogid):
+    # Get SDSS_IDs
+    db = apogeedb.DBSession()
 
-def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0):
+    # Only returns unique catalogid values
+    # i.e. if there are duplicates in catalogid, then the number of elements
+    # in the returned results will not match the number in catalogid
+    #tp = SDSS_ID_flat.select(SDSS_ID_flat.catalogid, SDSS_ID_flat.sdss_id)\
+    #                 .where(SDSS_ID_flat.catalogid.in_(catalogid)).dicts()
+
+    sql = 'select s.*,f.catalogid,f.version_id from catalogdb.sdss_id_flat as f'
+    sql += ' join catalogdb.sdss_id_stacked as s on f.sdss_id=s.sdss_id where f.catalogid'
+    # Multiple IDs
+    if dln.size(catalogid)>1:
+        ids = ','.join(np.array(catalogid).astype(str))
+        sql += " in ("+ids+")"
+    # Single ID
+    else:
+        if type(catalogid)==np.ndarray:
+            ids = str(catalogid[0])
+        else:
+            ids = str(catalogid)
+        sql += "="+ids
+
+    data = db.query(sql=sql,fmt="table")
+
+    if len(data)==0:
+	print('no matches')
+    else:
+        _,ind1,ind2 = np.intersect1d(catalogid,data['catalogid'],return_indices=True)
+        out = np.zeros(dln.size(catalogid),dtype=data.dtype)
+        if len(ind1)>0:
+            for c in data.dtype.names:
+                out[c][ind1] = data[c][ind2]
+        if len(ind1) != dln.size(catalogid):
+            print(len(catalogid)-len(ind1),' rows missing SDSS_IDs')
+
+    db.close()
+
+    return out
+
+def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
     """
     Get catalogdb data for objects.  You can either query by
     catalogid or by coordinates (ra/dec).
@@ -19,6 +62,8 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0):
        Array of DEC values.
     dcr : float, optional
        Search radius in arcsec.  Default is 1". 
+    sdssid : bool, optional                      
+       Return the sdssid.  Default is True.  
 
     Returns
     -------
@@ -95,4 +140,10 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0):
 
     db.close()
 
+    # Get SDSS_IDs
+    if sdssid and len(data)>0:
+	sout = get_sdssid(data['catalogid'].tolist())
+	data['sdss_id'] = 0
+	data['sdss_id'] = sout['sdss_id']
+    
     return data
