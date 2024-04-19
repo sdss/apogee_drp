@@ -301,6 +301,57 @@ if file_test(platedatafile) eq 1 and not keyword_set(clobber) then begin
 endif
 
 
+;; -------- CALL THE PYTHON ROUTINE ----------
+print,'Running Python platedata.py'
+; use temporary files and symlinks
+tbase = MKTEMP('pltdata',outdir=getlocaldir())    ; create base, leave so other processes won't take it
+tempfile = tbase+'.fits'
+file_delete,tempfile,/allow
+;; defaults
+if keyword_set(mapa) then mapa='True' else mapa='False'
+if keyword_set(fixfiberid) then fixfiberid='True' else fixfiberid='False'
+if keyword_set(noobject) then noobject='True' else noobject='False'
+if keyword_set(skip) then skip='True' else skip='False'
+if keyword_set(twilight) then twilight='True' else twilight='False'
+if keyword_set(clobber) then clobber='True' else clobber='False'
+if n_elements(plugid) eq 0 then plugid='None' else plugid='"'+strtrim(plugid,2)+'"'
+if n_elements(asdaf) eq 0 then asdaf='None' else asdaf='"'+strtrim(asdaf,2)+'"'
+if n_elements(obj1m) eq 0 then obj1m='None' else obj1dm='"'+strtrim(obj1m,2)+'"'
+if n_elements(badfiberid) eq 0 then badfiberid='None' else badfiberid='"'+strtrim(badfiberid,2)+'"'
+if n_elements(mapper_data) eq 0 then mapper_data='None' else mapper_data='"'+strtrim(mapper_data,2)+'"'
+if n_elements(starfiber) eq 0 then starfiber='None' else starfiber='"'+strtrim(starfiber,2)+'"'
+;; Call the python code
+cmd = '#!/usr/bin/env python'
+push,cmd,'from astropy.table import Table'
+push,cmd,'from apogee_drp.utils import platedata'
+pars = strtrim(plate,2)+','+strtrim(cmjd,2)+',"'+strtrim(dirs.apred,2)+'","'+strtrim(dirs.telescope,2)+'"'
+pars += ',plugid='+plugid+',asdaf='+asdaf+',mapa='+mapa
+pars += ',obj1m='+obj1m+',fixfiberid='+fixfiberid+',noobject='+noobject
+pars += ',skip='+skip+',twilight='+twilight+',badfiberid='+badfiberid
+pars += ',mapper_data='+mapper_data+',starfiber='+starfiber+',clobber='+clobber
+push,cmd,'tab=platedata.getdata('+pars+')'
+;;push,cmd,'if len(tab)>0: Table(tab).write("'+tempfile+'")'
+scriptfile = tbase+'.py'
+WRITELINE,scriptfile,cmd
+FILE_CHMOD,scriptfile,'755'o
+SPAWN,scriptfile,out,errout,/noshell
+if errout[0] ne '' or n_elements(errout) gt 1 then begin
+  print,'Problems with the platedata.py call'
+  for i=0,n_elements(errout)-1 do print,errout[i]
+endif
+;; The python code will save it to the apPlateData file
+if file_test(platedatafile) eq 1 then begin
+  return,readplatedata(platedatafile)
+endif else begin
+  print,platedatafile,' NOT FOUND'
+  return,-1
+endelse
+
+  
+;;;---------------------------- IDL code ------------------------------  
+
+
+
 ;; Deal with null values from yaml file
 if size(fixfiberid,/type) eq 7 and n_elements(fixfiberid) eq 1 then $
   if (strtrim(fixfiberid,2) eq 'null' or strtrim(strlowcase(fixfiberid),2) eq 'none') then undefine,fixfiberid  ;; null/none  
