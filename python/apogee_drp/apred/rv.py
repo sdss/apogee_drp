@@ -1,3 +1,4 @@
+
 # Radial velocity and visit combination code
 
 import os
@@ -111,7 +112,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     try : os.makedirs(os.path.dirname(stardir))
     except FileExistsError: pass
 
-    # Initalize star-level summary table                                                                                         
+    # Initalize star-level summary table
     startype = np.dtype([('apogee_id','U30'),('file','U100'),('uri','U300'),('starver','U50'),('mjdbeg',int),('mjdend',int),
                          ('telescope','U6'),('apred_vers','U50'),('v_apred','U50'),('healpix',int),('snr',float),
                          ('ra',float),('dec',float),('glon',float),('glat',float),
@@ -1081,13 +1082,14 @@ def dbingest(startab,starvisits):
                            "and telescope='"+startab['telescope'][0]+"' and starver='"+startab['starver'][0]+"'")
         starvisits['star_pk'] = starout['pk'][0]
         # Remove some unnecessary columns (duplicates what's in visit table)
-        delcols = ['target_id','objtype','survey', 'field', 'programname', 'alt_id', 'location_id', 'glon','glat',
+        delcols = ['target_id','objtype','survey', 'field', 'design', 'sdss_id', 'programname',
+                   'alt_id', 'location_id', 'glon','glat',
                    'assigned','on_target','valid','cadence','program','category','exptime','nframes',
                    'jmag','jerr', 'herr', 'kmag', 'kerr', 'src_h','pmra', 'pmdec', 'pm_src','apogee_target1',
-                   'apogee_target2', 'apogee_target3', 'apogee_target4','gaiadr2_sourceid',
-                   'gaiadr2_plx','gaiadr2_plx_error','gaiadr2_pmra','gaiadr2_pmra_error','gaiadr2_pmdec',
-                   'gaiadr2_pmdec_error','gaiadr2_gmag',
-                   'gaiadr2_gerr','gaiadr2_bpmag','gaiadr2_bperr','gaiadr2_rpmag','gaiadr2_rperr',
+ 	           'apogee_target2', 'apogee_target3', 'apogee_target4','gaia_release','gaia_sourceid',
+                   'gaia_plx','gaia_plx_error','gaia_pmra','gaia_pmra_error','gaia_pmdec',
+                   'gaia_pmdec_error','gaia_gmag',
+                   'gaia_gerr','gaia_bpmag','gaia_bperr','gaia_rpmag','gaia_rperr',
                    'sdssv_apogee_target0','firstcarton',
                    'targflags', 'starflag', 'starflags','created','rvtab']
         visits = starvisits.copy()  # make a local copy
