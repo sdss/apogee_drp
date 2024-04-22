@@ -83,7 +83,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
     colarr = ['twomass','jmag','e_jmag','hmag','e_hmag','kmag','e_kmag','twomflag',
               'gaia','pmra','e_pmra','pmdec','e_pmdec','plx','e_plx','gaiamag',
               'e_gaiamag','gaiabp','e_gaiabp','gaiarp','e_gaiarp']
-    cols = 'c.catalogid,c.ra,c.dec,' + ','.join('t.'+np.char.array(colarr))
+    cols = 'c.catalogid,c.version_id,c.ra,c.dec,' + ','.join('t.'+np.char.array(colarr))
     cols += ",'dr2' as gaia_release"
     
     # Use catalogid
@@ -103,7 +103,8 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
                   "join catalogdb.catalog as c on x.catalogid=c.catalogid where x.catalogid="+ids
     # Get all targets for a certain design
     elif designid is not None:
-        sql = "select t.catalogid,t.ra,t.dec,t.pmra,t.pmdec,t.epoch,m.bp as gaia_bpmag,m.rp as gaia_rpmag,m.gaia_g as gaia_gmag,"+\
+        sql = "select t.catalogid,t.version_id,t.ra,t.dec,t.pmra,t.pmdec,t.epoch,m.bp as gaia_bpmag,"+\
+              "m.rp as gaia_rpmag,m.gaia_g as gaia_gmag,"+\
               "'dr2' as gaia_release, m.j as jmag,m.h as hmag,m.k as kmag,c.carton,c.program "+\
               "from targetdb.carton_to_target as ct "+\
               "join targetdb.assignment as a on a.carton_to_target_pk=ct.pk "+\
@@ -125,7 +126,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
         vals = ','.join(coords)
         ctable = '(VALUES '+vals+' ) as v'
         # Subquery makes a temporary table from q3c coordinate query with catalogdb.catalog
-        sqlsub = "with r as (select c.catalogid,c.ra,c.dec,(q3c_dist(c.ra,c.dec,v.column1,v.column2)*3600.0) as q3c_dist "+\
+        sqlsub = "with r as (select c.catalogid,c.version_id,c.ra,c.dec,(q3c_dist(c.ra,c.dec,v.column1,v.column2)*3600.0) as q3c_dist "+\
                  " from "+ctable+",catalogdb.catalog as c "+\
                  "where q3c_join(v.column1,v.column2,c.ra,c.dec,"+radlim+") LIMIT 1000000)"
         # Use inline query for first join with catalogdb.catalog_to_tic_v8
@@ -138,7 +139,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
 
     # Do the query
     data = db.query(sql=sql,fmt="table")
-
+    
     db.close()
 
     # Get SDSS_IDs

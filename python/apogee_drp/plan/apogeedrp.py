@@ -3728,7 +3728,10 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         print('Starting '+str(apred)+' fresh')
         apogee_redux = os.environ['APOGEE_REDUX']+'/'
         if os.path.exists(apogee_redux+apred):
-            shutil.rmtree(apogee_redux+apred)
+            if os.path.islink(apogee_redux+apred)==False:
+                shutil.rmtree(apogee_redux+apred)
+            else:
+                raise Exception('Cannot remove directory that is a symbolic link')
         os.makedirs(logdir)        
 
     # Set up logging to screen and logfile

@@ -443,7 +443,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             print('Reading flagModifications file: ','flagModifications-'+platestr+'.txt')
             flag_changes = Table.read(platedir+'/flagModifications-'+platestr+'.txt',format='ascii')
             have_flag_changes = 1
-
+            
     # Get SDSS-V FPS photometry from targetdb
     if fps:
         print('Querying targetdb/catalogdb')
@@ -519,7 +519,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             guide['zeta'][i] = plugmap['fiberdata']['zeta'][gi]
             guide['spectrographid'][i] = plugmap['fiberdata']['spectrographId'][gi]
         platedata['guidedata'] = guide
-        
+    
     # Find matching plugged entry for each spectrum and load up the output information from correct source(s)
     nomatch = 0
     for i in range(300):
@@ -657,7 +657,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             sdss5 = True
                             if fps==False:   # SDSS-V plate data
                                 fiber['catalogid'][i] = ph['catalogid'][match]
-                                fiber['version_id'][i] = ph['version_id'][match]
+                                #fiber['version_id'][i] = ph['version_id'][match]
                                 #fiber['sdss_id'][i] = ph['sdss_id'][match]
                                 fiber['gaia_g'][i] = ph['gaia_g'][match]
                                 fiber['gaia_bp'][i] = ph['gaia_bp'][match]
@@ -886,7 +886,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         platedata['field'] = plugmap['field_id']
         if len(ph)>0:
             platedata['programname'] = ph['carton'][0]
-
+            
     ## Load apogeeObject file to get proper name and coordinates
     ## Get apogeeObject catalog info for this field
     #if apogee2 then apogeeobject='apogee2Object' else apogeeobject='apogeeObject'
