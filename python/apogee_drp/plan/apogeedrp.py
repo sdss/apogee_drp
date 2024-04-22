@@ -1142,6 +1142,143 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     if mjd5 is not None:
         create_sumfiles_mjd(apred,telescope,mjd5,logger=logger)
 
+def create_sumfiles_carton(apred,telescope,carton,logger=None):
+    """
+    Create allVisit/allStar files and summary of objects
+    for a particular carton
+    """
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+
+    # Start db session
+    db = apogeedb.DBSession()
+
+    # USE STAR_LATEST AND VISIT_LATEST "VIEWS" IN THE FUTURE!
+
+    # Full allVisit and allStar files
+    #  apogee_id+apred_vers+telescope+starver uniquely identifies a particular star row
+    #  For each apogee_id+apred_vers+telescope we want the maximum starver
+    #  The subquery does this for us by grouping by apogee_id+apred_vers+telescope and
+    #    calculating the aggregate value MAX(starver).
+    #  We then select the particular row (with all columns) using apogee_id+apred_vers+telescope+starver
+    #    from this subquery.
+    #allstar = db.query(sql="select * from apogee_drp.star where (apogee_id, apred_vers, telescope, starver) in "+\
+    #                   "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\
+    #                   "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    # Using STAR_LATEST seems much faster
+    #allstar = db.query('star_latest',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+
+    sql = """select * from apogee_drp.star as s
+             join targetdb.target as t
+             on s.catalogid=t.catalogid
+             join targetdb.carton_to_target as ct
+             on t.pk=ct.target_pk
+             join targetdb.carton
+             on ct.carton_pk=carton.pk
+             where """
+    sql += "s.apred_vers='"+apred+"'"
+    sql += " and s.telescope='"+telescope+"'"
+    if type(carton) is int:
+        sql += " and carton.carton_pk="+int(carton)
+    else:
+        sql += " and carton.carton='"+carton+"'"        
+    vstar = db.query(sql=sql)
+    
+    # Deal with multiple STARVER versions per star
+    star_index = dln.create_index(vstar['apogee_id'])
+    ndups = np.sum(star_index['num']>1)
+    if ndups>0:
+        allstar = np.zeros(len(star_index['value']),dtype=vstar.dtype)
+        for i,obj in enumerate(star_index['value']):
+            if star_index['num'][i]>1:
+                ind = star_index['index'][star_index['lo'][i]]
+                allstar[i] = vstar[ind]
+            else:
+                ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
+                starver = vstar['starver'][ind]
+                si = np.argsort(starver)
+                useind = ind[si[-1]]   # use last/largest STARVER
+                allstar[i] = vstar[useind]
+    else:
+        allstar = vstar
+        
+    allstarfile = load.filename('allStar')
+    if type(carton) is int:
+        carton_name = db.query(sql='select carton from targetdb.carton where pk='+str(carton))
+        carton_name = carton_name[0][0]
+    else:
+        allstarfile = allstarfile.replace('.fits','-'+carton+'.fits')
+    logger.info('Writing allStar file to '+allstarfile)
+    logger.info(str(len(allstar))+' stars')
+    if os.path.exists(os.path.dirname(allstarfile))==False:
+        os.makedirs(os.path.dirname(allstarfile))
+    allstar = Table(allstar)
+    if 'nres' in allstar.colnames:
+        del allstar['nres']    # temporary kludge, nres is causing write problems
+    allstar.write(allstarfile,overwrite=True)
+
+    return
+
+    
+    # allVisit
+    # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
+    #   Get more info by joining with the visit table.
+    vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
+             'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+             'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
+             'apogee_target4', 'catalogid', 'sdss_id', 'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
+             'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
+             'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
+             'starflags','dateobs','jd','exptime']
+    rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
+              'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'n_components', 'rv_components']
+    
+    # Straight join query of visit and rv_visit
+    cols = np.hstack(('v.'+np.char.array(vcols),'rv.'+np.char.array(rvcols)))
+    sql = 'select '+','.join(cols)+' from apogee_drp.visit as v LEFT JOIN apogee_drp.rv_visit as rv ON rv.visit_pk=v.pk'
+    sql += " where v.apred_vers='"+apred+"' and v.telescope='"+telescope+"'"
+    allvisit = db.query(sql=sql)
+
+    # Fix bad STARVER values
+    bdstarver, = np.where(np.char.array(allvisit['starver']) == '')
+    if len(bdstarver)>0:
+        allvisit['starver'][bdstarver] = allvisit['mjd'][bdstarver]
+    # Check for duplicate STARVER for each star
+    idindex = dln.create_index(allvisit['apogee_id'])
+    duplicate = np.zeros(len(allvisit),bool)
+    for i in range(len(idindex['value'])):
+        ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
+        allv = allvisit[ind]
+        if np.min(allv['starver'].astype(int)) != np.max(allv['starver'].astype(int)):
+            # Only keep rows for the maximum STARVER per star
+            maxstarver = np.max(allv['starver'].astype(int))
+            bd1, = np.where(allv['starver'].astype(int) != maxstarver)
+            duplicate[ind[bd1]] = True
+    torem, = np.where(duplicate==True)
+    if len(torem)>0:
+        allvisit = np.delete(allvisit,torem)
+
+    # Match with allstar to pull the carton apogee_id values
+        
+    # Use visit_latest, this can sometimes take forever
+    #cols = ','.join(vcols+rvcols)        
+    #allvisit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    # rv_components can sometimes be an object type
+    if allvisit.dtype['rv_components'] == np.object:
+        allvisit = Table(allvisit)
+        allvisit['rv_components'] = np.zeros(len(allvisit),dtype=np.dtype((np.float32,3)))
+    allvisitfile = load.filename('allVisit')#.replace('.fits','-'+telescope+'.fits')
+    logger.info('Writing allVisit file to '+allvisitfile)
+    logger.info(str(len(allvisit))+' visits')
+    if os.path.exists(os.path.dirname(allvisitfile))==False:
+        os.makedirs(os.path.dirname(allvisitfile))
+    Table(allvisit).write(allvisitfile,overwrite=True)
+
+    db.close()
+        
 def mkvers(apred,logger=None):
     """
     Setup APOGEE DRP directory structure.
