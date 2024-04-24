@@ -140,7 +140,8 @@ def read(filename):
 
 def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=None,
             fixfiberid=False,noobject=False,skip=False,twilight=False,
-            badfiberid=None,mapper_data=None,starfiber=None,clobber=False):
+            badfiberid=None,mapper_data=None,starfiber=None,clobber=False,
+            logger=None):
     """
     Getdata loads up a structure with plate information and information about the 300 APOGEE fibers
     This is obtained from a plPlugMapA file or from a 
@@ -184,6 +185,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
        Don't load the plugmap information.  Default is False.
     clobber : bool, optional
        Overwrite any existing apPlateData file.  Default is False.
+    logger : logger, optional
+       Logging object.  If not is input, then a default one will be created.   
 
     Returns
     -------
@@ -200,6 +203,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
 
     """
 
+    if logger is None:
+        logger = dln.basiclogger()
+    
     load = apload.ApLoad(apred=apred,telescope=telescope)
     if mapper_data is None:
         if load.instrument=='apogee-n':
@@ -228,7 +234,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             planfile = load.filename('Plan',plate=plate,mjd=mjd)
     platedatafile = planfile.replace('Plan','PlateData').replace('.yaml','.fits')
     if os.path.exists(platedatafile) and clobber==False:
-        print('Reading platedata from '+platedatafile)
+        logger.info('Reading platedata from '+platedatafile)
         pdata = read(platedatafile)
         fiber = Table(pdata['fiberdata'])  # make sure the fiberdata columns are lowercase
         for c in fiber.colnames: fiber[c].name = c.lower()
@@ -373,7 +379,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         # Rare cases where the plugmap exists in the data directory but NOT in the mapper directory
         if os.path.exists(plugdir+'/'+plugfile)==False:
             if os.path.exists(datadir+'/'+str(mjd)+'/'+plugfile.replace('MapM','MapA'))==True:
-                print('Cannot find plPlugMapM file in mapper directory.  Using plPlugMapA file in data directory instead.')
+                logger.info('Cannot find plPlugMapM file in mapper directory.  Using plPlugMapA file in data directory instead.')
                 plugdir = datadir+'/'+str(mjd)+'/'
                 root = 'plPlugMapA'
                 plugfile = plugfile.replace('MapM','MapA')
@@ -408,7 +414,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         platestr = '{:06d}'.format(plate)
         platedir = os.environ['PLATELIST_DIR']+'/plates/%04dXX/%06d' % (plate//100,plate)
         holefile = 'plateHolesSorted-'+platestr+'.par'
-        print('yanny_read,'+platedir+'/'+holefile)
+        logger.info('yanny_read,'+platedir+'/'+holefile)
         pdata = yanny.yanny(platedir+'/'+holefile,np=True)
         ph = pdata['STRUCT1']
         # Use locationid from plateHoles files as there are a few cases
@@ -432,21 +438,21 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             bdcatid, = np.where((np.char.array(ph['holetype']).astype(str).find('APOGEE') > -1) & 
                                 (ph['catalogid']>0) & (ph['catalogid']<4204681993))
         if len(bdcatid)>0:
-            print('KLUDGE!!!  Fixing overflow catalogIDs for '+str(len(bdcatid))+' telluric stars')
-            print(ph['catalogid'][bdcatid])
+            logger.info('KLUDGE!!!  Fixing overflow catalogIDs for '+str(len(bdcatid))+' telluric stars')
+            logger.info(ph['catalogid'][bdcatid])
             ph['catalogid'][bdcatid] += 2**32
 
         # Read flag correction data
         have_flag_changes = 0
-        print(platedir+'/flagModifications-'+platestr+'.txt')
+        logger.info(platedir+'/flagModifications-'+platestr+'.txt')
         if os.path.exists(platedir+'/flagModifications-'+platestr+'.txt'):
-            print('Reading flagModifications file: ','flagModifications-'+platestr+'.txt')
+            logg.erinfo('Reading flagModifications file: flagModifications-'+platestr+'.txt')
             flag_changes = Table.read(platedir+'/flagModifications-'+platestr+'.txt',format='ascii')
             have_flag_changes = 1
 
     # Get SDSS-V FPS photometry from targetdb
     if fps:
-        print('Querying targetdb/catalogdb')
+        logger.info('Querying targetdb/catalogdb')
         ph = catalogdb.getdata(designid=plugmap['design_id'])
         ph['target_ra'] = ph['ra']
         ph['target_dec'] = ph['dec']
@@ -535,12 +541,12 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         if badfiberid is not None:
             j, = np.where(badfiberid == 300-i)
             if len(j)>0:
-                print('fiber index ',i,' declared as bad')
+                logger.info('fiber index '+str(i)+' declared as bad')
                 nm = 0
         
         if nm>1:
-            print('halt: more than one match for fiber id !! MARVELS??')
-            #print(plugmap['fiberdata']['fiberId'][m],plugmap['fiberdata']['primTarget'][m],
+            logger.info('halt: more than one match for fiber id !! MARVELS??')
+            #logger.info(plugmap['fiberdata']['fiberId'][m],plugmap['fiberdata']['primTarget'][m],
             #      plugmap['fiberdata']['secTarget'][m])
             import pdb; pdb.set_trace()
         if nm==1:
@@ -581,7 +587,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     if fiber['on_target'][i]==0: badcmt.append('NOT on target')
                     if fiber['valid'][i]==0: badcmt.append('INVALID')
                     cmt += ', '.join(badcmt)
-                    print(cmt)
+                    logger.info(cmt)
                 # Unassigned, no information for this target
                 if fiber['assigned'][i]==0:
                     fiber['hmag'][i] = 99.99
@@ -642,7 +648,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 jj, = np.where((flag_changes['PlateID'] == plate) &
                                                (flag_changes['TARGETID'] == ph['targetids'][match]))
                                 if len(jj)>0:
-                                    print('modifying flags for',ph['targetids'][match])
+                                    logger.info('modifying flags for '+str(ph['targetids'][match]))
                                     fiber['target1'][i] = flag_changes['at1'][jj]
                                     fiber['target2'][i] = flag_changes['at2'][jj]
                                     fiber['target3'][i] = flag_changes['at3'][jj]
@@ -742,16 +748,16 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                         fiber['tmass_style'][i] = objname
                     else:
                         #raise Exception('no match found in plateHoles!',fiber['ra'][i],fiber['dec'][i], i)
-                        print('no match found to photometry',fiber['ra'][i],fiber['dec'][i], 300-i)
+                        logger.info('no match found to photometry '+str(fiber['ra'][i])+' '+str(fiber['dec'][i])+' '+str(300-i))
                         nomatch += 1
         else:
             fiber['fiberid'][i] = -1
-            print('no match for fiber index',i)
+            logger.info('no match for fiber index '+str(i))
 
     # SDSS-V, get catalogdb information
     #----------------------------------
     if plate >= 15000:
-        print('Getting catalogdb information')
+        logger.info('Getting catalogdb information')
         objind, = np.where((fiber['objtype']=='OBJECT') | (fiber['objtype']=='STAR') |
                            (fiber['objtype']=='HOT_STD'))
         nobjind = len(objind)
@@ -760,29 +766,29 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         # Get catalogdb information using catalogID
         catdb = None
         if ngdid>0:
-            print('Querying catalogdb using catalogID for '+str(ngdid)+' stars')
+            logger.info('Querying catalogdb using catalogID for '+str(ngdid)+' stars')
             catdb1 = catalogdb.getdata(catid=objdata['catalogid'][gdid])
 
             # Got some results
             if len(catdb1)>0:
-                print('Got results for '+str(len(catdb1))+' stars')
+                logger.info('Got results for '+str(len(catdb1))+' stars')
                 catdb = catdb1.copy()
             else:
-                print('No results')
+                logger.info('No results')
         # Get catalogdb information using coordinates (tellurics don't have IDs)    
         if nbdid>0:
-            print('Querying catalogdb using coordinates for ',str(nbdid)+' stars')
+            logger.info('Querying catalogdb using coordinates for '+str(nbdid)+' stars')
             catdb2 = catalogdb.getdata(ra=objdata['ra'][bdid],dec=objdata['dec'][bdid])
             # this returns a q3c_dist column that we don't want to keep
             if len(catdb2)>0:
-                print('Got results for '+str(len(catdb2))+' stars')
+                logger.info('Got results for '+str(len(catdb2))+' stars')
                 del catdb2['q3c_dist']
                 if catdb is None:
                     catdb = catdb2.copy()
                 else:
                     catdb = vstack((catdb,catdb2))
             else:
-                print('No results')
+                logger.info('No results')
         # Add catalogdb information
         for i in range(nobjind):
             istar = objind[i]
@@ -850,7 +856,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     # Construct 2MASS-style name from GaiaDR2 RA/DEC
                     else:
                         fiber['tmass_style'][istar] = '2M'+coords2tmass(catdb['ra'][ind1[0]],catdb['dec'][ind1[0]])
-                    print('Fixing tmass_style ID for '+fiber['tmass_style'][istar])
+                    logger.info('Fixing tmass_style ID for '+fiber['tmass_style'][istar])
                 if fiber['catalogid'][istar]<0:
                     fiber['catalogid'][istar]=catdb['catalogid'][ind1[0]]
                 fiber['twomass_designation'][istar] = catdb['twomass'][ind1[0]]
@@ -880,7 +886,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 fiber['gaia_rpmag'][istar] = catdb['gaiarp'][ind1[0]]
                 fiber['gaia_rperr'][istar] = catdb['e_gaiarp'][ind1[0]]
             else:
-                print('no match catalogdb match for ',fiber['object'][istar])
+                logger.info('no match catalogdb match for '+str(fiber['object'][istar]))
 
     # SDSS-V FPS data
     if fps:
@@ -970,7 +976,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     platedata['fiberdata'] = fiber
 
     # Save the platedata to file
-    print('Saving platedata to '+platedatafile)    
+    logger.info('Saving platedata to '+platedatafile)    
     save(platedatafile,platedata)
     
     return platedata

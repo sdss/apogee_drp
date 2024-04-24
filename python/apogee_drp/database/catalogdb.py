@@ -375,7 +375,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
         if designid is not None:
             data = getdata(catid=catid,ra=ra,dec=dec,designid=designid,
                            dcr=dcr,table='tic_v8',sdssid=False)
-            data = data[['catalogid','ra','dec','carton','program']]
+            data = data[['catalogid','version_id','ra','dec','carton','program']]
             catid = data['catalogid']
             designid = None
         # Query all the tables and merge results
@@ -460,13 +460,14 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
 
     # Get all targets for a certain design
     elif designid is not None:
-        sql = "select t.catalogid,t.ra,t.dec,t.pmra,t.pmdec,t.epoch,m.bp as gaia_bpmag,m.rp as gaia_rpmag,m.gaia_g as gaia_gmag,"+\
+        sql = "select t.catalogid,cat.version_id,t.ra,t.dec,t.pmra,t.pmdec,t.epoch,m.bp as gaia_bpmag,m.rp as gaia_rpmag,m.gaia_g as gaia_gmag,"+\
               "m.j as jmag,m.h as hmag,m.k as kmag,c.carton,c.program "+\
               "from targetdb.carton_to_target as ct "+\
               "join targetdb.assignment as a on a.carton_to_target_pk=ct.pk "+\
               "join magnitude as m on m.carton_to_target_pk=a.carton_to_target_pk "+\
               "join target as t on t.pk=ct.target_pk "+\
               "join carton as c on c.pk=ct.carton_pk "+\
+              "join catalogdb.catalog as cat on cat.catalogid=t.catalogid "+\
               "where a.design_id="+str(designid)+";"
         
     # Use coordinates
