@@ -1102,36 +1102,15 @@ def obj2healpix(obj,nside=128):
     Calculate healpix number for a star given EITHER it's 2MASS-style name
     or catalogid.
     """
-
-    # 2MASS name input
-    if type(obj) is str and str(obj).isnumeric()==False:
-        tmassname = str(obj)
         
-        # Check length of string
-        if len(tmassname)!=18:
-            print(tmassname+' is not in the correct format')
-            return None
-
-        # Get coordinates from the 2MASS-style name
-        ra,dec = obj2coords(tmassname)
-
-    # catalogid input
-    elif str(obj).isnumeric()==True:
-        # query the database
-        catalogid = int(obj)
-        db = apogeedb.DBSession()
-        res = db.query(sql='select catalogid,ra,dec from catalogdb.catalog where catalogid='+str(catalogid))
-        db.close()
-        if len(res)==0:
-            print('No catalogdb.catalog information found for '+str(obj))
-            return None
-        ra = res['ra'][0]
-        dec = res['dec'][0]
-
-    else:
-        print('Input obj='+str(obj)+' not understood.  Must be 2MASS ID or catalogid')
+    # Check length of string
+    if len(obj)!=18:
+        print(obj+' is not in the correct format')
         return None
-        
+
+    # Get coordinates from the 2MASS-style name
+    ra,dec = obj2coords(obj)
+
     # Calculate HEALPix number
     pix = hp.ang2pix(nside,ra,dec,lonlat=True)
     return pix
