@@ -40,7 +40,6 @@ def coords2tmass(ra,dec):
 
     return name
 
-
 def save(filename,plug):
     """
     Save plugmap data to a PlateData file.

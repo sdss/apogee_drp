@@ -690,10 +690,10 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,dbload=True,logger=None):
             if chinfo['okay'][0]:
                 fiberdata = Table.read(chfiles[0],11)
             else:
-                logger.info('Cannot get fiber data from '+chfiles[0])
-                logger.info('info: okay ',chinfo['okay'][0])
-                logger.info('info: exists ',chinfo['exists'][0])
-                logger.info('info: size ',chinfo['size'][0])                
+                logger.info('Cannot get fiber data from '+str(chfiles[0]))
+                logger.info('info: okay '+str(chinfo['okay'][0]))
+                logger.info('info: exists '+str(chinfo['exists'][0]))
+                logger.info('info: size '+str(chinfo['size'][0]))
                 fiberdata = None
         else:
             fiberdata = None

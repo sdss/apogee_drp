@@ -1184,6 +1184,10 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             else:  # plates
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
+                if expinfo['designid'][i] != 'None':
+                    objplan['designid'] = str(expinfo['designid'][i])
+                if expinfo['fieldid'][i] != 'None':
+                    objplan['fieldid'] = str(expinfo['fieldid'][i])                
             if waveid:
                 objplan['waveid'] = str(waveid)
             out.append(objplan)

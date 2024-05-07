@@ -6,7 +6,7 @@ from glob import glob
 import pdb
 
 from dlnpyutils import utils as dln
-from . import apload
+from . import apload,plugmap as plmap
 from astropy.io import fits
 from astropy.table import Table
 
@@ -116,6 +116,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
                       ('dateobs',np.str,50),('gangstate',np.str,20),('shutter',np.str,20),('calshutter',np.str,20),
                       ('mjd',int),('observatory',(np.str,10)),('dithpix',float)])
     tab = np.zeros(nfiles,dtype=dtype)
+    plate2field = {}
     # Loop over the files
     for i in range(nfiles):
         if os.path.exists(files[i]):
@@ -135,6 +136,19 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
             mjd = int(load.cmjd(int(num)))
             tab['mjd'] = mjd
             #    tab['mjd'] = utils.getmjd5(head['date-obs'])
+            if mjd<59556:
+                plate = head.get('plateid')
+                plugid = head.get('name')
+                plfilename = plmap.plugmapfilename(plate,mjd,load.instrument,plugid=plugid)
+                plugmap = plmap.load(plfilename)
+                tab['designid'][i] = plugmap.get('designid')
+                locationID = plugmap.get('locationId')
+                if plate2field.get(plate) is not None:
+                    fieldid = plate2field.get(plate)
+                else:
+                    fieldid,_,_ = apload.apfield(plate,telescope=load.telescope,fps=False)
+                    plate2field[plate] = fieldid
+                tab['fieldid'][i] = fieldid
             if observatory is not None:
                 tab['observatory'] = observatory
             else:
