@@ -689,8 +689,12 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr.apred_vers = apred_vers
     visitstr.fiberid = objdata[istar].fiberid
     visitstr.plate = strtrim(planstr.plateid,2)
-    visitstr.field = strtrim(planstr.fieldid,2)
-    visitstr.design = strtrim(planstr.designid,2)
+    visitstr.field = strtrim(planstr.field,2)
+    if tag_exist(planstr,'designid') then begin
+       visitstr.design = strtrim(planstr.designid,2)
+    endif else begin
+       visitstr.design = -999
+    endelse
     visitstr.exptime = sxpar(finalframe[0].hdr,'exptime')
     visitstr.nframes = nframes
     visitstr.mjd = planstr.mjd
