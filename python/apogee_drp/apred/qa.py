@@ -2496,12 +2496,14 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 snr = '-9.9'
                 relsnr = '-1%'
                 fcolor = 'red'
+                plotwidth = '1000'
                 if objtype != 'SKY': 
                     objtype = 'BLANK'
                     snr = '-99.9'
                     relsnr = '-1%'
                     bgcolor = 'grey'
                     fcolor = 'Black'
+                    plotwidth = '10'
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
                 vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
                 vishtml.write('<TD align="center">' + objtype)
@@ -2533,7 +2535,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
-                plotwidth = '10'
                 
             tmp2 = plotdir + os.path.basename(visitplotfile)
             if (firstcarton != 'UNASSIGNED!!!') & (starflags != 'BAD_PIXELS'):# & (os.path.exists(tmp2)):
