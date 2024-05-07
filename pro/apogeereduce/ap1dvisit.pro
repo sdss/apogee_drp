@@ -689,8 +689,12 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr.apred_vers = apred_vers
     visitstr.fiberid = objdata[istar].fiberid
     visitstr.plate = strtrim(planstr.plateid,2)
-    visitstr.field = strtrim(planstr.fieldid,2)
-    visitstr.design = strtrim(planstr.designid,2)
+    visitstr.field = strtrim(planstr.field,2)
+    if tag_exist(planstr,'designid') then begin
+       visitstr.design = strtrim(planstr.designid,2)
+    endif else begin
+       visitstr.design = -999
+    endelse
     visitstr.exptime = sxpar(finalframe[0].hdr,'exptime')
     visitstr.nframes = nframes
     visitstr.mjd = planstr.mjd
@@ -762,23 +766,21 @@ FOR i=0L,nplanfiles-1 do begin
   ; HDU1 - structure
   MWRFITS,allvisitstr,visitstrfile,/silent
 
-  ;; Insert the apVisitSum information into the apogee_drp database                                                              
+  ;; Insert the apVisitSum information into the apogee_drp database
   if nobjind gt 0 then begin
     print,'Loading visit data into the database'
     DBINGEST_VISIT,allvisitstr
   endif else begin
-    print,'No data to load into the database'
+    print,'No data to load into the database'  
   endelse
-  
- BOMB:
+    
+  BOMB:
 ENDFOR   ; plan files
 
 print,'AP1DVISIT finished'
 writelog,logfile,'AP1DVISIT '+file_basename(planfile)+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
 dt = systime(1)-t0
 print,'dt = ',strtrim(string(dt,format='(F10.1)'),2),' sec'
-
-;stop
 
 if keyword_set(stp) then stop
 
