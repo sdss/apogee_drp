@@ -2146,7 +2146,7 @@ print,'no_checksum: ', no_checksum
   
   endelse
 
-  ; With userference, subtract off the reference array to reduce/remove
+  ; With usereference, subtract off the reference array to reduce/remove
   ;   crosstalk. 
   if keyword_set(usereference) then begin
     print,'subtracting reference array...'
