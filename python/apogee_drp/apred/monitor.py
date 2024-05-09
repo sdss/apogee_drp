@@ -382,7 +382,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(outfile4))
 
             if allv4 is None:
-                allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allVisit-dr17-synspec.fits'
+                allv4path = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec_rev1/allVisit-dr17-synspec_rev1.fits'
                 allv4 = fits.getdata(allv4path)
 
             gd, = np.where(allv4['TELESCOPE'] == telescope)
@@ -4613,7 +4613,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         ###########################################################################################
         # rvparams1.png
         # Plot of residuals of stellar parameters, plate vs. FPS
-        allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allStarLite-dr17-synspec.fits'
+        allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec_rev1/allStarLite-dr17-synspec_rev1.fits'
         allv = fits.getdata(allvpath)
 
         fields = np.array(['18956', '19106', '19092'])
@@ -4723,7 +4723,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         ###########################################################################################
         # rvparams.png
         # Plot of stellar parameters, plate vs. FPS
-        allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec/allStarLite-dr17-synspec.fits'
+        allvpath = '/uufs/chpc.utah.edu/common/home/sdss40/apogeework/apogee/spectro/aspcap/dr17/synspec_rev1/allStarLite-dr17-synspec_rev1.fits'
         allv = fits.getdata(allvpath)
 
         fields = np.array(['18956', '19106', '19092'])

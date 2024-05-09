@@ -136,8 +136,8 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
             mjd = int(load.cmjd(int(num)))
             tab['mjd'] = mjd
             #    tab['mjd'] = utils.getmjd5(head['date-obs'])
-            if mjd<59556:
-                plate = head.get('plateid')
+            plate = head.get('plateid')            
+            if mjd<59556 and plate is not None and str(plate) != '' and int(plate)>0:
                 plugid = head.get('name')
                 plfilename = plmap.plugmapfilename(plate,mjd,load.instrument,plugid=plugid)
                 plugmap = plmap.load(plfilename)

@@ -54,7 +54,8 @@ def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None
             mapper_data = os.environ['MAPPER_DATA_N']
         else:
             mapper_data = os.environ['MAPPER_DATA_S']
-        
+    datadir = mapper_data
+            
     # SDSS-V FPS configuration files
     #-------------------------------
     if fps:
