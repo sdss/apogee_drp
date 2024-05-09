@@ -859,6 +859,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 if fiber['catalogid'][istar]<0:
                     fiber['catalogid'][istar]=catdb['catalogid'][ind1[0]]
                 fiber['twomass_designation'][istar] = catdb['twomass'][ind1[0]]
+                import pdb; pdb.set_trace()
                 fiber['version_id'][istar] = catdb['version_id'][ind1[0]]
                 fiber['sdss_id'][istar] = catdb['sdss_id'][ind1[0]]
                 fiber['jmag'][istar] = catdb['jmag'][ind1[0]]

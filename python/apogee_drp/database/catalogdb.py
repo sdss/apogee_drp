@@ -410,7 +410,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
     
     db = apogeedb.DBSession()
 
-    xcols = 'c.catalogid,c.ra,c.dec,'
+    xcols = 'c.catalogid,c.version_id,c.ra,c.dec,'
     tic_colarr = ['twomass','jmag','e_jmag','hmag','e_hmag','kmag','e_kmag','twomflag',
                   'gaia','pmra','e_pmra','pmdec','e_pmdec','plx','e_plx','gaiamag',
                   'e_gaiamag','gaiabp','e_gaiabp','gaiarp','e_gaiarp']
