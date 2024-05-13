@@ -255,8 +255,10 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
         dbexpinfo = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))
         # No exposures for this night
         if len(expinfo1)==0 and len(dbexpinfo)==0:
-            logger.info('No exposures for MJD='+str(m))
+            logger.info('MJD={:}  {:3d} exposures'.format(m,0))
             continue
+        if len(expinfo1)>0 and verbose:
+            logger.info('MJD={:}  {:3d} exposures'.format(m,len(expinfo1)))
         # Crossmatch the two catalogs
         if len(expinfo1)>0 and len(dbexpinfo)>0:
             vals,ind1,ind2 = np.intersect1d(expinfo1['num'],dbexpinfo['num'],return_indices=True)
