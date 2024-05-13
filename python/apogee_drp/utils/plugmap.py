@@ -10,7 +10,8 @@ from sdss_access.path import path
 from astropy.io import fits
 from . import bitmask as bmask
 
-def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None):
+def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None,
+                    logger=None,verbose=True):
     """
     Construct the plugmap filename using plate and mjd.
     Works for both plate and FPS data.
@@ -31,6 +32,10 @@ def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None
     mapper_data : str, optional
        Directory for mapper information (optional).  If not input, this will
          be obtained from the environmental variables MAPPER_DATA_N/S.
+    logger : logging object, optional
+       Logging object used for logging output.
+    verbose : bool, optional
+       Verbose output to the screen.  Default is True.
 
     Returns
     -------
@@ -44,17 +49,22 @@ def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None
 
     """
 
+    if logger is None:
+        logger = dln.basiclogger()
+    
     # Plates or FPS
     fps = False  # default
     if mjd>=59556:
         fps = True
 
-    if mapper_data is None:
-        if instrument=='apogee-n':
+    if instrument=='apogee-n':
+        datadir = os.environ['APOGEE_DATA_N']
+        if mapper_data is None:
             mapper_data = os.environ['MAPPER_DATA_N']
-        else:
+    else:
+        datadir = os.environ['APOGEE_DATA_S']
+        if mapper_data is None:
             mapper_data = os.environ['MAPPER_DATA_S']
-    datadir = mapper_data
             
     # SDSS-V FPS configuration files
     #-------------------------------
@@ -85,19 +95,23 @@ def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None
             tplugid = str(plate)+'-'+str(mjd)+'-01'
             plugfile = root+'-'+tplugid+'.par'
         if mapa==True:
-            plugdir = datadir+'/'+str(mjd)+'/'
+            plugdir = os.path.join(datadir,str(mjd))
         else:
             plugmjd = tplugid.split('-')[1]
-            plugdir = mapper_data+'/'+plugmjd+'/'
+            plugdir = os.path.join(mapper_data,plugmjd)
 
         # Rare cases where the plugmap exists in the data directory but NOT in the mapper directory
-        if os.path.exists(plugdir+'/'+plugfile)==False:
-            if os.path.exists(datadir+'/'+str(mjd)+'/'+plugfile.replace('MapM','MapA'))==True:
-                logger.info('Cannot find plPlugMapM file in mapper directory.  Using plPlugMapA file in data directory instead.')
-                plugdir = datadir+'/'+str(mjd)+'/'
+        if os.path.exists(os.path.join(plugdir,plugfile))==False:
+            if os.path.exists(os.path.join(datadir,str(mjd),plugfile.replace('MapM','MapA')))==True:
+                if verbose:
+                    logger.info('Cannot find plPlugMapM file in mapper directory.  Using plPlugMapA file in data directory instead.')
+                plugdir = os.path.join(datadir,str(mjd))
                 root = 'plPlugMapA'
                 plugfile = plugfile.replace('MapM','MapA')
-
+            else:
+                logger.info('Cannot find plugmap file for '+str(mjd)+' '+str(plugfile))
+                return ''
+                
     return os.path.join(plugdir,plugfile)
 
 def load(plugfile,verbose=False,fixfiberid=None):

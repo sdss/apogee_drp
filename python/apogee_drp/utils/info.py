@@ -43,7 +43,8 @@ def file_status(filename):
 
     return out
                 
-def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
+def expinfo(observatory=None,mjd5=None,files=None,expnum=None,
+            logger=None,verbose=False):
     """
     Get header information about raw APOGEE files.
     This program can be run with observatory+mjd5 or
@@ -52,26 +53,31 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
     Parameters
     ----------
     observatory : str, optional
-        APOGEE observatory (apo or lco).
+       APOGEE observatory (apo or lco).
     mjd5 : int, optional
-        The MJD5 night to get exposure information for.
+       The MJD5 night to get exposure information for.
     files : list of str, optional
-        List of APOGEE apz filenames.
+       List of APOGEE apz filenames.
     expnum : list, optional
-        List of exposure numbers.
+       List of exposure numbers.
+    logger : logging object, optional
+       Logging object for printing logs.
+    verbose : bool, optional
+       Verbose output to the screen.  Default is False.
 
     Returns
     -------
     cat : numpy structured array
-        Table with information for each file grabbed from the header.
+       Table with information for each file grabbed from the header.
 
     Examples
     --------
+
     info = expinfo(files)
 
     By D.Nidever,  Oct 2020
     """
-
+    
     # Types of inputs:
     #  files, observatory+mjd5, observatory+expnum
     if (files is None and observatory is None) or (files is None and mjd5 is None and expnum is None):
@@ -79,6 +85,8 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
     if (mjd5 is not None and expnum is not None):
         raise ValueError('Input either observatory+mjd5 or observatory+expnum')
 
+    if logger is None and verbose:
+        logger = dln.basiclogger()
     
     load = apload.ApLoad(apred='daily',telescope='apo25m')
 
@@ -117,6 +125,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
                       ('mjd',int),('observatory',(np.str,10)),('dithpix',float)])
     tab = np.zeros(nfiles,dtype=dtype)
     plate2field = {}
+    plate2plugmap = {}
     # Loop over the files
     for i in range(nfiles):
         if os.path.exists(files[i]):
@@ -139,7 +148,12 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
             plate = head.get('plateid')            
             if mjd<59556 and plate is not None and str(plate) != '' and int(plate)>0:
                 plugid = head.get('name')
-                plfilename = plmap.plugmapfilename(plate,mjd,load.instrument,plugid=plugid)
+                if plate2plugmap.get(plate) is not None:
+                    plfilename = plate2plugmap.get(plate)
+                else:
+                    plfilename = plmap.plugmapfilename(plate,mjd,load.instrument,
+                                                       plugid=plugid,verbose=verbose)
+                    plate2plugmap[plate] = plfilename
                 plugmap = plmap.load(plfilename)
                 tab['designid'][i] = plugmap.get('designid')
                 locationID = plugmap.get('locationId')
@@ -186,7 +200,10 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
                     tab['calshutter'][i] = 'Open'
                 else:
                     tab['calshutter'][i] = 'Closed'
-                    
+
+            if verbose:
+                logger.info(tab[i])
+                
     return tab
 
 def getdithergroups(expinfo):
