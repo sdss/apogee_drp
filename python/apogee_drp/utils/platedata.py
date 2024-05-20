@@ -140,7 +140,8 @@ def read(filename):
 
 def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=None,
             fixfiberid=False,noobject=False,skip=False,twilight=False,
-            badfiberid=None,mapper_data=None,starfiber=None,clobber=False):
+            badfiberid=None,mapper_data=None,starfiber=None,clobber=False
+            logger=None):
     """
     Getdata loads up a structure with plate information and information about the 300 APOGEE fibers
     This is obtained from a plPlugMapA file or from a 
