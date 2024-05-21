@@ -103,7 +103,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
                   "join catalogdb.catalog as c on x.catalogid=c.catalogid where x.catalogid="+ids
     # Get all targets for a certain design
     elif designid is not None:
-        sql = "select t.catalogid,t.version_id,t.ra,t.dec,t.pmra,t.pmdec,t.epoch,m.bp as gaia_bpmag,"+\
+        sql = "select t.catalogid,cat.version_id,t.ra,t.dec,t.pmra,t.pmdec,t.epoch,m.bp as gaia_bpmag,"+\
               "m.rp as gaia_rpmag,m.gaia_g as gaia_gmag,"+\
               "'dr2' as gaia_release, m.j as jmag,m.h as hmag,m.k as kmag,c.carton,c.program "+\
               "from targetdb.carton_to_target as ct "+\
@@ -111,6 +111,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
               "join magnitude as m on m.carton_to_target_pk=a.carton_to_target_pk "+\
               "join target as t on t.pk=ct.target_pk "+\
               "join carton as c on c.pk=ct.carton_pk "+\
+              "join catalogdb.catalog as cat on cat.catalogid=t.catalogid "+\
               "where a.design_id="+str(designid)+";"
         
     # Use coordinates
@@ -136,7 +137,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,sdssid=True):
         sql = "select "+cols+" from "+sqlinline+" inner join catalogdb.tic_v8 as t on cat.target_id=t.id"
         # Turning this off improves q3c queries
         sql = 'set enable_seqscan=off; '+sql
-
+        
     # Do the query
     data = db.query(sql=sql,fmt="table")
     
