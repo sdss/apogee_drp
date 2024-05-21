@@ -453,6 +453,17 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     if fps:
         logger.info('Querying targetdb/catalogdb')
         ph = catalogdb.getdata(designid=plugmap['design_id'])
+        # Add missing columns
+        for c in ['jmag','hmag','kmag','gaia_gmag','gaia_bpmag','gaia_rpmag']:
+            if c not in ph.colnames: ph[c]=99.99
+        for c in ['e_jmag','e_hmag','e_kmag','gaia_gerr','gaia_bperr','gaia_rperr']:
+            if c not in ph.colnames: ph[c]=9.99            
+        for c in ['pmra','pmdec','gaia_ra','gaia_dec','gaia_pmra','gaia_pmra_error',
+                  'gaia_pmdec','gaia_pmdec_error','gaia_plx','gaia_plx_error']:
+            if c not in ph.colnames: ph[c]=np.nan
+        if 'tmass_id' not in ph.colnames: ph['tmass_id'] = 18*' '
+        if 'gaia_sourceid' not in ph.colnames: ph['gaia_sourceid'] = 0
+        if 'gaia_release' not in ph.colnames: ph['gaia_release'] = 0
         ph['target_ra'] = ph['ra']
         ph['target_dec'] = ph['dec']
         ph['tmass_j'] = ph['jmag']
