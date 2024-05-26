@@ -24,7 +24,7 @@ def get_sdssid(catalogid):
         sql += " in ("+ids+")"
     # Single ID
     else:
-        if type(catalogid)==np.ndarray:
+        if type(catalogid)==np.ndarray or type(catalogid)==list:
             ids = str(catalogid[0])
         else:
             ids = str(catalogid)
