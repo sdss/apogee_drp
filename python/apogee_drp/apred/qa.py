@@ -2702,9 +2702,9 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         rvteff = '----'; rvlogg = '----'; rvfeh = '---'
         #gd, = np.where((jdata['rv_teff'] > 0) & (np.absolute(jdata['rv_teff']) < 99999))
         #if len(gd) > 0:
-        rvteff = str(int(round(jdata['rv_teff'])))
-        rvlogg = str("%.3f" % round(jdata['rv_logg'],3))
-        rvfeh = str("%.3f" % round(jdata['rv_feh'],3))
+        rvteff = str("%.0f" % np.round(jdata['rv_teff'],0))
+        rvlogg = str("%.3f" % np.round(jdata['rv_logg'],3))
+        rvfeh = str("%.3f" % np.round(jdata['rv_feh'],3))
 
         starHTML = open(starHTMLpath, 'w')
         starHTML.write('<HTML>\n')
