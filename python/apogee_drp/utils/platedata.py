@@ -493,7 +493,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 ph['phflag'][ind1] = catinfo['twomflag'][ind2]
                 #ph['gaia_release'] = '          '
                 #ph['gaia_release'][ind1] = catinfo['gaia_release'][ind2]
-                ph['gaia_sourceid'] = '                                  '
+                #ph['gaia_sourceid'] = '                                  '
+                ph['gaia_sourceid'] = -1                
                 ph['gaia_sourceid'][ind1] = catinfo['gaia'][ind2]
                 ph['gaia_ra'] = 0.0
                 ph['gaia_ra'][ind1] = catinfo['ra'][ind2]
