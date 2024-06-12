@@ -176,7 +176,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None,
                 else:
                     tab['arctype'][i] = 'None'
             # FPI
-            if tab['exptype'][i]=='ARCLAMP' and tab['arctype'][i]=='None' and head.get('OBSCMNT')=='FPI':
+            if tab['exptype'][i]=='ARCLAMP' and tab['arctype'][i]=='None' and head.get('OBSCMNT').startswith('FPI'):
                 tab['exptype'][i] = 'FPI'
 
             # Sky flat
