@@ -4,6 +4,7 @@ from . import apogeedb
 from dlnpyutils import utils as dln
 from astropy.coordinates import SkyCoord
 import astropy.units as u
+from astropy.table import Table,vstack,hstack
 import traceback
 
 #from sdssdb.peewee.sdss5db.catalogdb import SDSS_ID_flat    
@@ -54,7 +55,7 @@ def get_ids(catalogid=None,sdss_id=None,apogee_id=None):
         sql += ' join catalogdb.sdss_id_stacked as s on f.sdss_id=s.sdss_id where f.catalogid='+str(catalogid)        
         data = db.query(sql=sql,fmt="table")
         if len(data)==0:
-            print('No results found for catalogid'+str(catalogid))
+            print('No results found for catalogid = '+str(catalogid))
             db.close()
             return []
     # Use sdss_id
@@ -91,7 +92,7 @@ def get_ids(catalogid=None,sdss_id=None,apogee_id=None):
             data['lead'][0] = cdata['lead'][0]
         else:
             print('Weird! No catalogdb.catalog entry for catalogid='+str(data['catalogid'][0]))
-    
+            
     # Deal with duplicates
     #---------------------
     if len(data)>1:
@@ -160,11 +161,11 @@ def get_ids(catalogid=None,sdss_id=None,apogee_id=None):
             sql = 'select '+gcols+' from catalogdb.gaia_dr3_source'
             sql += ' where q3c_radial_query(ra,dec,{:.7f},{:.7f},1.0/3600)'.format(ra,dec)
             gdata = db.query(sql=sql,fmt="table")
-            gdata['xflag'] = 2
+            gdata['xflag'] = 2            
     # Deal with duplicates
     if len(gdata)>1:
         print('Need to deal with gaia duplicates')
-        import pdb; pdb.set_trace()        
+        import pdb; pdb.set_trace()
     # Add gaia data to output table
     data['gaiadr3_source_id'] = -1
     for name in ['gaiadr3_ra','gaiadr3_dec','gaiadr3_pmra','gaiadr3_pmdec','gaiadr3_gmag']:
@@ -180,8 +181,7 @@ def get_ids(catalogid=None,sdss_id=None,apogee_id=None):
         data['gaiadr3_gmag'] = gdata['gmag'][0]
         data['gaiadr3_xflag'] = gdata['xflag'][0]
         data['gaiadr3_match'] = True
-    
-        
+            
     # Get 2MASS ID
     #-------------
     # First, check any existing cross-matches
@@ -302,25 +302,27 @@ def get_sdssid(catalogid):
 
     sql = 'select s.*,f.catalogid,f.version_id from catalogdb.sdss_id_flat as f'
     sql += ' join catalogdb.sdss_id_stacked as s on f.sdss_id=s.sdss_id where f.catalogid'
+    catalogid = np.atleast_1d(catalogid).tolist()
     # Multiple IDs
     if dln.size(catalogid)>1:
         ids = ','.join(np.array(catalogid).astype(str))
         sql += " in ("+ids+")"
     # Single ID
     else:
-        if type(catalogid)==np.ndarray:
+        if type(catalogid)==np.ndarray or type(catalogid)==list:
             ids = str(catalogid[0])
         else:
             ids = str(catalogid)
         sql += "="+ids
-    
+
     data = db.query(sql=sql,fmt="table")    
     
     if len(data)==0:
         print('no matches')
+        out = []
     else:
         _,ind1,ind2 = np.intersect1d(catalogid,data['catalogid'],return_indices=True)
-        out = np.zeros(dln.size(catalogid),dtype=data.dtype)
+        out = Table(np.zeros(dln.size(catalogid),dtype=data.dtype))
         if len(ind1)>0:
             for c in data.dtype.names:
                 out[c][ind1] = data[c][ind2]
@@ -330,6 +332,53 @@ def get_sdssid(catalogid):
     db.close()
     
     return out
+
+def getdesign(designid):
+    """
+    Get information on a design
+    """
+
+    db = apogeedb.DBSession()
+    sql = "select t.catalogid,cat.version_id,t.ra,t.dec,c.carton,c.program "+\
+          "from targetdb.carton_to_target as ct "+\
+          "join targetdb.assignment as a on a.carton_to_target_pk=ct.pk "+\
+          "join targetdb.instrument as i on i.pk=a.instrument_pk "+\
+          "join magnitude as m on m.carton_to_target_pk=a.carton_to_target_pk "+\
+          "join target as t on t.pk=ct.target_pk "+\
+          "join carton as c on c.pk=ct.carton_pk "+\
+          "join catalogdb.catalog as cat on cat.catalogid=t.catalogid "+\
+          "where a.design_id="+str(designid)+" and i.label='APOGEE';"
+    data = db.query(sql=sql,fmt="table")
+    db.close()
+    
+    return data
+
+def coords2catid(ra,dec,dcr=1.0):
+    """
+    Get catalogids from ra/dec coordinates
+    """
+
+    db = apogeedb.DBSession()
+
+    radlim = str(dcr/3600.0)
+    ra = np.atleast_1d(ra)
+    dec = np.atleast_1d(dec)
+    nra = len(ra)
+    coords = []
+    for k in range(nra):
+        coords.append( '('+str(ra[k])+','+str(dec[k])+')' )
+    vals = ','.join(coords)
+    ctable = '(VALUES '+vals+' ) as v'
+    # Subquery makes a temporary table from q3c coordinate query with catalogdb.catalog
+    sql = 'select s.* from '+ctable+',catalogdb.sdss_id_stacked as s'
+    sql += ' where q3c_join(v.column1,v.column2,s.ra_sdss_id,s.dec_sdss_id,'+radlim+') LIMIT 1000000'    
+    # Turning this off improves q3c queries
+    sql = 'set enable_seqscan=off; '+sql
+        
+    data = db.query(sql=sql,fmt="table")    
+    db.close()
+
+    return data
     
 def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
             table='tmass,gaiadr3',sdssid=True):
@@ -367,17 +416,27 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
 
     """
 
+    # Always get version31 catalogids for all stars
+    if catid is not None:
+        catid = np.atleast_1d(catid).tolist()        
+        data = get_sdssid(catid)
+    elif designid is not None:
+        ddata = getdesign(designid)
+        sdata = get_sdssid(ddata['catalogid'].tolist())
+        del sdata[['catalogid','version_id']]
+        data = hstack((ddata,sdata))
+    elif ra is not None and dec is not None:
+        data = coords2catid(ra,dec)
+    else:
+        raise ValueError('Need catid, designid, ra+dec or sdssid')
+    catid = data['catalogid31'].tolist()
+
+    # You only get carton and program if you use designid
+    #   these are unique only by assignment, not catalogid
+    
     # ---- Multiple table queries -----
     if len(table.split(','))>1:
         tables = table.split(',')
-        data = []
-        # Use designid to cat catalogids
-        if designid is not None:
-            data = getdata(catid=catid,ra=ra,dec=dec,designid=designid,
-                           dcr=dcr,table='tic_v8',sdssid=False)
-            data = data[['catalogid','version_id','ra','dec','carton','program']]
-            catid = data['catalogid']
-            designid = None
         # Query all the tables and merge results
         for t in tables:
             o = getdata(catid=catid,ra=ra,dec=dec,dcr=dcr,table=t,sdssid=False)
@@ -431,20 +490,31 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
     # Use catalogid
     if catid is not None:
         if table=='tic' or table=='ticv8' or table=='tic_v8':
-            sql = "select "+xcols+tic_cols+" from catalogdb.tic_v8 as t join catalogdb.catalog_to_tic_v8 as x on x.target_id=t.id "+\
-                "join catalogdb.catalog as c on x.catalogid=c.catalogid where x.catalogid"
+            sql = "select "+xcols+tic_cols+" from catalogdb.catalog as c"
+            sql += " join catalogdb.catalog_to_tic_v8 as x on c.catalogid=x.catalogid"
+            sql += " join catalogdb.tic_v8 as t on x.target_id=t.id"
+            sql += " where c.catalogid"
         elif table=='tmass' or table=='twomass' or table=='twomass_psc':
-            sql = "select "+xcols+tmass_cols+" from catalogdb.twomass_psc as t join catalogdb.catalog_to_twomass_psc as x on x.target_id=t.pts_key "+\
-                  "join catalogdb.catalog as c on x.catalogid=c.catalogid where x.catalogid"
+            sql = "select "+xcols+tmass_cols+" from catalogdb.catalog as c"
+            sql += " join catalogdb.catalog_to_twomass_psc as x on c.catalogid=x.catalogid"
+            sql += " join catalogdb.twomass_psc as t on x.target_id=t.pts_key"
+            sql += " where c.catalogid"
         elif table=='gaiadr2' or table=='gaia_dr2' or table=='gaia_dr2_source':
-            sql = "select "+xcols+gaia_cols+",'dr2' as gaia_release from catalogdb.gaia_dr2_source as t join catalogdb.catalog_to_gaia_dr2_source as x on x.target_id=t.source_id "+\
-                  "join catalogdb.catalog as c on x.catalogid=c.catalogid where x.catalogid"
+            sql = "select "+xcols+gaia_cols+",'dr2' as gaia_release from catalogdb.catalog as c"
+            sql += " join catalogdb.catalog_to_gaia_dr2_source as x on c.catalogid=x.catalogid"
+            sql += " join catalogdb.gaia_dr2_source as t on x.target_id=t.source_id"
+            sql += " where c.catalogid"
         elif table=='gaiadr3' or table=='gaia_dr3' or table=='gaia_dr3_source':
-            sql = "select "+xcols+gaia_cols+",'dr3' as gaia_release from catalogdb.gaia_dr3_source as t join catalogdb.catalog_to_gaia_dr3_source as x on x.target_id=t.source_id "+\
-                  "join catalogdb.catalog as c on x.catalogid=c.catalogid where x.catalogid"
+            sql = "select "+xcols+gaia_cols+",'dr3' as gaia_release from catalogdb.catalog as c"
+            sql += " join catalogdb.catalog_to_gaia_dr3_source as x on c.catalogid=x.catalogid"
+            sql += " join catalogdb.gaia_dr3_source as t on x.target_id=t.source_id"
+            sql += " where c.catalogid"
         else:
             raise ValueError(str(table)+' not supported')
-            
+
+        # firstcarton is unique to an assignment not a catalogid
+        #   it can change from design to design
+        
         # Multiple IDs
         if dln.size(catid)>1:
             ids = ','.join(np.array(catid).astype(str))
@@ -452,7 +522,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
 
         # Single ID
         else:
-            if type(catid)==np.ndarray:
+            if type(catid)==np.ndarray or type(catid)==list:
                 ids = str(catid[0])
             else:
                 ids = str(catid)
