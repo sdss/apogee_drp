@@ -141,7 +141,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['v_apred'] = gitvers
     startab['mjdbeg'] = np.min(allvisits['mjd'].astype(int))
     startab['mjdend'] = np.max(allvisits['mjd'].astype(int))    
-    startab['healpix'] = apload.obj2healpix(star)
+    startab['healpix'] = apload.get_healpix(startab["ra"], startab["dec"])
     startab['nvisits'] = nallvisits
     # Copy data from visit
     tocopy = ['ra','dec','glon','glat','jmag','jerr','hmag','herr','kmag','kerr','src_h','catalogid',
@@ -884,7 +884,8 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     apstar.header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
     apstar.header['APRED'] = (apred, 'APOGEE reduction version')
     apstar.header['STARVER'] = (starver, 'apStar version')
-    apstar.header['HEALPIX'] = ( apload.obj2healpix(allvisit['apogee_id'][0]), 'HEALPix location')
+    #apstar.header['HEALPIX'] = ( apload.obj2healpix(allvisit['apogee_id'][0]), 'HEALPix location')
+    apstar.header["HEALPIX"] = (apload.get_healpix(allvisit['ra'].max(),allvisit['dec'].max())[0], 'HEALPix location')
     try :apstar.header['SNR'] = (np.nanmedian(apstar.flux[0,:]/apstar.err[0,:]), 'Median S/N per apStar pixel')
     except :apstar.header['SNR'] = (0., 'Median S/N per apStar pixel')
     apstar.header['RA'] = (allvisit['ra'].max(), 'right ascension, deg, J2000')
