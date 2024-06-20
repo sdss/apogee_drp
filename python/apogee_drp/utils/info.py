@@ -77,7 +77,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None,
 
     By D.Nidever,  Oct 2020
     """
-    
+
     # Types of inputs:
     #  files, observatory+mjd5, observatory+expnum
     if (files is None and observatory is None) or (files is None and mjd5 is None and expnum is None):
@@ -87,8 +87,11 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None,
 
     if logger is None and verbose:
         logger = dln.basiclogger()
-    
-    load = apload.ApLoad(apred='daily',telescope='apo25m')
+
+    telescope = 'apo25m'
+    if observatory is not None:
+        telescope = {'apo':'apo25m','lco':'lco25m'}
+    load = apload.ApLoad(apred='daily',telescope=telescope)
 
     # Get the exposures info for this MJD5        
     if files is None and expnum is None:

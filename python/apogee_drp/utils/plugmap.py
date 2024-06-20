@@ -111,7 +111,7 @@ def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None
             else:
                 logger.info('Cannot find plugmap file for '+str(mjd)+' '+str(plugfile))
                 return ''
-                
+
     return os.path.join(plugdir,plugfile)
 
 def load(plugfile,verbose=False,fixfiberid=None):
