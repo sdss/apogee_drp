@@ -15,7 +15,7 @@ from astropy.io import fits
 from astropy.table import Table
 import os
 try :
-    from sdss_access.path import path
+    from sdss_access.path import path,Path
     from sdss_access.sync.http import HttpAccess
 except :
     print('sdss_access or dependencies not available!')
@@ -867,7 +867,7 @@ class ApLoad:
                 healpix = obj2healpix(obj)
             else:
                 healpix = None
-
+                
             filePath = self.sdss_path.full(sdssroot,
                                            apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
                                            field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
@@ -1047,9 +1047,10 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m',fps=False):
     # FPS
     if nj==0 or fps:
         # Pull this from the confSummary file
-        observatory = {'apo25m':'apo','apo1m':'apo','lco25m':'lco'}[telescope]
-        configgrp = '{:0>4d}XX'.format(int(plateid) // 100)
-        configfile = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/confSummary-'+str(plateid)+'.par'
+        #observatory = {'apo25m':'apo','apo1m':'apo','lco25m':'lco'}[telescope]
+        #configgrp = '{:0>4d}XX'.format(int(plateid) // 100)
+        #configfile = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/confSummary-'+str(plateid)+'.par'
+        configfile = self.sdss_path.full('confSummary', obs=self.observatory, configid=plateid)
         planstr = yanny.yanny(configfile)
         field = planstr.get('field_id')
         return field, 'SDSS-V', None
