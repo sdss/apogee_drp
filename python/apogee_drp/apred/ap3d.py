@@ -16,6 +16,7 @@ import warnings
 import time
 from astropy.io import fits
 from astropy.table import Table, Column
+from astropy.time import Time
 from astropy import modeling
 from glob import glob
 from scipy.signal import medfilt,medfilt2d
@@ -59,11 +60,15 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
        Input data cube.
     header : header
        Header for the data file.
+    doapunzip : boolean
+       Boolean flag whether the apz file was uncompressed.
+    fitsfile : str
+       Fits filename used.
 
     Examples
     --------
 
-    cube,head = loaddata(filename)
+    cube,head,doapunzip,fitsfile = loaddata(filename)
 
     """
        
@@ -77,26 +82,25 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
     #  error = 'FILE must be of the form >>apR-a/b/c-XXXXXXXX.fits<<'
     #  if silent==False then print(error)
     #  return
-    #
 
     # Wrong extension
     if extension != 'fits' and extension != 'apz':
         error = 'FILE must have a ".fits" or ".apz" extension'
         if verbose:
             print(error)
-        return None,None
+        return None,None,False,''
   
     # Compressed file input
     if extension == 'apz':
-        if silent==False:
+        if verbose:
             print(ifile,' is a COMPRESSED file')
 
         # Check if the decompressed file already exists
         nbase = len(base)
         if fitsdir is not None:
-            fitsfile = os.path.join(fitsdir,base[0:nbase-4]+'.fits')
+            fitsfile = os.path.join(fitsdir,base[:nbase-4]+'.fits')
         else:
-            fitsfile = os.path(fdir,base[0:nbase-4]+'.fits')
+            fitsfile = os.path(fdir,base[:nbase-4]+'.fits')
             fitsdir = None
   
         # Need to decompress
@@ -114,7 +118,7 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
             except:
                 traceback.print_exc()
                 print('ERROR in APUNZIP')
-                return None,None
+                return None,None,False,fitsfile
             print('')
             doapunzip = True     # we ran apunzip
 
@@ -124,15 +128,13 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
                 print('The decompressed file already exists')
             doapunzip = False     # we didn't run apunzip
 
-        ifile = fitsfile  # using the decompressed FITS from now on
-
         # Cleanup by default
         if cleanuprawfile==False and extension=='apz' and doapunzip:   # remove recently decompressed file
             cleanuprawfile = True
 
     # Regular FITS file input
     else:
-        ifile = ifile
+        fitsfile = ifile
         doapunzip = False
  
     if verbose:
@@ -140,25 +142,25 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
             print('Removing recently decompressed FITS file at end of processing')
 
     # Check that the file exists
-    if os.path.exists(ifile)==False:
-        error = 'FILE '+ifile+' NOT FOUND'
+    if os.path.exists(fitsfile)==False:
+        error = 'FILE '+fitsfile+' NOT FOUND'
         if verbose:
             print('error')
-        return None,None
+        return None,None,False,fitsfile
  
     # Get header
     try:
-        head = fits.getheader(ifile)
+        head = fits.getheader(fitsfile)
     except:
-        error = 'There was an error loading the HEADER for '+ifile
+        error = 'There was an error loading the HEADER for '+fitsfile
         if verbose:
             print(error)
-        return None,NOne
+        return None,None,False,fitsfile
   
     # Check that this is a data CUBE
     naxis = head['NAXIS']
     try:
-        dumim,dumhead = fits.getdata(ifile,1,header=True)
+        dumim,dumhead = fits.getdata(fitsfile,1,header=True)
         readokay = True
     except:
         readokay = False
@@ -166,34 +168,34 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
         error = 'FILE must contain a 3D DATACUBE OR image extensions'
         if verbose:
             print(error)
-        return None,None
+        return None,None,False,fitsfile
 
     # Check that the file exists
-    if os.path.exists(ifile)==False:
+    if os.path.exists(fitsfile)==False:
         error = ifile+' NOT FOUND'
         if verbose:
             print(error)
-        return None,None
+        return None,None,False,fitsfile
 
     # Read in the File
     #-------------------
     
     # DATACUBE
     if naxis==3:
-        cube,head = fits.getdata(ifile,header=True)  # uint
+        cube,head = fits.getdata(fitsfile,header=True)  # uint
     # Extensions
     else:
-        head = fits.getheader(ifile)
+        head = fits.getheader(fitsfile)
         # Figure out how many reads/extensions there are
         #  the primary unit should be empty
-        hdu = fits.open(ifile)
+        hdu = fits.open(fitsfile)
         nreads = len(hdu)-1
   
         # Only 1 read
         if nreads < 2:
             error = 'ONLY 1 read.  Need at least two'
             print(error)
-            return None,None
+            return None,None,False,fitsfile
 
         # allow user to specify maximum number of reads to use (e.g., in the
         #   case of calibration exposures that may be overexposed in some chip
@@ -213,7 +215,7 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
             # We could make a header structure or array
         hdu.close()
 
-    return cube,head
+    return cube,head,doapunzip,fitsfile
 
 
 def loaddetector(detcorr,verbose=False):
@@ -1901,11 +1903,11 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         if verbose:
             if f > 0:
                 print('')
-            print(str(f+1),'/',str(nfiles),' Filename = ',ifile)
+            print(str(f+1)+'/'+str(nfiles)+' Filename = '+ifile)
             print('----------------------------------')
 
         # if another job is working on this file, wait
-        if len(outfile) > 0:
+        if outfile:
             if utils.localdir() is not None:
                 lockfile = utils.localdir()+'/'+os.path.basename((outfile[f])+'.lock')
             else:
@@ -1942,13 +1944,13 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
 
 
         # Test if the output file already exists
-        if outfile is not None:
+        if outfile:
             if os.path.exists(outfile[f]) and clobber==False:
                 print('OUTFILE = ',outfile[f],' ALREADY EXISTS.  Set /clobber to overwrite.')
                 continue
 
         # Load the data
-        cube,head,doapunzip = loaddata(ifile,fitsdir=fitsdir,maxread=maxread,verbose=verbose)
+        cube,head,doapunzip,fitsfile = loaddata(ifile,fitsdir=fitsdir,maxread=maxread,verbose=verbose)
         if cube is None: continue
 
         # Dimensions of the cube
@@ -2207,12 +2209,13 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         if len(bdsat) > 0:
             slc0[bdsat] = 0.0
         # unfixable
-        unfmask_slc = int((int(mask[i,:]) & maskval('UNFIXABLE')) == maskval('UNFIXABLE'))
+        unfmask_slc = (mask[i,:].astype(bool) & maskval('UNFIXABLE')) == maskval('UNFIXABLE'))
+        unfmask_slc = unfmask_slc.astype(int)
         slc0[:2048] = slc0[:2048]*(1.0-unfmask_slc)    # set unfixable pixels to zero
-  
-        slc_fixed = slc0 # (fltarr(nreads)+1.0)
+
+        slc_fixed = slc0.reshape(-1,1) + np.zeros((nx,nreads),float)
         if nreads > 2:
-            slc_fixed[:,1:] += np.cumsum(dCounts,axis=2)
+            slc_fixed[:,1:] += np.cumsum(dCounts,axis=1)
         else:
             slc_fixed[:,0] = slc0
             slc_fixed[:,1] = slc0+dCounts
@@ -2220,7 +2223,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         #--------------------------------
         # Put fixed slice back into cube
         #--------------------------------
-        cube[i,:,:] = np.round( slc_fixed )     # round to closest integer, LONG type
+        cube[i,:,:] = (np.round( slc_fixed )).astype(int)   # round to closest integer
   
         #------------------------------------
         # Final median of each "fixed" pixel
@@ -2231,15 +2234,15 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             # If NOT fixing saturated pixels, then we need to
             # temporarily set saturated reads to NAN
             #  Leave unfixable pixels at 0.0
-            temp_dCounts = dCounts
+            temp_dCounts = dCounts.copy()
             if satfix==False:
                 bdsat, = np.where((satmask[i,:,0] == 1) & (unfmask_slc == 0))
                 nbdsat = len(bdsat)
-                for j in range(bdsat):
+                for j in range(nbdsat):
                     temp_dCounts[bdsat[j],satmask[bdsat[j],i,1]-1:] = np.nan
 
-            fmed_dCounts = np.median(temp_dCounts,axis=2)    # NAN are automatically ignored
-            bdnan, = np.where(finite(fmed_dCounts) == 0)
+            fmed_dCounts = np.median(temp_dCounts,axis=1)    # NAN are automatically ignored
+            bdnan, = np.where(np.isfinite(fmed_dCounts) == False)
             if len(bdnan) > 0:
                 import pdb; pdb.set_trace()
                 med_dCounts_im[:,i] = fmed_dCounts
@@ -2253,8 +2256,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             if len(crtab) == 0:
                 ncrslc = 0
             else:
-                dum, = np.where(crtab['data']['y'] == i)
-                ncrslc = len(dum)
+                ncrslc = np.sum(crtab['data']['y'] == i)
             print('Nsat/NCR = {:}/{:} this row'.format(int(nsatslc)),int(ncrslc))
 
         if len(crtab) == 0:
@@ -2264,7 +2266,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         # Measure "variability" of data
         #--------------------------------
         # Use pixels with decent count rates
-        crmask = int((int(mask) & maskval('CRPIX')) == maskval('CRPIX'))
+        crmask = (mask.astype(int) & maskval('CRPIX')) == maskval('CRPIX')).astype(int)
         highpix, = np.where((satmask[:,:,0] == 0) & (crmask == 0) & (med_dCounts_im > 40))
         nhighpix = len(highpix)
         if nhighpix == 0:
@@ -2303,31 +2305,31 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         if len(gainim)==0:
             print('NO gain image.  Using GAIN=1')
             gainim = np.ones((2048,2048),float)
-
+        # why would this every happen??
             
         # Fowler Sampling
         #------------------
         if uptheramp == False:  
             # Make sure that Nfowler isn't too large
             Nfowler_used = Nfowler
-            if Nfowler > Nreads/2:
-                Nfowler_used = Ngdreads/2
+            if Nfowler > Nreads//2:
+                Nfowler_used = Ngdreads//2
   
             # Use the mean of Nfowler reads
 
             # Beginning sample
-            gd_beg = gdreads[0:nfowler_used]
+            gd_beg = gdreads[:nfowler_used]
             if len(gd_beg) == 1:
-                im_beg = cube[:,:,gd_beg]/Nfowler_used.astype(float)
+                im_beg = cube[:,:,gd_beg]/float(Nfowler_used)
             else:
-                im_beg = np.sum(cube[:,:,gd_beg],axis=2)/Nfowler_used.astype(float)
+                im_beg = np.sum(cube[:,:,gd_beg],axis=2)/float(Nfowler_used)
 
             # End sample
             gd_end = gdreads[ngdreads-nfowler_used:ngdreads]
             if len(gd_end) == 1:
-                im_end = cube[:,:,gd_end]/Nfowler_used.astype(float)
+                im_end = cube[:,:,gd_end]/float(Nfowler_used)
             else:
-                im_end = np.sum(cube[:,:,gd_end],axis=2)/Nfowler_used.astype(float)
+                im_end = np.sum(cube[:,:,gd_end],axis=2)/float(Nfowler_used)
 
             # The middle read will be used twice for 3 reads
 
@@ -2355,20 +2357,19 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             # Calculating the slope for each pixel
             #  t is the exptime, s is the signal
             #  we will use the read index for t
-            sumts = np.zeros((sz[1],sz[2]),float)   # SUM t*s
-            sums = np.zeros((sz[1],sz[2]),float)    # SUM s
-            sumn = np.zeros((sz[1],sz[2]),int)    # SUM s
-            sumt = np.zeros((sz[1],sz[2]),float)   # SUM t*s
-            sumt2 = np.zeros((sz[1],sz[2]),float)   # SUM t*s
+            sumts = np.zeros((shape[0],shape[1]),float)   # SUM t*s
+            sums = np.zeros((shape[0],shape[1]),float)    # SUM s
+            sumn = np.zeros((shape[0],shape[1]),int)      # SUM s
+            sumt = np.zeros((shape[0],shape[1]),float)    # SUM t*s
+            sumt2 = np.zeros((shape[0],shape[1]),float)   # SUM t*s
             for k in range(ngdreads):
                 slc = cube[:,:,gdreads[k]]
                 if satfix==False:
-                    good, = np.where((satmask[:,:,0] == 0) | ((satmask[:,:,0] == 1) & (satmask[:,:,1] > i)))
+                    good = ((satmask[:,:,0] == 0) | ((satmask[:,:,0] == 1) & (satmask[:,:,1] > i)))
                 else:
-                    good, = np.where(np.finite(slc))
-            #good = np.where(finite(slc))
-            sumts[good] += gdreads[k]*reform(slc[good])
-            sums[good] += reform(slc[good])
+                    good = (np.isfinite(slc))
+            sumts[good] += gdreads[k]*slc[good]
+            sums[good] += slc[good]
             sumn[good] += 1
             sumt[good] += gdreads[k]
             sumt2[good] += gdreads[k]**2
@@ -2385,8 +2386,8 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             #  with m=1
             #  noise and image/flux should be in electrons, sample_noise is in electrons
             #sample_noise = sqrt( 12*(ngdreads-1.)/(nreads*(ngdreads+1.))*(noise*gainim)^2 + 6.*(ngdreads^2+1)/(5.*ngdreads*(ngdreads+1))*im*gainim )
-            sample_noise = np.sqrt( 12*(ngdreads-1.)/(nreads*(ngdreads+1.))*noise**2 +
-                                    6.*(ngdreads**2+1)/(5.*ngdreads*(ngdreads+1))*im[0:2048,:]*gainim )
+            sample_noise = np.sqrt( 12*(ngdreads-1.)/(nreads*(ngdreads+1.))*noise**2 + \
+                                    6.*(ngdreads**2+1)/(5.*ngdreads*(ngdreads+1))*im[:2048,:]*gainim )
             sample_noise /= gainim  # convert to ADU
   
             # Noise contribution to the variance
@@ -2397,22 +2398,23 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         # With userference, subtract off the reference array to reduce/remove
         #   crosstalk. 
         if usereference==True:
-            print('subtracting reference array...')
-            tmp = im[0:2048,0:2048]
-            ref = im[2048:2560,0:2048]
+            print('Subtracting reference array...')
+            tmp = im[:2048,:2048].copy()
+            ref = im[:2048,2048:2460].copy()
             # subtract smoothed horizontal structure
-            ref -= (np.zeros(512,float)+1)#medfilt1d(median(ref,dim=1),7)
-            ref = aprefcorr_sub(tmp,ref)
-            im = tmp
+            ref -= medfilt(np.median(ref,axis=0),7).reshape(1,-1) + np.zeros((512,2048),float)
+            #ref -= (np.zeros(512,float)+1)#medfilt1d(median(ref,dim=1),7)
+            im = refcorr_sub(tmp,ref)
             nx = 2048
 
         #-----------------------------------
         # Apply the Persistence Correction
         #-----------------------------------
-        if len(persistmodelcorr) > 0 and len(histcorr) > 0:
-            if silent==False:
+        pmodelim = None
+        if persistmodelcorr and histcorr:
+            if verbose:
                 print('PERSIST modelcorr file = '+persistmodelcorr)
-            appersistmodel(ifile,histcorr,persistmodelcorr,pmodelim,ppar,bpmfile=bpmcorr,error=perror)
+            pmodelim,ppar = persistmodel(ifile,histcorr,persistmodelcorr,bpmfile=bpmcorr)
             im -= pmodelim
 
         #------------------------
@@ -2429,18 +2431,18 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
   
   
         # Initialize varim
-        varim = np.zeros((nx,ny),float)         # variance in ADU
+        varim = np.zeros((ny,nx),float)         # variance in ADU
   
         # 1. Poisson Noise from the image: note that the equation for UTR
         #    noise above already includes Poisson term
-        if not keyword_set(uptheramp):
-            if len(pmodelim) > 0:
+        if uptheramp==False:
+            if pmodelim is not None:
                 varim += np.maximum( (im+pmodelim)/gainim , 0)
             else:
                 varim += np.maximum(im/gainim,0)
      
         # 2. Poisson Noise from dark current
-        if len(darkcube) > 0:
+        if darkcube:
             darkim = darkcube[:,:,nreads-1]
             varim += np.maximum(darkim/gainim,0)
   
@@ -2455,31 +2457,31 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         else:
             varim = varim*(1-satmask[:,:,0]) + satmask[:,:,0]*99999999.   # saturated pixels are bad!
         # Unfixable pixels
-        unfmask = int((int(mask) & maskval('UNFIXABLE')) == maskval('UNFIXABLE'))  # unfixable
+        unfmask = ((mask.astype(int) & maskval('UNFIXABLE')) == maskval('UNFIXABLE')).astype(int)  # unfixable
         varim = varim*(1-unfmask) + unfmask*99999999.         # unfixable pixels are bad!
   
         # 5. CR error
         #     We use median of neighboring dCounts to "fix" reads with CRs
-        crmask = int((int(mask) & maskval('CRPIX')) == maskval('CRPIX'))
-        if crfix == True:
+        crmask = ((mask.astype(int) & maskval('CRPIX')) == maskval('CRPIX')).astype(int)
+        if crfix:
             # loop in case there are multiple CRs per pixel
-            for i in range(crtab.ncr):
+            for i in range(crtab['ncr']):
                 if crtab['data'][i]['x'] < 2048:
-                    varim[crtab['data'][i]['x'],crtab['data'][i]['y']]+=crtab['data'][i]['fixerror']
+                    varim[crtab['data'][i]['y'],crtab['data'][i]['x']] += crtab['data'][i]['fixerror']
                 else:
                     varim = varim*(1-crmask) + crmask*99999999.               # pixels with CRs are bad!
   
         # Bad pixels
-        bpmmask = int((int(mask) & maskval('BADPIX')) == maskval('BADPIX'))
+        bpmmask = ((mask.astype(int) & maskval('BADPIX')) == maskval('BADPIX')).astype(int)
         varim = varim*(1-bpmmask) + bpmmask*99999999.               # bad pixels are bad!
 
         # Flat field  
-        if len(flatim) > 0:
+        if flatim:
             varim /= flatim**2
             im /= flatim
 
         # Now convert to ELECTRONS
-        if len(detcorr) > 0 and outelectrons==False:
+        if detcorr and outelectrons==False:
             varim *= gainim**2
             im *= gainim
 
@@ -2487,14 +2489,14 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         # Construct output datacube
         #  [image, error, mask]
         #----------------------------
-        if len(pmodelim) > 0:
-            output = np.zeros((nx,ny,4),float)
+        if pmodelim:
+            output = np.zeros((ny,nx,4),float)
         else:
-            output = np.zeros((nx,ny,3),float)
+            output = np.zeros((ny,nx,3),float)
         output[:,:,0] = im
         output[:,:,1] = np.maximum(np.sqrt(varim),1)  # must be greater than zero
         output[:,:,2] = mask
-        if len(pmodelim)>0:
+        if pmodelim:
             output[:,:,3] = pmodelim  # persistence model in ADU
   
         #-----------------------------
@@ -2510,7 +2512,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         head['HISTORY'] = leadstr+'python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
         head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+getvers()
         head['HISTORY'] = leadstr+'Output File:'
-        if len(detcorr) > 0 and keyword_set(outelectrons):
+        if detcorr and outelectrons:
             head['HISTORY'] = leadstr+' HDU1 - image (electrons)'
             head['HISTORY'] = leadstr+' HDU2 - error (electrons)'
         else:
@@ -2521,103 +2523,103 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         head['HISTORY'] = leadstr+'        2 - cosmic ray'
         head['HISTORY'] = leadstr+'        4 - saturated'
         head['HISTORY'] = leadstr+'        8 - unfixable'
-        if len(pmodelim) > 0:
+        if pmodelim:
             head['HISTORY'] = leadstr+' HDU4 - persistence correction (ADU)'
-        head['HISTORY'] = leadstr+'Global fractional variability = '+str(string(global_variability,format='(F5.3)'))
-        maxlen = 72-strlen(leadstr)
+        head['HISTORY'] = leadstr+'Global fractional variability = {:.5.3f}'.format(global_variability)
+        maxlen = 72-len(leadstr)
         # Bad pixel mask file
-        if len(bpmim) > 0:
+        if bpmim:
             line = 'BAD PIXEL MASK file="'+bpmcorr+'"'
-            if strlen(line) > maxlen:
-                line1 = line[0:maxlen]
+            if len(line) > maxlen:
+                line1 = line[:maxlen]
                 line2 = line[maxlen:]
                 head['HISTORY'] = leadstr+line1
                 head['HISTORY'] = leadstr+line2
             else:
                 head['HISTORY'] = leadstr+line
         # Detector file
-        if len(detcorr) > 0:
+        if detcorr:
             line = 'DETECTOR file="'+detcorr+'"'
-            if strlen(line) > maxlen:
-                line1 = line[0:maxlen]
+            if len(line) > maxlen:
+                line1 = line[:maxlen]
                 line2 = line[maxlen:]
                 head['HISTORY'] = leadstr+line1
                 head['HISTORY'] = leadstr+line2
             else:
                 head['HISTORY'] = leadstr+line
         # Dark Correction File
-        if len(darkcube) > 0:
+        if darkcube:
             line = 'Dark Current Correction file="'+darkcorr+'"'
-            if strlen(line) > maxlen:
-                line1 = line[0:maxlen]
+            if len(line) > maxlen:
+                line1 = line[:maxlen]
                 line2 = line[maxlen:]
                 head['HISTORY'] = leadstr+line1
                 head['HISTORY'] = leadstr+line2
             else:
                 head['HISTORY'] = leadstr+line
         # Flat field Correction File
-        if len(flatim) > 0:
+        if flatim:
             line = 'Flat Field Correction file="'+flatcorr+'"'
-            if strlen(line) > maxlen:
-                line1 = line[0:maxlen]
+            if len(line) > maxlen:
+                line1 = line[:maxlen]
                 line2 = line[maxlen:]
                 head['HISTORY'] = leadstr+line1
                 head['HISTORY'] = leadstr+line2
             else:
                 head['HISTORY'] = leadstr+line
         # Littrow ghost mask File
-        if len(littrowim) > 0:
+        if littrowim:
             line = 'Littrow ghost mask file="'+littrowcorr+'"'
-            if strlen(line) > maxlen:
-                line1 = line[0:maxlen]
+            if len(line) > maxlen:
+                line1 = line[:maxlen]
                 line2 = line[maxlen:]
                 head['HISTORY'] = leadstr+line1
                 head['HISTORY'] = leadstr+line2
             else:
                 head['HISTORY'] = leadstr+line
         # Persistence mask File
-        if len(persistim) > 0:
+        if persistim:
             line = 'Persistence mask file="'+persistcorr+'"'
-            if strlen(line) > maxlen:
-                line1 = line[0:maxlen]
+            if len(line) > maxlen:
+                line1 = line[:maxlen]
                 line2 = line[maxlen:]
                 head['HISTORY'] = leadstr+line1
                 head['HISTORY'] = leadstr+line2
             else:
                 head['HISTORY'] = leadstr+line
         # Persistence model file
-        if len(persistmodelcorr) > 0:
+        if persistmodelcorr:
             line = 'Persistence model file="'+persistmodelcorr+'"'
-            if strlen(line) > maxlen:
-                line1 = line[0:maxlen]
+            if len(line) > maxlen:
+                line1 = line[:maxlen]
                 line2 = line[maxlen:]
                 head['HISTORY'] = leadstr+line1
                 head['HISTORY'] = leadstr+line2
             else:
                 head['HISTORY'] = leadstr+line
         # History file
-        if len(histcorr) > 0:
+        if histcorr:
             line = 'Exposure history file="'+histcorr+'"'
-            if strlen(line) > maxlen:
-                line1 = line[0:maxlen]
+            if len(line) > maxlen:
+                line1 = line[:maxlen]
                 line2 = line[maxlen:]
                 head['HISTORY'] = leadstr+line1
                 head['HISTORY'] = leadstr+line2
             else:
                 head['HISTORY'] = leadstr+line
         # Bad pixels 
-        bpmmask = int((int(mask) & maskval('BADPIX')) == maskval('BADPIX'))
+        bpmmask = ((mask.astype(int) & maskval('BADPIX')) == maskval('BADPIX')).astype(int)
         totbpm = np.sum(bpmmask)
         head['HISTORY'] = leadstr+str(int(totbpm))+' pixels are bad'
         # Cosmic Rays
-        crmask, = np.where(int(mask) & maskval('CRPIX'),totcr)
+        crmask, = np.where(mask.astype(int) & maskval('CRPIX'),totcr)
         if nreads > 2:
             head['HISTORY'] = leadstr+str(int(totcr))+' pixels have cosmic rays'
         if crfix and nreads>2:
             head['HISTORY'] = leadstr+'Cosmic Rays FIXED'
         # Saturated pixels
-        satmask, = np.where(int(mask) & maskval('SATPIX'),totsat)
-        unfmask, = np.where(int(mask) & maskval('UNFIXABLE'),totunf)
+        satmask, = np.where(mask.astype(int) & maskval('SATPIX'),totsat)
+        unfmask, = np.where(mask.astype(int) & maskval('UNFIXABLE'),totunf)
         totfix = totsat-totunf
         head['HISTORY'] = leadstr+str(int(totsat))+' pixels are saturated'
         if satfix and nreads>2:
@@ -2626,26 +2628,28 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         head['HISTORY'] = leadstr+str(int(totunf))+' pixels are unfixable'
         # Sampling
         if uptheramp:
-            head['HISTORY'] = leadstr+'UP-THE-RAMP Sampling',head
+            head['HISTORY'] = leadstr+'UP-THE-RAMP Sampling'
         else:
-            head['HISTORY'] = leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used)),head 
+            head['HISTORY'] = leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used))
         # Persistence correction factor
         if len(pmodelim) > 0 and len(ppar) > 0:
-            head['HISTORY'] = leadstr+'Persistence correction: '+' '.join(str(string(ppar,format='(G7.3)'))),head
+            sppar = ['{:7.3g}'.(p) for p in ppar]
+            head['HISTORY'] = leadstr+'Persistence correction: '+' '.join(sppar)
   
         # Fix EXPTIME if necessary
         if head['NFRAMES'] != nreads:
             # NFRAMES is from ICC, NREAD is from bundler which should be correct
             exptime = nreads*10.647  # secs
             head['EXPTIME'] = exptime
-            print('not halting, but NFRAMES does not match NREADS, NFRAMES: ', head['NFRAMES'], ' NREADS: ',str(nreads),'  ', seq)
-            #print('halt: NFRAMES does not match NREADS, NFRAMES: ', sxpar(head,'NFRAMES'), ' NREADS: ',string(format='(i8)',nreads),'  ', seq
+            print('not halting, but NFRAMES does not match NREADS, NFRAMES: '+str(head['NFRAMES'])+' NREADS: '+str(nreads)+'  '+seq)
 
         # Add UT-MID/JD-MID to the header
-        jd = date2jd(head['DATE-OBS'])
+        jd = Time(head['DATE-OBS'],format='fits').jd
+        #jd = date2jd(head['DATE-OBS'])
         exptime = head['EXPTIME']
         jdmid = jd + (0.5*exptime)/24/3600
-        utmid = jd2date(jdmid)
+        utmid = Time(jd,format='jd').fits
+        #utmid = jd2date(jdmid)
         head['UT-MID'] = utmid,' Date at midpoint of exposure'
         head['JD-MID'] = jdmid,' JD at midpoint of exposure'
 
@@ -2655,30 +2659,31 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         #----------------------------------
         # Output the final image and mask
         #----------------------------------
-        if outfile is not None:
+        if outfile:
             ioutfile = outfile[f]
   
             # Does the output directory exist?
             if os.path.exists(os.path.dirname(ioutfile))==False:
-                print('Creating ',os.path.dirname(ioutfile))
+                print('Creating '+os.path.dirname(ioutfile))
                 os.makedirs(os.path.dirname(ioutfile))
   
             # Test if the output file already exists
-            test = os.path.exists(ioutfile)
+            filexists = os.path.exists(ioutfile)
 
-            if silent==False:
+            if verbose:
                 print('')
-            if test == 1 and clobber:
-                print('OUTFILE = ',ioutfile,' ALREADY EXISTS.  OVERWRITING')
-            if test == 1 and clobber==False:
-                print('OUTFILE = ',ioutfile,' ALREADY EXISTS. ')
+            if filexists and clobber:
+                print('OUTFILE = '+ioutfile+' ALREADY EXISTS.  OVERWRITING')
+            if filexists and clobber==False:
+                print('OUTFILE = '+ioutfile+' ALREADY EXISTS. ')
     
         # Writing file
-        if test == 0 or clobber:
-            if silent==False:
-                print('Writing output to: ',ioutfile)
+        if filexists==False or clobber:
+            if verbose:
+                print('Writing output to: '+ioutfile)
             if outlong:
                 print('Saving FLUX/ERR as LONG instead of FLOAT')
+            if os.path.exists(ioutfile): os.remove(ioutfile)
             # HDU0 - header only
             hdu = fits.HDUList()
             hdu.append(fits.ImageHDU(0,head))
@@ -2686,13 +2691,13 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             # HDU1 - flux
             flux = output[:,:,0]
             # replace NaNs with zeros
-            bad, = np.where(np.isfinite(flux)==False)
-            nbad = len(bad)
+            bad = np.where(np.isfinite(flux)==False)
+            nbad = np.sum(bad)
             if nbad > 0:
                 flux[bad] = 0.
             if outlong:
-                flux = np.round(flux)
-            hdu.append(fits.ImageHDU(flux,head1))
+                flux = np.round(flux).astype(int)
+            hdu.append(fits.ImageHDU(flux))
             hdu[1].header['CTYPE1'] = 'Pixel'
             hdu[1].header['CTYPE2'] = 'Pixel'
             hdu[1].header['BUNIT'] = 'Flux (ADU)'
@@ -2701,8 +2706,8 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             #err = sqrt(reform(output[:,:,1])) > 1  # must be greater than zero
             err = errout(output[:,:,1])
             if outlong:
-                err = np.round(err)
-            hdu.append(fits.ImageHDU(err,head2))
+                err = np.round(err).astype(int)
+            hdu.append(fits.ImageHDU(err))
             hdu[2].header['CTYPE1'] = 'Pixel'
             hdu[2].header['CTYPE2'] = 'Pixel'
             hdu[2].header['BUNIT'] = 'Error (ADU)'
@@ -2711,7 +2716,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             #flagmask = fix(reform(output[:,:,2]))
             # don't go through conversion to float and back!
             flagmask = mask.astype(int)
-            hdu.append(fits.ImageHDU(flagmask,head3))
+            hdu.append(fits.ImageHDU(flagmask))
             hdu[3].header['CTYPE1'] = 'Pixel'
             hdu[3].header['CTYPE2'] = 'Pixel'
             hdu[3].header['BUNIT'] = 'Flag Mask (bitwise)'
@@ -2725,40 +2730,45 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             #if write_error != '' then print('Error writing file '+write_error)
 
             # HDU4 - persistence model
-            if len(pmodelim) > 0:
+            if pmodelim:
                 hdu.append(fits.ImageHDU(pmodelim))
                 hdu[4].header['CTYPE1'] = 'Pixel'
                 hdu[4].header['CTYPE2'] = 'Pixel'
                 hdu[4].header['BUNIT'] = 'Persistence correction (ADU)'
-  
+
+            # Write the file
+            hdu.writeto(ioutfile,overwrite=True)
+            hdu.close()
+            
         # Remove the recently Decompressed file
         if extension == 'apz' and cleanuprawfile and doapunzip:
-            print('Deleting recently decompressed file ',file)
-            if os.path.exists(file): os.remove(file)
+            print('Deleting recently decompressed file ',fitsfile)
+            if os.path.exists(fitsfile): os.remove(fitsfile)
     
         # Number of saturated and CR pixels
-        if silent==False:
+        if verbose:
             print('')
             print('BAD/CR/Saturated Pixels:')
-            print(str(int(totbpm)),' pixels are bad')
-            print(str(int(totcr)),' pixels have cosmic rays')
-            print(str(int(totsat)),' pixels are saturated')
-            print(str(int(totunf)),' pixels are unfixable')
+            print(str(int(totbpm))+' pixels are bad')
+            print(str(int(totcr))+' pixels have cosmic rays')
+            print(str(int(totsat))+' pixels are saturated')
+            print(str(int(totunf))+' pixels are unfixable')
             print('')
-
-        if os.path.exists(lockfile): os.remove(lockfile)
+            
+        # Remove the lock file
+        lock.lock(lockfile,clear=True)
   
         dt = time.time()-t0
-        if silent==False:
-            print('dt = %10.f1 sec ' % dt)
-        if logfile is not None:
-            name = os.path.basename(ifile)+('%f10.2 %1x %i8 %1x %i8 %1x %i8 %i8' % (dt,totbpm,totcr,totsat,totunf))
+        if verbose:
+            print('dt = {:10.1f} sec'.format(dt))
+        if logfile:
+            name = os.path.basename(ifile)+('{:10.2f} {:8d} {:8d} {:8d} {:8d}'.format(dt,totbpm,totcr,totsat,totunf))
             utils.writelog(logfile,name)
 
         if nfiles > 1:
-            dt = systime(1)-t00
-            if silent==False:
-                print('dt = ',str(string(dt,format='(F10.1)')),' sec')
+            dt = time.time()-t00
+            if verbose:
+                print('dt = {:10.1f} sec'.format(dt))
 
     return flux,cube
                 
@@ -2770,11 +2780,14 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
 
     Parameters
     ----------
-    planfiles  Input list of plate plan files
-    apred      
-    /verbose  Print a lot of information to the screen
-    /stp      Stop at the end of the prrogram
-    /unlock      Delete lock file and start fresh
+    planfiles : str or list
+       Input list of plate plan files
+    verbose : boolean, optional
+       Print a lot of information to the screen. Default is False.
+    unlock : boolean, optional
+       Delete lock file and start fresh.  Default is False
+    clobber : boolean, optional
+       Delete any existing output files.  Default is False.
 
     Returns
     -------
@@ -2784,7 +2797,7 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
     Example
     -------
 
-    ap3d(planfiles,'apred')
+    ap3d(planfiles)
 
     Written by D.Nidever  Feb. 2010
     Modifications J. Holtzman 2011+
