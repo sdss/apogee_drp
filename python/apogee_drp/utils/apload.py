@@ -1047,10 +1047,10 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m',fps=False):
     # FPS
     if nj==0 or fps:
         # Pull this from the confSummary file
-        #observatory = {'apo25m':'apo','apo1m':'apo','lco25m':'lco'}[telescope]
+        observatory = {'apo25m':'apo','apo1m':'apo','lco25m':'lco'}[telescope]
         #configgrp = '{:0>4d}XX'.format(int(plateid) // 100)
         #configfile = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/confSummary-'+str(plateid)+'.par'
-        configfile = self.sdss_path.full('confSummary', obs=self.observatory, configid=plateid)
+        configfile = Path().full('confSummary', obs=observatory, configid=plateid)
         planstr = yanny.yanny(configfile)
         field = planstr.get('field_id')
         return field, 'SDSS-V', None
