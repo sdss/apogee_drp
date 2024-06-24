@@ -39,7 +39,8 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 pixelmask = bitmask.PixelBitMask()
 
-def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
+def loaddata(filename,fitsdir=None,maxread=None,cleanuprawfile=True,
+             verbose=False):
     """
     Load the input data file.
 
@@ -51,6 +52,14 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
        Directory for the temporary, uncompressed FITS images.
     maxread : int, optional
        Maximum read to use.  Default is to use all reads.
+    cleanuprawfile : boolean, optional
+       If a compressed file is input and ap3dproc needs to
+         Decompress the file (no decompressed file is on disk)
+         then setting this keyword will delete the decompressed
+         file at the very end of processing.  This is the default.
+         Set cleanuprawfile=0 if you want to keep the decompressed
+         file.  An input decompressed FITS file will always
+         be kept.
     verbose : boolean, optional
        Verbose output to the screen.  Default is False.
 
@@ -73,8 +82,8 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
     """
        
     # Check the file
-    fdir = os.path.dirname(ifile)
-    base = os.path.basename(ifile)
+    fdir = os.path.dirname(filename)
+    base = os.path.basename(filename)
     nbase = len(base)
     basesplit = os.path.splitext(base)
     extension = basesplit[-1][1:]
@@ -105,7 +114,7 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
   
         # Need to decompress
         if os.path.exists(fitsfile)==False:
-            if silent==False:
+            if verbose:
                 print('Decompressing with APUNZIP')
             num = int(base[6:6+8])
             if num < 2490000:
@@ -114,7 +123,7 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
                 no_checksum = 0 
             print('no_checksum: ', no_checksum)
             try:
-                apzip.unzip(ifile,clobber=True,fitsdir=fitsdir,no_checksum=True)
+                apzip.unzip(filename,clobber=True,fitsdir=fitsdir,no_checksum=True)
             except:
                 traceback.print_exc()
                 print('ERROR in APUNZIP')
@@ -134,7 +143,7 @@ def loaddata(filename,fitsdir=None,maxread=None,verbose=False):
 
     # Regular FITS file input
     else:
-        fitsfile = ifile
+        fitsfile = filename
         doapunzip = False
  
     if verbose:
@@ -625,6 +634,7 @@ def checkbadreads(cube):
     # Use the reference pixels and reference output for this
 
     shape = cube.shape
+    ny,nx,nreads = shape
     
     if shape[1] == 2560:
         refout1 = np.median(cube[:,2048:,0:np.minimum(nreads,4)],axis=2)        
@@ -695,7 +705,7 @@ def checkbadreads(cube):
     return badflag,bdreads
 
 
-def lincorr(slc_in,lindata,linhead):
+def lincorr(slc_in,lindata):
     """
     Perform the linearity correction for a slice.
 
@@ -711,8 +721,6 @@ def lincorr(slc_in,lindata,linhead):
        Input slice 2D array.
     lindata : numpy array
        Linearity correction data.
-    linhead : Header
-       Header for the linearity data.
 
     Returns
     -------
@@ -728,14 +736,11 @@ def lincorr(slc_in,lindata,linhead):
 
     readtime = 10.0   # the time between reads
 
-    lny,lnx = slc_in.shape
-    nreads = sz[1]
-
-    szlin = lindata.shape
+    nx,nreads = slc_in.shape
 
     # Each pixel separately
     #-----------------------
-    if szlin[0]==2048:
+    if lindata.shape[0]==2048:
 
         # Need to figure out the threshold for each pixel
         # Only want to correct data that need it and are
@@ -768,7 +773,7 @@ def lincorr(slc_in,lindata,linhead):
         coef1 = np.zeros((2048,nreads),float)
         coef2 = np.zeros((2048,nreads),float)
         corr = np.zeros((2048,nreads),float)
-        npar = szlin[1]
+        npar = lindata.shape[1]
         # loop over quadrants
         slc_out = slc_in.copy()
         for i in range(4):
@@ -1194,7 +1199,7 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,
     # Create long output
     out = np.zeros((2048,2048,nread),int)
     if keepref:
-        refout = np.zeros((512,2048,nread),int)
+        refout = np.zeros((2048,512,nread),int)
 
     # Ignore reference array by default
     # Default is to do CDS, vertical, and horizontal correction
@@ -1318,9 +1323,9 @@ def refcorr(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,
             ref -= ref
         # Subtract median-filtered reference array
         elif indiv>1:
-            mdref = medfilt2d(ref,[indiv,indiv])
+            mdref = medfilt2d(ref.astype(float),[indiv,indiv]).astype(int)
             im = refcorr_sub(im,mdref)
-            ref -= mdred
+            ref -= mdref
         # Subtract mean reference array
         elif indiv<0:
             im = refcorr_sub(im,meanref)
@@ -1648,7 +1653,7 @@ def fixsatreads(dCounts,var_dCounts,med_dCounts,bdsat,mask,satmask,
             #dCounts[bdsat] = med_dCounts[bdsatx]
             # if the first read is saturated then we start with
             #   the first dCounts
-            dCounts[ibdsatx,np.maximum(minsatread[ibdsatx]-1),0):nreads-1] = med_dCounts[ibdsatx]
+            dCounts[ibdsatx,np.maximum(minsatread[ibdsatx]-1,0):nreads-1] = med_dCounts[ibdsatx]
             # Saturation extrapolation error
             var_dCounts = variability[ibdsatx] * np.maximum(med_dCounts[ibdsatx],0.0001)
             # variability in dCounts
@@ -1856,7 +1861,9 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
     nfiles = np.char.array(files).size
     if type(files) is str:
         files = [files]
-
+    if type(outfile) is str:
+        outfile = [outfile]
+        
     if outfile is None:
         raise ValueError('OUTFILE must have same number of elements as FILES')
 
@@ -1896,6 +1903,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
 
     # File loop
     #------------
+    outlist = nfiles*[None]
     for f in range(nfiles):
         t0 = time.time()
         ifile = files[f]
@@ -1903,15 +1911,21 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         if verbose:
             if f > 0:
                 print('')
-            print(str(f+1)+'/'+str(nfiles)+' Filename = '+ifile)
+            print(str(f+1)+'/'+str(nfiles)+' filename = '+ifile)
             print('----------------------------------')
 
-        # if another job is working on this file, wait
+        # Test if the output file already exists
+        if outfile:
+            if os.path.exists(outfile[f]) and clobber==False:
+                print('OUTFILE = '+outfile[f]+' ALREADY EXISTS.  Set clobber=True to overwrite.')
+                continue
+            
+        # If another job is working on this file, wait
         if outfile:
             if utils.localdir() is not None:
-                lockfile = utils.localdir()+'/'+os.path.basename((outfile[f])+'.lock')
+                lockfile = utils.localdir()+'/'+os.path.basename(outfile[f])
             else:
-                lockfile = outfile[f]+'.lock'
+                lockfile = outfile[f]
             #if not unlock and not clobber:
             #    while os.path.exists(lockfile):
             #        print('Waiting for lockfile '+lockfile)
@@ -1928,8 +1942,6 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             #    lockfile = localdir+'/'+load.prefix+'1D-'+baseframeid
             lock.lock(lockfile,unlock=unlock)
 
-            
-
             ## Test if the output file already exists
             #if (os.path.exists(outfile[f]) or os.path.exists(outfile[f]+'.fz')) and clobber==False:
             #    if silent==False:
@@ -1942,20 +1954,13 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             # Lock the file
             lock.lock(lockfile,lock=True)
 
-
-        # Test if the output file already exists
-        if outfile:
-            if os.path.exists(outfile[f]) and clobber==False:
-                print('OUTFILE = ',outfile[f],' ALREADY EXISTS.  Set /clobber to overwrite.')
-                continue
-
         # Load the data
-        cube,head,doapunzip,fitsfile = loaddata(ifile,fitsdir=fitsdir,maxread=maxread,verbose=verbose)
+        cube,head,doapunzip,fitsfile = loaddata(ifile,fitsdir=fitsdir,maxread=maxread,
+                                                cleanuprawfile=cleanuprawfile,verbose=verbose)
         if cube is None: continue
 
         # Dimensions of the cube
         ny,nx,nreads = cube.shape
-        #type = size(cube,/type)  # UINT
         chip = head.get('CHIP')
         if chip is None:
             raise ValueError('CHIP not found in header')
@@ -1994,7 +1999,6 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
 
         if detcorr or darkcorr or flatcorr and verbose: print('')
   
-
         #---------------------
         # Check for BAD READS
         #---------------------
@@ -2005,21 +2009,18 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
   
         # Reference pixel subtraction
         #----------------------------
-        tmp = refcorr(cube,head,mask,readmask=readmask,q3fix=q3fix,keepref=usereference)
-        cube = tmp
-        
+        cube,mask,readmask = refcorr(cube,head,q3fix=q3fix,keepref=usereference)        
         bdreads2, = np.where(readmask == 1)
         nbdreads2 = len(bdreads2)
         if nbdreads2 > 0:
             bdreads = np.hstack((bdreads,bdreads))
         nbdreads = len(np.unique(bdreads))
-  
         if nbdreads > (nreads-2):
             print('Error: Not enough good reads')
             continue
-
         gdreads = np.arange(nreads)
-        gdreads = np.delete(gdreads,bdreads)
+        if nbdreads>0:
+            gdreads = np.delete(gdreads,bdreads)
         ngdreads = len(gdreads)
 
         # Interpolate bad reads
@@ -2033,10 +2034,11 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         if refonly:
             if verbose:
                 print('Reference subtraction only')
-  
+            # goto,BOMB
+                
         # READ NOISE
         #-----------
-        if rdnoiseim.shape>0:
+        if rdnoiseim is not None:
             noise = np.median(rdnoiseim)
         else:
             noise = 12.0  # default value
@@ -2049,9 +2051,9 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         #crindex = intarr(nx,ny,10)-1       # the CR read indices get put in here
         #crnum = intarr(nx,ny)              # # of CRs per pixel
         med_dCounts_im = np.zeros((ny,nx),float)     # the median dCounts for each pixel
-        satmask = np.zeros((ny,nx,3),int)          # 1st plane is 0/1 mask, 2nd plane is which read
-                                            #   it saturated on, 3rd plane is # of
-                                            #   saturated reads
+        satmask = np.zeros((ny,nx,3),int)            # 1st plane is 0/1 mask, 2nd plane is which read
+                                                     #   it saturated on, 3rd plane is # of
+                                                     #   saturated reads
         variability_im = np.zeros((ny,nx),float)     # fractional variability for each pixel
         sat_extrap_error = np.zeros((ny,nx),float)   # saturation extrapolation error 
   
@@ -2086,7 +2088,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         # Flag BAD pixels
         #---------------------------------
         if bpmcorr:
-            bdpix, = np.where(bpmim[i,:] > 0,nbdpix)
+            bdpix, = np.where(bpmim[i,:] > 0)
             nbdpix = len(bdpix)
             if nbdpix > 0:
                 for j in range(nbdpix):
@@ -2106,15 +2108,15 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         # Flag persistence pixels, but don't change data values
         #---------------------------------
         if persistcorr:
-            bdpix, = np.where(persistim[i,:] and 1)
-            if len(bdpix) > 0:
-                mask[i,bdpix] = (mask[i,bdpix] | maskval('PERSIST_HIGH'))
-            bdpix, = np.where(persistim[i,:] and 2)
-            if len(bdpix) > 0:
-                mask[i,bdpix] = (mask[i,bdpix] | maskval('PERSIST_MED'))
-            bdpix, = np.where(persistim[:,i] and 4)
-            if len(bdpix)>0:
-                mask[i,bdpix] = (mask[i,bdpix] | maskval('PERSIST_LOW'))
+            bdpix1, = np.where(persistim[i,:] and 1)
+            if len(bdpix1) > 0:
+                mask[i,bdpix1] = (mask[i,bdpix1] | maskval('PERSIST_HIGH'))
+            bdpix2, = np.where(persistim[i,:] and 2)
+            if len(bdpix2) > 0:
+                mask[i,bdpix2] = (mask[i,bdpix2] | maskval('PERSIST_MED'))
+            bdpix4, = np.where(persistim[:,i] and 4)
+            if len(bdpix4)>0:
+                mask[i,bdpix4] = (mask[i,bdpix4] | maskval('PERSIST_LOW'))
   
         #---------------------------------
         # Detect and Flag Saturated reads
@@ -2209,7 +2211,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         if len(bdsat) > 0:
             slc0[bdsat] = 0.0
         # unfixable
-        unfmask_slc = (mask[i,:].astype(bool) & maskval('UNFIXABLE')) == maskval('UNFIXABLE'))
+        unfmask_slc = ((mask[i,:].astype(bool) & maskval('UNFIXABLE')) == maskval('UNFIXABLE'))
         unfmask_slc = unfmask_slc.astype(int)
         slc0[:2048] = slc0[:2048]*(1.0-unfmask_slc)    # set unfixable pixels to zero
 
@@ -2266,7 +2268,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         # Measure "variability" of data
         #--------------------------------
         # Use pixels with decent count rates
-        crmask = (mask.astype(int) & maskval('CRPIX')) == maskval('CRPIX')).astype(int)
+        crmask = ((mask.astype(int) & maskval('CRPIX')) == maskval('CRPIX')).astype(int)
         highpix, = np.where((satmask[:,:,0] == 0) & (crmask == 0) & (med_dCounts_im > 40))
         nhighpix = len(highpix)
         if nhighpix == 0:
@@ -2633,7 +2635,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             head['HISTORY'] = leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used))
         # Persistence correction factor
         if len(pmodelim) > 0 and len(ppar) > 0:
-            sppar = ['{:7.3g}'.(p) for p in ppar]
+            sppar = ['{:7.3g}'.format(p) for p in ppar]
             head['HISTORY'] = leadstr+'Persistence correction: '+' '.join(sppar)
   
         # Fix EXPTIME if necessary
@@ -2660,85 +2662,73 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         # Output the final image and mask
         #----------------------------------
         if outfile:
-            ioutfile = outfile[f]
-  
+            ioutfile = outfile[f]  
             # Does the output directory exist?
             if os.path.exists(os.path.dirname(ioutfile))==False:
                 print('Creating '+os.path.dirname(ioutfile))
                 os.makedirs(os.path.dirname(ioutfile))
-  
             # Test if the output file already exists
             filexists = os.path.exists(ioutfile)
-
             if verbose:
                 print('')
             if filexists and clobber:
                 print('OUTFILE = '+ioutfile+' ALREADY EXISTS.  OVERWRITING')
             if filexists and clobber==False:
                 print('OUTFILE = '+ioutfile+' ALREADY EXISTS. ')
-    
-        # Writing file
-        if filexists==False or clobber:
+
+        # Create the HDUList
+        #-------------------
+        # HDU0 - header only
+        hdu = fits.HDUList()
+        hdu.append(fits.ImageHDU(0,head))
+        # HDU1 - flux
+        flux = output[:,:,0]
+        # replace NaNs with zeros
+        bad = np.where(np.isfinite(flux)==False)
+        nbad = np.sum(bad)
+        if nbad > 0:
+            flux[bad] = 0.
+        if outlong:
+            flux = np.round(flux).astype(int)
+        hdu.append(fits.ImageHDU(flux))
+        hdu[1].header['CTYPE1'] = 'Pixel'
+        hdu[1].header['CTYPE2'] = 'Pixel'
+        hdu[1].header['BUNIT'] = 'Flux (ADU)'
+        # HDU2 - error
+        err = errout(output[:,:,1])
+        if outlong:
+            err = np.round(err).astype(int)
+        hdu.append(fits.ImageHDU(err))
+        hdu[2].header['CTYPE1'] = 'Pixel'
+        hdu[2].header['CTYPE2'] = 'Pixel'
+        hdu[2].header['BUNIT'] = 'Error (ADU)'
+        # HDU3 - mask
+        # don't go through conversion to float and back!
+        flagmask = mask.astype(int)
+        hdu.append(fits.ImageHDU(flagmask))
+        hdu[3].header['CTYPE1'] = 'Pixel'
+        hdu[3].header['CTYPE2'] = 'Pixel'
+        hdu[3].header['BUNIT'] = 'Flag Mask (bitwise)'
+        hdu[3].header['HISTORY'] = 'Explanation of BITWISE flag mask'
+        hdu[3].header['HISTORY'] = ' 1 - bad pixels'
+        hdu[3].header['HISTORY'] = ' 2 - cosmic ray'
+        hdu[3].header['HISTORY'] = ' 4 - saturated'
+        hdu[3].header['HISTORY'] = ' 8 - unfixable'
+        # HDU4 - persistence model
+        if pmodelim:
+            hdu.append(fits.ImageHDU(pmodelim))
+            hdu[4].header['CTYPE1'] = 'Pixel'
+            hdu[4].header['CTYPE2'] = 'Pixel'
+            hdu[4].header['BUNIT'] = 'Persistence correction (ADU)'
+
+        # Write the file
+        if filexists==False or clobber:        
             if verbose:
                 print('Writing output to: '+ioutfile)
             if outlong:
                 print('Saving FLUX/ERR as LONG instead of FLOAT')
             if os.path.exists(ioutfile): os.remove(ioutfile)
-            # HDU0 - header only
-            hdu = fits.HDUList()
-            hdu.append(fits.ImageHDU(0,head))
-            #FITS_WRITE,ioutfile,0,head,message=write_error    
-            # HDU1 - flux
-            flux = output[:,:,0]
-            # replace NaNs with zeros
-            bad = np.where(np.isfinite(flux)==False)
-            nbad = np.sum(bad)
-            if nbad > 0:
-                flux[bad] = 0.
-            if outlong:
-                flux = np.round(flux).astype(int)
-            hdu.append(fits.ImageHDU(flux))
-            hdu[1].header['CTYPE1'] = 'Pixel'
-            hdu[1].header['CTYPE2'] = 'Pixel'
-            hdu[1].header['BUNIT'] = 'Flux (ADU)'
-
-            # HDU2 - error
-            #err = sqrt(reform(output[:,:,1])) > 1  # must be greater than zero
-            err = errout(output[:,:,1])
-            if outlong:
-                err = np.round(err).astype(int)
-            hdu.append(fits.ImageHDU(err))
-            hdu[2].header['CTYPE1'] = 'Pixel'
-            hdu[2].header['CTYPE2'] = 'Pixel'
-            hdu[2].header['BUNIT'] = 'Error (ADU)'
-
-            # HDU3 - mask
-            #flagmask = fix(reform(output[:,:,2]))
-            # don't go through conversion to float and back!
-            flagmask = mask.astype(int)
-            hdu.append(fits.ImageHDU(flagmask))
-            hdu[3].header['CTYPE1'] = 'Pixel'
-            hdu[3].header['CTYPE2'] = 'Pixel'
-            hdu[3].header['BUNIT'] = 'Flag Mask (bitwise)'
-            hdu[3].header['HISTORY'] = 'Explanation of BITWISE flag mask'
-            hdu[3].header['HISTORY'] = ' 1 - bad pixels'
-            hdu[3].header['HISTORY'] = ' 2 - cosmic ray'
-            hdu[3].header['HISTORY'] = ' 4 - saturated'
-            hdu[3].header['HISTORY'] = ' 8 - unfixable'
-            #MWRFITS,flagmask,ioutfile,head3
-            #FITS_WRITE,ioutfile,output,head,/no_abort,message=write_error
-            #if write_error != '' then print('Error writing file '+write_error)
-
-            # HDU4 - persistence model
-            if pmodelim:
-                hdu.append(fits.ImageHDU(pmodelim))
-                hdu[4].header['CTYPE1'] = 'Pixel'
-                hdu[4].header['CTYPE2'] = 'Pixel'
-                hdu[4].header['BUNIT'] = 'Persistence correction (ADU)'
-
-            # Write the file
             hdu.writeto(ioutfile,overwrite=True)
-            hdu.close()
             
         # Remove the recently Decompressed file
         if extension == 'apz' and cleanuprawfile and doapunzip:
@@ -2756,13 +2746,15 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             print('')
             
         # Remove the lock file
-        lock.lock(lockfile,clear=True)
+        if outfile:
+            lock.lock(lockfile,clear=True)
   
         dt = time.time()-t0
         if verbose:
             print('dt = {:10.1f} sec'.format(dt))
         if logfile:
-            name = os.path.basename(ifile)+('{:10.2f} {:8d} {:8d} {:8d} {:8d}'.format(dt,totbpm,totcr,totsat,totunf))
+            fmt = '{:10.2f} {:8d} {:8d} {:8d} {:8d}'
+            name = os.path.basename(ifile)+(fmt.format(dt,totbpm,totcr,totsat,totunf))
             utils.writelog(logfile,name)
 
         if nfiles > 1:
@@ -2770,7 +2762,14 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             if verbose:
                 print('dt = {:10.1f} sec'.format(dt))
 
-    return flux,cube
+        # Add to the outlist list
+        outlist[f] = hdu
+
+    if nfiles==1: outlist=outlist[0]
+
+    import pdb; pdb.set_trace()
+    
+    return outlist
                 
 
 def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=False):
@@ -2813,7 +2812,7 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
     print('')
     print('RUNNING AP3D')
     print('')
-    print(str(nplanfiles),' PLAN files')
+    print(str(nplanfiles)+' PLAN file(s)')
 
     chips = ['a','b','c']
 
@@ -2827,7 +2826,7 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
 
         print('')
         print('=========================================================================')
-        print(str(i+1),'/',str(nplanfiles),'  Processing Plan file ',planfile)
+        print(str(i+1)+'/'+str(nplanfiles)+'  Processing Plan file '+planfile)
         print('=========================================================================')
         
         # Load the plan file
