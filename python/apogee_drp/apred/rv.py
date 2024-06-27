@@ -878,7 +878,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         apstar.skyerr[2:,:] = stack.skyerr
         apstar.telluric[2:,:] = stack.telluric
         apstar.telerr[2:,:] = stack.telerr
-
+        
     # Populate header
     apstar.header['OBJID'] = (allvisit['apogee_id'][0], 'APOGEE object name')
     apstar.header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
