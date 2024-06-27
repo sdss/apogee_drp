@@ -1048,6 +1048,23 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         html.close()
         return
 
+    # Checking that we have good targets for this visit
+    targs = platefile['a'][11].data
+    if fps:
+        gdtargs, = np.where((targs['HMAG'] > 5) & (targs['HMAG'] < 15) & (np.isnan(targs['HMAG']) == False) &
+                            (targs['TMASS_STYLE'] != '') & (targs['SPECTROGRAPHID']==2) &
+                            (targs['ASSIGNED']) & (targs['ON_TARGET']) & (targs['VALID']) &
+                            (targs['OBJTYPE'] != 'none') & (targs['OBJTYPE'] != ''))
+    else:
+        gdtargs, = np.where((targs['HMAG'] > 5) & (targs['HMAG'] < 15) & (np.isnan(targs['HMAG']) == False) &
+                            (targs['TMASS_STYLE'] != '') & (targs['SPECTROGRAPHID']==2) &
+                            (targs['OBJTYPE'] != 'none') & (targs['OBJTYPE'] != ''))
+    ntargs = len(gdtargs)
+    if ntargs==0:
+        print('No APOGEE targets for this visit')
+        html.write('<H3><FONT COLOR=red>No APOGEE Targets for this visit</FONT></H3>\n')
+        html.write('<HR>\n')
+    
     # Link to combined spectra page.
     html.write('<H3> Plots of apVisit spectra ---> <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html>' + prefix + 'Plate-'+plate+'-'+mjd+'</a></H3>\n')
     html.write('<HR>\n')
@@ -1061,6 +1078,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<HR>\n')
 
     # Flat field/throughput plots.
+    fluxfile = ''
     if fluxid is not None:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
         plotfile = fluxfile.replace('Flux','Tput')
