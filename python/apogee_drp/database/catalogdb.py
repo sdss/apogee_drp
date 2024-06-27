@@ -422,6 +422,8 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
         data = get_sdssid(catid)
     elif designid is not None:
         ddata = getdesign(designid)
+        if len(ddata)==0:
+            return []
         sdata = get_sdssid(ddata['catalogid'].tolist())
         del sdata[['catalogid','version_id']]
         data = hstack((ddata,sdata))

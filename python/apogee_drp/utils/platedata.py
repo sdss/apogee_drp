@@ -453,6 +453,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     if fps:
         logger.info('Querying targetdb/catalogdb')
         ph = catalogdb.getdata(designid=plugmap['design_id'])
+    if fps and len(ph)>0:
+        # The extra if is to deal with cases when there are no apogee assigned targets
+        # for a design and "ph" is empty
         # Add missing columns
         for c in ['jmag','hmag','kmag','gaia_gmag','gaia_bpmag','gaia_rpmag']:
             if c not in ph.colnames: ph[c]=99.99
