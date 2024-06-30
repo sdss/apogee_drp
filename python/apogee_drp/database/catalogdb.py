@@ -5,6 +5,7 @@ from dlnpyutils import utils as dln
 from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.table import Table,vstack,hstack
+from astropy.time import Time
 import traceback
 
 #from sdssdb.peewee.sdss5db.catalogdb import SDSS_ID_flat    
@@ -16,10 +17,10 @@ import traceback
 #    traceback.print_exc()
 
 lead_mjd = {
- 'bhm_csc':0.0,
- 'bhm_rm_v0':0.0,
- 'gaia_dr2_source':0.0,
- 'gaia_dr3_source':0.0,
+# 'bhm_csc':0.0,
+# 'bhm_rm_v0':0.0,
+ 'gaia_dr2_source':57203.0,
+ 'gaia_dr3_source':57388.0,
  'gaia_qso':0.0,
  'guvcat':0.0,
  'legacy_survey_dr10':0.0,
@@ -40,7 +41,7 @@ lead_mjd = {
 #'skies_v1':XXX,
 #'skies_v2':XXX,
 
-def get_ids(catalogid=None,sdss_id=None,apogee_id=None):
+def getids(catalogid=None,sdss_id=None,apogee_id=None):
     """
     Get 2MASS, Gaia DR3 ID, sdss_id,  catalogids.  Deal with duplicate issues.
     # Only ONE star at a time.
@@ -80,16 +81,21 @@ def get_ids(catalogid=None,sdss_id=None,apogee_id=None):
 
 
     # Get proper motion and "lead" from catalogdb.catalog
+    # and epoch from targetdb.target
     data['pmra'] = np.nan
     data['pmdec'] = np.nan
     data['lead'] = 50*' '
+    data['epoch'] = np.nan
     if data['catalogid'][0] > 0:
-        sql = 'select * from catalogdb.catalog where catalogid='+str(data['catalogid'][0])
+        sql = 'select * from catalogdb.catalog as c '
+        sql += 'join targetdb.target as t on t.catalogid=c.catalogid '
+        sql += 'where c.catalogid='+str(data['catalogid'][0])
         cdata = db.query(sql=sql,fmt="table")
         if len(cdata)>0:
             data['pmra'][0] = cdata['pmra'][0]
             data['pmdec'][0] = cdata['pmdec'][0]
             data['lead'][0] = cdata['lead'][0]
+            data['epoch'][0] = cdata['epoch'][0]
         else:
             print('Weird! No catalogdb.catalog entry for catalogid='+str(data['catalogid'][0]))
             
@@ -128,40 +134,38 @@ def get_ids(catalogid=None,sdss_id=None,apogee_id=None):
         pmra = data['pmra'][0]
         dec = data['dec_sdss_id'][0]
         pmdec = data['pmdec'][0]
-        # No proper motions, query gaia dr3 around the coordinates and
-        #  use the gaia dr3 to propagate to common epoch
-        if pmra < -999990 or pmdec < -999990:
-            gcols = 'source_id,ra,dec,pmra,pmdec,phot_g_mean_mag as gmag'
-            sql = 'select '+gcols+' from catalogdb.gaia_dr3_source'
-            sql += ' where q3c_radial_query(ra,dec,{:.7f},{:.7f},1.0/60)'.format(ra,dec)
-            gaiadata = db.query(sql=sql,fmt="table")
-            if len(gaiadata)>0:
-                gpmra = gaiadata['pmra']
-                gpmra[~np.isfinite(gpmra)] = 0.0  # set NaNs to zero
-                gpmdec = gaiadata['pmdec']
-                gpmdec[~np.isfinite(gpmdec)] = 0.0
-                gaiamjd = 57388.0   # 1/1/2016, J2016.0, EDR3, DR3
-                leadepoch = 0
-                tdelt = (mjd-gaiamjd)/365.242170 # convert to years 
-                # convert from mas/yr->deg/yr and convert to angle in RA 
-                gra_epoch = gaiadata['ra'] + tdelt*pmra/3600.0/1000.0/np.cos(np.deg2rad(gaiadata['dec'])) 
-                gdec_epoch = gaiadata['dec'] + tdelt*pmdec/3600.0/1000.0
-                # No crossmatch this to our coordinates
-                dist = dln.sphdist(ra,dec,gra_epoch,gdec_epoch)*3600
-                bestind = np.argmin(dist)
-                mindist = np.min(dist)
-                # Only keep matches within 1"
-            else:
-                print('No gaia sources with 1 arcmin.')
-            import pdb; pdb.set_trace()
-        # We have proper motions, use them to propagate to a common epoch
+
+        # Get Gaia sources in this region, then correct coords to
+        # epoch using Gaia proper motions
+        gcols = 'source_id,ra,dec,pmra,pmdec,phot_g_mean_mag as gmag'
+        sql = 'select '+gcols+' from catalogdb.gaia_dr3_source'
+        sql += ' where q3c_radial_query(ra,dec,{:.7f},{:.7f},50.0/3600)'.format(ra,dec)
+        gdata = db.query(sql=sql,fmt="table")
+        gpmra = gdata['pmra']
+        gpmra[~np.isfinite(gpmra)] = 0.0  # set NaNs to zero
+        gpmdec = gdata['pmdec']
+        gpmdec[~np.isfinite(gpmdec)] = 0.0
+        gaiamjd = 57388.0   # 1/1/2016, J2016.0, EDR3, DR3
+        leadepoch = Time(data['epoch'][0],format='decimalyear')
+        tdelt = (leadepoch.mjd-gaiamjd)/365.242170 # convert to years 
+        # convert from mas/yr->deg/yr and convert to angle in RA 
+        gra_epoch = gdata['ra'] + tdelt*pmra/3600.0/1000.0/np.cos(np.deg2rad(gdata['dec'])) 
+        gdec_epoch = gdata['dec'] + tdelt*pmdec/3600.0/1000.0
+        # Now crossmatch this to our coordinates
+        coo = SkyCoord(ra=ra,dec=dec,unit='deg',frame='icrs')
+        gcoo = SkyCoord(ra=gra_epoch,dec=gdec_epoch,unit='deg',frame='icrs')
+        dist = coo.separation(gcoo).arcsec
+        gdata['dist'] = dist
+        bestind = np.argmin(dist)
+        mindist = np.min(dist)
+        gdata['xflag'] = 2
+        # Use 1" matching radius
+        gddist, = np.where(dist <= 1.0)
+        if len(gddist)>0:
+            gdata = gdata[gddist]
         else:
-            import pdb; pdb.set_trace()
-            gcols = 'source_id,ra,dec,pmra,pmdec,phot_g_mean_mag as gmag'
-            sql = 'select '+gcols+' from catalogdb.gaia_dr3_source'
-            sql += ' where q3c_radial_query(ra,dec,{:.7f},{:.7f},1.0/3600)'.format(ra,dec)
-            gdata = db.query(sql=sql,fmt="table")
-            gdata['xflag'] = 2            
+            print('No Gaia DR3 sources within 1 arcsec')
+            gdata = np.array([])
     # Deal with duplicates
     if len(gdata)>1:
         print('Need to deal with gaia duplicates')
@@ -290,7 +294,7 @@ def get_ids(catalogid=None,sdss_id=None,apogee_id=None):
 
     return data
     
-def get_sdssid(catalogid):
+def getsdssid(catalogid):
     # Get SDSS_IDs
     db = apogeedb.DBSession()
     
@@ -333,6 +337,51 @@ def get_sdssid(catalogid):
     
     return out
 
+def getxmatchids(sdssid):
+    """
+    Get all of the crossmatched IDs from catalogdb.sdss_id_to_catalog.
+    This follows all the paths to the main catalogs.
+    """
+
+    # This will often return multiple rows per sdss_id,
+    # one per catalogid
+    
+    db = apogeedb.DBSession()
+    if dln.size(sdssid)==1:
+        tomatch = "="+str(np.atleast_1d(sdssid)[0])
+    else:
+        tomatch = " in ("+','.join(np.char.array(sdssid).astype(str))+")"
+    sql = "select sdss_id,catalogid,version_id,lead,gaia_dr2_source__source_id,"
+    sql += "gaia_dr3_source__source_id,tic_v8__id,twomass_psc__pts_key "
+    sql += "from catalogdb.sdss_id_to_catalog "
+    sql += "where sdss_id"+tomatch
+    data = db.query(sql=sql)
+    db.close()
+
+    return data
+    
+def gettargeting(sdssid):
+    """
+    Get targeting information.
+    """
+
+    db = apogeedb.DBSession()
+    if dln.size(sdssid)==1:
+        tomatch = "="+str(np.atleast_1d(sdssid)[0])
+    else:
+        tomatch = " in ("+','.join(np.char.array(sdssid).astype(str))+")"
+    sql = "select s.sdss_id,STRING_AGG(ct.carton_pk::text,',') as carton_pk,"+\
+          "STRING_AGG(DISTINCT t.catalogid::text,',') as catalogid "+\
+          "from targetdb.target as t "+\
+          "join targetdb.carton_to_target as ct on t.pk = ct.target_pk "+\
+          "join catalogdb.sdss_id_flat as s on s.catalogid = t.catalogid "+\
+          "where s.sdss_id"+tomatch+" "+\
+          "group by s.sdss_id"
+    data = db.query(sql=sql)
+    db.close()
+
+    return data
+    
 def getdesign(designid):
     """
     Get information on a design
@@ -381,7 +430,7 @@ def coords2catid(ra,dec,dcr=1.0):
     return data
     
 def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
-            table='tmass,gaiadr3',sdssid=True):
+            table='tmass,gaiadr3',sdssid=True,targeting=True):
     """
     Get catalogdb data for objects.  You can either query by
     catalogid or by coordinates (ra/dec).
@@ -402,6 +451,8 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
          Default is 'tmass,gaiadr3'.
     sdssid : bool, optional
        Return the sdssid.  Default is True.
+    targeting : bool, optional
+       Return targeiting information.  Default is True.
 
     Returns
     -------
@@ -419,12 +470,12 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
     # Always get version31 catalogids for all stars
     if catid is not None:
         catid = np.atleast_1d(catid).tolist()        
-        data = get_sdssid(catid)
+        data = getsdssid(catid)
     elif designid is not None:
         ddata = getdesign(designid)
         if len(ddata)==0:
             return []
-        sdata = get_sdssid(ddata['catalogid'].tolist())
+        sdata = getsdssid(ddata['catalogid'].tolist())
         del sdata[['catalogid','version_id']]
         data = hstack((ddata,sdata))
     elif ra is not None and dec is not None:
@@ -461,10 +512,23 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
                         
         # Get SDSSID
         if sdssid and len(data)>0:
-            sout = get_sdssid(data['catalogid'].tolist())
+            sout = getsdssid(data['catalogid'].tolist())
             data['sdss_id'] = 0            
             data['sdss_id'] = sout['sdss_id']
+            data['version_id'] = 0
+            data['version_id'] = sout['version_id']
 
+        # Get targeting information
+        if targeting and len(data)>0:
+            tout = gettargeting(data['sdss_id'].tolist())
+            data['targ_carton_pk'] = 1000*' '
+            data['targ_catalogid'] = 1000*' '
+            _,ind1,ind2 = np.intersect1d(data['sdss_id'],tout['sdss_id'],
+                                         return_indices=True)
+            if len(ind1)>0:
+                data['targ_carton_pk'][ind1] = tout['carton_pk'][ind2]
+                data['targ_catalogid'][ind1] = tout['catalogid'][ind2]
+            
         return data
 
     # ---- Single table queries ----
@@ -595,7 +659,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
 
     # Get SDSS_IDs
     if sdssid and len(data)>0:
-        sout = get_sdssid(data['catalogid'].tolist())
+        sout = getsdssid(data['catalogid'].tolist())
         data['sdss_id'] = 0
         data['sdss_id'] = sout['sdss_id']
         data['version_id'] = 0
