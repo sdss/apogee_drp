@@ -21,6 +21,7 @@ from astropy.io import fits
 from astropy.table import Table,vstack
 from astropy.coordinates import Angle
 from astropy import units as u
+import numpy.lib.recfunctions as rfn
 
 # filter the warnings
 
@@ -199,7 +200,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
 
     By J. Holtzman, 2011?
     Doc updates by D. Nidever, Sep 2020
-
+    Many updates and fixed by D. Nidever, 2020-2024
     """
 
     if logger is None:
@@ -407,7 +408,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     #pdata = yanny.yanny(platedir+'/'+holefile,np=True)
     #gd, = np.where(pdata['STRUCT1']['holetype'].astype(str)=='APOGEE')   
     #pdata['STRUCT1']['targetids'][gd].astype(str)
-
+    
     if mapa==False and fps==False:
         # Get the plateHolesSorted file for this plate and read it
         platestr = '{:06d}'.format(plate)
@@ -420,13 +421,13 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         #  where plugmapM is wrong
         loc = pdata['locationId']
         platedata['locationid'] = loc
-
+        
         # Sometimes TMASS_ID in "p" is 2MASS-J23580454-0007415
         for i in range(len(ph)):
             if 'tmass_id' in ph.dtype.names:
                 if ph['tmass_id'][i].astype(str).find('2MASS-J') > -1:
                     ph['tmass_id'][i] = ph['tmass_id'][i].astype(str).replace('2MASS-J','2M')
-                
+                    
         # Fix telluric catalogIDs
         # There is a problem with some of the telluric catalogIDs due to
         # overflow.  We need to add 2**32 to them.
@@ -448,6 +449,17 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             logg.erinfo('Reading flagModifications file: flagModifications-'+platestr+'.txt')
             flag_changes = Table.read(platedir+'/flagModifications-'+platestr+'.txt',format='ascii')
             have_flag_changes = 1
+            
+        # Get SDSS_ID
+        gdcat, = np.where(ph['catalogid']>0)
+        if len(gdcat)>0:
+            sdata = catalogdb.getsdssid(ph['catalogid'][gdcat])
+            temp = np.zeros(len(ph),dtype=np.dtype([('version_id',int),('sdss_id',int)]))
+            temp['version_id'] = -1
+            temp['sdss_id'] = -1
+            temp['version_id'][gdcat] = sdata['version_id']
+            temp['sdss_id'][gdcat] = sdata['sdss_id']
+            ph = rfn.merge_arrays((ph,temp),asrecarray=True,flatten=True)
 
     # Get SDSS-V FPS photometry from targetdb
     if fps:
@@ -849,7 +861,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                         if isinstance(addcat[n],np.int): addcat[n]=-1
                     addcat['catalogid'] = cat['catalogid']
                     try:
-                        sidout = catalogdb.get_sdssid([cat['catalogid'][0]])
+                        sidout = catalogdb.getsdssid([cat['catalogid'][0]])
                         addcat['sdss_id'] = sidout['sdss_id'][0]
                         addcat['version_id'] = sidout['version_id'][0]
                     except:
