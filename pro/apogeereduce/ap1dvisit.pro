@@ -672,6 +672,7 @@ FOR i=0L,nplanfiles-1 do begin
                 jmag:0.0,jerr:0.0,hmag:0.0,herr:0.0,kmag:0.0,kerr:0.0,src_h:'',$
                 pmra:0.0,pmdec:0.0,pm_src:'',$
                 apogee_target1:0L,apogee_target2:0L,apogee_target3:0L,apogee_target4:0L,$
+                sdss5_target_carton_pks:'',sdss5_target_cartons:'',sdss5_target_flags:uintarr(57),$
                 catalogid:0LL, sdss_id:0LL, gaia_release:'',gaia_sourceid:0LL,gaia_plx:0.0,$
                 gaia_plx_error:0.0, gaia_pmra:0.0, gaia_pmra_error:0.0,$
                 gaia_pmdec:0.0, gaia_pmdec_error:0.0, gaia_gmag:0.0, gaia_gerr:0.0,$

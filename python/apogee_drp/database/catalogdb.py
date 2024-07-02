@@ -6,6 +6,7 @@ from astropy.coordinates import SkyCoord
 import astropy.units as u
 from astropy.table import Table,vstack,hstack
 from astropy.time import Time
+from sdss_semaphore.targeting import TargetingFlags
 import traceback
 
 #from sdssdb.peewee.sdss5db.catalogdb import SDSS_ID_flat    
@@ -15,31 +16,6 @@ import traceback
 #database.connect()
 #except:
 #    traceback.print_exc()
-
-lead_mjd = {
-# 'bhm_csc':0.0,
-# 'bhm_rm_v0':0.0,
- 'gaia_dr2_source':57203.0,
- 'gaia_dr3_source':57388.0,
- 'gaia_qso':0.0,
- 'guvcat':0.0,
- 'legacy_survey_dr10':0.0,
- 'legacy_survey_dr8':0.0,
- 'panstarrs1':0.0,
- 'ps1_g18':0.0,
- 'sdss_dr13_photoobj':0,
- 'sdss_dr13_photoobj_primary':0,
- 'sdss_dr16_specobj':0,
- 'skymapper_dr1_1':0,
- 'skymapper_dr2':0,
- 'supercosmos':0,
- 'tic_v8':0,
- 'tic_v8_extended':0,
- 'twomass_psc':51544.0,
- 'tycho2':48437.0,
- 'unwise':0}
-#'skies_v1':XXX,
-#'skies_v2':XXX,
 
 def getids(catalogid=None,sdss_id=None,apogee_id=None):
     """
@@ -370,16 +346,29 @@ def gettargeting(sdssid):
         tomatch = "="+str(np.atleast_1d(sdssid)[0])
     else:
         tomatch = " in ("+','.join(np.char.array(sdssid).astype(str))+")"
-    sql = "select s.sdss_id,STRING_AGG(ct.carton_pk::text,',') as carton_pk,"+\
-          "STRING_AGG(DISTINCT t.catalogid::text,',') as catalogid "+\
+    sql = "select s.sdss_id,STRING_AGG(ct.carton_pk::text,',') as sdss5_target_carton_pks,"+\
+          "STRING_AGG(DISTINCT t.catalogid::text,',') as sdss5_target_catalogids "+\
           "from targetdb.target as t "+\
           "join targetdb.carton_to_target as ct on t.pk = ct.target_pk "+\
           "join catalogdb.sdss_id_flat as s on s.catalogid = t.catalogid "+\
           "where s.sdss_id"+tomatch+" "+\
           "group by s.sdss_id"
-    data = db.query(sql=sql)
+    data = db.query(sql=sql,fmt='table')
     db.close()
-
+    
+    # Use semaphore to create the targeting bitmasks
+    data['sdss5_target_flags'] = np.zeros([len(data),57],np.uint8)
+    flags = TargetingFlags()
+    all_carton_pks = [ attrs["carton_pk"] for bit, attrs in flags.mapping.items() ]
+    for i in range(len(data)):
+        carton_pks = np.array(data['sdss5_target_carton_pks'][i].split(',')).astype(int)
+        flags = TargetingFlags()
+        for k in carton_pks:
+            if k in all_carton_pks:
+                flags.set_bit_by_carton_pk(0,k)
+        # the array is zero-padded at the end
+        data['sdss5_target_flags'][i,:flags.array.shape[1]] = flags.array[0,:]
+    
     return data
     
 def getdesign(designid):
@@ -521,13 +510,15 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
         # Get targeting information
         if targeting and len(data)>0:
             tout = gettargeting(data['sdss_id'].tolist())
-            data['targ_carton_pk'] = 1000*' '
-            data['targ_catalogid'] = 1000*' '
+            data['sdss5_target_carton_pks'] = 1000*' '
+            data['sdss5_target_catalogids'] = 1000*' '
+            data['sdss5_target_flags'] = np.zeros((len(data),57),np.uint8) 
             _,ind1,ind2 = np.intersect1d(data['sdss_id'],tout['sdss_id'],
                                          return_indices=True)
             if len(ind1)>0:
-                data['targ_carton_pk'][ind1] = tout['carton_pk'][ind2]
-                data['targ_catalogid'][ind1] = tout['catalogid'][ind2]
+                data['sdss5_target_carton_pks'][ind1] = tout['sdss5_target_carton_pks'][ind2]
+                data['sdss5_target_catalogids'][ind1] = tout['sdss5_target_catalogids'][ind2]
+                data['sdss5_target_flags'][ind1] = tout['sdss5_target_flags'][ind2]                
             
         return data
 
