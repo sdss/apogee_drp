@@ -354,7 +354,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
         # the arcs.
         if incremental:
             mjds = [mjd5+1,mjd5+2,mjd5+3]
-	    caltypes = ['psf','flux','arcs']
+            caltypes = ['psf','flux','arcs']
             chkcal = apogeedrp.rundailycals(load,mjds,slurm,caltypes=caltypes,
                                             clobber=clobber,logger=rootLogger)
         # Now make regular daily cals for this night
