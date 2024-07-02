@@ -58,10 +58,12 @@ def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None
         fps = True
 
     if instrument=='apogee-n':
+        telescope = 'apo25m'
         datadir = os.environ['APOGEE_DATA_N']
         if mapper_data is None:
             mapper_data = os.environ['MAPPER_DATA_N']
     else:
+        telescope = 'lco25m'
         datadir = os.environ['APOGEE_DATA_S']
         if mapper_data is None:
             mapper_data = os.environ['MAPPER_DATA_S']
@@ -69,7 +71,8 @@ def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None
     # SDSS-V FPS configuration files
     #-------------------------------
     if fps:
-        plugmapfile = load.filename('confSummary',configid=plate)
+        aload = apload.ApLoad(apred='daily',telescope=telescope)
+        plugmapfile = aload.filename('confSummary',configid=plate)
         plugdir = os.path.dirname(plugmapfile)+'/'
         plugfile = os.path.basename(plugmapfile)
 
