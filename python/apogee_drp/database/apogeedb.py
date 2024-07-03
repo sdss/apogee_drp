@@ -5,7 +5,7 @@
 # Most of this code was taken from here:
 # https://github.com/ctheissen/WISE_Parallaxes/blob/master/WISE_Parallax.py
 
-import os, sys
+import os, sys, io
 import numpy as np
 from astropy.table import Table, vstack, join
 #import matplotlib.pyplot as plt
@@ -28,7 +28,7 @@ import datetime
 # 700  float4, float
 # 701  float8, double
 
-from psycopg2.extensions import register_adapter, AsIs
+from psycopg2.extensions import register_adapter, AsIs, register_type
 def addapt_np_float16(np_float16):
     return AsIs(np_float16)
 def addapt_np_float32(np_float32):
@@ -58,7 +58,6 @@ register_adapter(np.uint64, addapt_np_uint64)
 register_adapter(np.bool, addapt_np_bool)
 register_adapter(np.bool_, addapt_np_bool)
 
-from psycopg2.extensions import register_type
 def cast_date(value, cursor):
     return value
 oids = (1082, 1114, 1184) 
@@ -96,6 +95,47 @@ def cast_float_none(value, cursor):
     return np.float(value)
 new_type = pg.extensions.new_type(oids_float, "FLOAT", cast_float_none)
 register_type(new_type)
+
+# Binary / bytea adaptor
+def adapt_array(a):
+    return pg.Binary(a)
+
+#def my_converter(my_buffer, cursor):
+#    return np.frombuffer(my_buffer)
+
+def typecast_binary(data, cur):
+    if data is None: return None
+    buf = pg.BINARY(data, cur)
+    return bytes(buf)
+    #return np.frombuffer(buf)
+
+register_adapter(np.ndarray, adapt_array)
+new_type = pg.extensions.new_type(pg.BINARY.values, "binary", typecast_binary)
+register_type(new_type)
+
+
+# Dealing with converting arrays
+# https://stackoverflow.com/questions/10529351/using-a-psycopg2-converter-to-retrieve-bytea-data-from-postgresql
+# converts from python to postgres
+def _adapt_array(text):
+    out = io.BytesIO()
+    np.save(out, text)
+    out.seek(0)
+    return pg.Binary(out.read())
+
+# converts from postgres to python
+#def _typecast_array(value, cur):
+#    if value is None:
+#        return None
+#    data = pg.BINARY(value, cur)
+#    bdata = io.BytesIO(data)
+#    bdata.seek(0)
+#    #np.frombuffer(bdata.getbuffer())
+#    return np.load(bdata)
+#
+#register_adapter(np.ndarray, _adapt_array)
+#t_array = pg.extensions.new_type(pg.BINARY.values, "numpy", _typecast_array)
+#register_type(t_array)
 
 #def cast_data(data):
 #    """ Cast output sql query data to deal with None's."""
@@ -247,8 +287,9 @@ class DBSession(object):
                 return data
 
             # Get numpy data types
-            d2d = {'smallint':np.int, 'integer':np.int, 'bigint':np.int, 'real':np.float32, 'double precision':np.float64,
-                   'text':(np.str,200),'char':(np.str,5),'timestamp':(np.str,50), 'timestamp with time zone':(np.str,50),
+            d2d = {'smallint':np.int, 'integer':np.int, 'bigint':np.int, 'real':np.float32,
+                   'double precision':np.float64,'text':(np.str,200),'char':(np.str,5),
+                   'timestamp':(np.str,50), 'timestamp with time zone':(np.str,50),
                    'timestamp without time zone':(np.str,50),'boolean':np.bool}
             dt = []
             for i,name in enumerate(selcolnames):
@@ -282,7 +323,7 @@ class DBSession(object):
             if len(data)==0:
                 cur.close()
                 return np.array([])
-
+            
             # Return the raw results
             if fmt=='raw':
                 cur.close()
@@ -294,7 +335,7 @@ class DBSession(object):
                 data = [tuple(colnames)]+data
                 cur.close()
                 return data
-
+            
             # Get table column names and data types
             colnames = [desc[0] for desc in cur.description]
             colnames = np.array(colnames)
@@ -307,13 +348,15 @@ class DBSession(object):
                 nind = len(ind)
                 for j in np.arange(1,nind):
                     colnames[ind[j]] += str(j+1)
-
+                    
             # Use the data returned to get the type
             dt = []
             stringizecol = []
             for i,c in enumerate(colnames):
                 type1 = type(data[0][i])
                 if type1 is str:
+                    dt.append( (c, type(data[0][i]), 300) )
+                elif type1 is bytes:
                     dt.append( (c, type(data[0][i]), 300) )
                 elif type1 is list:  # convert list to array
                     nlist = len(data[0][i])
@@ -340,12 +383,11 @@ class DBSession(object):
                     for k in range(len(stringizecol)):
                         data1[stringizecol[k]] = str(data1[stringizecol[k]])
                     data[i] = tuple(data1)  # convert back to tuple for numpy array loading
-            
+                    
             # Convert to numpy structured array
             cat = np.zeros(len(data),dtype=dtype)
             cat[...] = data
             del(data)
-
 
         # For string columns change size to maximum length of that column
         dt2 = []
@@ -494,6 +536,7 @@ class DBSession(object):
                 insert_query = 'INSERT INTO '+schema+'.'+tab+' ('+','.join(columns)+') VALUES %s ON CONFLICT DO NOTHING'
         else:
             raise ValueError(onconflict+' not supported')
+        
         # Perform the insert
         execute_values(cur,insert_query,data,template=None)
 

@@ -357,7 +357,8 @@ def gettargeting(sdssid):
     db.close()
     
     # Use semaphore to create the targeting bitmasks
-    data['sdss5_target_flags'] = np.zeros([len(data),57],np.uint8)
+    #data['sdss5_target_flags'] = np.zeros([len(data),57],np.uint8)
+    data['sdss5_target_flagshex'] = np.zeros(len(data),(str,150))
     flags = TargetingFlags()
     all_carton_pks = [ attrs["carton_pk"] for bit, attrs in flags.mapping.items() ]
     for i in range(len(data)):
@@ -367,8 +368,12 @@ def gettargeting(sdssid):
             if k in all_carton_pks:
                 flags.set_bit_by_carton_pk(0,k)
         # the array is zero-padded at the end
-        data['sdss5_target_flags'][i,:flags.array.shape[1]] = flags.array[0,:]
-    
+        #data['sdss5_target_flags'][i,:flags.array.shape[1]] = flags.array[0,:]        
+        # convert to hex string for easy storage in database
+        flags_array = flags.array[0,:]
+        flags_array_hex = ''.join('{:02x}'.format(x) for x in flags_array)
+        data['sdss5_target_flagshex'][i] = flags_array_hex
+        
     return data
     
 def getdesign(designid):
@@ -512,13 +517,13 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
             tout = gettargeting(data['sdss_id'].tolist())
             data['sdss5_target_carton_pks'] = 1000*' '
             data['sdss5_target_catalogids'] = 1000*' '
-            data['sdss5_target_flags'] = np.zeros((len(data),57),np.uint8) 
+            data['sdss5_target_flagshex'] = np.zeros(len(data),(str,150))
             _,ind1,ind2 = np.intersect1d(data['sdss_id'],tout['sdss_id'],
                                          return_indices=True)
             if len(ind1)>0:
                 data['sdss5_target_carton_pks'][ind1] = tout['sdss5_target_carton_pks'][ind2]
                 data['sdss5_target_catalogids'][ind1] = tout['sdss5_target_catalogids'][ind2]
-                data['sdss5_target_flags'][ind1] = tout['sdss5_target_flags'][ind2]                
+                data['sdss5_target_flagshex'][ind1] = tout['sdss5_target_flagshex'][ind2]
             
         return data
 
