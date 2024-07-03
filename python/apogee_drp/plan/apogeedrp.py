@@ -999,9 +999,11 @@ def create_sumfiles_mjd(apred,telescope,mjd5,logger=None):
     # for visit except that we'll get the multiple visit rows returned for each unique star row
     #   Get more info by joining with the visit table.
     vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
-             'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+             'field', 'programname', 'healpix', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
              'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
-             'apogee_target4', 'catalogid', 'sdss_id', 'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
+             'apogee_target4', 'catalogid', 'sdss_id', 'ra_sdss_id', 'dec_sdss_id', 'sdss5_target_pks',
+             'sdss5_target_catalogids', 'sdss5_target_carton_pks', 'sdss5_target_cartons', 'sdss5_target_flagshex',
+             'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
              'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
              'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
              'starflags','dateobs','jd','exptime']
@@ -1093,16 +1095,17 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
     #   Get more info by joining with the visit table.
     vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
-             'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+             'field', 'programname', 'healpix', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
              'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
-             'apogee_target4', 'catalogid', 'sdss_id', 'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
+             'apogee_target4', 'catalogid', 'sdss_id', 'ra_sdss_id', 'dec_sdss_id', 'sdss5_target_pks',
+             'sdss5_target_catalogids', 'sdss5_target_carton_pks', 'sdss5_target_cartons', 'sdss5_target_flagshex',
+             'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
              'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
              'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
              'starflags','dateobs','jd','exptime']
     rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'n_components', 'rv_components']
     
-
 
     # Straight join query of visit and rv_visit
     cols = np.hstack(('v.'+np.char.array(vcols),'rv.'+np.char.array(rvcols)))
