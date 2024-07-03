@@ -250,6 +250,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                       ('spectrographid',int),('mag',float,5),('alt_id',str,30),('twomass_designation',str,30),
                       ('jmag',float),('jerr',float),('hmag',float),('herr',float),('kmag',float),('kerr',float),
                       ('phflag',str,50),('src_h',str,50),('pmra',float),('pmdec',float),('pm_src',str,50),
+                      ('sdss5_target_carton_pks',str,1000),('sdss5_target_cartons',str,1000),('sdss5_target_flagshex',str,150),
                       ('catalogid',int),('version_id',int),('sdssv_apogee_target0',int),('firstcarton',str,100),
                       ('cadence',str,100),('program',str,100),('category',str,100),
                       ('gaia_g',float),('gaia_bp',float),('gaia_rp',float),
@@ -716,6 +717,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 fiber['herr'][i] = ph['e_hmag'][match]
                                 fiber['kmag'][i] = ph['kmag'][match]
                                 fiber['kerr'][i] = ph['e_kmag'][match]
+                                fiber['sdss5_target_carton_pks'][i] = ph['sdss5_target_carton_pks'][match[0]]
+                                fiber['sdss5_target_cartons'][i] = ph['sdss5_target_cartons'][match[0]]
+                                fiber['sdss5_target_flagshex'][i] = ph['sdss5_target_flagshex'][match[0]]
                                 fiber['firstcarton'][i] = plugmap['fiberdata']['firstcarton'][m]
                                 fiber['cadence'][i] = plugmap['fiberdata']['cadence'][m]
                                 fiber['program'][i] = plugmap['fiberdata']['program'][m]

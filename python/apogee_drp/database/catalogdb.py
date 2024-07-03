@@ -347,9 +347,11 @@ def gettargeting(sdssid):
     else:
         tomatch = " in ("+','.join(np.char.array(sdssid).astype(str))+")"
     sql = "select s.sdss_id,STRING_AGG(ct.carton_pk::text,',') as sdss5_target_carton_pks,"+\
+          "STRING_AGG(DISTINCT c.carton::text,',') as sdss5_target_cartons,"+\
           "STRING_AGG(DISTINCT t.catalogid::text,',') as sdss5_target_catalogids "+\
           "from targetdb.target as t "+\
           "join targetdb.carton_to_target as ct on t.pk = ct.target_pk "+\
+          "join targetdb.carton as c on c.pk = ct.carton_pk "+\
           "join catalogdb.sdss_id_flat as s on s.catalogid = t.catalogid "+\
           "where s.sdss_id"+tomatch+" "+\
           "group by s.sdss_id"
@@ -517,11 +519,13 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
             tout = gettargeting(data['sdss_id'].tolist())
             data['sdss5_target_carton_pks'] = 1000*' '
             data['sdss5_target_catalogids'] = 1000*' '
+            data['sdss5_target_cartons'] = 1000*' '            
             data['sdss5_target_flagshex'] = np.zeros(len(data),(str,150))
             _,ind1,ind2 = np.intersect1d(data['sdss_id'],tout['sdss_id'],
                                          return_indices=True)
             if len(ind1)>0:
                 data['sdss5_target_carton_pks'][ind1] = tout['sdss5_target_carton_pks'][ind2]
+                data['sdss5_target_cartons'][ind1] = tout['sdss5_target_cartons'][ind2]
                 data['sdss5_target_catalogids'][ind1] = tout['sdss5_target_catalogids'][ind2]
                 data['sdss5_target_flagshex'][ind1] = tout['sdss5_target_flagshex'][ind2]
             

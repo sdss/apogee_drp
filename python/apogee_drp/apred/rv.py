@@ -119,7 +119,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
                          ('src_h','U16'),('targ_pmra',float),('targ_pmdec',float),('targ_pm_src','U16'),
                          ('apogee_target1',int),('apogee_target2',int),
                          ('apogee2_target1',int),('apogee2_target2',int),('apogee2_target3',int),('apogee2_target4',int),
-                         ('sdss5_target_carton_pks',str,1000),('sdss5_target_cartons',str,1000),('sdss5_target_flags',np.uint8,57)
+                         ('sdss5_target_carton_pks',str,1000),('sdss5_target_cartons',str,1000),('sdss5_target_flagshex',str,150),
                          ('catalogid',int),('sdss_id',int),('gaia_release',str,10),
                          ('gaia_sourceid',int),('gaia_plx',float),('gaia_plx_error',float),
                          ('gaia_pmra',float),('gaia_pmra_error',float),('gaia_pmdec',float),('gaia_pmdec_error',float),
