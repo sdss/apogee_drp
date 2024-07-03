@@ -143,8 +143,17 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['apred_vers'] = apred
     startab['v_apred'] = gitvers
     startab['mjdbeg'] = np.min(allvisits['mjd'].astype(int))
-    startab['mjdend'] = np.max(allvisits['mjd'].astype(int))    
-    startab['healpix'] = apload.obj2healpix(star)
+    startab['mjdend'] = np.max(allvisits['mjd'].astype(int))
+    startab['healpix'] = -1
+    if 'healpix' in allvisits.colnames:
+        # Use visit healpix, if it exists
+        startab['healpix'] = allvisits['healpix'][0]
+    if startab['healpix'][0] == -1 and 'ra_sdss_id' in allvisits.colnames and 'dec_sdss_id' in allvisits.colnames:
+        # Use ra_sdss_id/dec_sdss_id        
+        startab['healpix'] = apload.coords2healpix(allvisits['ra_sdss_id'][0],allvisits['dec_sdss_id'][0])
+    # This used to be the default until 07/03/2024
+    if startab['healpix'][0] == -1:
+        startab['healpix'] = apload.obj2healpix(star)    
     startab['nvisits'] = nallvisits
     # Copy data from visit
     tocopy = ['ra','dec','glon','glat','jmag','jerr','hmag','herr','kmag','kerr','src_h','catalogid',

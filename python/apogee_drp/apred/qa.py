@@ -4892,7 +4892,10 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
             apStarRelPath = None
             if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
                 # Find which healpix this star is in
-                healpix = apload.obj2healpix(objid)
+                if 'HEALPIX' in jdata.dtype.names:
+                    healpix = jdata['HEALPIX']
+                else:
+                    healpix = apload.obj2healpix(objid)
                 healpixgroup = str(healpix // 1000)
                 healpix = str(healpix)
 
