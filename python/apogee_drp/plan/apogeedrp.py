@@ -950,9 +950,14 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
         starfile = stardir+'/'+starbase+'.fits'
         # Get nvisits for this star
         starvisits = db.query('visit',cols='*',where="apogee_id='"+visit['apogee_id']+"' and "+\
-                              "telescope='"+telescope+"' and apred_vers='"+apred_vers+"'")
+                              "telescope='"+telescope+"' and apred_vers='"+apred_vers+"'",fmt='table')
         chkrv['apogee_id'][i] = visit['apogee_id']
-        chkrv['healpix'][i] = apload.obj2healpix(visit['apogee_id'])
+        if 'healpix' in visit.colnames:
+            chkrv['healpix'][i] = visit['healpix']
+        elif 'ra_sdss_id' in visit.colnames and 'dec_sdss_id' in visit.colnames:
+            ckrv['healpix'][i] = apload.coords2healpix(visit['ra_sdss_id'][0],visit['dec_sdss_id'][0])
+        else:
+            chkrv['healpix'][i] = apload.obj2healpix(visit['apogee_id'])
         chkrv['nvisits'][i] = len(starvisits)
         chkrv['file'][i] = starfile
         if os.path.exists(starfile):
