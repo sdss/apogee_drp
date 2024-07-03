@@ -243,8 +243,8 @@ def checkbrightneighbors(sdssid,ra,dec):
         res = db.query(sql=sql,fmt='table')
         if len(res)<=1:
             continue
-        res['brightneicount'][bad[i]] = len(res)-1
         res['gmag'][~np.isfinite(res['gmag'])] = 99.99  # deal with any NaNs
+        data['brightneicount'][bad[i]] = len(res)-1        
         # Estimate the relative flux of the target and the neighbor in the fiber
         # Assume the first one (closest) is the source itself
         fratio = 10**((res['gmag'][0]-res['gmag'][1:])/2.5)
