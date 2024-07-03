@@ -122,6 +122,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
                          ('sdss5_target_pks',int),('sdss5_target_catalogids',str,1000),
                          ('sdss5_target_carton_pks',str,1000),('sdss5_target_cartons',str,1000),
                          ('sdss5_target_flagshex',str,150),('catalogid',int),
+                         ('brightneicount',np.int16),('brightneiflag',np.int16),('brightneifluxfrac',np.float32)
                          ('sdss_id',int),('ra_sdss_id',float),('dec_sdss_id',float),('gaia_release',str,10),
                          ('gaia_sourceid',int),('gaia_plx',float),('gaia_plx_error',float),
                          ('gaia_pmra',float),('gaia_pmra_error',float),('gaia_pmdec',float),('gaia_pmdec_error',float),
@@ -1099,7 +1100,8 @@ def dbingest(startab,starvisits):
                    'jmag','jerr', 'herr', 'kmag', 'kerr', 'src_h','pmra', 'pmdec', 'pm_src','apogee_target1',
                    'apogee_target2', 'apogee_target3', 'apogee_target4', 'sdss5_target_pks',
                    'sdss5_target_catalogids', 'sdss5_target_carton_pks', 'sdss5_target_cartons',
-                   'sdss5_target_flagshex', 'ra_sdss_id', 'dec_sdss_id', 'healpix', 'gaia_release',
+                   'sdss5_target_flagshex','brightneicount','brightneiflag','brightneifluxfrac',
+                   'ra_sdss_id', 'dec_sdss_id', 'healpix', 'gaia_release',
                    'gaia_sourceid', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
                    'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag',
                    'gaia_gerr', 'gaia_bpmag', 'gaia_bperr', 'gaia_rpmag', 'gaia_rperr',
