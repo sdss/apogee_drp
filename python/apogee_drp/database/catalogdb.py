@@ -1,6 +1,5 @@
 # Get catalogdb data for sources
 import numpy as np
-from . import apogeedb
 from dlnpyutils import utils as dln
 from astropy.coordinates import SkyCoord
 import astropy.units as u
@@ -8,6 +7,8 @@ from astropy.table import Table,vstack,hstack
 from astropy.time import Time
 from sdss_semaphore.targeting import TargetingFlags
 import traceback
+from . import apogeedb
+from ..utils import apload
 
 #from sdssdb.peewee.sdss5db.catalogdb import SDSS_ID_flat    
 #from sdssdb.peewee.sdss5db.targetdb import database
@@ -313,6 +314,17 @@ def getsdssid(catalogid):
     
     return out
 
+def gethealpix(ra,dec):
+    """ Get healpix with coordinates, should use ra_sdss_id/dec_sdss_id. """
+    rr = np.atleast_1d(ra)
+    dd = np.atleast_1d(dec)
+    hpix = np.zeros(len(rr),int)-1
+    for i in range(len(rr)):
+        if rr[i] < 0 or dd[i]<-100:
+            continue
+        hpix[i] = apload.coords2healpix(rr[i],dd[i])
+    return hpix
+        
 def getxmatchids(sdssid):
     """
     Get all of the crossmatched IDs from catalogdb.sdss_id_to_catalog.
@@ -346,7 +358,9 @@ def gettargeting(sdssid):
         tomatch = "="+str(np.atleast_1d(sdssid)[0])
     else:
         tomatch = " in ("+','.join(np.char.array(sdssid).astype(str))+")"
-    sql = "select s.sdss_id,STRING_AGG(ct.carton_pk::text,',') as sdss5_target_carton_pks,"+\
+    sql = "select s.sdss_id,"+\
+          "STRING_AGG(DISTINCT t.pk::text,',') as sdss5_target_pks,"+\
+          "STRING_AGG(ct.carton_pk::text,',') as sdss5_target_carton_pks,"+\
           "STRING_AGG(DISTINCT c.carton::text,',') as sdss5_target_cartons,"+\
           "STRING_AGG(DISTINCT t.catalogid::text,',') as sdss5_target_catalogids "+\
           "from targetdb.target as t "+\
@@ -511,12 +525,18 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
             sout = getsdssid(data['catalogid'].tolist())
             data['sdss_id'] = 0            
             data['sdss_id'] = sout['sdss_id']
+            data['ra_sdss_id'] = -9999.0
+            data['ra_sdss_id'] = sout['ra_sdss_id']
+            data['dec_sdss_id'] = -9999.0
+            data['dec_sdss_id'] = sout['dec_sdss_id']
             data['version_id'] = 0
             data['version_id'] = sout['version_id']
-
+            data['healpix'] = gethealpix(data['ra_sdss_id'],data['dec_sdss_id'])
+            
         # Get targeting information
         if targeting and len(data)>0:
             tout = gettargeting(data['sdss_id'].tolist())
+            data['sdss5_target_pks'] = 1000*' '
             data['sdss5_target_carton_pks'] = 1000*' '
             data['sdss5_target_catalogids'] = 1000*' '
             data['sdss5_target_cartons'] = 1000*' '            
@@ -524,9 +544,10 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
             _,ind1,ind2 = np.intersect1d(data['sdss_id'],tout['sdss_id'],
                                          return_indices=True)
             if len(ind1)>0:
+                data['sdss5_target_pks'][ind1] = tout['sdss5_target_pks'][ind2]
+                data['sdss5_target_catalogids'][ind1] = tout['sdss5_target_catalogids'][ind2]
                 data['sdss5_target_carton_pks'][ind1] = tout['sdss5_target_carton_pks'][ind2]
                 data['sdss5_target_cartons'][ind1] = tout['sdss5_target_cartons'][ind2]
-                data['sdss5_target_catalogids'][ind1] = tout['sdss5_target_catalogids'][ind2]
                 data['sdss5_target_flagshex'][ind1] = tout['sdss5_target_flagshex'][ind2]
             
         return data
@@ -662,7 +683,12 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
         sout = getsdssid(data['catalogid'].tolist())
         data['sdss_id'] = 0
         data['sdss_id'] = sout['sdss_id']
+        data['ra_sdss_id'] = -9999.0
+        data['ra_sdss_id'] = sout['ra_sdss_id']
+        data['dec_sdss_id'] = -9999.0
+        data['dec_sdss_id'] = sout['dec_sdss_id']
         data['version_id'] = 0
         data['version_id'] = sout['version_id']
-        
+        data['healpix'] = gethealpix(data['ra_sdss_id'],data['dec_sdss_id'])
+
     return data

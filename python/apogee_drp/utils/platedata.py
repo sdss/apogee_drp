@@ -245,11 +245,12 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     # Create the output fiber structure
     dtype = np.dtype([('fiberid',int),('ra',np.float64),('dec',np.float64),('eta',np.float64),('zeta',np.float64),
                       ('objtype',str,10),('holetype',str,10),('object',str,30),('assigned',int),('on_target',int),
-                      ('valid',int),('tmass_style',str,30),('sdss_id',int),
-                      ('target1',int),('target2',int),('target3',int),('target4',int),
+                      ('valid',int),('tmass_style',str,30),('sdss_id',int),('ra_sdss_id',float),('dec_sdss_id',float),
+                      ('healpix',int),('target1',int),('target2',int),('target3',int),('target4',int),
                       ('spectrographid',int),('mag',float,5),('alt_id',str,30),('twomass_designation',str,30),
                       ('jmag',float),('jerr',float),('hmag',float),('herr',float),('kmag',float),('kerr',float),
                       ('phflag',str,50),('src_h',str,50),('pmra',float),('pmdec',float),('pm_src',str,50),
+                      ('sdss5_target_pks',str,1000),('sdss5_target_catalogids',str,1000),
                       ('sdss5_target_carton_pks',str,1000),('sdss5_target_cartons',str,1000),('sdss5_target_flagshex',str,150),
                       ('catalogid',int),('version_id',int),('sdssv_apogee_target0',int),('firstcarton',str,100),
                       ('cadence',str,100),('program',str,100),('category',str,100),
@@ -327,6 +328,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     fiber['spectrographid'] = 2
     fiber['catalogid'] = -1
     fiber['version_id'] = -1
+    fiber['ra_sdss_id'] = -9999.0
+    fiber['dec_sdss_id'] = -9999.0
+    fiber['healpix'] = -1
     for c in ['ra','dec','eta','zeta']: fiber[c] = 999999.9
     gaia_cols = ['gaia_g','gaia_bp','gaia_rp','gaia_ra','gaia_dec','gaia_plx','gaia_plx_error',
                  'gaia_pmra','gaia_pmra_error','gaia_pmdec','gaia_pmdec_error',
@@ -455,11 +459,17 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         gdcat, = np.where(ph['catalogid']>0)
         if len(gdcat)>0:
             sdata = catalogdb.getsdssid(ph['catalogid'][gdcat])
-            temp = np.zeros(len(ph),dtype=np.dtype([('version_id',int),('sdss_id',int)]))
+            temp = np.zeros(len(ph),dtype=np.dtype([('version_id',int),('sdss_id',int),
+                                                    ('ra_sdss_id',float),('dec_sdss_id',float)]))
             temp['version_id'] = -1
             temp['sdss_id'] = -1
+            temp['ra_sdss_id'] = -9999
+            temp['dec_sdss_id'] = -9999
             temp['version_id'][gdcat] = sdata['version_id']
             temp['sdss_id'][gdcat] = sdata['sdss_id']
+            temp['ra_sdss_id'][gdcat] = sdata['ra_sdss_id']
+            temp['dec_sdss_id'][gdcat] = sdata['dec_sdss_id']
+            temp['healpix'] = catalogdb.gethealpix(temp['ra_sdss_id'],temp['dec_sdss_id'])
             ph = rfn.merge_arrays((ph,temp),asrecarray=True,flatten=True)
 
     # Get SDSS-V FPS photometry from targetdb
@@ -499,6 +509,12 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 ph['tmass_id'][ind1] = catinfo['twomass'][ind2]
                 ph['sdss_id'] = 0
                 ph['sdss_id'][ind1] = catinfo['sdss_id'][ind2]
+                ph['sdss_ra'] = -9999.0
+                ph['sdss_ra'][ind1] = catinfo['ra_sdss_id'][ind2]
+                ph['sdss_dec'] = -9999.0
+                ph['sdss_dec'][ind1] = catinfo['dec_sdss_id'][ind2]
+                ph['healpix'] = -1
+                ph['healpix'] = catinfo['healpix'][ind2]
                 ph['e_jmag'] = 0.0
                 ph['e_jmag'][ind1] = catinfo['e_jmag'][ind2]
                 ph['e_hmag'] = 0.0
@@ -691,7 +707,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             if fps==False:   # SDSS-V plate data
                                 fiber['catalogid'][i] = ph['catalogid'][match]
                                 fiber['version_id'][i] = ph['version_id'][match]
-                                #fiber['sdss_id'][i] = ph['sdss_id'][match]
+                                fiber['sdss_id'][i] = ph['sdss_id'][match]
+                                fiber['ra_sdss_id'][i] = ph['ra_sdss_id'][match]
+                                fiber['dec_sdss_id'][i] = ph['dec_sdss_id'][match]
+                                fiber['healpix'][i] = ph['healpix'][match]
                                 fiber['gaia_g'][i] = ph['gaia_g'][match]
                                 fiber['gaia_bp'][i] = ph['gaia_bp'][match]
                                 fiber['gaia_rp'][i] = ph['gaia_rp'][match]
@@ -706,7 +725,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             else:
                                 fiber['catalogid'][i] = ph['catalogid'][match]
                                 fiber['version_id'][i] = ph['version_id'][match]
-                                fiber['sdss_id'][i] = ph['sdss_id'][match]                                
+                                fiber['sdss_id'][i] = ph['sdss_id'][match]
+                                fiber['ra_sdss_id'][i] = ph['ra_sdss_id'][match]
+                                fiber['dec_sdss_id'][i] = ph['dec_sdss_id'][match]
+                                fiber['healpix'][i] = ph['healpix'][match]
                                 fiber['twomass_designation'][i] = ph['tmass_id'][match][0].astype(str)
                                 fiber['gaia_g'][i] = ph['gaia_gmag'][match]
                                 fiber['gaia_bp'][i] = ph['gaia_bpmag'][match]
@@ -717,6 +739,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 fiber['herr'][i] = ph['e_hmag'][match]
                                 fiber['kmag'][i] = ph['kmag'][match]
                                 fiber['kerr'][i] = ph['e_kmag'][match]
+                                fiber['sdss5_target_pks'][i] = ph['sdss5_target_pks'][match[0]]
+                                fiber['sdss5_target_catalogids'][i] = ph['sdss5_target_catalogids'][match[0]]                                
                                 fiber['sdss5_target_carton_pks'][i] = ph['sdss5_target_carton_pks'][match[0]]
                                 fiber['sdss5_target_cartons'][i] = ph['sdss5_target_cartons'][match[0]]
                                 fiber['sdss5_target_flagshex'][i] = ph['sdss5_target_flagshex'][match[0]]
@@ -868,6 +892,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                         sidout = catalogdb.getsdssid([cat['catalogid'][0]])
                         addcat['sdss_id'] = sidout['sdss_id'][0]
                         addcat['version_id'] = sidout['version_id'][0]
+                        addcat['ra_sdss_id'] = sidout['ra_sdss_id'][0]
+                        addcat['dec_sdss_id'] = sidout['dec_sdss_id'][0]                        
                     except:
                         pass
                     addcat['ra'] = cat['ra']
@@ -892,6 +918,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 fiber['twomass_designation'][istar] = catdb['twomass'][ind1[0]]
                 fiber['version_id'][istar] = catdb['version_id'][ind1[0]]
                 fiber['sdss_id'][istar] = catdb['sdss_id'][ind1[0]]
+                fiber['ra_sdss_id'][istar] = catdb['ra_sdss_id'][ind1[0]]
+                fiber['dec_sdss_id'][istar] = catdb['dec_sdss_id'][ind1[0]]
+                fiber['healpix'][istar] = catdb['healpix'][ind1[0]]
                 fiber['jmag'][istar] = catdb['jmag'][ind1[0]]
                 fiber['jerr'][istar] = catdb['e_jmag'][ind1[0]]
                 fiber['hmag'][istar] = catdb['hmag'][ind1[0]]

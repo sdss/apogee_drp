@@ -119,8 +119,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
                          ('src_h','U16'),('targ_pmra',float),('targ_pmdec',float),('targ_pm_src','U16'),
                          ('apogee_target1',int),('apogee_target2',int),
                          ('apogee2_target1',int),('apogee2_target2',int),('apogee2_target3',int),('apogee2_target4',int),
-                         ('sdss5_target_carton_pks',str,1000),('sdss5_target_cartons',str,1000),('sdss5_target_flagshex',str,150),
-                         ('catalogid',int),('sdss_id',int),('gaia_release',str,10),
+                         ('sdss5_target_pks',int),('sdss5_target_catalogids',str,1000),
+                         ('sdss5_target_carton_pks',str,1000),('sdss5_target_cartons',str,1000),
+                         ('sdss5_target_flagshex',str,150),('catalogid',int),
+                         ('sdss_id',int),('ra_sdss_id',float),('dec_sdss_id',float),('gaia_release',str,10),
                          ('gaia_sourceid',int),('gaia_plx',float),('gaia_plx_error',float),
                          ('gaia_pmra',float),('gaia_pmra_error',float),('gaia_pmdec',float),('gaia_pmdec_error',float),
                          ('gaia_gmag',float),('gaia_gerr',float),('gaia_bpmag',float),('gaia_bperr',float),
@@ -1086,12 +1088,14 @@ def dbingest(startab,starvisits):
                    'alt_id', 'location_id', 'glon','glat',
                    'assigned','on_target','valid','cadence','program','category','exptime','nframes',
                    'jmag','jerr', 'herr', 'kmag', 'kerr', 'src_h','pmra', 'pmdec', 'pm_src','apogee_target1',
-                   'apogee_target2', 'apogee_target3', 'apogee_target4','gaia_release','gaia_sourceid',
-                   'gaia_plx','gaia_plx_error','gaia_pmra','gaia_pmra_error','gaia_pmdec',
-                   'gaia_pmdec_error','gaia_gmag',
-                   'gaia_gerr','gaia_bpmag','gaia_bperr','gaia_rpmag','gaia_rperr',
-                   'sdssv_apogee_target0','firstcarton',
-                   'targflags', 'starflag', 'starflags','created','rvtab']
+                   'apogee_target2', 'apogee_target3', 'apogee_target4', 'sdss5_target_pks',
+                   'sdss5_target_catalogids', 'sdss5_target_carton_pks', 'sdss5_target_cartons',
+                   'sdss5_target_flagshex', 'ra_sdss_id', 'dec_sdss_id', 'healpix', 'gaia_release',
+                   'gaia_sourceid', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
+                   'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag',
+                   'gaia_gerr', 'gaia_bpmag', 'gaia_bperr', 'gaia_rpmag', 'gaia_rperr',
+                   'sdssv_apogee_target0', 'firstcarton',
+                   'targflags', 'starflag', 'starflags', 'created', 'rvtab']
         visits = starvisits.copy()  # make a local copy
         for c in delcols:
             if c in visits.dtype.names:
@@ -1099,7 +1103,7 @@ def dbingest(startab,starvisits):
         # Rename columns
         visits['pk'].name = 'visit_pk'
         visits['starver'] = starout['starver'][0]
-        
+
         db.ingest('rv_visit',np.array(visits))   # Load the visit information into the table  
 
     # Close db session
