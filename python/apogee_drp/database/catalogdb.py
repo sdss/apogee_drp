@@ -34,9 +34,18 @@ def getxmatchids(sdssid):
           "from catalogdb.sdss_id_to_catalog "+\
           "where sdss_id"+tomatch+" "+\
           "group by sdss_id"
-    data = db.query(sql=sql,fmt='table')
+    res = db.query(sql=sql,fmt='table')
     db.close()
-        
+
+    # The results from the query will be out of order and
+    # might be missing some rows
+    data = Table(np.zeros(len(sdssid),dtype=res.dtype))
+    _,ind1,ind2 = np.intersect1d(sdssid,res['sdss_id'],return_indices=True)
+    if len(ind1)==0:
+        return data
+    for c in data.colnames:
+        data[c][ind1] = res[c][ind2]
+    
     return data
 
 def getsdssid(catalogid):
@@ -114,11 +123,19 @@ def gettargeting(sdssid):
           "join catalogdb.sdss_id_flat as s on s.catalogid = t.catalogid "+\
           "where s.sdss_id"+tomatch+" "+\
           "group by s.sdss_id"
-    data = db.query(sql=sql,fmt='table')
+    res = db.query(sql=sql,fmt='table')
     db.close()
-    
+
+    # The results from the query will be out of order and
+    # might be missing some rows
+    data = Table(np.zeros(len(sdssid),dtype=res.dtype))
+    _,ind1,ind2 = np.intersect1d(sdssid,res['sdss_id'],return_indices=True)
+    if len(ind1)==0:
+        return data
+    for c in data.colnames:
+        data[c][ind1] = res[c][ind2]
+        
     # Use semaphore to create the targeting bitmasks
-    #data['sdss5_target_flags'] = np.zeros([len(data),57],np.uint8)
     data['sdss5_target_flagshex'] = np.zeros(len(data),(str,150))
     flags = TargetingFlags()
     all_carton_pks = [ attrs["carton_pk"] for bit, attrs in flags.mapping.items() ]
@@ -304,38 +321,47 @@ def sdssidcatalogquery(sdssid,table):
     gaia_cols += ',2.5*log(1+1/phot_rp_mean_flux_over_error) as e_gaiarp'    
 
     # Get the xmatch IDs first
+    #  this returns the results in the correct order
     idata = getxmatchids(sdssid)
     
     if table=='tic' or table=='ticv8' or table=='tic_v8':
         tablename = 'tic_v8'
         cols = tic_cols
-        idname = 'id'
-        ids = idata['tic_v8_id']
-        sql = "select "+cols+" from catalogdb.tic_v8 "
+        sqlidname = 'id'
+        idname = 'tic_v8_id'
+        ids = idata[idname]
+        cols += ','+sqlidname+' as '+idname  # always return id/key        
+        sql = "select "+cols+" from catalogdb.tic_v8"
     elif table=='tmass' or table=='twomass' or table=='twomass_psc':
         tablename = 'twomass_psc'
         cols = tmass_cols
-        idname = 'pts_key'
-        ids = idata['twomass_psc_pts_key']
-        sql = "select "+cols+" from catalogdb.twomass_psc "
+        sqlidname = 'pts_key'
+        idname = 'twomass_psc_pts_key'
+        ids = idata[idname]
+        cols += ','+sqlidname+' as '+idname  # always return id/key        
+        sql = "select "+cols+" from catalogdb.twomass_psc"
     elif table=='gaiadr2' or table=='gaia_dr2' or table=='gaia_dr2_source':
         tablename = 'gaia_dr2_source'
         cols = gaia_cols
-        idname = 'source_id'
-        ids = idata['gaia_dr2_source_id']
-        sql = "select "+cols+",'dr2' as gaia_release from catalogdb.gaia_dr2_source "        
+        sqlidname = 'source_id'
+        idname = 'gaia_dr2_source_id'
+        ids = idata[idname]
+        cols += ','+sqlidname+' as '+idname  # always return id/key        
+        sql = "select "+cols+",'dr2' as gaia_release from catalogdb.gaia_dr2_source"
     elif table=='gaiadr3' or table=='gaia_dr3' or table=='gaia_dr3_source':
         tablename = 'gaia_dr3_source'        
         cols = gaia_cols
-        idname = 'source_id'
-        ids = idata['gaia_dr3_source_id']
-        sql = "select "+cols+",'dr3' as gaia_release from catalogdb.gaia_dr3_source "
+        sqlidname = 'source_id'
+        idname = 'gaia_dr3_source_id'
+        ids = idata[idname]
+        cols += ','+sqlidname+' as '+idname  # always return id/key
+        sql = "select "+cols+",'dr3' as gaia_release from catalogdb.gaia_dr3_source"
     else:
         raise ValueError(str(table)+' not supported')
 
     # Initializing the output table
     nsdssid = len(np.atleast_1d(sdssid))
-    coldata = db.query(sql=sql+' limit 1',fmt='table') # Get column names and data types with a quick search
+    coldata = db.query(sql=sql+' limit 1',fmt='table')  # Get column names/dtypes
     data = Table(np.zeros(nsdssid,dtype=coldata.dtype))
     # Initialize to nans
     for c in data.colnames:
@@ -345,16 +371,19 @@ def sdssidcatalogquery(sdssid,table):
             data[c] = -9999
     data['sdss_id'] = sdssid
     data[tablename+'_match'] = False
-
+    # Add the id for this catalog to table
+    data[idname] = ids
+    
     # Need good ids
-    gdid, = np.where(ids != '')
+    #  all the IDs returned by getxmatchids() are strings
+    gdid, = np.where(data[idname] != '')
     # No good ids to match
     if len(gdid)==0:
         db.close()
         return data
     
     # Multiple IDs
-    sql += " where "+idname
+    sql += " where "+sqlidname
     if len(gdid)>1:
         sql += " in (" + ','.join(np.array(ids[gdid]).astype(str)) + ")"
     # Single ID
@@ -363,13 +392,17 @@ def sdssidcatalogquery(sdssid,table):
 
     # Do the query
     res = db.query(sql=sql,fmt="table")
-
-    # Insert the query results into the output table
-    for c in res.colnames:
-        data[c][gdid] = res[c]
-    data[tablename+'_match'][gdid] = True
-        
     db.close()
+    
+    # Insert the query results into the output table
+    _,ind1,ind2 = np.intersect1d(data[idname][gdid],res[idname],return_indices=True)
+    if len(ind1)==0:
+        return data
+    copycols = res.colnames  # columns to copy over
+    copycols.remove(idname)  
+    for c in copycols:
+        data[c][gdid[ind1]] = res[c][ind2]
+    data[tablename+'_match'][gdid[ind1]] = True
     
     return data
 
@@ -458,6 +491,7 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
     # Query all the tables and merge results
     for t in tables:
         res = sdssidcatalogquery(data['sdss_id'],t)
+        # the results are returned in the correct order
         # Add new columns to "data"
         newcols = [c for c in res.colnames if c not in data.colnames]
         for c in res.colnames:
