@@ -62,11 +62,13 @@ def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None
         datadir = os.environ['APOGEE_DATA_N']
         if mapper_data is None:
             mapper_data = os.environ['MAPPER_DATA_N']
-    else:
+    elif instrument=='apogee-s':
         telescope = 'lco25m'
         datadir = os.environ['APOGEE_DATA_S']
         if mapper_data is None:
             mapper_data = os.environ['MAPPER_DATA_S']
+    else:
+        raise ValueError('no instrument '+str(instrument))
             
     # SDSS-V FPS configuration files
     #-------------------------------

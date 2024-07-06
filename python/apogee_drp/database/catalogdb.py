@@ -48,6 +48,30 @@ def getxmatchids(sdssid):
     
     return data
 
+def getcatalog(catalogid):
+    """ Get information from catalogdb.catalog."""
+
+    catid = np.atleast_1d(catalogid).tolist()    
+    db = apogeedb.DBSession()
+    sql = 'select * from catalogdb.catalog where catalogid in ('
+    sql += ','.join(np.char.array(catid).astype(str))+')'
+    res = db.query(sql=sql,fmt='table')
+    db.close()
+
+    if len(res)==0:
+        return []
+    
+    data = Table(np.zeros(len(catid),dtype=res.dtype))
+    data['catalogid'] = catid
+    _,ind1,ind2 = np.intersect1d(catid,res['catalogid'],
+                                 return_indices=True)
+    if len(ind1)==0:
+        return data
+    for c in res.colnames:
+        data[c][ind1] = res[c][ind2]
+
+    return data
+
 def getsdssid(catalogid):
     # Get SDSS_IDs
     db = apogeedb.DBSession()
@@ -73,23 +97,21 @@ def getsdssid(catalogid):
             ids = str(catalogid)
         sql += "="+ids
 
-    data = db.query(sql=sql,fmt="table")    
-    
-    if len(data)==0:
-        print('no matches')
-        out = []
-    else:
-        _,ind1,ind2 = np.intersect1d(catalogid,data['catalogid'],return_indices=True)
-        out = Table(np.zeros(dln.size(catalogid),dtype=data.dtype))
-        if len(ind1)>0:
-            for c in data.dtype.names:
-                out[c][ind1] = data[c][ind2]
-        if len(ind1) != dln.size(catalogid):
-            print(len(catalogid)-len(ind1),' rows missing SDSS_IDs')
-            
+    res = db.query(sql=sql,fmt="table")    
     db.close()
     
-    return out
+    if len(res)==0:
+        return []
+    else:
+        _,ind1,ind2 = np.intersect1d(catalogid,res['catalogid'],return_indices=True)
+        data = Table(np.zeros(dln.size(catalogid),dtype=res.dtype))
+        if len(ind1)>0:
+            for c in res.dtype.names:
+                data[c][ind1] = res[c][ind2]
+        if len(ind1) != dln.size(catalogid):
+            print(len(catalogid)-len(ind1),' rows missing SDSS_IDs')
+    
+    return data
 
 def gethealpix(ra,dec):
     """ Get healpix with coordinates, should use ra_sdss_id/dec_sdss_id. """
@@ -307,18 +329,21 @@ def sdssidcatalogquery(sdssid,table):
                   'gaia','pmra','e_pmra','pmdec','e_pmdec','plx','e_plx','gaiamag',
                   'e_gaiamag','gaiabp','e_gaiabp','gaiarp','e_gaiarp']
     tic_cols = ','.join(tic_colarr)
-    tmass_colarr = ['designation as twomass','j_m as jmag','j_cmsig as e_jmag','h_m as hmag',
+    tmass_colarr = ['designation as twomass','ra as twomass_ra','decl as twomass_dec',
+                    'j_m as jmag','j_cmsig as e_jmag','h_m as hmag',
                     'h_cmsig as e_hmag','k_m as kmag','k_cmsig as e_kmag','ph_qual as twomflag']
     tmass_cols = ','.join(tmass_colarr)
-    gaia_colarr = ['source_id as gaia','pmra','pmra_error as e_pmra','pmdec','pmdec_error as e_pmdec',
-                   'parallax as plx','parallax_error as e_plx','phot_g_mean_mag as gaiamag',
-                   '2.5*log(1+1/phot_g_mean_flux_over_error) as e_gaiamag','phot_bp_mean_mag as gaiabp',
-                   '2.5*log(1+1/phot_bp_mean_flux_over_error) as e_gaiabp','phot_rp_mean_mag as gaiarp',
-                   '2.5*log(1+1/phot_rp_mean_flux_over_error) as e_gaiarp']
-    gaia_cols = ','.join(gaia_colarr[:8])
-    gaia_cols += ',2.5*log(1+1/phot_g_mean_flux_over_error) as e_gaiamag,phot_bp_mean_mag as gaiabp'
-    gaia_cols += ',2.5*log(1+1/phot_bp_mean_flux_over_error) as e_gaiabp,phot_rp_mean_mag as gaiarp'
-    gaia_cols += ',2.5*log(1+1/phot_rp_mean_flux_over_error) as e_gaiarp'    
+    gaia_colarr = ['source_id as gaia_sourceid','ra as gaia_ra','dec as gaia_dec',
+                   'pmra as gaia_pmra','pmra_error as gaia_pmra_error','pmdec as gaia_pmdec',
+                   'pmdec_error as gaia_pmdec_error','parallax as gaia_plx',
+                   'parallax_error as gaia_plx_error','phot_g_mean_mag as gaia_gmag',
+                   '2.5*log(1+1/phot_g_mean_flux_over_error) as gaia_gerr','phot_bp_mean_mag as gaia_bpmag',
+                   '2.5*log(1+1/phot_bp_mean_flux_over_error) as gaia_bperr','phot_rp_mean_mag as gaia_rpmag',
+                   '2.5*log(1+1/phot_rp_mean_flux_over_error) as gaia_rperr']
+    gaia_cols = ','.join(gaia_colarr[:10])
+    gaia_cols += ',2.5*log(1+1/phot_g_mean_flux_over_error) as gaia_gerr,phot_bp_mean_mag as gaia_bpmag'
+    gaia_cols += ',2.5*log(1+1/phot_bp_mean_flux_over_error) as gaia_bperr,phot_rp_mean_mag as gaia_rpmag'
+    gaia_cols += ',2.5*log(1+1/phot_rp_mean_flux_over_error) as gaia_rperr'    
 
     # Get the xmatch IDs first
     #  this returns the results in the correct order
@@ -445,23 +470,28 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
     """
 
     # Always get version31 catalogids and sdss_id for all stars
+    # Using catalogids
     if catid is not None:
         catid = np.atleast_1d(catid).tolist()
-        db = apogeedb.DBSession()
-        sql = 'select * from catalogdb.catalog where catalogid in ('
-        sql += ','.join(np.char.array(catid).astype(str))+')'
-        ddata = db.query(sql=sql,fmt='table')
-        db.close()
+        ddata = getcatalog(catid)
+        if len(ddata)==0:
+            return []
         sdata = getsdssid(catid)
-        del sdata[['catalogid','version_id']]
-        data = hstack((ddata,sdata))        
+        if len(sdata)>0:
+            del sdata[['catalogid','version_id']]
+            data = hstack((ddata,sdata))
+        else:
+            data = ddata
+    # Using designid
     elif designid is not None:
         ddata = getdesign(designid)
         if len(ddata)==0:
             return []
         sdata = getsdssid(ddata['catalogid'].tolist())
         del sdata[['catalogid','version_id']]
+        # we can just combine them, they are guaranteed to be matched
         data = hstack((ddata,sdata))
+    # Using coordinates
     elif ra is not None and dec is not None:
         data = coords2catid(ra,dec)
     else:
