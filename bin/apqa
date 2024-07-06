@@ -79,7 +79,8 @@ if __name__ == '__main__' :
             kws[k] = val
 
     # Fix the "make" flags names
-    flags = ['platesum','obshtml','obsplots','vishtml','starhtml','visplots','starplots','masterqa','nightqa','monitor']
+    flags = ['platesum','obshtml','obsplots','vishtml','starhtml',
+             'visplots','starplots','masterqa','nightqa','monitor']
     for f in flags:
         if f in kws.keys():
             val = kws.pop(f)

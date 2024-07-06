@@ -3623,6 +3623,8 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
             cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjd,observatory,apred,telescope,plate)
             #cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
             cmd += ' --masterqa False --starhtml True --starplots True --nightqa False --monitor False'
+            if clobber:
+                cmd += ' --clobber'
             logger.info('Command : '+cmd)
             logger.info('Logfile : '+logfile)
             tasks['cmd'][i] = cmd
@@ -3650,13 +3652,15 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
                     all_ims = expinfo['num'][calind]
                     all_types = np.full(len(all_ims), 'cal')
                     all_types[expinfo['exptype'][calind]=='FPI'] = 'fpi'
-                    qa.makeCalFits(load=load, ims=all_ims, types=all_types, mjd=str(m), instrument=instrument, clobber=clobber)
+                    qa.makeCalFits(load=load, ims=all_ims, types=all_types, mjd=str(m),
+                                   instrument=instrument, clobber=clobber)
                 # makeDarkFits
                 darkind, = np.where(expinfo['exptype']=='DARK')
                 if len(darkind)>0:
                     all_ims = expinfo['num'][darkind]
                     qa.makeDarkFits(load=load, ims=all_ims, mjd=str(m), clobber=clobber)
-                qa.makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=str(m), clobber=clobber)
+                qa.makeExpFits(instrument=instrument, apodir=apodir, apred=apred,
+                               load=load, mjd=str(m), clobber=clobber)
         except:
             traceback.print_exc()    
     # Make final mjd/fields pages
