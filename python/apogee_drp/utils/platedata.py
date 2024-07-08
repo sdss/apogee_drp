@@ -511,9 +511,13 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     if fps:
         logger.info('Querying catalogdb/targetdb')
         ph = catalogdb.getdata(designid=plugmap['design_id'])
-        ph['target_ra'] = ph['ra']
-        ph['target_dec'] = ph['dec']
+        if len(ph)>0:
+            ph['target_ra'] = ph['ra']
+            ph['target_dec'] = ph['dec']
+        else:
+            print('No APOGEE assignments for this design.')
 
+            
     # I don't understand the purpose of this next section???
     # querying by design or by catalogid gives the same results!
     # Maybe that used to be the case
