@@ -38,6 +38,7 @@ warnings.filterwarnings("ignore", message="numpy.dtype size changed")
 warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 
 pixelmask = bitmask.PixelBitMask()
+BADERR = 1.0000000e+10
 
 def loaddata(filename,fitsdir=None,maxread=None,cleanuprawfile=True,
              verbose=False):
@@ -388,11 +389,9 @@ def loadlittrow(littrowcorr,verbose=False):
     littrowim,littrowhead = loadlittrow(littrowcorr)
 
     """
-    
-    import pdb; pdb.set_trace()
 
     # LITTROWCORR must be scalar string
-    if type(littrowcorr) is not str or np.array(littrowcorr).shape != 1:
+    if type(littrowcorr) is not str or np.atleast_1d(littrowcorr).size != 1:
         error = 'LITTROWCORR must be a scalar string with the filename of the LITTROW MASK file'
         raise ValueError(error)
   
@@ -411,9 +410,7 @@ def loadlittrow(littrowcorr,verbose=False):
     # Check that the file looks reasonable
     #  must be 2048x2048 and have 0/1 values
     nyl,nxl = littrowim.shape
-    littrowokay = 0
-    dum, = np.where((littrowim != 0) and( littrowim != 1))
-    nbad = len(dum)
+    nbad = np.sum((littrowim != 0) & (littrowim != 1))
     if littrowim.ndim != 2 or nxl != 2048 or nyl != 2048 or nbad > 0:
         error = 'LITTROW MASK must be 2048x2048 with 0/1 values'
         raise ValueError(error)
@@ -488,7 +485,7 @@ def loaddark(darkcorr,verbose=False):
     Returns
     -------
     darkcube : numpy array
-       Dark correction cube.
+       Dark correction cube. [Ny,Nx,Nreads]
     darkhead : Header
        Header for the dark correction file.
 
@@ -527,11 +524,14 @@ def loaddark(darkcorr,verbose=False):
     # Load the dark correction file
     #  This needs to be 2048x2048xNreads
     #  It's the dark counts for each pixel in counts
-  
+
+    # This always returns the cube as [Ny,Nx,Nreads]
+    
     # Datacube
     if darkhead1['NAXIS'] == 3:
         darkcube = fits.getdata(darkcorr)
-        darkcube = np.swapaxes(darkcube,2,0)  # [nreads,ny,nx] -> [ny,nx,nreads]
+        darkcube = darkcube.T                 # [nreads,ny,nx] -> [nx,ny,nreads]
+        darkcube = np.swapaxes(darkcube,0,1)  # [nx,ny,nreads] -> [ny,nx,nreads]
     # Extensions
     else:
         # Initializing the cube
@@ -741,12 +741,12 @@ def lincorrect(slc_in,lindata):
     # A separate coefficient for each output (512 columns)
     corr = np.zeros((2048,nreads),float)
     npar = shapelin[1]
-
-    # loop over quadrants
+    
+    # Loop over quadrants
     slc_out = slc_in.copy()
     for i in range(4):
         corr[512*i:512*i+512,:] = lindata[i,0]
-        x = slc_in[512*i:512*i+512,:]
+        x = slc_in[512*i:512*i+512,:].copy()
         for j in np.arange(2,nreads):
             x[:,j] = (x[:,j]-x[:,1])*(j+1.0)/(j-1.0)
         x[~np.isfinite(x)] = 0.0
@@ -758,7 +758,8 @@ def lincorrect(slc_in,lindata):
         for j in range(2):
             corr[:,j] = corr[:,2]  # +(corr[*,2]-corr[*,3]) needs to work if only 3 reads!
 
-    slc_out[:2048,:] = slc_in[:2048,:]/corr
+    #slc_out[:2048,:] = slc_in[:2048,:]/corr      # correct code
+    slc_out[:2048,0] = slc_in[:2048,0]/corr[:,0]  # this is what the IDL code does, BUG
     
     return slc_out
 
@@ -791,17 +792,15 @@ def darkcorrect(slc_in,darkslc):
     """
 
     nreads = slc_in.shape[1]
-
+    
     # Just subtract the darkslc
-    # subtract each read at a time in case we still have the reference pixels
     slc_out = slc_in.copy()
-    for i in range(nreads):
-        slc_out[0:2048,i] -= darkslc[:,i]
-
+    slc_out[:2048,:] -= darkslc[:,:nreads]
+        
     return slc_out
 
 
-def crcorrect(dCounts,satmask,sigthresh=10,onlythisread=False,noise=17.0,
+def crcorrect(dCounts,satmask,sigthresh=10,onlythisread=None,noise=17.0,
               fix=False,verbose=False):
     """
     This subroutine fixes cosmic rays in a slice of the datacube.
@@ -821,7 +820,7 @@ def crcorrect(dCounts,satmask,sigthresh=10,onlythisread=False,noise=17.0,
     onlythisread : bool, optional
        Only accept CRs in this read index (+/-1 read).
          This is only used for the iterative CR rejection.
-         Default is False.
+         Default is None.
     noise : float, optional
        The readnoise in ADU (for dCounts, not single reads).
          Default is 17.
@@ -966,17 +965,17 @@ def crcorrect(dCounts,satmask,sigthresh=10,onlythisread=False,noise=17.0,
     for j in range(nbd1D):
         ibdx = bdx[j]
         ibdr = bdr[j]
-        dCounts_pixel = dCounts[ibdx,:]
+        dCounts_pixel = dCounts[ibdx,:].copy()
 
         # ONLYTHISREAD
         #  for checking neighboring pixels in the iterative part
         #--------------
         if onlythisread is not None:
-            # onlthisread is the read index, while ibdr is a dCounts index
+            # onlythisread is the read index, while ibdr is a dCounts index
             # ibdr+1 is the read index for this CR
             if (ibdr+1) < onlythisread-1 or (ibdr+1) > onlythisread+1:
                 break
-
+            
         # Calculate Local Median and Local Sigma
         #----------------------------------------
         #   Use a local median/sigma so the affected CR dCount is not included
@@ -1034,7 +1033,7 @@ def crcorrect(dCounts,satmask,sigthresh=10,onlythisread=False,noise=17.0,
             # Error in the fix
             #   by taking median of smbin neighboring reads we reduce the error by ~1/sqrt(smbin)
             fixerror = local_sigma/np.sqrt(smbin-1)   # -1 because the CR read is in there
-
+        
         # Add CR information to table
         #----------------------------
         crtab['data'][crtab['ncr']]['x'] = ibdx
@@ -1067,7 +1066,7 @@ def crcorrect(dCounts,satmask,sigthresh=10,onlythisread=False,noise=17.0,
         nmaskpix = len(maskpix)
         if nmaskpix > 0:
             mask[crtab['data'][maskpix]['x']] = pixelmask.getval('CRPIX')
-
+            
     return crtab, dCounts_fixed, med_dCounts, variability, mask
 
 
@@ -1199,7 +1198,7 @@ def refcorrect(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,
             readmask[i] = 1
             
     meanref /= nref
-
+    
     if verbose:
         print('\nReference processing ')
         
@@ -1224,7 +1223,7 @@ def refcorrect(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,
         # Do all operations as floats, then convert to int at the end
         
         # Subtract mean reference array
-        im = cube[:,0:2048,iread].astype(float)
+        im = cube[:,:2048,iread].astype(int)
 
         # Deal with saturated pixels
         sat = (im > satval)
@@ -1263,7 +1262,7 @@ def refcorrect(cube,head,mask=None,indiv=3,vert=True,horz=True,cds=True,
             im -= cdsref.astype(int)
 
         # Use the reference array information
-        ref = cube[:,2048:2560,iread].astype(int)
+        ref = cube[:,2048:2560,iread].astype(float)
         # No reference array subtraction
         if indiv is None or indiv==0:
             pass
@@ -1449,7 +1448,7 @@ def detectsatreads(slc,saturation):
     slc : numpy array
        Slice array.
     bdsat : numpy array
-       Array of saturated pixels.
+       2D boolean array of saturated pixels in slice.
     satmask : numpy array
        Saturated pixels array. [Npix,Nread,3]
          1st value is the mask, 2nd is the read at which it saturated,
@@ -1475,10 +1474,9 @@ def detectsatreads(slc,saturation):
         bdsatx,bdsatr = np.where(bdsat)
         # bdsat is 1D array for slice(2D)
         # bdsatx is column index for 1D med_dCounts
-  
+
         # Unique pixels
-        uibdx = np.unique(bdsatx)
-        ubdsatx = bdsatx[uibdx]
+        ubdsatx = np.unique(bdsatx)
         nbdsatx = len(ubdsatx)
         
         # Figure out at which Read (NOT dCounts) each column saturated
@@ -1548,13 +1546,16 @@ def fixsatreads(dCounts,med_dCounts,bdsat,satmask,
 
     """
 
-    nx,nreads = dCounts.shape
+    nx = dCounts.shape[0]
+    nreads = dCounts.shape[1]+1
     sat_extrap_error = np.zeros(nx,float)
     mask = np.zeros(2048,int)
-    
-    if len(bdsat)==0:
-        return dCounts,mask,sat_extrap_error
+    ubdsatx, = np.where(satmask[:2048,0]==1)
 
+    # No saturated pixels
+    if np.sum(bdsat)==0:
+        return dCounts,mask,sat_extrap_error
+    
     # Only 2 reads, can't fix anything
     if (nreads <= 2):
         mask[ubdsatx] = pixelmask.getval('UNFIXABLE')
@@ -1575,7 +1576,6 @@ def fixsatreads(dCounts,med_dCounts,bdsat,satmask,
     if len(unfixable) > 0:
         dCounts[unfixable,:] = 0.0
         mask[unfixable] = pixelmask.getval('UNFIXABLE')
-        # mask: 1-bad, 2-CR, 4-sat, 8-unfixable
   
     # Fixable Pixels
     #-----------------
@@ -1587,6 +1587,7 @@ def fixsatreads(dCounts,med_dCounts,bdsat,satmask,
     # Loop through the fixable saturated pixels
     for j in range(nfixable):
         ibdsatx = fixable[j]
+
         # "Fix" the saturated pixels
         #----------------------------
         if satfix:  
@@ -1610,7 +1611,7 @@ def fixsatreads(dCounts,med_dCounts,bdsat,satmask,
           
         # It might be better to use the last good value from sm_dCounts
         # rather than the straight median of all reads
-
+        
     return dCounts,mask,sat_extrap_error
 
 
@@ -1649,11 +1650,16 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
        Cosmic ray table.
     med_dCounts : numpy array
        Median count rate array.
+    variability : numpy array
+       Fractional variability for each pixel.
+    sat_extrap_error : numpy array
+       Extra error when fixing saturated pixels.
 
     Examples
     --------
 
-    slc_fixed,mask,satmask,crtab,med_dCounts = process_slice(slc,mask,caldata)
+    out = process_slice(slc,mask,caldata)
+    slc_fixed,mask,satmask,crtab,med_dCounts,variability,sat_extrap_error = out
 
     """
 
@@ -1662,12 +1668,12 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
     bpmim,littrowim,persistim = caldata['bpmim'],caldata['littrowim'],caldata['persistim']
     darkim,flatim,saturation = caldata['darkim'],caldata['flatim'],caldata['saturation']
     noise = caldata['noise']
+    noise_dCounts = noise*np.sqrt(2)
     
     nx,nreads = slc.shape
     
     # Slice of datacube, [Ncol,Nread]
     #--------------------------------
-    slc_orig = slc.copy()  # original slice
  
     # Flag BAD pixels
     #----------------
@@ -1678,7 +1684,7 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
             for j in range(nbdpix):
                 slc[bdpix[j],:] = 0.0  # set them to zero
             mask[bdpix] |= bpmim[bdpix]
-  
+            
     # Flag LITTROW ghost pixels
     #   but don't change data values
     #---------------------------------
@@ -1692,16 +1698,16 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
     #   but don't change data values
     #---------------------------------
     if persistim is not None:
-        bdpix1, = np.where(persistim and 1)
+        bdpix1, = np.where(persistim & 1)
         if len(bdpix1) > 0:
             mask[bdpix1] |= pixelmask.getval('PERSIST_HIGH')
-        bdpix2, = np.where(persistim and 2)
+        bdpix2, = np.where(persistim & 2)
         if len(bdpix2) > 0:
             mask[bdpix2] |= pixelmask.getval('PERSIST_MED')
-        bdpix4, = np.where(persistim and 4)
+        bdpix4, = np.where(persistim & 4)
         if len(bdpix4)>0:
             mask[bdpix4] |= pixelmask.getval('PERSIST_LOW')
-
+            
     # Detect and Flag Saturated reads
     #---------------------------------
     #  The saturated pixels are detected in the reference subtraction
@@ -1732,15 +1738,16 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
     #----------------------------
     slc_prefix = slc.copy()
     if nocr==False and nreads>2:
-        out = crcorrect(dCounts,satmask,noise=noise,fix=crfix)
+        out = crcorrect(dCounts,satmask,noise=noise_dCounts,fix=crfix)
         crtab,dCounts,med_dCounts,variability,crmask = out
         # Add to the mask
         mask |= crmask   # add to the mask
     # Only 2 reads, Cannot detect or fix CRs
     else:
-        med_dCounts = dCounts
         crtab = {'ncr':0}
-
+        med_dCounts = dCounts
+        variability = np.zeros(nx,float)
+        
     # Fix Saturated reads
     #----------------------
     #  do this after CR fixing, so we don't have to worry about CRs here
@@ -1749,11 +1756,11 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
                                                  satmask,variability,
                                                  satfix=satfix,rd3satfix=rd3satfix)
     mask |= smask   # add to the mask
-   
+    
     # Reconstruct the SLICE from dCounts
     #------------------------------------
-    slc0 = slc[:,0]                       # first read
-    bdsat, = np.where(np.isfinite(slc0))  # NAN in first read, set to 0.0
+    slc0 = slc[:,0].copy()                # first read
+    bdsat, = np.where(~np.isfinite(slc0))  # NAN in first read, set to 0.0
     if len(bdsat) > 0:
         slc0[bdsat] = 0.0
     # unfixable
@@ -1766,7 +1773,7 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
     else:
         slc_fixed[:,0] = slc0
         slc_fixed[:,1] = slc0+dCounts
-  
+        
     # Final median of each "fixed" pixel
     #------------------------------------
     if nreads > 2:
@@ -1780,27 +1787,27 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
             nbdsat = len(bdsat)
             for j in range(nbdsat):
                 temp_dCounts[bdsat[j],satmask[bdsat[j],1]-1:] = np.nan
-        fmed_dCounts = np.median(temp_dCounts,axis=1)    # NAN are automatically ignored
+        fmed_dCounts = np.nanmedian(temp_dCounts,axis=1)    # NAN are automatically ignored
         bdnan, = np.where(~np.isfinite(fmed_dCounts))
         if len(bdnan) > 0:
             import pdb; pdb.set_trace()
-            med_dCounts = fmed_dCounts
+        med_dCounts = fmed_dCounts
     # Only 2 reads
     else:
         med_dCounts = dCounts
-
+        
     # Print some information
     if verbose:
         nsatslc = np.sum(satmask[:,0])
         ncrslc = crtab['ncr']
         print('Nsat/NCR = {:}/{:} this row'.format(int(nsatslc)),int(ncrslc))
         
-    return slc_fixed,mask,satmask,crtab,med_dCounts
+    return slc_fixed,mask,satmask,crtab,med_dCounts,variability,sat_extrap_error
 
 
-def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None,
-             littrowcorr=None,persistcorr=None,persistmodelcorr=None,histcorr=None,
-             crfix=True,satfix=True,rd3satfix=False,saturation=65000,
+def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
+             flatcorr=None,littrowcorr=None,persistcorr=None,persistmodelcorr=None,
+             histcorr=None,crfix=True,satfix=True,rd3satfix=False,saturation=65000,
              nfowler=None,uptheramp=None,outelectrons=False,refonly=False,
              criter=False,clobber=False,outlong=None,cleanuprawfile=True,
              nocr=False,logfile=None,fitsdir=None,maxread=None,
@@ -1827,6 +1834,8 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
          and the file will be automatically uncompressed.
     outfile : str
        The output filename.  
+    apred : str
+       APOGEE DRP reduction version, e.g. "1.3".
     detcorr : str
        Filename of the detector file (containing gain,
          rdnoise, and linearity correction).
@@ -1999,7 +2008,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         nfowler = 10
     if seq is None:
         seq = 'no seq'
-
+        
     # Print out the parameters we are using
     if verbose:
         print('AP3DPROC Input Parameters:')
@@ -2026,7 +2035,6 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         print('')
     print(str(nfiles),' File(s) input')
 
-
     # File loop
     #------------
     outlist = nfiles*[None]
@@ -2052,31 +2060,8 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
                 lockfile = utils.localdir()+'/'+os.path.basename(outfile[f])
             else:
                 lockfile = outfile[f]
-            #if not unlock and not clobber:
-            #    while os.path.exists(lockfile):
-            #        print('Waiting for lockfile '+lockfile)
-            #        time.sleep(10)
-            #else: 
-            #    if os.path.exists(lockfile): 
-            #        os.remove(lockfile)
-            #if os.path.exists(os.path.dirname(lockfile))==False:
-            #    os.makedirs(os.path.dirname(lockfile))
-            #open(lockfile,'w').close()
-            # Wait if another process is working on this
-            #lockfile = outdir+load.prefix+'2D-'+baseframeid
-            #if localdir: 
-            #    lockfile = localdir+'/'+load.prefix+'1D-'+baseframeid
             lock.lock(lockfile,unlock=unlock)
 
-            ## Test if the output file already exists
-            #if (os.path.exists(outfile[f]) or os.path.exists(outfile[f]+'.fz')) and clobber==False:
-            #    if silent==False:
-            #        print('OUTFILE = ',outfile[f],' ALREADY EXISTS. Set clobber to overwrite')
-            #    continue
-
-            # set lock to notify other jobs that this file is being worked on
-            #openw,lock,/get_lun,lockfile
-            #free_lun,lock
             # Lock the file
             lock.lock(lockfile,lock=True)
 
@@ -2158,7 +2143,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         # Interpolate bad reads
         if nbdreads > 0:
             cube = interpbadreads(cube,gdreads,bdreads)
-
+            
         shape = cube.shape
         ny,nx = shape[:2]
         
@@ -2183,16 +2168,12 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
   
         # Initialize some arrays
         #------------------------
-        #mask = intarr(nx,ny)               # CR and saturation mask
-        #crindex = intarr(nx,ny,10)-1       # the CR read indices get put in here
-        #crnum = intarr(nx,ny)              # # of CRs per pixel
         med_dCounts_im = np.zeros((ny,nx),float)     # the median dCounts for each pixel
         satmask = np.zeros((ny,nx,3),int)            # 1st plane is 0/1 mask, 2nd plane is which read
                                                      #   it saturated on, 3rd plane is # of
                                                      #   saturated reads
         variability_im = np.zeros((ny,nx),float)     # fractional variability for each pixel
         sat_extrap_error = np.zeros((ny,nx),float)   # saturation extrapolation error 
-  
     
         #--------------------------------------------
         # PROCESS EACH SLICE (one row) ONE AT A TIME
@@ -2216,10 +2197,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             if debug==False:
                 if (i+1) % 500 == 0:
                     print('{:4d}/{:4d}'.format(i+1,ny))
-
-            #print('KLUDGE!!!!')
-            #if i<4: continue
-
+    
             # Getting calibration data for this slice
             caldata = {'rdnoiseim':rdnoiseim,'gainim':gainim,'lindata':lindata,
                        'bpmim':None,'littrowim':None,'persistim':None,
@@ -2230,76 +2208,50 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
                     caldata[c+'im'] = locals()[c+'im'][i]  # get ith row
             if lindata.ndim == 3:
                 caldata['lindata'] = lindata[i]
-                    
+                
             # Process the slice
             out = process_slice(cube[i].astype(float),mask[i],caldata,
                                 crfix=crfix,nocr=nocr,satfix=satfix,
                                 rd3satfix=rd3satfix,verbose=(verbose or debug))
-            slc_fixed,slcmask,slcsatmask,crtab_slc,med_dCounts = out
+            slcfixed,slcmask,slcsatmask,crtabslc,med_dCounts,variability,sat_xerror = out
 
             # Put information back into the full arrays
-            cube[i,:,:] = (np.round( slc_fixed )).astype(int)   # round to closest integer
+            cube[i,:,:] = (np.round( slcfixed )).astype(int)   # round to closest integer
             mask[i,:] = slcmask
             satmask[i,:,:] = slcsatmask
             med_dCounts_im[i,:] = med_dCounts
-
+            variability_im[i,:] = variability
+            sat_extrap_error[i,:] = sat_xerror
+            
             # Add to main crtab table
-            if crtab_slc['ncr']>0:
-                crtab_slc['data']['y'] = i  # add the row information
+            if crtabslc['ncr']>0:
+                crtabslc['data']['y'] = i  # add the row information
                 if crtab is None:
-                    crtab = crtab_slc
+                    crtab = crtabslc
                 else:
-                    ncrtot = crtab['ncr'] + crtab_slc['ncr']
-                    crtab = {'ncr':ncrtot,'data':np.hstack((crtab['data'], crtab_slc['data']))}
-
-
-        import pdb; pdb.set_trace()
-  
+                    ncrtot = crtab['ncr'] + crtabslc['ncr']
+                    crtab = {'ncr':ncrtot,'data':np.hstack((crtab['data'],crtabslc['data']))}
+                    
         #--------------------------------
         # Measure "variability" of data
         #--------------------------------
         # Use pixels with decent count rates
-        crmask = ((mask.astype(int) & pixelmask.getval('CRPIX')) == pixelmask.getval('CRPIX')).astype(int)
-        highpix, = np.where((satmask[:,:,0] == 0) & (crmask == 0) & (med_dCounts_im > 40))
-        nhighpix = len(highpix)
+        crmask = ((mask & pixelmask.getval('CRPIX')) == pixelmask.getval('CRPIX')).astype(int)
+        highpix = np.where((satmask[:,:2048,0] == 0) & (crmask == 0) & (med_dCounts_im[:,:2048] > 40))
+        nhighpix = np.sum(highpix)
         if nhighpix == 0:
-            highpix, = np.where((satmask[:,:,0] == 0) & (med_dCounts_im > 20))
-            nhighpix = len(highpix)
+            highpix = np.where((satmask[:,:2048,0] == 0) & (med_dCounts_im[:,:2048] > 20))
+            nhighpix = np.sum(highpix)
         if nhighpix > 0:
-            global_variability = np.median(variability_im[highpix])
+            global_variability = np.median(variability_im[:,:2048][highpix])
         else:
             global_variability = -1
 
-        #-------------------------
-        # FLAT FIELD CORRECTION
-        #-------------------------
-        #  if len(flatim) > 0:
-        #  
-        #    # Apply the flat field to each read.  Each pixel has a separate
-        #    # kTC noise/offset, but applying the flat field before or after
-        #    # this is removed gives IDENTICAL results.
-        #  
-        #    # Just divide the read image by the flat field iamge
-        #    #for i=0,nreads-1 do cube[:,:,i] /= flatim
-        #    for i=0,nreads-1 do cube[:,:,i] = round( cube[:,:,i] / flatim )  # keep cube LONG type
-        #  
-        #    # Hopefully this propogates everything to the variance
-        #    # image properly.
-        #  
-        #  
-  
-  
+            
         #------------------------
         # COLLAPSE THE DATACUBE
         #------------------------
-    
-        # No gain image, using gain=1.0 for all pixels
-        # gain = Electrons/ADU
-        if len(gainim)==0:
-            print('NO gain image.  Using GAIN=1')
-            gainim = np.ones((2048,2048),float)
-        # why would this every happen??
-            
+        
         # Fowler Sampling
         #------------------
         if uptheramp == False:  
@@ -2338,10 +2290,6 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             # For now just fit a line to each pixel
             #  Use median dCounts for each pixel to get the flux rate, i.e. "med_dCounts_im"
             #  then multiply by the exposure time.
-            # THIS WILL NEED TO BE IMPROVED IN THE FUTURE TO TAKE THROUGHPUT VARIATIONS
-            # INTO ACCOUNT.  FOR NOW THIS IS JUST FOR DARKS AND FLATS
-            #im = med_dCounts_im * nreads
-  
   
             # Fit a line to the reads for each pixel
             #   dCounts are noisier than the actual reads by sqrt(2)
@@ -2360,51 +2308,43 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
                 if satfix==False:
                     good = ((satmask[:,:,0] == 0) | ((satmask[:,:,0] == 1) & (satmask[:,:,1] > i)))
                 else:
-                    good = (np.isfinite(slc))
-            sumts[good] += gdreads[k]*slc[good]
-            sums[good] += slc[good]
-            sumn[good] += 1
-            sumt[good] += gdreads[k]
-            sumt2[good] += gdreads[k]**2
-            #sumt = total(findgen(nread))     # SUM t
-            #sumt2 = total(findgen(nread)^2)  # SUM t^2
+                    good = np.isfinite(slc)
+                sumts[good] += gdreads[k]*slc[good]
+                sums[good] += slc[good]
+                sumn[good] += 1
+                sumt[good] += gdreads[k]
+                sumt2[good] += gdreads[k]**2
             # The slope in Counts per read, similar to med_dCounts_im
-            #slope = (nread*sumts - sumt*sums)/(nread*sumt2 - sumt^2)
             slope = (sumn*sumts - sumt*sums)/(sumn*sumt2 - sumt**2)
             # To get the total counts just multiply by nread
             im = slope * (ngdreads-1)
             # the first read doesn't really add any signal, just a zero-point
-  
+            
             # See Equation 1 in Rauscher et al.(2007), SPIE
             #  with m=1
             #  noise and image/flux should be in electrons, sample_noise is in electrons
-            #sample_noise = sqrt( 12*(ngdreads-1.)/(nreads*(ngdreads+1.))*(noise*gainim)^2 + 6.*(ngdreads^2+1)/(5.*ngdreads*(ngdreads+1))*im*gainim )
             sample_noise = np.sqrt( 12*(ngdreads-1.)/(nreads*(ngdreads+1.))*noise**2 + \
-                                    6.*(ngdreads**2+1)/(5.*ngdreads*(ngdreads+1))*im[:2048,:]*gainim )
+                                    6.*(ngdreads**2+1)/(5.*ngdreads*(ngdreads+1))*im[:,:2048]*gainim )
             sample_noise /= gainim  # convert to ADU
-  
-            # Noise contribution to the variance
-            #   this is only valid if the variability is zero
-            #ngdreads = nreads - nbdreads
-            #sample_noise = noise / sqrt(Ngdreads)
-
+            
         # With userference, subtract off the reference array to reduce/remove
         #   crosstalk. 
-        if usereference==True:
+        if usereference:
             print('Subtracting reference array...')
             tmp = im[:2048,:2048].copy()
-            ref = im[:2048,2048:2460].copy()
+            ref = im[:2048,2048:2560].copy()
             # subtract smoothed horizontal structure
-            ref -= medfilt(np.median(ref,axis=0),7).reshape(1,-1) + np.zeros((512,2048),float)
-            #ref -= (np.zeros(512,float)+1)#medfilt1d(median(ref,dim=1),7)
-            im = refcorr_sub(tmp,ref)
+            smref = medfilt(np.median(ref,axis=1),7)
+            ref -= smref.reshape(-1,1) + np.zeros((2048,512),float)
+            im = refcorrect_sub(tmp,ref)
             nx = 2048
 
         #-----------------------------------
         # Apply the Persistence Correction
         #-----------------------------------
-        pmodelim = None
+        pmodelim,ppar = None,None
         if persistmodelcorr and histcorr:
+            # NOT TESTED YET!!!
             if verbose:
                 print('PERSIST modelcorr file = '+persistmodelcorr)
             pmodelim,ppar = persistmodel(ifile,histcorr,persistmodelcorr,bpmfile=bpmcorr)
@@ -2435,27 +2375,27 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
                 varim += np.maximum(im/gainim,0)
      
         # 2. Poisson Noise from dark current
-        if darkim:
+        if darkcorr:
             darkim = darkim[:,:,nreads-1]
             varim += np.maximum(darkim/gainim,0)
   
         # 3. Sample/read noise
         varim += sample_noise**2         # rdnoise reduced by the sampling
-  
+        
         # 4. Saturation error
         #      We used median(dCounts) to extrapolate the saturated pixels
         #      Use the variability in dCounts to estimate the error of doing this
         if satfix:
-            varim += sat_extrap_error     # add saturation extrapolation error
+            varim += sat_extrap_error[:,:2048]     # add saturation extrapolation error
         else:
-            varim = varim*(1-satmask[:,:,0]) + satmask[:,:,0]*99999999.   # saturated pixels are bad!
+            varim = varim*(1-satmask[:,:2048,0]) + satmask[:,:2048,0]*99999999.   # saturated pixels are bad!
         # Unfixable pixels
-        unfmask = ((mask.astype(int) & pixelmask.getval('UNFIXABLE')) == pixelmask.getval('UNFIXABLE')).astype(int)  # unfixable
+        unfmask = ((mask & pixelmask.getval('UNFIXABLE')) == pixelmask.getval('UNFIXABLE')).astype(int)  # unfixable
         varim = varim*(1-unfmask) + unfmask*99999999.         # unfixable pixels are bad!
   
         # 5. CR error
         #     We use median of neighboring dCounts to "fix" reads with CRs
-        crmask = ((mask.astype(int) & pixelmask.getval('CRPIX')) == pixelmask.getval('CRPIX')).astype(int)
+        crmask = ((mask & pixelmask.getval('CRPIX')) == pixelmask.getval('CRPIX')).astype(int)
         if crfix and crtab is not None:
             # loop in case there are multiple CRs per pixel
             for i in range(crtab['ncr']):
@@ -2465,11 +2405,11 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
                     varim = varim*(1-crmask) + crmask*99999999.               # pixels with CRs are bad!
   
         # Bad pixels
-        bpmmask = ((mask.astype(int) & pixelmask.getval('BADPIX')) == pixelmask.getval('BADPIX')).astype(int)
+        bpmmask = ((mask & pixelmask.getval('BADPIX')) == pixelmask.getval('BADPIX')).astype(int)
         varim = varim*(1-bpmmask) + bpmmask*99999999.               # bad pixels are bad!
-
-        # Flat field  
-        if flatim:
+        
+        # Flat field correction  
+        if flatcorr:
             varim /= flatim**2
             im /= flatim
 
@@ -2497,13 +2437,14 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         #-----------------------------
         leadstr = 'AP3D: '
         pyvers = sys.version.split()[0]
-        head['V_APRED'] = getvers()
-        head['HISTORY'] = leadstr+time.time()  # need better time output
+        head['V_APRED'] = plan.getgitvers(),'APOGEE software version' 
+        head['APRED'] = apred,'APOGEE Reduction version'
+        head['HISTORY'] = leadstr+time.asctime()  # need better time output
         import socket
         head['HISTORY'] = leadstr+os.getlogin()+' on '+socket.gethostname()
         import platform
         head['HISTORY'] = leadstr+'python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
-        head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+getvers()
+        head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+apred
         head['HISTORY'] = leadstr+'Output File:'
         if detcorr and outelectrons:
             head['HISTORY'] = leadstr+' HDU1 - image (electrons)'
@@ -2518,10 +2459,10 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         head['HISTORY'] = leadstr+'        8 - unfixable'
         if pmodelim:
             head['HISTORY'] = leadstr+' HDU4 - persistence correction (ADU)'
-        head['HISTORY'] = leadstr+'Global fractional variability = {:.5.3f}'.format(global_variability)
+        head['HISTORY'] = leadstr+'Global fractional variability = {:5.3f}'.format(global_variability)
         maxlen = 72-len(leadstr)
         # Bad pixel mask file
-        if bpmim:
+        if bpmcorr:
             line = 'BAD PIXEL MASK file="'+bpmcorr+'"'
             if len(line) > maxlen:
                 line1 = line[:maxlen]
@@ -2601,17 +2542,17 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             else:
                 head['HISTORY'] = leadstr+line
         # Bad pixels 
-        totbpm = np.sum((mask.astype(int) & pixelmask.getval('BADPIX')) == pixelmask.getval('BADPIX'))
+        totbpm = np.sum((mask & pixelmask.getval('BADPIX')) == pixelmask.getval('BADPIX'))
         head['HISTORY'] = leadstr+str(int(totbpm))+' pixels are bad'
         # Cosmic Rays
-        totcr = np.sum(mask.astype(int) & pixelmask.getval('CRPIX'))
+        totcr = np.sum(mask & pixelmask.getval('CRPIX'))
         if nreads > 2:
             head['HISTORY'] = leadstr+str(int(totcr))+' pixels have cosmic rays'
         if crfix and nreads>2:
             head['HISTORY'] = leadstr+'Cosmic Rays FIXED'
         # Saturated pixels
-        totsat = np.sum(mask.astype(int) & pixelmask.getval('SATPIX'))
-        totunf = np.sum(mask.astype(int) & pixelmask.getval('UNFIXABLE'))
+        totsat = np.sum(mask & pixelmask.getval('SATPIX'))
+        totunf = np.sum(mask & pixelmask.getval('UNFIXABLE'))
         totfix = totsat-totunf
         head['HISTORY'] = leadstr+str(int(totsat))+' pixels are saturated'
         if satfix and nreads>2:
@@ -2624,7 +2565,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         else:
             head['HISTORY'] = leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used))
         # Persistence correction factor
-        if len(pmodelim) > 0 and len(ppar) > 0:
+        if pmodelim is not None and ppar is not None:
             sppar = ['{:7.3g}'.format(p) for p in ppar]
             head['HISTORY'] = leadstr+'Persistence correction: '+' '.join(sppar)
   
@@ -2670,7 +2611,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         #-------------------
         # HDU0 - header only
         hdu = fits.HDUList()
-        hdu.append(fits.ImageHDU(0,head))
+        hdu.append(fits.ImageHDU(header=head))
         # HDU1 - flux
         flux = output[:,:,0]
         # replace NaNs with zeros
@@ -2685,7 +2626,12 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         hdu[1].header['CTYPE2'] = 'Pixel'
         hdu[1].header['BUNIT'] = 'Flux (ADU)'
         # HDU2 - error
-        err = errout(output[:,:,1])
+
+        # errout sets the value to output for the error for bad pixels
+        err = output[:,:,1]
+        bd = np.where((err==BADERR) | (err <= 0) | (~np.isfinite(err)))
+        if np.sum(bd)>0:
+            err[bd] = BADERR
         if outlong:
             err = np.round(err).astype(int)
         hdu.append(fits.ImageHDU(err))
@@ -2693,9 +2639,7 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
         hdu[2].header['CTYPE2'] = 'Pixel'
         hdu[2].header['BUNIT'] = 'Error (ADU)'
         # HDU3 - mask
-        # don't go through conversion to float and back!
-        flagmask = mask.astype(int)
-        hdu.append(fits.ImageHDU(flagmask))
+        hdu.append(fits.ImageHDU(mask))
         hdu[3].header['CTYPE1'] = 'Pixel'
         hdu[3].header['CTYPE2'] = 'Pixel'
         hdu[3].header['BUNIT'] = 'Flag Mask (bitwise)'
@@ -2721,19 +2665,18 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
             hdu.writeto(ioutfile,overwrite=True)
             
         # Remove the recently Decompressed file
-        if extension == 'apz' and cleanuprawfile and doapunzip:
+        if ifile.split('.')[-1] == 'apz' and cleanuprawfile and doapunzip:
             print('Deleting recently decompressed file ',fitsfile)
             if os.path.exists(fitsfile): os.remove(fitsfile)
     
         # Number of saturated and CR pixels
-        if verbose:
-            print('')
-            print('BAD/CR/Saturated Pixels:')
-            print(str(int(totbpm))+' pixels are bad')
-            print(str(int(totcr))+' pixels have cosmic rays')
-            print(str(int(totsat))+' pixels are saturated')
-            print(str(int(totunf))+' pixels are unfixable')
-            print('')
+        print('')
+        print('BAD/CR/Saturated Pixels:')
+        print(str(int(totbpm))+' pixels are bad')
+        print(str(int(totcr))+' pixels have cosmic rays')
+        print(str(int(totsat))+' pixels are saturated')
+        print(str(int(totunf))+' pixels are unfixable')
+        print('')
             
         # Remove the lock file
         if outfile:
@@ -2757,8 +2700,6 @@ def ap3dproc(files,outfile,detcorr=None,bpmcorr=None,darkcorr=None,flatcorr=None
 
     if nfiles==1: outlist=outlist[0]
 
-    import pdb; pdb.set_trace()
-    
     return outlist
                 
 
@@ -3053,12 +2994,13 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 #if os.path.exists(outfile) and clobber==False:
                 #    print(outfile,' exists already and clobber not set')
                 #    continue
-
+                
                 # PROCESS the file
                 #-------------------
-                ap3dproc(chfile,outfile,cleanuprawfile=1,verbose=verbose,clobber=clobber,
-                         logfile=logfile,q3fix=q3fix,maxread=maxread,fitsdir=fitsdir,
-                         usereference=usereference,refonly=refonly,seq=seq,unlock=unlock,**kws)
+                ap3dproc(chfile,outfile,load.apred,cleanuprawfile=True,verbose=verbose,
+                         clobber=clobber,logfile=logfile,q3fix=q3fix,maxread=maxread,
+                         fitsdir=fitsdir,usereference=usereference,refonly=refonly,
+                         seq=seq,unlock=unlock,**kws)
 
     utils.writelog(logfile,'AP3D: '+os.path.basename(planfile)+('%8.2f' % time.time()))
 
