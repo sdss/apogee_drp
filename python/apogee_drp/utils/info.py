@@ -90,7 +90,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None,
 
     telescope = 'apo25m'
     if observatory is not None:
-        telescope = {'apo':'apo25m','lco':'lco25m'}
+        telescope = {'apo':'apo25m','lco':'lco25m'}[observatory]
     load = apload.ApLoad(apred='daily',telescope=telescope)
 
     # Get the exposures info for this MJD5        
