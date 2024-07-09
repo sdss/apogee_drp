@@ -19,6 +19,7 @@ import sys
 import subprocess
 import pdb
 from apogee_drp.plan import mkplan
+import traceback
 
 if __name__ == '__main__' :
 
