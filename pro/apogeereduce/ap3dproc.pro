@@ -286,7 +286,8 @@ nreads = sz[2]   ; this is actually Nreads-1
 
 ; Initialize the CRSTR with 50 CRs, will trim later
 ;  don't know Y right now
-crstr_data_def = {X:0L,Y:0L,READ:0L,COUNTS:0.0,NSIGMA:0.0,GLOBALSIGMA:0.0,FIXED:0,LOCALSIGMA:0.0,FIXERROR:0.0,NEICHECK:0}
+crstr_data_def = {X:0L,Y:0L,READ:0L,COUNTS:0.0,NSIGMA:0.0,GLOBALSIGMA:0.0,$
+                  FIXED:0,LOCALSIGMA:0.0,FIXERROR:0.0,NEICHECK:0}
 crstr = {NCR:0L,DATA:REPLICATE(crstr_data_def,50)}
 
 ; Initializing dCounts_fixed
@@ -420,7 +421,6 @@ if nbd1D gt 0 then begin
       if (ibdr+1) lt onlythisread[0]-1 or (ibdr+1) gt onlythisread[0]+1 then goto,BOMB
     endif
 
-
     ; Calculate Local Median and Local Sigma
     ;----------------------------------------
     ;   Use a local median/sigma so the affected CR dCount is not included
@@ -453,7 +453,7 @@ if nbd1D gt 0 then begin
       if finite(local_sigma) eq 0 then local_sigma=sig_dCounts[ibdx]
       ; If still NaN then set to noise
       if finite(local_sigma) eq 0 then local_sigma=noise
-    
+      
     ; Only 2 good dCounts OR Nreads<smbin
     endif else begin
       local_med_dCounts = med_dCounts[ibdx]
@@ -1412,12 +1412,12 @@ print,'no_checksum: ', no_checksum
     print,'ONLY ',strtrim(nreads-nbdreads,2),' good reads.  Need at least 2.'
     return
   endif
-  
+
   ; Reference pixel subtraction
   ;----------------------------
   tmp=APREFCORR(cube,head,mask,readmask=readmask,q3fix=q3fix,keepref=usereference)
   cube=tmp
-
+  
   bdreads2 = where(readmask eq 1,nbdreads2)
   if nbdreads2 gt 0 then PUSH,bdreads,bdreads2
   ;nbdreads = n_elements(bdreads)
@@ -1486,15 +1486,12 @@ print,'no_checksum: ', no_checksum
   
       ; Stuff it in the cube
       cube[*,*,bdreads[k]] = round(im0)         ; round to closest integer, LONG type
-  
-    end
-  
+    endfor
   endif
   
   sz = size(cube)
   nx = sz[1]
   ny = sz[2]
-  
   
   ; Reference subtraction ONLY
   if keyword_set(refonly) then begin
@@ -1512,8 +1509,6 @@ print,'no_checksum: ', no_checksum
   ; make sure to treat the edgs and reference pixels correctly
   ; The "T" shape might indicate that we don't need to do the "top"
   ;  portion
-  
-  
   
   
   ; READ NOISE
@@ -1558,7 +1553,7 @@ print,'no_checksum: ', no_checksum
       print,'Scanning Row ',strtrim(i+1,2)
     if not keyword_set(silent) and not keyword_set(verbose) and not keyword_set(debug) then $
       if (i+1) mod 500 eq 0 then print,i+1,'/',ny,format='(I4,A1,I4)'
-  
+    
     ; Slice of datacube, [Ncol,Nread]
     ;--------------------------------
     slice = float(reform(cube[*,i,*]))
@@ -1575,7 +1570,7 @@ print,'no_checksum: ', no_checksum
         mask[bdpix,i] = (mask[bdpix,i] OR bpmim[bdpix,i])
       endif
     endif
-  
+
     ;---------------------------------
     ; Flag LITTROW ghost pixels, but don't change data values
     ;---------------------------------
@@ -1583,8 +1578,7 @@ print,'no_checksum: ', no_checksum
       bdpix = where(littrowim[*,i] eq 1,nbdpix)
       if nbdpix gt 0 then mask[bdpix,i] = (mask[bdpix,i] OR maskval('LITTROW_GHOST'))
     endif
-  
-    ;---------------------------------
+
     ;---------------------------------
     ; Flag persistence pixels, but don't change data values
     ;---------------------------------
@@ -1604,7 +1598,6 @@ print,'no_checksum: ', no_checksum
     ;  step and fixed to 65535.
     bdsat = where(slice gt saturation,nbdsat)
     if nbdsat gt 0 then begin
-  
       ; Flag saturated reads as NAN
       slice[bdsat] = !values.f_nan
   
@@ -1642,7 +1635,7 @@ print,'no_checksum: ', no_checksum
       mask[ubdsatx,i] = (mask[ubdsatx,i] OR maskval('SATPIX'))     ; mask: 1-bad, 2-CR, 4-sat, 8-unfixable
   
     endif
-  
+
     ;----------------------
     ; Linearity correction
     ;----------------------
@@ -1656,7 +1649,7 @@ print,'no_checksum: ', no_checksum
       ;AP3DPROC_LINCORR,slice_orig1,linslice,linhead,slice
       aplincorr,slice_orig1,linslice,slice
     endif
-  
+
     ;-----------------
     ; Dark correction
     ;-----------------
@@ -1669,7 +1662,6 @@ print,'no_checksum: ', no_checksum
     endif
   
   
-  
     ;------------------------------------------------
     ; Find difference of neighboring reads, dCounts
     ;------------------------------------------------
@@ -1678,7 +1670,6 @@ print,'no_checksum: ', no_checksum
   
   
     ; SHOULD I FIX BAD READS HERE?????
-  
   
     ;----------------------------
     ; Detect and Fix cosmic rays
@@ -1690,9 +1681,8 @@ print,'no_checksum: ', no_checksum
       satmask_slice = reform(satmask[*,i,*])
       AP3DPROC_CRFIX,dCounts_orig,satmask_slice,dCounts,med_dCounts,crstr_slice,$
                      crfix=crfix,noise=noise_dCounts,variability=variability_slice
-  
       variability_im[*,i] = variability_slice
-  
+      
     ; Only 2 reads, CANNOT detect or fix CRs
     endif else begin
       med_dCounts = dCounts
@@ -1701,7 +1691,6 @@ print,'no_checksum: ', no_checksum
   
     ; Some CRs detected, add to CRSTR structure
     if crstr_slice.ncr gt 0 then begin
-  
       crstr_slice.data.y = i  ; add the row information
   
       ; Add to MASK
@@ -1722,8 +1711,7 @@ print,'no_checksum: ', no_checksum
       endelse
   
     endif
-  
-  
+
     ;----------------------
     ; Fix Saturated reads
     ;----------------------
@@ -1779,7 +1767,7 @@ print,'no_checksum: ', no_checksum
           endif else begin
             dCounts[ibdsatx,minsatread[ibdsatx]-1:nreads-2] = 0.0    ; set saturated dCounts to zero
           endelse
-  
+          
         endfor ; loop through the fixable saturated pixels
   
         ; It might be better to use the last good value from sm_dCounts
@@ -1792,8 +1780,7 @@ print,'no_checksum: ', no_checksum
       endelse
   
     endif  ; some saturated pixels
-  
-  
+    
     ;------------------------------------
     ; Reconstruct the SLICE from dCounts
     ;------------------------------------
@@ -1811,7 +1798,7 @@ print,'no_checksum: ', no_checksum
       slice_fixed[*,0] = slice0
       slice_fixed[*,1] = slice0+dCounts
     endelse
-  
+
     ;--------------------------------
     ; Put fixed slice back into cube
     ;--------------------------------
@@ -1861,7 +1848,7 @@ print,'no_checksum: ', no_checksum
   
     ;stop
   
-  END  ; loop through the rows
+  ENDFOR  ; loop through the rows
   
   if n_elements(crstr) eq 0 then crstr={ncr:0L}
   
@@ -2008,8 +1995,7 @@ print,'no_checksum: ', no_checksum
   
   ; THIS HAS BEEN MOVED TO JUST AFTER THE REFERENCE PIXEL SUBTRACTION!!!!
   ; this needs to happen before dark subtraction!!
-  
-  
+
   ;--------------------------------
   ; Measure "variability" of data
   ;--------------------------------
@@ -2023,7 +2009,6 @@ print,'no_checksum: ', no_checksum
   endif else begin
     global_variability = -1
   endelse
-  
   
   ;-------------------------
   ; FLAT FIELD CORRECTION

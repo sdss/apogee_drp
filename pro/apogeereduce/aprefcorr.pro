@@ -155,19 +155,20 @@ for iread=0,nread-1 do begin
 
   ; with cds keyword, subtract off first read before getting reference pixel values
   if keyword_set(cds) then red-=cdsref
-
+  
   ref = cube[2048:2559,*,iread]
   if indiv eq 1 then begin
     APREFCORR_SUB,red,ref
     ref-=ref
   endif else if indiv gt 1 then begin
+    ;; the median smoothing sets the perimeter pixels to 0.0
     APREFCORR_SUB,red,median(ref,indiv)
     ref-=median(ref,indiv)
   endif else if indiv lt 0 then begin
     APREFCORR_SUB,red,meanref
     ref-=meanref
   endif
-
+  
   if keyword_set(vert) then begin
    ; Subtract vertical ramp
    for j=0,3 do begin
@@ -186,7 +187,7 @@ for iread=0,nread-1 do begin
     endif
    endfor
   endif
-
+  
   ; Subtract smoothed horizontal ramp
   if keyword_set(horz) then begin
    for i=0,2047 do begin
@@ -224,6 +225,7 @@ for iread=0,nread-1 do begin
     stop
    endif
   endif
+  
   if keyword_set(q3fix) then begin
     ;fix=red
     q3offset=fltarr(2048)
