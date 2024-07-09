@@ -2621,12 +2621,17 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
             flux[bad] = 0.
         if outlong:
             flux = np.round(flux).astype(int)
+        else:
+            flux = flux.astype(np.float32)
         hdu.append(fits.ImageHDU(flux))
         hdu[1].header['CTYPE1'] = 'Pixel'
         hdu[1].header['CTYPE2'] = 'Pixel'
-        hdu[1].header['BUNIT'] = 'Flux (ADU)'
+        if outelectrons:
+            hdu[1].header['BUNIT'] = 'Flux (electrons)'
+        else:
+            hdu[1].header['BUNIT'] = 'Flux (ADU)'
+        hdu[1].header['EXTNAME'] = 'FLUX'
         # HDU2 - error
-
         # errout sets the value to output for the error for bad pixels
         err = output[:,:,1]
         bd = np.where((err==BADERR) | (err <= 0) | (~np.isfinite(err)))
@@ -2634,12 +2639,18 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
             err[bd] = BADERR
         if outlong:
             err = np.round(err).astype(int)
+        else:
+            err = err.astype(np.float32)
         hdu.append(fits.ImageHDU(err))
         hdu[2].header['CTYPE1'] = 'Pixel'
         hdu[2].header['CTYPE2'] = 'Pixel'
-        hdu[2].header['BUNIT'] = 'Error (ADU)'
+        if outelectrons:
+            hdu[2].header['BUNIT'] = 'Error (electrons)'
+        else:
+            hdu[2].header['BUNIT'] = 'Error (ADU)'            
+        hdu[2].header['EXTNAME'] = 'ERROR'
         # HDU3 - mask
-        hdu.append(fits.ImageHDU(mask))
+        hdu.append(fits.ImageHDU(mask.astype(np.int16)))
         hdu[3].header['CTYPE1'] = 'Pixel'
         hdu[3].header['CTYPE2'] = 'Pixel'
         hdu[3].header['BUNIT'] = 'Flag Mask (bitwise)'
@@ -2648,13 +2659,15 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
         hdu[3].header['HISTORY'] = ' 2 - cosmic ray'
         hdu[3].header['HISTORY'] = ' 4 - saturated'
         hdu[3].header['HISTORY'] = ' 8 - unfixable'
+        hdu[3].header['EXTNAME'] = 'MASK'
         # HDU4 - persistence model
         if pmodelim:
-            hdu.append(fits.ImageHDU(pmodelim))
+            hdu.append(fits.ImageHDU(pmodelim.astype(np.float32)))
             hdu[4].header['CTYPE1'] = 'Pixel'
             hdu[4].header['CTYPE2'] = 'Pixel'
             hdu[4].header['BUNIT'] = 'Persistence correction (ADU)'
-
+            hdu[4].header['EXTNAME'] = 'PERSIST CORRECTION'
+            
         # Write the file
         if filexists==False or clobber:        
             if verbose:
