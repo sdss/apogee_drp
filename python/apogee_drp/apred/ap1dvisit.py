@@ -10,11 +10,364 @@ BADERR = 1.0000000e+10
 
 # dithershift()
 # outcframe()
+# ditherpairs()
 # dithercombine()
 # fluxing
 # visitoutput()
 # sky.skysub()
 # sky.telluric()
+
+def dithershift(frame1,frame2,xcorr=False,lines=True,objspec=None,plot=False,
+                pfile=None,plugmap=None,nofit=False,mjd=None):
+    """
+    This program measured the SHIFT in two dithered images
+
+    Parameters
+    ----------
+    frame1 : list
+       A structure giving 1D extracted data and headers for
+          all three chips for the FIRST dithered frame.
+    frame2 : list
+       The same as "frame1" but for the SECOND dithered frame.
+    xcorr : bool, optional
+       Use cross-correlation to measure the shift.
+    lines : bool, optional
+       Use emission lines to measure the shift.  This is the default.
+    objspec : bool
+       This is an object spectrum (stellar spectra).  The
+         spectra will be normalized by the stellar continuum.
+    pl : bool, optional
+       Show plots of the fits.
+
+    Returns
+    -------
+    shifttab : table
+       Table with results.
+         type       'xcorr' or 'lines'
+         shiftfit    The shift in pixels between frame2 and frame1.  A positive
+                       shift means that frame2 is to the RIGHT of frame1.
+         shifterr   The uncertainty of the shift measurement.
+         chipshift  The measured shifts for each chip.
+         chipsfit   The fitted shift parameters for each chip.
+
+    Examples
+    --------
+
+    shifttab = dithershift(frame1,frame2)
+
+    By D. Nidever  March 2010
+    Translated to Python by D. Nidever 2024
+    """
+
+    if mjd is None:
+        mjd = 999999
+
+    # Checking the tags of the input structure in FRAME1
+    needtags1 = ['CHIPA','CHIPB','CHIPC']
+    needtags2 = ['HEADER','FLUX','ERR','MASK']    
+    for i in range(len(needtags1)):
+        if needtags1[i] not in frame1.keys():
+            print('TAG ',needtags1[i],' NOT FOUND in input structure')
+            return []
+    for i in range(3):
+        for j in range(len(needtags2)):
+            if needtags2[j] not in frame1[i].keys():
+                print('TAG ',needtags2[j],' NOT FOUND in input structure')
+                return []
+    # Checking the tags of the input structure in FRAME2
+    for i in range(len(needtags1)):
+        if needtags1[i] not in frame2.keys():
+            print('TAG ',needtags1[i],' NOT FOUND in input structure')
+            return []
+    for i in range(3):
+        for j in range(len(needtags2)):
+            if needtags2[j] not in frame2[j].keys():
+                print('TAG ',needtags2[j],' NOT FOUND in input structure')
+                return []
+
+    # Temporary versions of the data
+    f1 = frame1.copy()
+    f2 = frame2.copy()
+
+    sz = f1['chipa']['flux'][:,:].shape
+    npix = sz[0]
+    nfibers = sz[1]
+
+    chipshift = np.zeros((3,2),float)
+    pars = np.zeros(4,float)
+
+    #-------------------------
+    # Using CROSS-CORRELATION
+    #-------------------------
+    if xcorr:
+        shtype = 'xcorr'
+        print('Using Cross-correlation to measure the dither shift')
+
+        if plugmap is not None:
+            iplugind, = np.where(plugmap['fiberdata']['spectrographid'] == 2)
+            iplugind = 300-plugmap['fiberdata'][iplugind]['fiberid']
+        else:
+            iplugind = np.arange(nfibers)
+        f1chipaflux = f1.chipa.flux[:,iplugind]
+        f1chipbflux = f1.chipb.flux[:,iplugind]
+        f1chipcflux = f1.chipc.flux[:,iplugind]
+        f2chipaflux = f2.chipa.flux[:,iplugind]
+        f2chipbflux = f2.chipb.flux[:,iplugind]
+        f2chipcflux = f2.chipc.flux[:,iplugind]
+        sz = size(f1chipaflux[:,:])
+        nfibers = sz[1]
+
+        # Should use the PlugMap to only pick object spectra??
+
+        # The input arrays are [2048,300,8]
+        #  the planes are: [spec, wave, error, flag, sky, errsky,
+        #      telluric, error_telluric]
+        
+        # Object spectra, normalize
+        #  DON'T want to do this for SKY FIBERS!!!!
+        if objspec:
+            print('Median filtering the spectra')
+            f1chipaflux = f1chipaflux / ( MEDFILT2D(f1chipaflux,100,dim=1,/edge_copy) > 1)
+            f1chipbflux = f1chipbflux / ( MEDFILT2D(f1chipbflux,100,dim=1,/edge_copy) > 1)
+            f1chipcflux = f1chipcflux / ( MEDFILT2D(f1chipcflux,100,dim=1,/edge_copy) > 1)
+            f2chipaflux = f2chipaflux / ( MEDFILT2D(f2chipaflux,100,dim=1,/edge_copy) > 1)
+            f2chipbflux = f2chipbflux / ( MEDFILT2D(f2chipbflux,100,dim=1,/edge_copy) > 1)
+            f2chipcflux = f2chipcflux / ( MEDFILT2D(f2chipcflux,100,dim=1,/edge_copy) > 1)
+
+        # Do the cross-correlation
+        nlags = 21
+        lags = np.arange(nlags)-nlags//2
+        lo = nlags
+        hi = npix-nlags-1
+
+        fiber = np.zeros((nfibers,3),float)
+        chip = np.zeros((nfibers,3),float)
+        xshiftarr = np.zeros((nfibers,3),float)
+        for ichip in range(3):
+            xcorr = np.zeros((nlags,nfibers),float)
+            for i in range(nlags):
+                if ichip == 0:
+                    xcorr[i,:] = np.sum(f1chipaflux[lo:hi,*]*f2chipaflux[lo+lags[i]:hi+lags[i],:],axis=0)
+                if ichip == 1:
+                    xcorr[i,:] = np.sum(f1chipbflux[lo:hi,*]*f2chipbflux[lo+lags[i]:hi+lags[i],:],axis=0)
+                if ichip == 2:
+                    xcorr[i,:] = np.sum(f1chipcflux[lo:hi,*]*f2chipcflux[lo+lags[i]:hi+lags[i],:],axis=0)
+
+        for i in range(nfibers):
+            fiber[i,ichip] = iplugind[i]
+            chip[i,ichip] = ichip
+            xshiftarr[i,ichip] = -100.
+
+            xcorr0 = xcorr[:,i]
+            if np.sum(xcorr0) == 0:
+                continue
+            # Now fit a Gaussian to it
+            coef1 = ap_robust_poly_fit(lags,xcorr0,1)
+            estimates = [max(xcorr0), 0.0, 2.0, coef1[0], coef1[1]]
+            yfit1 = MPFITPEAK(lags,xcorr0,par1,nterms=5,estimates=estimates,
+                              /gaussian,/positive,$
+                              perror=perror1,chisq=chisq1,dof=dof1,
+                              yerror=yerror1,status=status1)
+
+            estimates = [par1[0], 0.0, par1[2], coef1[0], coef1[1], 0.0, 0.0]
+            par2 = MPFITFUN('gausspoly',lags,xcorr0,xcorr0*0+1,estimates,
+                            perror=perror2,chisq=chisq2,$
+                            dof=dof2,yerror=yerror2,status=status2,yfit=yfit2,/quiet)
+  
+            gd, = np.where(abs(lags-par2[1]) lt 3.0*par2[2])
+            if len(gd)==0:
+                continue
+            par3 = MPFITFUN('gausspoly',lags[gd],xcorr0[gd],xcorr0[gd]*0+1,par2,
+                            perror=perror3,chisq=chisq3,
+                            dof=dof3,yerror=yerror3,status=status3,yfit=yfit3,/quiet)
+            
+            xshiftarr[i,ichip] = par3[1]
+
+        if shiftarr is None:
+            shiftarr = xshiftarr
+        # Measure mean shift
+        gd, = np.where(xshiftarr > -99)
+        ROBUST_MEAN,xshiftarr[gd],shift,shiftsig
+        shifterr = shiftsig/np.sqrt(nfibers*3)
+        # Printing the results
+        print('Shift = {:.5f} +/- {:.5f} pixels'.format(shift,shifterr))
+
+        #if nofit, we only have one row, so return chip offsets
+        if nofit:
+            pars=[0.]
+            for ichip in range(3):
+                gd, = np.where(xshiftarr[:,ichip] > -99)
+                robust_mean,xshiftarr[gd,ichip],tmp,tmpsig
+                pars = [pars,tmp]
+            print(pars)
+            shift = [shift,0.]
+            #goto, fitend
+
+        # do linear fits to the shifts
+        # don't use blue fibers in superpersistence region
+        if mjd < 56860:
+            bd, = np.where((chip == 2) & (fiber > 200))
+            if len(bd)>0:
+                xshiftarr[bd] = -100
+
+        # single slope and offset
+        bad = ((xshiftarr < -99) | ((chip==2) & (fiber>200)))
+        gd, = np.where(~bad)
+        shift = AP_ROBUST_POLY_FIT(fiber[gd],xshiftarr[gd],1)
+        # slope and offset for each chip
+        print('Fit coefficients: ', shift)
+        for ichip in range(3):
+            bad = (xshiftarr[:,ichip] < -99)
+            gd, = np.where(~bad)
+            chipshift[ichip,:] = AP_ROBUST_POLY_FIT(fiber[gd,ichip],xshiftarr[gd,ichip],1)
+        # Global fit for slope with row and 3 independent chip offsets
+        for iter in range(3):
+            gd, = np.where(xshiftarr > -99)
+            print('n: ',len(gd))
+            design = np.zeros((len(gd),4),float)
+            design[:,0] = fiber[gd]
+            for ichip in range(3):
+                j, = np.where(chip[gd] == ichip)
+                design[j,ichip+1] = 1.
+            y = xshiftarr[gd]
+            a = matrix_multiply(design,design,/atranspose)
+            b = matrix_multiply(design,y,/atranspose)
+            pars = invert(a)#b
+            res = y-matrix_multiply(pars,design,/btrans)
+            bd, = np.where(np.abs(res) > 5*dln.mad(res))
+            print(pars)
+            print('mad: ', dln.mad(res))
+            xshiftarr[bd] = -100
+        
+        # Plot all the xcorr shifts
+        if plot:
+            #if plfile:
+            #    set_plot,'PS'
+            #    file_mkdir,file_dirname(pfile)
+            #    device,file=pfile+'.eps',/encap,/color,xsize=16,ysize=16
+            #    smcolor,/ps
+            xr = [0,nfibers*3]
+            yr = [-3,3]*dln.mad(xshiftarr)+np.median(xshiftarr)
+            xr = [0,nfibers]
+            yr = [-0.1,0.1]+np.median(xshiftarr)
+            plt.plot(np.arange(nfibers),np.polyval(shift,np.arange(nfibers)),
+                     linewidth=3)
+            plt.xlabel('Spectrum #')
+            plt.ylabel('Pixel Shift')
+            plt.xlim(xr)
+            plt.ylim(yr)
+            plt.plot(xshiftarr[:nfibers])
+            plt.plot(xshiftarr[nfibers:2*nfibers])
+            plt.plot(xshiftarr[2*nfibers:3*nfibers])
+            for ichip in range(3):
+                if ichip=0: color=2
+                if ichip=1: color=3
+                if ichip=2: color=4
+                plt.plot(np.arange(nfibers),np.polyval(chipshift[ichip,:],
+                                                       np.arange(nfibers)),color=color)
+            #f1 = strsplit(file_basename(frame1.chipa.filename,'.fits'),'-',/ext)
+            #f2 = strsplit(file_basename(frame2.chipa.filename,'.fits'),'-',/ext)
+            #al_legend,['Zero '+string(format='(f8.3)',shift[0]),
+            #'Slope '+string(format='(e10.2)',shift[1])],textcolor=[1,1],/top,/left
+            plt.legend()
+            plt.savefig(pfile,bbox_inches='tight')
+            #if keyword_set(pfile) then begin
+            #device,/close
+            #ps2gif,pfile+'.eps',/delete,/eps,chmod='664'o
+            #endif
+
+    #----------------------
+    # Using EMISSION LINES
+    #----------------------
+    else:
+        shtype = 'lines'
+        print('Using Emission Lines to measure the dither shift')
+        allmatchtab = []
+        # Loop through the chips
+        for i in range(3):
+            print('Fitting lines for Chip ',chiptag[i])
+            spec1 = f1[i]
+            spec2 = f2[i]
+
+            # Fit the peaks
+            #   this can find peaks in ThAr or object frames
+            print(' Frame 1')
+            linetab1 = peakfit.peakfit(spec1)
+            print(' Frame 2')
+            linetab2 = peakfit.peakfit(spec2)            
+            # Add chip numbers
+            linetab1['chip'] = i+1
+            linetab2['chip'] = i+1
+            
+            matchtab = np.zeros(50000,dtype=linetab1.dtype)
+            
+            # Now match the lines
+            cntlines = 0
+            for j in range(nfibers):
+                gd1, = np.where(linetab1['fiber']==j)
+                gd2, = np.where(linetab2['fiber']==j)
+                if len(gd1)>0 and len(gd2)>0:
+                    ifiber1 = linetab1[gd1]
+                    ifiber2 = linetab2[gd2]
+                    thresh = 1.0
+                    ind1,ind2 = srcor2(ifiber1['fiber'],ifiber1['gaussx'],
+                                       ifiber2['fiber'],ifiber2['gaussx'],
+                                       thresh,opt=1)
+                    nmatch = len(ind1)
+                    if nmatch>0:
+                        matchstr[cntlines:cntlines+nmatch]['f1'] = ifiber1[ind1]
+                        matchstr[cntlines:cntlines+nmatch]['f2'] = ifiber2[ind2]
+                        cntlines += nmatch
+
+            # Trim trailing elements
+            matchtab = matchtab[:cntlines]
+            # Add to the total structure
+            allmatchtab.append(matchtab)
+
+        # Calculate the shift
+        diffy = allmatchtab['f2']['gaussx']-allmatchtab['f1']['gaussx']
+        nlines = len(allmatchtab)
+        # don't want lines in superpersistence region, give different shifts
+        gdlines, = np.where( ((allmatchtab['f2']['chip']<3) |
+                              ((allmatchtab['f2']['chip']==3) &
+                              allmatchtab['f2']['fiber'] < 200)) &
+                             (allmatchtab['f1']['gerror'][1]<2) &
+                             (allmatchtab['f2']['gerror'][1]<2))
+        ROBUST_MEAN,diffy[gdlines],shift,shiftsig
+        shifterr = shiftsig/np.sqrt(ngdlines)
+
+        # use height and error to weight the values
+        # don't use persistence region for blue chip
+        err = np.maximum(np.sqrt(allmatchtab['f1']['gerror'][2]**2 +
+                                 allmatchtab['f2']['gerror'][2]**2), 0.001)
+        # use height > 300 and err lt 0.15 (or some percentile)
+        # for blue chip use fiber < 200
+
+        # Plot all of the shifts
+        if pl:
+            xr = [0,len(allmatchtab)]
+            yr = [np.min(diffy),np.max(diffy)]
+            plt.scatter(diffy[gdlines])
+            plt.xlabel('Emission Line #')
+            plt.ylabel('Pixel Shift')
+            plt.xlim(xr)
+            plt.ylim(yr)
+            plt.axvline(shift,c='r')
+            plt.annotate('Shift = {:.5f}+/-{:.5f} pixels'.format(shift,shifterr),
+                         xy=[np.mean(xr),yr[1]-0.1*(yr[1]-yr[0])])
+            #xyouts,mean(xr),yr[1]-0.1*(yr[1]-yr[0]),
+            #'Shift = '+strtrim(shift,2)+'+/-'+strtrim(shifterr,2)+' pixels',$
+            #align=0.5,charsize=1.5
+
+        # Printing the results
+        print('Shift = {:.5f} +/- {:.5f} pixels'.format(shift,shifterr))
+        # This should be accurate to ~0.001 if there are ~18 lines per fiber
+        shift = [shift,0.]
+
+    shiftstr = {'type':shtype, 'shiftfit':shift, 'shifterr':shifterr,
+                'chipshift':chipshift, 'chipfit:'pars}
+
+    return shiftstr
 
 
 
