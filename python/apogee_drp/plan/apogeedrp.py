@@ -1730,7 +1730,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         slurmpars1['cpus'] = 4
         slurmpars1['memory'] = 55000  # in MB
         logger.info('Slurm settings: '+str(slurmpars1))
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(darkdict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(darkdict),bool)
@@ -1769,8 +1770,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Dark files to run')        
-            key,jobid = slrm.submit(tasks,label='mkdark',verbose=True,logger=logger,**slurmpars1)
-            slrm.queue_wait('mkdark',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='mkdark',verbose=True,
+                                    logger=logger,**slurmpars1)
+            slrm.queue_wait('mkdark',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Dark',logfiles,key,apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
@@ -1801,7 +1804,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if flatdict is None or len(flatdict)==0:
             flatdict = []
             logger.info('No master Flat calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(flatdict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(flatdict),bool)
@@ -1868,7 +1872,14 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if bpmdict is None or len(bpmdict)==0:
             bpmdict = []
             logger.info('No master BPM calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        # Give each job LOTS of memory
+        slurmpars1 = slurmpars.copy()
+        slurmpars1['nodes'] = np.minimum(slurmpars1['nodes'],2)
+        slurmpars1['cpus'] = 4
+        slurmpars1['memory'] = 55000  # in MB
+        logger.info('Slurm settings: '+str(slurmpars1))
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)]
         tasks = np.zeros(len(bpmdict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(bpmdict),bool)
@@ -1907,10 +1918,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' BPM files to run')        
-            key,jobid = slrm.submit(tasks,label='mkbpm',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mkbpm',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='mkbpm',verbose=True,
+                                    logger=logger,**slurmpars1)
+            slrm.queue_wait('mkbpm',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'BPM',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'BPM',logfiles,key,apred,
+                                          telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1931,7 +1945,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if sparsedict is None or len(sparsedict)==0:
             sparsedict = []
             logger.info('No master Sparse calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(sparsedict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(sparsedict),bool)
@@ -1970,10 +1985,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Sparse files to run')        
-            key,jobid = slrm.submit(tasks,label='mksparse',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mksparse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='mksparse',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mksparse',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Sparse',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Sparse',logfiles,key,
+                                          apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1995,7 +2013,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if littdict is None or len(littdict)==0:
             littdict = []
             logger.info('No master Littrow calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(littdict),dtype=np.dtype(dt))
         tasks = Table(tasks)        
         docal = np.zeros(len(littdict),bool)
@@ -2034,10 +2053,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Littrow files to run')        
-            key,jobid = slrm.submit(tasks,label='mklittrow',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mklittrow',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
-            # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Littrow',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            key,jobid = slrm.submit(tasks,label='mklittrow',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mklittrow',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(tasks['name'],'Littrow',logfiles,key,
+                                          apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -2058,7 +2080,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if responsedict is None or len(responsedict)==0:
             responsedict = []
             logger.info('No master Response calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(responsedict),dtype=np.dtype(dt))
         tasks = Table(tasks)        
         docal = np.zeros(len(responsedict),bool)
@@ -2097,10 +2120,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Response files to run')        
-            key,jobid = slrm.submit(tasks,label='mkresponse',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mkresponse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='mkresponse',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mkresponse',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Response',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Response',logfiles,key,
+                                          apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -2121,7 +2147,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if modelpsfdict is None or len(modelpsfdict)==0:
             modelpsfdict = []
             logger.info('No master PSF Model calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(modelpsfdict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(modelpsfdict),bool)    
@@ -2160,10 +2187,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' PSFModel files to run')        
-            key,jobid = slrm.submit(tasks,label='mkpsfmodel',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mkpsfmodel',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
-            # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'PSFModel',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            key,jobid = slrm.submit(tasks,label='mkpsfmodel',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mkpsfmodel',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(tasks['name'],'PSFModel',logfiles,key,
+                                          apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -2233,8 +2263,9 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info(str(len(psf_names))+' apPSF files need to be made')
 
         # Create the apPSF files so we can extract the individual wave files
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),
-              ('dir',str,1000),('num',int),('mjd',int),('observatory',str,10),
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000),('num',int),
+              ('mjd',int),('observatory',str,10),
               ('configid',str,50),('designid',str,50),('fieldid',str,50)]
         # num, mjd, observatory, configid, designid, fieldid        
         tasks = np.zeros(len(psf_names),dtype=np.dtype(dt))
@@ -2281,8 +2312,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' PSF files to run')
-            key,jobid = slrm.submit(tasks,label='makecal-psf',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('makecal-psf',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='makecal-psf',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('makecal-psf',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if it ran okay and puts the status in the database
             #  'tasks' doubles as 'expinfo' for check_calib()
             chkcal = check_calib(tasks,logfiles,key,apred,verbose=True,logger=logger)
@@ -2293,8 +2326,9 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logger.info('No individual PSF calibration files need to be run')
             
         # Creating individual wave files to the multiwave calibration files
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),
-              ('dir',str,1000),('num',int),('mjd',int),('observatory',str,10),
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000),('num',int),
+              ('mjd',int),('observatory',str,10),
               ('configid',str,50),('designid',str,50),('fieldid',str,50)]
         # num, mjd, observatory, configid, designid, fieldid        
         tasks = np.zeros(len(wave_names),dtype=np.dtype(dt))
@@ -2354,8 +2388,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' wave files to run')
-            key,jobid = slrm.submit(tasks,label='makecal-wave',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('makecal-wave',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='makecal-wave',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('makecal-wave',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if it ran okay and puts the status in the database
             #  'tasks' doubles as 'expinfo' for check_calib()
             chkcal = check_calib(tasks,logfiles,key,apred,verbose=True,logger=logger)
@@ -2366,7 +2402,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logger.info('No individual wave calibration files need to be run')        
 
         # Creating the multiwave calibration files
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)]
         tasks = np.zeros(len(multiwave_names),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(multiwave_names),bool)    
@@ -2404,10 +2441,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' multiwave files to run')        
-            key,jobid = slrm.submit(tasks,label='mkmultiwave',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mkmultiwave',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
-            # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Wave',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            key,jobid = slrm.submit(tasks,label='mkmultiwave',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mkmultiwave',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(tasks['name'],'Wave',logfiles,key,apred,
+                                          telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -2428,7 +2468,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if lsfdict is None or len(lsfdict)==0:
             lsfdict = []
             logger.info('No master LSF calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(lsfdict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(lsfdict),bool)
@@ -2467,10 +2508,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' LSF files to run')        
-            key,jobid = slrm.submit(tasks,label='mklsf',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mklsf',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
-            # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'LSF',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            key,jobid = slrm.submit(tasks,label='mklsf',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mklsf',key,jobid,sleeptime=60,verbose=True,
+                            logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(tasks['name'],'LSF',logfiles,key,
+                                          apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
