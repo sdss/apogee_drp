@@ -265,11 +265,17 @@ def checkbrightneighbors(sdssid,ra,dec):
     sql = 'set enable_seqscan=off; '+sql
     res = db.query(sql=sql,fmt="table")
 
+    # No results
+    if len(res)==0:
+        print('No Gaia DR3 sources within 1 arcsec')
+        db.close()
+        return data
+    
     # Put the information in the table
     _,ind1,ind2 = np.intersect1d(data['sdssid'],res['sdssid'],return_indices=True)
     if len(ind1)>0:
         data['xmatchcount'][ind1] = res['xmatchcount'][ind2]
-    
+            
     # Next, let's check each star with close neighbors in more detail
     bad, = np.where(data['xmatchcount']>1)
 
