@@ -2414,7 +2414,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
             im /= flatim
 
         # Now convert to ELECTRONS
-        if detcorr and outelectrons==False:
+        if detcorr and outelectrons:
             varim *= gainim**2
             im *= gainim
 
@@ -2545,14 +2545,14 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
         totbpm = np.sum((mask & pixelmask.getval('BADPIX')) == pixelmask.getval('BADPIX'))
         head['HISTORY'] = leadstr+str(int(totbpm))+' pixels are bad'
         # Cosmic Rays
-        totcr = np.sum(mask & pixelmask.getval('CRPIX'))
+        totcr = np.sum((mask & pixelmask.getval('CRPIX')) == pixelmask.getval('CRPIX'))
         if nreads > 2:
             head['HISTORY'] = leadstr+str(int(totcr))+' pixels have cosmic rays'
         if crfix and nreads>2:
             head['HISTORY'] = leadstr+'Cosmic Rays FIXED'
         # Saturated pixels
-        totsat = np.sum(mask & pixelmask.getval('SATPIX'))
-        totunf = np.sum(mask & pixelmask.getval('UNFIXABLE'))
+        totsat = np.sum((mask & pixelmask.getval('SATPIX')) == pixelmask.getval('SATPIX'))
+        totunf = np.sum((mask & pixelmask.getval('UNFIXABLE')) == pixelmask.getval('UNFIXABLE'))
         totfix = totsat-totunf
         head['HISTORY'] = leadstr+str(int(totsat))+' pixels are saturated'
         if satfix and nreads>2:
