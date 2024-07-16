@@ -1701,7 +1701,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             key,jobid = slrm.submit(tasks,label='mkdet',verbose=True,logger=logger,**slurmpars1)
             slrm.queue_wait('mkdet',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Detector',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Detector',logfiles,key,apred,
+                                          telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1775,7 +1776,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             slrm.queue_wait('mkdark',key,jobid,sleeptime=120,verbose=True,
                             logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Dark',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Dark',logfiles,key,apred,
+                                          telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1847,7 +1849,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mkflat',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,
+                                          telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -2592,7 +2595,8 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
-        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                                ('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
         #queue = pbsqueue(verbose=True)
         #queue.create(label='ap3d', **slurmpars1)
@@ -2974,7 +2978,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     slurmpars1['cpus'] = ntorun
                 slurmpars1['numpy_num_threads'] = 2
                 logger.info('Slurm settings: '+str(slurmpars1))
-                tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+                tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                                        ('errfile',str,1000),('dir',str,1000)]))
                 tasks = Table(tasks)
                 for j in range(ntorun):
                     num1 = calinfo['num'][torun[j]]
@@ -3256,7 +3261,8 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
-        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                                ('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
         #queue = pbsqueue(verbose=True)
         #queue.create(label='apred', **slurmpars1)
@@ -3438,7 +3444,8 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
-        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                                ('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
         for i in range(ntorun):
             obj = vcat['apogee_id'][torun[i]]
@@ -3567,7 +3574,8 @@ def rununified(load,mjds,slurmpars,clobber=False,logger=None):
         slurmpars1['cpus'] = len(mjds)
     slurmpars1['numpy_num_threads'] = 2    
     logger.info('Slurm settings: '+str(slurmpars1))
-    tasks = np.zeros(len(mjds),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+    tasks = np.zeros(len(mjds),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                               ('errfile',str,1000),('dir',str,1000)]))
     tasks = Table(tasks)
     #queue = pbsqueue(verbose=True)
     #queue.create(label='unidir', **slurmpars1)
@@ -3651,7 +3659,8 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
             slurmpars1['cpus'] = nplans
         slurmpars1['numpy_num_threads'] = 2    
         logger.info('Slurm settings: '+str(slurmpars1))
-        tasks = np.zeros(len(planfiles),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = np.zeros(len(planfiles),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                                        ('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
         for i,pf in enumerate(planfiles):
             logger.info('planfile %d : %s' % (i+1,pf))
@@ -3894,7 +3903,6 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     nsteps = len(steps)
 
     # Slurm settings
-    #alloc = 'sdss-np'
     if alloc == 'sdss-kp':
         shared = False
         ppn = 16
@@ -3972,8 +3980,8 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('1) Setting up the directory structure')
         rootLogger.info('=====================================')
         rootLogger.info('')
-
-        tasks = np.zeros(1,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = np.zeros(1,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                           ('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
         cmd = 'mkvers {0}'.format(apred)        
         mkvoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkvers.'+logtime+'.log'
@@ -3986,7 +3994,8 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         tasks['outfile'][0] = mkvoutfile
         tasks['errfile'][0] = mkverrfile
         tasks['dir'][0] = os.path.dirname(mkvoutfile)
-        slurmpars1 = {'nodes':1, 'alloc':alloc, 'cpus':1, 'shared':shared, 'walltime':walltime, 'notification':False}
+        slurmpars1 = slurmpars.copy()
+        slurmpars1['nodes'] = 1
         key,jobid = slrm.submit(tasks,label='mkvers',verbose=True,logger=rootLogger,**slurmpars1)
         slrm.queue_wait('mkvers',key,jobid,sleeptime=60,verbose=True,logger=rootLogger) # wait for jobs to complete 
 
