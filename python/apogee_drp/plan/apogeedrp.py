@@ -1363,7 +1363,8 @@ def mkvers(apred,logger=None):
             else:
                 logger.info(apogee_redux+apred+'/'+d+'/'+obs+'/cron already exists')            
     # Cal subdirectories
-    for d in ['bpm','darkcorr','detector','flatcorr','flux','fpi','html','littrow','lsf','persist','plans','psf','qa','telluric','trace','wave']:
+    for d in ['bpm','dark','detector','flat','flux','fpi','html','littrow','lsf',
+              'persist','plans','psf','qa','telluric','trace','wave']:
         for obs in ['apogee-n','apogee-s']:
             if os.path.exists(apogee_redux+apred+'/cal/'+obs+'/'+d)==False:
                 logger.info('Creating '+apogee_redux+apred+'/cal/'+obs+'/'+d)
@@ -1445,7 +1446,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     if linkvers:
         logger.info('Creating calibration product symlinks to version >>'+str(linkvers)+'<<')
         cwd = os.path.abspath(os.curdir)
-        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','sparse','fiber','modelpsf','fpi']:
+        for d in ['bpm','dark','detector','flat','littrow','lsf',
+                  'persist','sparse','fiber','modelpsf','fpi']:
             for obs in ['apogee-n','apogee-s']:
                 prefix = {'apogee-n':'ap','apogee-s':'as'}[obs]
                 srcdir = apogee_redux+linkvers+'/cal/'+obs+'/'+d
@@ -1481,7 +1483,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                             dtrcdir = apogee_redux+apred+'/cal/'+obs+'/trace'                            
                             subprocess.run(['ln -s '+trcdir+'/'+prefix+'ETrace-?-'+num+'.fits '+dtrcdir],shell=True)
                 # Darks and Flats
-                elif d=='darkcorr' or d=='flatcorr':
+                elif d=='dark' or d=='flat':
                     darkfiles = glob(srcdir+'/*.fits')
                     if len(darkfiles)>0:
                         subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
