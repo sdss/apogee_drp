@@ -162,18 +162,23 @@ def gettargeting(sdssid):
     flags = TargetingFlags()
     all_carton_pks = [ attrs["carton_pk"] for bit, attrs in flags.mapping.items() ]
     for i in range(len(data)):
-        carton_pks = np.array(data['sdss5_target_carton_pks'][i].split(',')).astype(int)
-        flags = TargetingFlags()
-        for k in carton_pks:
-            if k in all_carton_pks:
-                flags.set_bit_by_carton_pk(0,k)
-        # the array is zero-padded at the end
-        #data['sdss5_target_flags'][i,:flags.array.shape[1]] = flags.array[0,:]        
-        # convert to hex string for easy storage in database
-        flags_array = flags.array[0,:]
-        flags_array_hex = ''.join('{:02x}'.format(x) for x in flags_array)
-        data['sdss5_target_flagshex'][i] = flags_array_hex
-        
+        if data['sdss_id'][i] == 0:
+            continue
+        if data['sdss5_target_carton_pks'][i] != '':
+            carton_pks = np.array(data['sdss5_target_carton_pks'][i].split(',')).astype(int)
+            flags = TargetingFlags()
+            for k in carton_pks:
+                if k in all_carton_pks:
+                    flags.set_bit_by_carton_pk(0,k)
+            # the array is zero-padded at the end
+            #data['sdss5_target_flags'][i,:flags.array.shape[1]] = flags.array[0,:]        
+            # convert to hex string for easy storage in database
+            flags_array = flags.array[0,:]
+            flags_array_hex = ''.join('{:02x}'.format(x) for x in flags_array)
+            data['sdss5_target_flagshex'][i] = flags_array_hex
+        else:
+            print('no sdss5_target_carton_pks for this star')
+            
     return data
     
 def getdesign(designid):
@@ -502,17 +507,27 @@ def getdata(catid=None,ra=None,dec=None,designid=None,dcr=1.0,
         data = coords2catid(ra,dec)
     else:
         raise ValueError('Need catid, designid, ra+dec or sdssid')
+
+    # No results
+    if len(data)==0:
+        print('No results.  Returning')
+        return Table(np.array([]))
+    
+    # No sdss_id
+    if len(data)>0 and 'sdss_id' not in data.colnames:
+        print('No sdss_id.  Returning')
+        return data
     
     # Get healpix
     data['healpix'] = gethealpix(data['ra_sdss_id'],data['dec_sdss_id'])
-            
+        
     # Get targeting information
-    tout = gettargeting(data['sdss_id'].tolist())
     data['sdss5_target_pks'] = 1000*' '
     data['sdss5_target_carton_pks'] = 1000*' '
     data['sdss5_target_catalogids'] = 1000*' '
     data['sdss5_target_cartons'] = 1000*' '            
     data['sdss5_target_flagshex'] = np.zeros(len(data),(str,150))
+    tout = gettargeting(data['sdss_id'].tolist())
     _,ind1,ind2 = np.intersect1d(data['sdss_id'],tout['sdss_id'],
                                  return_indices=True)
     if len(ind1)>0:

@@ -892,13 +892,13 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             # Try catalogid
             if fiber['catalogid'][istar] > 0:
                 catdb = catalogdb.getdata(catid=fiber['catalogid'][istar])
-                if len(catdb)>0:
+                if len(catdb)>0 and 'sdss_id' in catdb.colnames:
                     ind1 = [0]
                     nmatch = 1
             # Try coordinates
             if nmatch==0:
                 catdb = catalogdb.getdata(ra=fiber['ra'][istar],dec=fiber['dec'][istar])
-                if len(catdb)>0:
+                if len(catdb)>0 and 'sdss_id' in catdb.colnames:
                     ind1 = [0]
                     nmatch = 1
             # There's a match, fill in the information
