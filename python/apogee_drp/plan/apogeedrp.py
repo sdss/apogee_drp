@@ -2228,14 +2228,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if multiwavedict is None or len(multiwavedict)==0:
             multiwavedict = []
             logger.info('No master multiwave calibration files to make')
-
         # Which multiwave and individual wave still need to be made
         multiwave_names = []
         wave_names = []
         for i in range(len(multiwavedict)):
             name = multiwavedict['name'][i]
             if np.sum((mjds >= multiwavedict['mjd1'][i]) & (mjds <= multiwavedict['mjd2'][i])) > 0:
-                if load.exists('Wave',num=multiwavedict['name'][i])==False:
+                if clobber or load.exists('Wave',num=multiwavedict['name'][i])==False:
                     multiwave_names.append(name)
                     wnames = multiwavedict['frames'][i].split(',')
                     wave_names += wnames
@@ -2264,7 +2263,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 psfid = qtzinfo['num'][bestind]
                 psf_names.append(psfid)
         psf_names = list(np.unique(psf_names))
-        psf_names = [n for n in psf_names if load.exists('PSF',num=n)==False]
+        psf_names = [n for n in psf_names if clobber or load.exists('PSF',num=n)==False]
         logger.info(str(len(psf_names))+' apPSF files need to be made')
 
         # Create the apPSF files so we can extract the individual wave files
@@ -2293,7 +2292,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                if load.exists('PSF',num=name):
+                if clobber or load.exists('PSF',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
