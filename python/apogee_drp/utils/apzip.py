@@ -22,7 +22,7 @@ import traceback
 import tempfile
 import shutil
 
-from pydl.pydlutils import yanny
+from . import yanny
 
 
 def zip(files,delete=True,verbose=True):
