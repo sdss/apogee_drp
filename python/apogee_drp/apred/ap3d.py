@@ -103,7 +103,7 @@ def loaddata(filename,fitsdir=None,maxread=None,cleanuprawfile=True,
     # Compressed file input
     if extension == 'apz':
         if verbose:
-            print(ifile,' is a COMPRESSED file')
+            print(filename,' is a COMPRESSED file')
 
         # Check if the decompressed file already exists
         nbase = len(base)
@@ -1616,7 +1616,8 @@ def fixsatreads(dCounts,med_dCounts,bdsat,satmask,
 
 
 def process_slice(slc,mask,caldata,crfix=True,nocr=False,
-                  satfix=False,rd3satfix=False,verbose=True):
+                  satfix=False,rd3satfix=False,verbose=False,
+                  debug=False):
     """
     Process a single row/slice of the datacube.
 
@@ -1637,6 +1638,9 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
        have CRs.  Default is False.
     verbose : boolean, optional
        Verbose output to the screen.  Default is False.
+    debug : boolean, optional
+       Debugging mode with extra printing to the screen.
+          Default is False.
 
     Returns
     -------
@@ -1797,10 +1801,11 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
         med_dCounts = dCounts
         
     # Print some information
-    if verbose:
+    if debug:
         nsatslc = np.sum(satmask[:,0])
         ncrslc = crtab['ncr']
-        print('Nsat/NCR = {:}/{:} this row'.format(int(nsatslc)),int(ncrslc))
+        if nsatslc > 0 or ncrslc > 0:
+            print('Nsat/NCR = {:}/{:} this row'.format(int(nsatslc),int(ncrslc)))
         
     return slc_fixed,mask,satmask,crtab,med_dCounts,variability,sat_extrap_error
 
@@ -2192,7 +2197,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
         #-------------------
         crtab = None
         for i in range(ny):
-            if verbose or debug:
+            if debug:
                 print('Scanning Row ',str(i+1))
             if debug==False:
                 if (i+1) % 500 == 0:
@@ -2212,7 +2217,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
             # Process the slice
             out = process_slice(cube[i].astype(float),mask[i],caldata,
                                 crfix=crfix,nocr=nocr,satfix=satfix,
-                                rd3satfix=rd3satfix,verbose=(verbose or debug))
+                                rd3satfix=rd3satfix,verbose=debug)
             slcfixed,slcmask,slcsatmask,crtabslc,med_dCounts,variability,sat_xerror = out
 
             # Put information back into the full arrays
@@ -3000,7 +3005,7 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 outfile = load.filename('2D',num=framenum,mjd=planstr['mjd'],chips=True)
                 outfile = outfile.replace('2D-','2D-'+chips[k]+'-')
                 # Does the output directory exist?
-                fitsdir = utils.localdir()
+                fitsdir = os.path.join(utils.localdir(),load.apred)
                 if os.path.exists(os.path.dirname(outfile))==False:
                     os.makedirs(os.path.dirname(outfile))
                 # Does the file exist already
