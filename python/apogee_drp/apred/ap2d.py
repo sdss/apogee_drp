@@ -265,7 +265,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
      
     # Double-check the flux calibration file
     if fluxcalfile is not None: 
-        fluxcalfiles = [os.path.dirname(fluxcalfile)+'/'+load.prefix+'Flux-'+ch+'-'+os.path.basename(fluxcalfile)+'.fits' for ch in chiptag]
+        fluxcalfiles = [os.path.join(os.path.dirname(fluxcalfile),load.prefix+'Flux-'+ch+'-'+os.path.basename(fluxcalfile)+'.fits') for ch in chiptag]
         ftest = [os.path.exists(f) for f in fluxcalfiles]
         if np.sum(ftest) < 3: 
             if not silent: 
@@ -275,7 +275,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
          
     # Double-check the response calibration file
     if responsefile is not None: 
-        responsefiles = [os.path.dirname(responsefile)+'/'+load.prefix+'Response-'+ch+'-'+os.path.basename(responsefile)+'.fits' for ch in chiptag]
+        responsefiles = [os.path.join(os.path.dirname(responsefile),load.prefix+'Response-'+ch+'-'+os.path.basename(responsefile)+'.fits') for ch in chiptag]
         ftest = [os.path.exists(f) for f in responsefiles]
         if np.sum(ftest) < 3: 
             if not silent: 
@@ -285,7 +285,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
          
     # Double-check the wave calibration file
     if wavefile is not None: 
-        wavefiles = [os.path.dirname(wavefile)+'/'+load.prefix+'Wave-'+ch+'-'+os.path.basename(wavefile)+'.fits' for ch in chiptag]
+        wavefiles = [os.path.join(os.path.dirname(wavefile),load.prefix+'Wave-'+ch+'-'+os.path.basename(wavefile)+'.fits') for ch in chiptag]
         wtest = [os.path.exists(f) for f in wavefiles]
         if np.sum(wtest) < 3: 
             if not silent: 
@@ -294,10 +294,11 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             return [],[]
          
     # Wait if another process is working on this
-    lockfile = outdir+load.prefix+'1D-'+baseframeid
-    if localdir: 
-        lockfile = localdir+'/'+load.prefix+'1D-'+baseframeid
-    lock.lock(lockfile,unlock=unlock)
+    #lockfile = outdir+load.prefix+'1D-'+baseframeid
+    #if localdir: 
+    #    lockfile = localdir+'/'+load.prefix+'1D-'+baseframeid
+    onedfile = os.path.join(outdir,load.prefix+'1D-a-'+baseframeid+'.fits')
+    lock.lock(onedfile,unlock=unlock)
     #lockfile = outdir+load.prefix+'1D-'+str(framenum) # lock file
     #if localdir: 
     #    lockfile = localdir+'/'+load.prefix+'1D-'+str(framenum)+'.lock' 
@@ -328,7 +329,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         return [],[]
 
     # Lock the file
-    lock.lock(lockfile,lock=True)
+    lock.lock(onedfile,lock=True)
 
     
     #--------------------------------
@@ -962,7 +963,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             hdu.close()
 
     # Remove the lock file
-    lock.lock(lockfile,clear=True)
+    lock.lock(onedfile,clear=True)
     #if os.path.exists(lockfile):
     #    os.remove(lockfile)
  

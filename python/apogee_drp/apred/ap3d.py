@@ -2061,14 +2061,14 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
             
         # If another job is working on this file, wait
         if outfile:
-            if utils.localdir() is not None:
-                lockfile = utils.localdir()+'/'+os.path.basename(outfile[f])
-            else:
-                lockfile = outfile[f]
-            lock.lock(lockfile,unlock=unlock)
+            #if utils.localdir() is not None:
+            #    lockfile = os.path.join(utils.localdir(),load.apred)+'/'+os.path.basename(outfile[f])
+            #else:
+            #    lockfile = outfile[f]
+            lock.lock(outfile[f],unlock=unlock)
 
             # Lock the file
-            lock.lock(lockfile,lock=True)
+            lock.lock(outfile[f],lock=True)
 
         # Load the data
         cube,head,doapunzip,fitsfile = loaddata(ifile,fitsdir=fitsdir,maxread=maxread,
@@ -2698,7 +2698,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
             
         # Remove the lock file
         if outfile:
-            lock.lock(lockfile,clear=True)
+            lock.lock(outfile[f],clear=True)
   
         dt = time.time()-t0
         if verbose:
