@@ -382,7 +382,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
             print("----> monitor: Making " + os.path.basename(outfile4))
 
             if allv4 is None:
-                allv4path = '/uufs/chpc.utah.edu/common/home/sdss/dr17/apogee/spectro/aspcap/dr17/synspec_rev1/allVisit-dr17-synspec_rev1.fits/'
+                allv4path = '/uufs/chpc.utah.edu/common/home/sdss/dr17/apogee/spectro/aspcap/dr17/synspec_rev1/allVisit-dr17-synspec_rev1.fits'
                 allv4 = fits.getdata(allv4path)
 
             gd, = np.where(allv4['TELESCOPE'] == telescope)
