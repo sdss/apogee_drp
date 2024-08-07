@@ -11,6 +11,7 @@ __version__ = '20200404'  # yyyymmdd
 
 import os
 import sys
+from pwd import getpwuid
 import numpy as np
 import warnings
 import time
@@ -110,7 +111,7 @@ def loaddata(filename,fitsdir=None,maxread=None,cleanuprawfile=True,
         if fitsdir is not None:
             fitsfile = os.path.join(fitsdir,base[:nbase-4]+'.fits')
         else:
-            fitsfile = os.path(fdir,base[:nbase-4]+'.fits')
+            fitsfile = os.path.join(fdir,base[:nbase-4]+'.fits')
             fitsdir = None
   
         # Need to decompress
@@ -2446,7 +2447,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
         head['APRED'] = apred,'APOGEE Reduction version'
         head['HISTORY'] = leadstr+time.asctime()  # need better time output
         import socket
-        head['HISTORY'] = leadstr+os.getlogin()+' on '+socket.gethostname()
+        head['HISTORY'] = leadstr+getpwuid(os.getuid())[0]+' on '+socket.gethostname()
         import platform
         head['HISTORY'] = leadstr+'python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
         head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+apred
