@@ -2262,25 +2262,25 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
         #------------------
         if uptheramp == False:  
             # Make sure that Nfowler isn't too large
-            Nfowler_used = Nfowler
-            if Nfowler > Nreads//2:
-                Nfowler_used = Ngdreads//2
+            nfowler_used = nfowler
+            if nfowler > nreads//2:
+                nfowler_used = ngdreads//2
   
             # Use the mean of Nfowler reads
 
             # Beginning sample
             gd_beg = gdreads[:nfowler_used]
             if len(gd_beg) == 1:
-                im_beg = cube[:,:,gd_beg]/float(Nfowler_used)
+                im_beg = cube[:,:,gd_beg]/float(nfowler_used)
             else:
-                im_beg = np.sum(cube[:,:,gd_beg],axis=2)/float(Nfowler_used)
+                im_beg = np.sum(cube[:,:,gd_beg],axis=2)/float(nfowler_used)
 
             # End sample
             gd_end = gdreads[ngdreads-nfowler_used:ngdreads]
             if len(gd_end) == 1:
-                im_end = cube[:,:,gd_end]/float(Nfowler_used)
+                im_end = cube[:,:,gd_end]/float(nfowler_used)
             else:
-                im_end = np.sum(cube[:,:,gd_end],axis=2)/float(Nfowler_used)
+                im_end = np.sum(cube[:,:,gd_end],axis=2)/float(nfowler_used)
 
             # The middle read will be used twice for 3 reads
 
@@ -2288,7 +2288,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
             im = im_end - im_beg
   
             # Noise contribution to the variance
-            sample_noise = noise * np.sqrt(2.0/Nfowler_used)
+            sample_noise = noise * np.sqrt(2.0/nfowler_used)
   
         # Up-the-ramp sampling
         #---------------------
@@ -2569,7 +2569,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
         if uptheramp:
             head['HISTORY'] = leadstr+'UP-THE-RAMP Sampling'
         else:
-            head['HISTORY'] = leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used))
+            head['HISTORY'] = leadstr+'Fowler Sampling, nfowler='+str(int(nfowler_used))
         # Persistence correction factor
         if pmodelim is not None and ppar is not None:
             sppar = ['{:7.3g}'.format(p) for p in ppar]
