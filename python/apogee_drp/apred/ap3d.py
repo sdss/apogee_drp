@@ -147,7 +147,7 @@ def loaddata(filename,fitsdir=None,maxread=None,cleanuprawfile=True,
     else:
         fitsfile = filename
         doapunzip = False
- 
+        
     if verbose:
         if extension == 'apz' and cleanuprawfile and doapunzip == 1:
             print('Removing recently decompressed FITS file at end of processing')
@@ -156,7 +156,7 @@ def loaddata(filename,fitsdir=None,maxread=None,cleanuprawfile=True,
     if os.path.exists(fitsfile)==False:
         error = 'FILE '+fitsfile+' NOT FOUND'
         if verbose:
-            print('error')
+            print(error)
         return None,None,False,fitsfile
  
     # Get header
@@ -1750,7 +1750,7 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
     # Only 2 reads, Cannot detect or fix CRs
     else:
         crtab = {'ncr':0}
-        med_dCounts = dCounts
+        med_dCounts = np.nanmedian(dCounts,axis=1)
         variability = np.zeros(nx,float)
         
     # Fix Saturated reads
@@ -2703,7 +2703,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
   
         dt = time.time()-t0
         if verbose:
-            print('dt = {:10.1f} sec'.format(dt))
+            print('dt = {:.1f} sec'.format(dt))
         if logfile:
             fmt = '{:10.2f} {:8d} {:8d} {:8d} {:8d}'
             name = os.path.basename(ifile)+(fmt.format(dt,totbpm,totcr,totsat,totunf))
@@ -2712,7 +2712,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
         if nfiles > 1:
             dt = time.time()-t00
             if verbose:
-                print('dt = {:10.1f} sec'.format(dt))
+                print('dt = {:.1f} sec'.format(dt))
 
         # Add to the outlist list
         outlist[f] = hdu
@@ -2722,7 +2722,8 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
     return outlist
                 
 
-def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=False):
+def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,
+         unlock=False,debug=False):
     """
     This program processes all of the APOGEE RAW datacubes for
     a single night.
@@ -2737,6 +2738,8 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
        Delete lock file and start fresh.  Default is False
     clobber : boolean, optional
        Delete any existing output files.  Default is False.
+    debug : boolean, optional
+       Print extra information to the screen.  Default is False.
 
     Returns
     -------
@@ -3019,12 +3022,12 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 ap3dproc(chfile,outfile,load.apred,cleanuprawfile=True,verbose=verbose,
                          clobber=clobber,logfile=logfile,q3fix=q3fix,maxread=maxread,
                          fitsdir=fitsdir,usereference=usereference,refonly=refonly,
-                         seq=seq,unlock=unlock,**kws)
+                         seq=seq,unlock=unlock,debug=debug,**kws)
 
     utils.writelog(logfile,'AP3D: '+os.path.basename(planfile)+('%8.2f' % time.time()))
 
     print('AP3D finished')
     dt = time.time()-t0
-    print('dt = %.1f sec ' % dt)
+    print('dt = {:.1f} sec '.format(dt))
 
             
