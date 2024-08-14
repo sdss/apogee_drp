@@ -485,6 +485,11 @@ class DBSession(object):
             tuple('nan' if isinstance(i, np.floating) and np.isnan(i) else i for i in t)
             for t in list(cat)
         ]
+        # Replace inf with 'inf'  
+        data = [
+            tuple(str(i) if isinstance(i, np.floating) and np.isinf(i) else i for i in t)
+            for t in list(data)
+        ]
 
         # Check for arrays and replace with a list
         hasarrays = False
@@ -604,6 +609,11 @@ class DBSession(object):
         data = [
             tuple('nan' if isinstance(i, np.floating) and np.isnan(i) else i for i in t)
             for t in list(cat)
+        ]
+        # Replace inf with 'inf'
+        data = [
+            tuple(str(i) if isinstance(i, np.floating) and np.isinf(i) else i for i in t)
+            for t in list(data)
         ]
 
         # Check for arrays and replace with a list
