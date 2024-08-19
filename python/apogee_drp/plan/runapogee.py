@@ -211,7 +211,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     gitvers = plan.getgitvers()
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
-
+    
     # Daily reduction logs directory
     logdir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'
     if os.path.exists(logdir)==False:
@@ -249,13 +249,14 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
         if os.path.exists(datadir3)==False:
             print('Incremental processing. MJD+3 data not there yet')
             return
-    
+
     # Check if there are apz files to process
     allfiles = os.listdir(mjddatadir)
     apzfiles = [f for f in allfiles if f.endswith('.apz')]  # need apz files
     # If no data was taken, then there's just a dummy and md5sum file
     md5sumfile = mjddatadir+'/'+str(mjd5)+'.md5sum'
     dummyfile = mjddatadir+'/'+str(mjd5)+'.dummy'
+    
     if len(apzfiles)==0 and os.path.exists(md5sumfile) and os.path.exists(dummyfile):
         print('No data for MJD5='+str(mjd5)+'. Incrementing to next night.')
         writeNewMJD(observatory,mjd5,apred=apred)        
@@ -320,6 +321,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
         rootLogger.info('1) Running AP3D on all exposures')
         rootLogger.info('================================')
         if incremental:
+            rootLogger.info('Incremental processing: Running 3D on 4 nights {:d}-{:d}'.format(mjd5,mjd5+3))
             mjds = [mjd5,mjd5+1,mjd5+2,mjd5+3]
         else:
             mjds = [mjd5]
@@ -374,7 +376,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     # Default is to remake the plan files, just in case something changed since
     #  the same thing this was run.  For example, the daily wave crashed and it
     #  tried to use an old multiwave file
-    planfiles = apogeedrp.makeplanfiles(load,[mjd5],slurm,clobber=True,logger=rootLogger)
+    planfiles = apogeedrp.makeplanfiles(load,[mjd5],slurm,clobber=True,logger=rootLogger)        
     nplanfiles = len(planfiles)
     # Start entry in daily_status table
     daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),

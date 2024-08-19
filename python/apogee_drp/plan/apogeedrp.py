@@ -3,7 +3,7 @@ import numpy as np
 import os
 import shutil
 from glob import glob
-import pdb
+import sys
 
 from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email,info,slurm as slrm
@@ -3101,9 +3101,9 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
             planfiles1 = mkplan.run_mjd5_yaml(mjd5planfile,clobber=clobber,logger=logger)
             nplanfiles1 = len(planfiles1)
         except:
-            traceback.print_exc()
+            logger.exception('Error making plan files')
             nplanfiles1 = 0
-
+            
         logger.info('Writing list of plan files to '+logdir+str(m)+'.plans')
         if nplanfiles1>0:
             dbload_plans(planfiles1)  # load plans into db
@@ -4039,7 +4039,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('====================')
         rootLogger.info('')
         planfiles = makeplanfiles(load,mjds,**kws)
-
+        
     # 6) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
     if 'apred' in steps:
@@ -4049,7 +4049,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('================')
         rootLogger.info('')
         chkexp,chkvisit = runapred(load,mjds,**kws)
-        
+            
     # 7) Run "rv" on all unique stars
     #--------------------------------
     if 'rv' in steps:
