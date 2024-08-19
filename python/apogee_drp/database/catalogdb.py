@@ -23,28 +23,60 @@ def getxmatchids(sdssid):
         tomatch = "="+str(np.atleast_1d(sdssid)[0])
     else:
         tomatch = " in ("+','.join(np.char.array(sdssid).astype(str))+")"
+    #sql = "select sdss_id,"+\
+    #      "STRING_AGG(distinct catalogid::text,',') as catalogids,"+\
+    #      "STRING_AGG(distinct version_id::text,',') as version_ids,"+\
+    #      "STRING_AGG(distinct lead::text,',') as leads,"+\
+    #      "STRING_AGG(distinct gaia_dr3_source__source_id::text,',') as gaia_dr3_source_id,"+\
+    #      "STRING_AGG(distinct gaia_dr2_source__source_id::text,',') as gaia_dr2_source_id,"+\
+    #      "STRING_AGG(distinct tic_v8__id::text,',') as tic_v8_id,"+\
+    #      "STRING_AGG(distinct twomass_psc__pts_key::text,',') as twomass_psc_pts_key "+\
+    #      "from catalogdb.sdss_id_to_catalog "+\
+    #      "where sdss_id"+tomatch+" "+\
+    #      "group by sdss_id"
     sql = "select sdss_id,"+\
-          "STRING_AGG(distinct catalogid::text,',') as catalogids,"+\
-          "STRING_AGG(distinct version_id::text,',') as version_ids,"+\
-          "STRING_AGG(distinct lead::text,',') as leads,"+\
-          "STRING_AGG(distinct gaia_dr3_source__source_id::text,',') as gaia_dr3_source_id,"+\
-          "STRING_AGG(distinct gaia_dr2_source__source_id::text,',') as gaia_dr2_source_id,"+\
-          "STRING_AGG(distinct tic_v8__id::text,',') as tic_v8_id,"+\
-          "STRING_AGG(distinct twomass_psc__pts_key::text,',') as twomass_psc_pts_key "+\
+          "catalogid::text,version_id::text,lead,"+\
+          "gaia_dr3_source__source_id::text as gaia_dr3_source_id,"+\
+          "gaia_dr2_source__source_id::text as gaia_dr2_source_id,"+\
+          "tic_v8__id::text as tic_v8_id,"+\
+          "twomass_psc__pts_key::text as twomass_psc_pts_key "+\
           "from catalogdb.sdss_id_to_catalog "+\
-          "where sdss_id"+tomatch+" "+\
-          "group by sdss_id"
+          "where sdss_id"+tomatch
+
     res = db.query(sql=sql,fmt='table')
     db.close()
-
+    
     # The results from the query will be out of order and
     # might be missing some rows
+    # and have duplicates
     data = Table(np.zeros(len(sdssid),dtype=res.dtype))
-    _,ind1,ind2 = np.intersect1d(sdssid,res['sdss_id'],return_indices=True)
+    data['lead'] = np.zeros(len(data),(str,50))  # extend "lead" column
+    index = dln.create_index(res['sdss_id'])
+    _,ind1,ind2 = np.intersect1d(sdssid,index['value'],return_indices=True) 
+    # No results, return empty table
     if len(ind1)==0:
         return data
-    for c in data.colnames:
-        data[c][ind1] = res[c][ind2]
+
+    # Get unique results for each sdss_id
+    for i in range(len(ind1)):
+        dind = ind1[i]   # index in data
+        iind = ind2[i]   # index in "index"
+        ind = index['index'][index['lo'][iind]:index['hi'][iind]+1]
+        nind = len(ind)
+        res1 = res[ind]
+        # Reverse sort by version_id
+        if nind>1:
+            si = np.argsort(res1['version_id'])[::-1]
+            res1 = res1[si]
+        # Use the latest version
+        for c in res.colnames:
+            data[c][dind] = res1[c][0]        
+        # No 2MASS information yet, use first non-zero value
+        if data['twomass_psc_pts_key'][dind]=='':
+            tind, = np.where(res1['twomass_psc_pts_key'] != '')
+            if len(tind)>0:
+                data['twomass_psc_pts_key'][dind] = res1['twomass_psc_pts_key'][tind[0]]
+                data['lead'][dind] = ','.join([data['lead'][dind],res1['lead'][tind[0]]])
     
     return data
 
@@ -294,6 +326,130 @@ def checkbrightneighbors(sdssid,ra,dec):
         if len(res)<=1:
             continue
         res['gmag'][~np.isfinite(res['gmag'])] = 99.99  # deal with any NaNs
+        data['brightneicount'][bad[i]] = len(res)-1        
+        # Estimate the relative flux of the target and the neighbor in the fiber
+        # Assume the first one (closest) is the source itself
+        fratio = 10**((res['gmag'][0]-res['gmag'][1:])/2.5)
+        # Take the spatial offset into account
+        # If you calculate the intersection of a 2D Gaussian (sigma=1") with a 2" diameter circle
+        # and the fraction of flux that enters the circle, this follows a Gaussian with
+        # sigma=1.13".  This is *relative" to no offset which of course doesn't fully fill the circle
+        fratio *= np.exp(-0.5*res['dist'][1:]**2/1.13**2)
+        totfratio = np.sum(fratio)  # total flux fraction, in case there are multiple ones
+        data['fluxfrac'][bad[i]] = totfratio
+        # Flag based on flux fration
+        # >=1     1
+        # >=0.5   2
+        # >=0.1   3
+        # >=0.05  4
+        # >=0.01  5
+        brightneiflag = 0
+        if totfratio>=1.0:
+            brightneiflag = 1
+        elif totfratio>=0.5:
+            brightneiflag = 2
+        elif totfratio>=0.1:
+            brightneiflag = 3
+        elif totfratio>=0.05:
+            brightneiflag = 4
+        elif totfratio>=0.01:
+            brightneiflag = 5            
+        data['brightneiflag'][bad[i]] = brightneiflag
+    
+    db.close()
+
+    return data
+
+def skycheck(ra,dec):
+    """
+    Check if we can use an unassigned fiber at these positions
+    as a sky fiber.
+    """
+
+    # but we actually want to check for any bright, close neighbor
+    # even if we targeted with gaia
+
+    # Initialize the output table
+    nsdssid = len(np.atleast_1d(ra))
+    dt = [('sdssid',int),('ra',float),('dec',float),('xmatchcount',np.int16),
+          ('brightneicount',np.int16),('brightneiflag',np.int16),('fluxfrac',np.float32)]
+    data = Table(np.zeros(nsdssid,dtype=np.dtype(dt)))
+    data['id'] = np.arange(len(data))+1
+    data['ra'] = ra
+    data['dec'] = dec
+    
+    db = apogeedb.DBSession()
+
+    # First, count how many Gaia DR3 sources there are within 5"
+    # of this position
+
+    dcr = 5.0
+    radlim = str(dcr/3600.0)
+    ra = np.atleast_1d(ra)
+    dec = np.atleast_1d(dec)
+    coords = []
+    for k in range(nsdssid):
+        coords.append( '('+str(sdssid[k])+','+str(ra[k])+','+str(dec[k])+')' )
+    vals = ','.join(coords)
+    ctable = '(VALUES '+vals+' ) as v'
+    # Subquery makes a temporary table from q3c coordinate query with catalogdb.catalog
+    sql = 'select v.column1 as sdssid,count(*) as xmatchcount from '+ctable+',catalogdb.gaia_dr3_source as g'
+    sql += ' where q3c_join(v.column2,v.column3,g.ra,g.dec,'+radlim+')'
+    sql += ' group by sdssid LIMIT 1000000'
+    # Turning this off improves q3c queries
+    sql = 'set enable_seqscan=off; '+sql
+    res = db.query(sql=sql,fmt="table")
+
+    # No results
+    if len(res)==0:
+        print('No Gaia DR3 sources within 5 arcsec')
+        db.close()
+        return data
+    
+    # Put the information in the table
+    _,ind1,ind2 = np.intersect1d(data['id'],res['id'],return_indices=True)
+    if len(ind1)>0:
+        data['xmatchcount'][ind1] = res['xmatchcount'][ind2]
+            
+    # Next, let's check each position with close neighbors in more detail
+    bad, = np.where(data['xmatchcount']>1)
+
+    for i in range(len(bad)):
+        sql = 'select source_id,ra,dec,phot_g_mean_mag as gmag,'
+        sql += 'q3c_dist(ra,dec,{:},{:})*3600 as dist '.format(data['ra'][bad[i]],data['dec'][bad[i]])
+        sql += 'from catalogdb.gaia_dr3_source '
+        sql += 'where q3c_radial_query(ra,dec,{:},{:},{:})'.format(data['ra'][bad[i]],data['dec'][bad[i]],dcr/3600.0)
+        sql += ' order by dist'
+        res = db.query(sql=sql,fmt='table')
+        if len(res)<=1:
+            continue
+        res['gmag'][~np.isfinite(res['gmag'])] = 99.99  # deal with any NaNs
+                           
+        # Estimate Hmag using color-color relationship
+        # G-H as a function of G-RP, determined using APOGEE stars
+        # coef1 = np.array([ 4.11230869, -0.6752835 ])
+        # coef2 = np.array([ 1.04074513,  2.33325908, -0.01339426])
+        # coef3 = np.array([ 0.3279905 ,  0.28292441,  2.83800045, -0.1040489 ])
+        # valid for  -0.2 < G-RP < 2.4
+        # the average color of the APOGEE stars is G-RP=0.98
+        # the average Gaia DR3 color for G<20 is G-RP=0.79
+        coef = np.array([ 0.3279905 ,  0.28292441,  2.83800045, -0.1040489 ])
+        res['grp'] = 0.80
+        gd, = np.where(np.isfinite(res['gmag']) & (res['gmag']<50) &
+                       np.isfinite(res['rpmag']) & (res['rpmag']<50))
+        if len(gd)>0:
+            res['grp'][gd] = res['gmag'][gd]-res['rpmag'][gd]
+        res['hmag'] = res['gmag']
+        gh = np.polyfit(coef,res['grp'])
+        # G-H = fxn(G-RP)
+        # H = G-fxn(G-RP)
+        hmag = res['gmag'] - gh
+
+        
+        
+        import pdb; pdb.set_trace()
+        
+                           
         data['brightneicount'][bad[i]] = len(res)-1        
         # Estimate the relative flux of the target and the neighbor in the fiber
         # Assume the first one (closest) is the source itself
