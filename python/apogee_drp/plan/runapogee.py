@@ -55,13 +55,13 @@ def nextmjd5(observatory,apred='t14'):
 
 def getNextMJD(observatory,apred='daily',mjdrange=None):
     ''' Returns the next MJD to reduce.  Either a list or one. '''
-
+    
     # Grab the MJD from the currentmjd file
     nextfile = os.path.join(os.getenv('APOGEE_REDUX'), apred, 'log', observatory, 'currentmjd')
     f = open(nextfile, 'r')
     mjd = f.read()
     f.close()
-
+    
     # Increment MJD from file by 1
     nextmjd = str(int(mjd) + 1)
 
@@ -69,10 +69,11 @@ def getNextMJD(observatory,apred='daily',mjdrange=None):
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
     mjdlist = os.listdir(datadir)
     newmjds = [mjd for mjd in mjdlist if mjd >= nextmjd and mjd.isdigit()]
-
+    newmjds.sort()
+    
     # Set next mjd or list of next mjds
     finalmjd = [nextmjd] if newmjds == [] else newmjds
-
+    
     # Filter out list based on any MJD range
     if mjdrange is not None:
         start, end = mjdrange.split('-')
@@ -213,7 +214,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     load = apload.ApLoad(apred=apred,telescope=telescope)
     
     # Daily reduction logs directory
-    logdir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'
+    logdir = os.path.join(os.environ['APOGEE_REDUX'],apred,'log',observatory)
     if os.path.exists(logdir)==False:
         os.makedirs(logdir)
 
@@ -229,7 +230,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
         else:
             mjd5 = int(mjd5[0])
         updatemjdfile = True
-
+        
     # SDSS-V FPS
     fps = False
     if int(mjd5)>=59556:
@@ -249,7 +250,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
         if os.path.exists(datadir3)==False:
             print('Incremental processing. MJD+3 data not there yet')
             return
-
+        
     # Check if there are apz files to process
     allfiles = os.listdir(mjddatadir)
     apzfiles = [f for f in allfiles if f.endswith('.apz')]  # need apz files
@@ -261,15 +262,15 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
         print('No data for MJD5='+str(mjd5)+'. Incrementing to next night.')
         writeNewMJD(observatory,mjd5,apred=apred)        
         return
-        
+    
     # Set up logging to screen and logfile
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
     rootLogger = logging.getLogger() 
     while rootLogger.hasHandlers(): # some existing loggers, remove them   
-        rootLogger.removeHandler(rootLogger.handlers[0]) 
+        rootLogger.removeHandler(rootLogger.handlers[0])
     rootLogger = logging.getLogger()
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")     
-    logfile = logdir+str(mjd5)+'.'+logtime+'.log'
+    logfile = os.path.join(logdir,str(mjd5)+'.'+logtime+'.log')
     if os.path.exists(logfile): os.remove(logfile)
     fileHandler = logging.FileHandler(logfile)
     fileHandler.setFormatter(logFormatter)
@@ -278,7 +279,6 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
     rootLogger.setLevel(logging.NOTSET)
-
     
     rootLogger.info('Running daily APOGEE data reduction for '+str(observatory).upper()+' '+str(mjd5)+' '+apred)
 
