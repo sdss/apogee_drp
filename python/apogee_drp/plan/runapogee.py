@@ -357,8 +357,10 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
         if incremental:
             mjds = [mjd5+1,mjd5+2,mjd5+3]
             caltypes = ['psf','flux','arcs']
+            rootLogger.info('Incremental processing: Running psf/flux/arcs on MJD-MJD+3')
             chkcal = apogeedrp.rundailycals(load,mjds,slurm,caltypes=caltypes,
                                             clobber=clobber,logger=rootLogger)
+            rootLogger.info('Incremental processing: Regular daily calibration products')
         # Now make regular daily cals for this night
         chkcal = apogeedrp.rundailycals(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
     else:
