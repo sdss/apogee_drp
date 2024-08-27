@@ -445,7 +445,7 @@ FOR i=0L,nplanfiles-1 do begin
       outfile = apogee_filename('2D',chip=chiptag[k],num=framenum)
       ; Does the output directory exist?
       if file_test(file_dirname(outfile),/directory) eq 0 then FILE_MKDIR,file_dirname(outfile)
-
+      
       ; PROCESS the file
       ;-------------------
       ;satfix = 0

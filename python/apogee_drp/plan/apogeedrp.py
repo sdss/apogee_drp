@@ -3,7 +3,7 @@ import numpy as np
 import os
 import shutil
 from glob import glob
-import pdb
+import sys
 
 from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email,info,slurm as slrm
@@ -255,8 +255,10 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
         dbexpinfo = db.query('exposure',where="mjd=%d and observatory='%s'" % (m,observatory))
         # No exposures for this night
         if len(expinfo1)==0 and len(dbexpinfo)==0:
-            logger.info('No exposures for MJD='+str(m))
+            logger.info('MJD={:}  {:3d} exposures'.format(m,0))
             continue
+        if len(expinfo1)>0 and verbose:
+            logger.info('MJD={:}  {:3d} exposures'.format(m,len(expinfo1)))
         # Crossmatch the two catalogs
         if len(expinfo1)>0 and len(dbexpinfo)>0:
             vals,ind1,ind2 = np.intersect1d(expinfo1['num'],dbexpinfo['num'],return_indices=True)
@@ -690,10 +692,10 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,dbload=True,logger=None):
             if chinfo['okay'][0]:
                 fiberdata = Table.read(chfiles[0],11)
             else:
-                logger.info('Cannot get fiber data from '+chfiles[0])
-                logger.info('info: okay ',chinfo['okay'][0])
-                logger.info('info: exists ',chinfo['exists'][0])
-                logger.info('info: size ',chinfo['size'][0])                
+                logger.info('Cannot get fiber data from '+str(chfiles[0]))
+                logger.info('info: okay '+str(chinfo['okay'][0]))
+                logger.info('info: exists '+str(chinfo['exists'][0]))
+                logger.info('info: size '+str(chinfo['size'][0]))
                 fiberdata = None
         else:
             fiberdata = None
@@ -948,9 +950,14 @@ def check_rv(visits,pbskey,verbose=False,logger=None):
         starfile = stardir+'/'+starbase+'.fits'
         # Get nvisits for this star
         starvisits = db.query('visit',cols='*',where="apogee_id='"+visit['apogee_id']+"' and "+\
-                              "telescope='"+telescope+"' and apred_vers='"+apred_vers+"'")
+                              "telescope='"+telescope+"' and apred_vers='"+apred_vers+"'",fmt='table')
         chkrv['apogee_id'][i] = visit['apogee_id']
-        chkrv['healpix'][i] = apload.obj2healpix(visit['apogee_id'])
+        if 'healpix' in visit.dtype.names:
+            chkrv['healpix'][i] = visit['healpix']
+        elif 'ra_sdss_id' in visit.dtype.names and 'dec_sdss_id' in visit.dtype.names:
+            ckrv['healpix'][i] = apload.coords2healpix(visit['ra_sdss_id'][0],visit['dec_sdss_id'][0])
+        else:
+            chkrv['healpix'][i] = apload.obj2healpix(visit['apogee_id'])
         chkrv['nvisits'][i] = len(starvisits)
         chkrv['file'][i] = starfile
         if os.path.exists(starfile):
@@ -992,12 +999,15 @@ def create_sumfiles_mjd(apred,telescope,mjd5,logger=None):
     # for visit except that we'll get the multiple visit rows returned for each unique star row
     #   Get more info by joining with the visit table.
     vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
-             'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+             'field', 'programname', 'healpix', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
              'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
-             'apogee_target4', 'catalogid', 'sdss_id', 'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
+             'apogee_target4', 'catalogid', 'sdss_id', 'ra_sdss_id', 'dec_sdss_id', 'sdss5_target_pks',
+             'brightneicount', 'brightneiflag', 'brightneifluxfrac',
+             'sdss5_target_catalogids', 'sdss5_target_carton_pks', 'sdss5_target_cartons', 'sdss5_target_flagshex',
+             'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
              'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
              'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
-             'starflags','dateobs','jd']
+             'starflags','dateobs','jd','exptime']
     rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'n_components', 'rv_components']
 
@@ -1086,16 +1096,18 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
     #   Get more info by joining with the visit table.
     vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
-             'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+             'field', 'programname', 'healpix', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
              'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
-             'apogee_target4', 'catalogid', 'sdss_id', 'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
+             'apogee_target4', 'catalogid', 'sdss_id', 'ra_sdss_id', 'dec_sdss_id', 'sdss5_target_pks',
+             'sdss5_target_catalogids', 'sdss5_target_carton_pks', 'sdss5_target_cartons', 'sdss5_target_flagshex',
+             'brightneicount', 'brightneiflag', 'brightneifluxfrac',
+             'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
              'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
              'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
-             'starflags','dateobs','jd']
+             'starflags','dateobs','jd','exptime']
     rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'n_components', 'rv_components']
     
-
 
     # Straight join query of visit and rv_visit
     cols = np.hstack(('v.'+np.char.array(vcols),'rv.'+np.char.array(rvcols)))
@@ -1142,6 +1154,143 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     if mjd5 is not None:
         create_sumfiles_mjd(apred,telescope,mjd5,logger=logger)
 
+def create_sumfiles_carton(apred,telescope,carton,logger=None):
+    """
+    Create allVisit/allStar files and summary of objects
+    for a particular carton
+    """
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+
+    # Start db session
+    db = apogeedb.DBSession()
+
+    # USE STAR_LATEST AND VISIT_LATEST "VIEWS" IN THE FUTURE!
+
+    # Full allVisit and allStar files
+    #  apogee_id+apred_vers+telescope+starver uniquely identifies a particular star row
+    #  For each apogee_id+apred_vers+telescope we want the maximum starver
+    #  The subquery does this for us by grouping by apogee_id+apred_vers+telescope and
+    #    calculating the aggregate value MAX(starver).
+    #  We then select the particular row (with all columns) using apogee_id+apred_vers+telescope+starver
+    #    from this subquery.
+    #allstar = db.query(sql="select * from apogee_drp.star where (apogee_id, apred_vers, telescope, starver) in "+\
+    #                   "(select apogee_id, apred_vers, telescope, max(starver) from apogee_drp.star where "+\
+    #                   "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
+    # Using STAR_LATEST seems much faster
+    #allstar = db.query('star_latest',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+
+    sql = """select * from apogee_drp.star as s
+             join targetdb.target as t
+             on s.catalogid=t.catalogid
+             join targetdb.carton_to_target as ct
+             on t.pk=ct.target_pk
+             join targetdb.carton
+             on ct.carton_pk=carton.pk
+             where """
+    sql += "s.apred_vers='"+apred+"'"
+    sql += " and s.telescope='"+telescope+"'"
+    if type(carton) is int:
+        sql += " and carton.carton_pk="+int(carton)
+    else:
+        sql += " and carton.carton='"+carton+"'"        
+    vstar = db.query(sql=sql)
+    
+    # Deal with multiple STARVER versions per star
+    star_index = dln.create_index(vstar['apogee_id'])
+    ndups = np.sum(star_index['num']>1)
+    if ndups>0:
+        allstar = np.zeros(len(star_index['value']),dtype=vstar.dtype)
+        for i,obj in enumerate(star_index['value']):
+            if star_index['num'][i]>1:
+                ind = star_index['index'][star_index['lo'][i]]
+                allstar[i] = vstar[ind]
+            else:
+                ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
+                starver = vstar['starver'][ind]
+                si = np.argsort(starver)
+                useind = ind[si[-1]]   # use last/largest STARVER
+                allstar[i] = vstar[useind]
+    else:
+        allstar = vstar
+        
+    allstarfile = load.filename('allStar')
+    if type(carton) is int:
+        carton_name = db.query(sql='select carton from targetdb.carton where pk='+str(carton))
+        carton_name = carton_name[0][0]
+    else:
+        allstarfile = allstarfile.replace('.fits','-'+carton+'.fits')
+    logger.info('Writing allStar file to '+allstarfile)
+    logger.info(str(len(allstar))+' stars')
+    if os.path.exists(os.path.dirname(allstarfile))==False:
+        os.makedirs(os.path.dirname(allstarfile))
+    allstar = Table(allstar)
+    if 'nres' in allstar.colnames:
+        del allstar['nres']    # temporary kludge, nres is causing write problems
+    allstar.write(allstarfile,overwrite=True)
+
+    return
+
+    
+    # allVisit
+    # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
+    #   Get more info by joining with the visit table.
+    vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
+             'field', 'programname', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+             'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
+             'apogee_target4', 'catalogid', 'sdss_id', 'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
+             'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
+             'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
+             'starflags','dateobs','jd','exptime']
+    rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
+              'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'n_components', 'rv_components']
+    
+    # Straight join query of visit and rv_visit
+    cols = np.hstack(('v.'+np.char.array(vcols),'rv.'+np.char.array(rvcols)))
+    sql = 'select '+','.join(cols)+' from apogee_drp.visit as v LEFT JOIN apogee_drp.rv_visit as rv ON rv.visit_pk=v.pk'
+    sql += " where v.apred_vers='"+apred+"' and v.telescope='"+telescope+"'"
+    allvisit = db.query(sql=sql)
+
+    # Fix bad STARVER values
+    bdstarver, = np.where(np.char.array(allvisit['starver']) == '')
+    if len(bdstarver)>0:
+        allvisit['starver'][bdstarver] = allvisit['mjd'][bdstarver]
+    # Check for duplicate STARVER for each star
+    idindex = dln.create_index(allvisit['apogee_id'])
+    duplicate = np.zeros(len(allvisit),bool)
+    for i in range(len(idindex['value'])):
+        ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
+        allv = allvisit[ind]
+        if np.min(allv['starver'].astype(int)) != np.max(allv['starver'].astype(int)):
+            # Only keep rows for the maximum STARVER per star
+            maxstarver = np.max(allv['starver'].astype(int))
+            bd1, = np.where(allv['starver'].astype(int) != maxstarver)
+            duplicate[ind[bd1]] = True
+    torem, = np.where(duplicate==True)
+    if len(torem)>0:
+        allvisit = np.delete(allvisit,torem)
+
+    # Match with allstar to pull the carton apogee_id values
+        
+    # Use visit_latest, this can sometimes take forever
+    #cols = ','.join(vcols+rvcols)        
+    #allvisit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    # rv_components can sometimes be an object type
+    if allvisit.dtype['rv_components'] == np.object:
+        allvisit = Table(allvisit)
+        allvisit['rv_components'] = np.zeros(len(allvisit),dtype=np.dtype((np.float32,3)))
+    allvisitfile = load.filename('allVisit')#.replace('.fits','-'+telescope+'.fits')
+    logger.info('Writing allVisit file to '+allvisitfile)
+    logger.info(str(len(allvisit))+' visits')
+    if os.path.exists(os.path.dirname(allvisitfile))==False:
+        os.makedirs(os.path.dirname(allvisitfile))
+    Table(allvisit).write(allvisitfile,overwrite=True)
+
+    db.close()
+        
 def mkvers(apred,logger=None):
     """
     Setup APOGEE DRP directory structure.
@@ -1214,7 +1363,8 @@ def mkvers(apred,logger=None):
             else:
                 logger.info(apogee_redux+apred+'/'+d+'/'+obs+'/cron already exists')            
     # Cal subdirectories
-    for d in ['bpm','darkcorr','detector','flatcorr','flux','fpi','html','littrow','lsf','persist','plans','psf','qa','telluric','trace','wave']:
+    for d in ['bpm','dark','detector','flat','flux','fpi','html','littrow','lsf',
+              'persist','plans','psf','qa','telluric','trace','wave']:
         for obs in ['apogee-n','apogee-s']:
             if os.path.exists(apogee_redux+apred+'/cal/'+obs+'/'+d)==False:
                 logger.info('Creating '+apogee_redux+apred+'/cal/'+obs+'/'+d)
@@ -1296,7 +1446,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     if linkvers:
         logger.info('Creating calibration product symlinks to version >>'+str(linkvers)+'<<')
         cwd = os.path.abspath(os.curdir)
-        for d in ['bpm','darkcorr','detector','flatcorr','littrow','lsf','persist','sparse','fiber','modelpsf','fpi']:
+        for d in ['bpm','dark','detector','flat','littrow','lsf',
+                  'persist','sparse','fiber','modelpsf','fpi']:
             for obs in ['apogee-n','apogee-s']:
                 prefix = {'apogee-n':'ap','apogee-s':'as'}[obs]
                 srcdir = apogee_redux+linkvers+'/cal/'+obs+'/'+d
@@ -1332,7 +1483,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                             dtrcdir = apogee_redux+apred+'/cal/'+obs+'/trace'                            
                             subprocess.run(['ln -s '+trcdir+'/'+prefix+'ETrace-?-'+num+'.fits '+dtrcdir],shell=True)
                 # Darks and Flats
-                elif d=='darkcorr' or d=='flatcorr':
+                elif d=='dark' or d=='flat':
                     darkfiles = glob(srcdir+'/*.fits')
                     if len(darkfiles)>0:
                         subprocess.run(['ln -s '+srcdir+'/*.fits .'],shell=True)
@@ -1552,7 +1703,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             key,jobid = slrm.submit(tasks,label='mkdet',verbose=True,logger=logger,**slurmpars1)
             slrm.queue_wait('mkdet',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Detector',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Detector',logfiles,key,apred,
+                                          telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1581,7 +1733,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         slurmpars1['cpus'] = 4
         slurmpars1['memory'] = 55000  # in MB
         logger.info('Slurm settings: '+str(slurmpars1))
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(darkdict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(darkdict),bool)
@@ -1620,10 +1773,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Dark files to run')        
-            key,jobid = slrm.submit(tasks,label='mkdark',verbose=True,logger=logger,**slurmpars1)
-            slrm.queue_wait('mkdark',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='mkdark',verbose=True,
+                                    logger=logger,**slurmpars1)
+            slrm.queue_wait('mkdark',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Dark',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Dark',logfiles,key,apred,
+                                          telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1652,7 +1808,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if flatdict is None or len(flatdict)==0:
             flatdict = []
             logger.info('No master Flat calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(flatdict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(flatdict),bool)
@@ -1694,7 +1851,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars)
             slrm.queue_wait('mkflat',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,
+                                          telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1719,7 +1877,14 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if bpmdict is None or len(bpmdict)==0:
             bpmdict = []
             logger.info('No master BPM calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        # Give each job LOTS of memory
+        slurmpars1 = slurmpars.copy()
+        slurmpars1['nodes'] = np.minimum(slurmpars1['nodes'],2)
+        slurmpars1['cpus'] = 4
+        slurmpars1['memory'] = 55000  # in MB
+        logger.info('Slurm settings: '+str(slurmpars1))
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)]
         tasks = np.zeros(len(bpmdict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(bpmdict),bool)
@@ -1758,10 +1923,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' BPM files to run')        
-            key,jobid = slrm.submit(tasks,label='mkbpm',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mkbpm',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='mkbpm',verbose=True,
+                                    logger=logger,**slurmpars1)
+            slrm.queue_wait('mkbpm',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'BPM',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'BPM',logfiles,key,apred,
+                                          telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1782,7 +1950,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if sparsedict is None or len(sparsedict)==0:
             sparsedict = []
             logger.info('No master Sparse calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(sparsedict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(sparsedict),bool)
@@ -1821,10 +1990,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Sparse files to run')        
-            key,jobid = slrm.submit(tasks,label='mksparse',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mksparse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='mksparse',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mksparse',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Sparse',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Sparse',logfiles,key,
+                                          apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1846,7 +2018,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if littdict is None or len(littdict)==0:
             littdict = []
             logger.info('No master Littrow calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(littdict),dtype=np.dtype(dt))
         tasks = Table(tasks)        
         docal = np.zeros(len(littdict),bool)
@@ -1885,10 +2058,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Littrow files to run')        
-            key,jobid = slrm.submit(tasks,label='mklittrow',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mklittrow',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
-            # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Littrow',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            key,jobid = slrm.submit(tasks,label='mklittrow',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mklittrow',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(tasks['name'],'Littrow',logfiles,key,
+                                          apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1909,7 +2085,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if responsedict is None or len(responsedict)==0:
             responsedict = []
             logger.info('No master Response calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(responsedict),dtype=np.dtype(dt))
         tasks = Table(tasks)        
         docal = np.zeros(len(responsedict),bool)
@@ -1948,10 +2125,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Response files to run')        
-            key,jobid = slrm.submit(tasks,label='mkresponse',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mkresponse',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='mkresponse',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mkresponse',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Response',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            chkmaster1 = check_mastercals(tasks['name'],'Response',logfiles,key,
+                                          apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -1972,7 +2152,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if modelpsfdict is None or len(modelpsfdict)==0:
             modelpsfdict = []
             logger.info('No master PSF Model calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(modelpsfdict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(modelpsfdict),bool)    
@@ -2011,10 +2192,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' PSFModel files to run')        
-            key,jobid = slrm.submit(tasks,label='mkpsfmodel',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mkpsfmodel',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
-            # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'PSFModel',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            key,jobid = slrm.submit(tasks,label='mkpsfmodel',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mkpsfmodel',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(tasks['name'],'PSFModel',logfiles,key,
+                                          apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -2044,14 +2228,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if multiwavedict is None or len(multiwavedict)==0:
             multiwavedict = []
             logger.info('No master multiwave calibration files to make')
-
         # Which multiwave and individual wave still need to be made
         multiwave_names = []
         wave_names = []
         for i in range(len(multiwavedict)):
             name = multiwavedict['name'][i]
             if np.sum((mjds >= multiwavedict['mjd1'][i]) & (mjds <= multiwavedict['mjd2'][i])) > 0:
-                if load.exists('Wave',num=multiwavedict['name'][i])==False:
+                if clobber or load.exists('Wave',num=multiwavedict['name'][i])==False:
                     multiwave_names.append(name)
                     wnames = multiwavedict['frames'][i].split(',')
                     wave_names += wnames
@@ -2080,12 +2263,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 psfid = qtzinfo['num'][bestind]
                 psf_names.append(psfid)
         psf_names = list(np.unique(psf_names))
-        psf_names = [n for n in psf_names if load.exists('PSF',num=n)==False]
+        psf_names = [n for n in psf_names if clobber or load.exists('PSF',num=n)==False]
         logger.info(str(len(psf_names))+' apPSF files need to be made')
 
         # Create the apPSF files so we can extract the individual wave files
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),
-              ('dir',str,1000),('num',int),('mjd',int),('observatory',str,10),
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000),('num',int),
+              ('mjd',int),('observatory',str,10),
               ('configid',str,50),('designid',str,50),('fieldid',str,50)]
         # num, mjd, observatory, configid, designid, fieldid        
         tasks = np.zeros(len(psf_names),dtype=np.dtype(dt))
@@ -2108,7 +2292,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                if load.exists('PSF',num=name):
+                if clobber or load.exists('PSF',num=name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
@@ -2132,8 +2316,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' PSF files to run')
-            key,jobid = slrm.submit(tasks,label='makecal-psf',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('makecal-psf',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='makecal-psf',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('makecal-psf',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if it ran okay and puts the status in the database
             #  'tasks' doubles as 'expinfo' for check_calib()
             chkcal = check_calib(tasks,logfiles,key,apred,verbose=True,logger=logger)
@@ -2144,8 +2330,9 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logger.info('No individual PSF calibration files need to be run')
             
         # Creating individual wave files to the multiwave calibration files
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),
-              ('dir',str,1000),('num',int),('mjd',int),('observatory',str,10),
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000),('num',int),
+              ('mjd',int),('observatory',str,10),
               ('configid',str,50),('designid',str,50),('fieldid',str,50)]
         # num, mjd, observatory, configid, designid, fieldid        
         tasks = np.zeros(len(wave_names),dtype=np.dtype(dt))
@@ -2205,8 +2392,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' wave files to run')
-            key,jobid = slrm.submit(tasks,label='makecal-wave',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('makecal-wave',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
+            key,jobid = slrm.submit(tasks,label='makecal-wave',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('makecal-wave',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
             # This should check if it ran okay and puts the status in the database
             #  'tasks' doubles as 'expinfo' for check_calib()
             chkcal = check_calib(tasks,logfiles,key,apred,verbose=True,logger=logger)
@@ -2217,7 +2406,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logger.info('No individual wave calibration files need to be run')        
 
         # Creating the multiwave calibration files
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)]
         tasks = np.zeros(len(multiwave_names),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(multiwave_names),bool)    
@@ -2255,10 +2445,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' multiwave files to run')        
-            key,jobid = slrm.submit(tasks,label='mkmultiwave',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mkmultiwave',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
-            # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'Wave',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            key,jobid = slrm.submit(tasks,label='mkmultiwave',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mkmultiwave',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(tasks['name'],'Wave',logfiles,key,apred,
+                                          telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -2279,7 +2472,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if lsfdict is None or len(lsfdict)==0:
             lsfdict = []
             logger.info('No master LSF calibration files to make')
-        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)] 
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(lsfdict),dtype=np.dtype(dt))
         tasks = Table(tasks)
         docal = np.zeros(len(lsfdict),bool)
@@ -2318,10 +2512,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' LSF files to run')        
-            key,jobid = slrm.submit(tasks,label='mklsf',verbose=True,logger=logger,**slurmpars)
-            slrm.queue_wait('mklsf',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
-            # This should check if the ran okay and puts the status in the database            
-            chkmaster1 = check_mastercals(tasks['name'],'LSF',logfiles,key,apred,telescope,verbose=True,logger=logger)
+            key,jobid = slrm.submit(tasks,label='mklsf',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mklsf',key,jobid,sleeptime=60,verbose=True,
+                            logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database
+            chkmaster1 = check_mastercals(tasks['name'],'LSF',logfiles,key,
+                                          apred,telescope,verbose=True,logger=logger)
             if chkmaster is None:
                 chkmaster = chkmaster1
             else:
@@ -2399,7 +2596,8 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
-        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                                ('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
         #queue = pbsqueue(verbose=True)
         #queue.create(label='ap3d', **slurmpars1)
@@ -2781,7 +2979,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     slurmpars1['cpus'] = ntorun
                 slurmpars1['numpy_num_threads'] = 2
                 logger.info('Slurm settings: '+str(slurmpars1))
-                tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+                tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                                        ('errfile',str,1000),('dir',str,1000)]))
                 tasks = Table(tasks)
                 for j in range(ntorun):
                     num1 = calinfo['num'][torun[j]]
@@ -2902,9 +3101,9 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
             planfiles1 = mkplan.run_mjd5_yaml(mjd5planfile,clobber=clobber,logger=logger)
             nplanfiles1 = len(planfiles1)
         except:
-            traceback.print_exc()
+            logger.exception('Error making plan files')
             nplanfiles1 = 0
-
+            
         logger.info('Writing list of plan files to '+logdir+str(m)+'.plans')
         if nplanfiles1>0:
             dbload_plans(planfiles1)  # load plans into db
@@ -3063,7 +3262,8 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
-        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                                ('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
         #queue = pbsqueue(verbose=True)
         #queue.create(label='apred', **slurmpars1)
@@ -3168,7 +3368,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     if len(allvisit)==0:
         logger.info('No visits found for MJDs')
         return None
-
+    
     # Remove rows with missing or blank apogee_ids
     apidlen = np.array([len(v['apogee_id']) for v in allvisit])   # 2M name should have 18 characters
     bd, = np.where((allvisit['apogee_id']=='') | (allvisit['apogee_id']=='None') | (allvisit['apogee_id']=='none') |
@@ -3186,7 +3386,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
         logger.info('No visits found for MJDs')
         return None
     visits = allvisit[ind]
-
+    
     # Make table for all the stars we are interested in
     apogee_id = np.unique(visits['apogee_id'])             # get the IDs of the stars for the input MJDs
     star_index = dln.create_index(allvisit['apogee_id'])    # visit index for all stars
@@ -3245,7 +3445,8 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             slurmpars1['cpus'] = ntorun
         slurmpars1['numpy_num_threads'] = 2
         logger.info('Slurm settings: '+str(slurmpars1))
-        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = np.zeros(ntorun,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                                ('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
         for i in range(ntorun):
             obj = vcat['apogee_id'][torun[i]]
@@ -3374,7 +3575,8 @@ def rununified(load,mjds,slurmpars,clobber=False,logger=None):
         slurmpars1['cpus'] = len(mjds)
     slurmpars1['numpy_num_threads'] = 2    
     logger.info('Slurm settings: '+str(slurmpars1))
-    tasks = np.zeros(len(mjds),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+    tasks = np.zeros(len(mjds),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                               ('errfile',str,1000),('dir',str,1000)]))
     tasks = Table(tasks)
     #queue = pbsqueue(verbose=True)
     #queue.create(label='unidir', **slurmpars1)
@@ -3458,7 +3660,8 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
             slurmpars1['cpus'] = nplans
         slurmpars1['numpy_num_threads'] = 2    
         logger.info('Slurm settings: '+str(slurmpars1))
-        tasks = np.zeros(len(planfiles),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = np.zeros(len(planfiles),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                                        ('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
         for i,pf in enumerate(planfiles):
             logger.info('planfile %d : %s' % (i+1,pf))
@@ -3474,6 +3677,8 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
             cmd = 'apqa {0} {1} --apred {2} --telescope {3} --plate {4}'.format(mjd,observatory,apred,telescope,plate)
             #cmd += ' --masterqa False --starhtml False --starplots False --nightqa False --monitor False'
             cmd += ' --masterqa False --starhtml True --starplots True --nightqa False --monitor False'
+            if clobber:
+                cmd += ' --clobber'
             logger.info('Command : '+cmd)
             logger.info('Logfile : '+logfile)
             tasks['cmd'][i] = cmd
@@ -3501,13 +3706,15 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
                     all_ims = expinfo['num'][calind]
                     all_types = np.full(len(all_ims), 'cal')
                     all_types[expinfo['exptype'][calind]=='FPI'] = 'fpi'
-                    qa.makeCalFits(load=load, ims=all_ims, types=all_types, mjd=str(m), instrument=instrument, clobber=clobber)
+                    qa.makeCalFits(load=load, ims=all_ims, types=all_types, mjd=str(m),
+                                   instrument=instrument, clobber=clobber)
                 # makeDarkFits
                 darkind, = np.where(expinfo['exptype']=='DARK')
                 if len(darkind)>0:
                     all_ims = expinfo['num'][darkind]
                     qa.makeDarkFits(load=load, ims=all_ims, mjd=str(m), clobber=clobber)
-                qa.makeExpFits(instrument=instrument, apodir=apodir, apred=apred, load=load, mjd=str(m), clobber=clobber)
+                qa.makeExpFits(instrument=instrument, apodir=apodir, apred=apred,
+                               load=load, mjd=str(m), clobber=clobber)
         except:
             traceback.print_exc()    
     # Make final mjd/fields pages
@@ -3697,7 +3904,6 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     nsteps = len(steps)
 
     # Slurm settings
-    #alloc = 'sdss-np'
     if alloc == 'sdss-kp':
         shared = False
         ppn = 16
@@ -3775,8 +3981,8 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('1) Setting up the directory structure')
         rootLogger.info('=====================================')
         rootLogger.info('')
-
-        tasks = np.zeros(1,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),('errfile',str,1000),('dir',str,1000)]))
+        tasks = np.zeros(1,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                           ('errfile',str,1000),('dir',str,1000)]))
         tasks = Table(tasks)
         cmd = 'mkvers {0}'.format(apred)        
         mkvoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkvers.'+logtime+'.log'
@@ -3789,7 +3995,8 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         tasks['outfile'][0] = mkvoutfile
         tasks['errfile'][0] = mkverrfile
         tasks['dir'][0] = os.path.dirname(mkvoutfile)
-        slurmpars1 = {'nodes':1, 'alloc':alloc, 'cpus':1, 'shared':shared, 'walltime':walltime, 'notification':False}
+        slurmpars1 = slurmpars.copy()
+        slurmpars1['nodes'] = 1
         key,jobid = slrm.submit(tasks,label='mkvers',verbose=True,logger=rootLogger,**slurmpars1)
         slrm.queue_wait('mkvers',key,jobid,sleeptime=60,verbose=True,logger=rootLogger) # wait for jobs to complete 
 
@@ -3832,7 +4039,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('====================')
         rootLogger.info('')
         planfiles = makeplanfiles(load,mjds,**kws)
-
+        
     # 6) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
     if 'apred' in steps:
@@ -3842,7 +4049,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('================')
         rootLogger.info('')
         chkexp,chkvisit = runapred(load,mjds,**kws)
-        
+            
     # 7) Run "rv" on all unique stars
     #--------------------------------
     if 'rv' in steps:

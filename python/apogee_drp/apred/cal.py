@@ -217,13 +217,13 @@ def flatplot(apred='r14',telescope='apo25m'):
         inst='apogee-s'
 
     # get flat frames
-    load=apload.ApLoad(apred=apred,telescope=telescope)
-    flatdir=os.path.dirname(load.filename('Flat',chips='a',num=0))
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    flatdir = os.path.dirname(load.filename('Flat',chips='a',num=0))
     try: os.makedirs(flatdir)
     except: pass
-    files=np.sort(glob.glob(flatdir+'/'+prefix+'Flat-a-*.fits'))
+    files = np.sort(glob.glob(flatdir+'/'+prefix+'Flat-a-*.fits'))
 
-    ny=len(files)//2
+    ny = len(files)//2
     if ny==0: ny=1
     if ny%2 == 1 : ny+=1
     fig,ax=plots.multi(1,3,figsize=(8,12))
@@ -261,7 +261,9 @@ def flatplot(apred='r14',telescope='apo25m'):
         #imfig[ichip].suptitle('chip: {:s}'.format(chip))
         imfig[ichip].savefig('{:s}/plots/{:s}_{:s}_flatimage.png'.format(flatdir,inst,chip))
     fig.tight_layout()
-    out='{:s}/plots/{:s}_flathist.png'.format(flatdir,inst)
+    out = '{:s}/plots/{:s}_flathist.png'.format(flatdir,inst)
+    if os.path.exists(os.path.dirname(out))==False:
+        os.makedirs(os.path.dirname(out))
     fig.savefig(out)
     grid=[[os.path.basename(out)]]
     for ichip,chip in enumerate(chips) :

@@ -32,8 +32,8 @@
 ;-
 
 pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
-           modelpsf=modelpsf,fiberid=fiberid,clobber=clobber,$
-           nowait=nowait,nofit=nofit,unlock=unlock,psflibrary=psflibrary
+                modelpsf=modelpsf,fiberid=fiberid,clobber=clobber,$
+                nowait=nowait,nofit=nofit,unlock=unlock,psflibrary=psflibrary
 
   name = strtrim(mjd,2)
   dirs = getdir(apodir,caldir,spectrodir,vers)

@@ -22,7 +22,7 @@ import traceback
 import tempfile
 import shutil
 
-from pydl.pydlutils import yanny
+from . import yanny
 
 
 def zip(files,delete=True,verbose=True):
@@ -467,9 +467,9 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
 
     # Final output filename
     if fitsdir is not None:
-        finalfile = fitsdir+base+'.fits'
+        finalfile = os.path.join(fitsdir,base+'.fits')
     else:
-        finalfile = fdir+base+'.fits'
+        finalfile = os.path.join(fdir,base+'.fits')
 
     # if another process is working already on this file, wait until done,
     #    then return

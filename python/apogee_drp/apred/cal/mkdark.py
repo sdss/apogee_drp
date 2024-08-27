@@ -11,11 +11,18 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
 
     Parameters
     ----------
-    ims: list of image numbers to include in superdark
-    cmjd=cmjd : (optional,obsolete) gives MJD directory name if not encoded in file number
-    step=step : (optional,obsolete) process every step image in UTR
-    psfid=psfid : (optional) EPSF id to use to try to subtract off thermal traces
-    /unlock : delete lock file and start fresh 
+    ims : list
+       List of image numbers to include in superdark
+    cmjd : str, optional, obsolete
+       Gives MJD directory name if not encoded in file number
+    step : int, optional, obsolete
+       Process every step image in UTR.
+    psfid : int, optional
+       EPSF id to use to try to subtract off thermal traces.
+    clobber : bool, optional
+       Overwrite any existing files.  Default is False.
+    unlock : bool, optional
+       Delete lock file and start fresh.  Default is False.
 
     Returns
     -------
@@ -28,10 +35,12 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
 
     By J. Holtzman, 2011??
     Updates, added doc strings, and cleanup by D. Nidever, Sep 2020
+    Translated to Python, D. Nidever 2024
     """
-    
-    i1 = ims[0]
-    nframes = len(ims)
+
+    images = np.atleast_1d(ims)
+    i1 = images[0]
+    nframes = len(images)
     chips = ['a', 'b', 'c']
     
     #dirs = getdir()
@@ -81,7 +90,8 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
             print('{:d}/{:d} {:s} {:s}'.format(j,len(ims),chip,im))
 
             # Process (bias-only) each individual frame
-            d = process.process(cm, im, chip, head, r, step=step, nofs=True, nofix=True, nocr=True)
+            d = ap3d.ap3dproc(im)
+            #d = process.process(cm, im, chip, head, r, step=step, nofs=True, nofix=True, nocr=True)
             print('Done process')
             if d.shape[0] != 2048:
                 raise Exception('Not 2048')
@@ -238,16 +248,28 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
         head['HISTORY'] = leadstr+'Python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
         # add reduction pipeline version to the header
         head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+load.apred
-        MWRFITS(0, os.path.join(darkdir, file + '.fits'), head0, create=True)
-        MKHDR(head1, dark)
-        sxaddpar(head1, 'EXTNAME', 'DARK')
-        MWRFITS(dark, os.path.join(darkdir, file + '.fits'), head1)
-        MKHDR(head2, chi2)
-        sxaddpar(head2, 'EXTNAME', 'CHI-SQUARED')
-        MWRFITS(chi2, os.path.join(darkdir, file + '.fits'), head2)
-        MKHDR(head3, mask)
-        sxaddpar(head3, 'EXTNAME', 'MASK')
-        MWRFITS(mask, os.path.join(darkdir, file + '.fits'), head3)
+
+        hdulist = fits.HDUList()
+        hdulist.append(fits.PrimaryHDU(header=head0))
+        hdulist.append(fits.PrimaryHDU(dark))
+        hdulist[1].header['EXTNAME'] = 'DARK'
+        hdulist.append(fits.ImageHDU(chi2))
+        hdulist[2].header['EXTNAME'] = 'CHI-SQUARED'
+        hdulist.append(fits.ImageHDU(mask))
+        hdulist[3].header['EXTNAME'] = 'MASK'
+        outfile = os.path.join(darkdir, file + '.fits')
+        hdulist.writeto(outfile,overwrite=True)
+        
+        #MWRFITS(0, os.path.join(darkdir, file + '.fits'), head0, create=True)
+        #MKHDR(head1, dark)
+        #sxaddpar(head1, 'EXTNAME', 'DARK')
+        #MWRFITS(dark, os.path.join(darkdir, file + '.fits'), head1)
+        #MKHDR(head2, chi2)
+        #sxaddpar(head2, 'EXTNAME', 'CHI-SQUARED')
+        #MWRFITS(chi2, os.path.join(darkdir, file + '.fits'), head2)
+        #MKHDR(head3, mask)
+        #sxaddpar(head3, 'EXTNAME', 'MASK')
+        #MWRFITS(mask, os.path.join(darkdir, file + '.fits'), head3)
 
         # Make some plots/images
         if not os.path.exists(os.path.join(darkdir, 'plots')):
@@ -268,7 +290,8 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
 
         # Save the rate file
         outfile = load.prefix + 'DarkRate-{:s}-{:08d}'.format(chip,i1)
-        MWRFITS(rate, darkdir+outfile+'.fits', create=True)
+        fits.writeto(darkdir+outfile+'.fits',rate,overwrite=True)
+        #MWRFITS(rate, darkdir+outfile+'.fits', create=True)
 
         dark = 0
         time = time.time()
@@ -278,7 +301,8 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
 
     # Write the summary log information
     outfile = prefix + 'Dark-{:08d}'.format(i1)
-    MWRFITS(darklog, darkdir+outfile + '.tab', create=True)
+    fits.writeto(darkdir+outfile + '.tab',darklog,overwriteTrue)
+    #MWRFITS(darklog, darkdir+outfile + '.tab', create=True)
 
     # Remove lock file
     lock.lock(darkfile, clear=True)

@@ -10,6 +10,115 @@ from sdss_access.path import path
 from astropy.io import fits
 from . import bitmask as bmask
 
+def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None,
+                    logger=None,verbose=True):
+    """
+    Construct the plugmap filename using plate and mjd.
+    Works for both plate and FPS data.
+    Should this be in apload???
+
+    Parameters
+    ----------
+    plate : int
+       ID for the desired plate.  For the FPS era, this is the configid.
+    mjd : int
+       MJD for the plugmap information.
+    instrument : str
+       APOGEE instrument name: 'apogee-n' or 'apogee-s'.
+    plugid : str, optional
+       Name of plugmap file.
+    mapa : bool, optional
+       Use "plPlugMapA" file, otherwise "plPlugMapM".
+    mapper_data : str, optional
+       Directory for mapper information (optional).  If not input, this will
+         be obtained from the environmental variables MAPPER_DATA_N/S.
+    logger : logging object, optional
+       Logging object used for logging output.
+    verbose : bool, optional
+       Verbose output to the screen.  Default is True.
+
+    Returns
+    -------
+    plugfile : str
+       Full path to plugmap filename.
+
+    Examples
+    --------
+
+    plugfile = plugmapfilename(15073,59190,'apogee-n')
+
+    """
+
+    if logger is None:
+        logger = dln.basiclogger()
+    
+    # Plates or FPS
+    fps = False  # default
+    if mjd>=59556:
+        fps = True
+
+    if instrument=='apogee-n':
+        telescope = 'apo25m'
+        datadir = os.environ['APOGEE_DATA_N']
+        if mapper_data is None:
+            mapper_data = os.environ['MAPPER_DATA_N']
+    elif instrument=='apogee-s':
+        telescope = 'lco25m'
+        datadir = os.environ['APOGEE_DATA_S']
+        if mapper_data is None:
+            mapper_data = os.environ['MAPPER_DATA_S']
+    else:
+        raise ValueError('no instrument '+str(instrument))
+            
+    # SDSS-V FPS configuration files
+    #-------------------------------
+    if fps:
+        aload = apload.ApLoad(apred='daily',telescope=telescope)
+        plugmapfile = aload.filename('confSummary',configid=plate)
+        plugdir = os.path.dirname(plugmapfile)+'/'
+        plugfile = os.path.basename(plugmapfile)
+
+    # SDSS-III/IV/V Plate plugmap files
+    #----------------------------------
+    else:
+        # Do we want to use a plPlugMapA file with the matching already done?
+        havematch = 0
+        if mapa==True:
+            root = 'plPlugMapA'
+        else:
+            root = 'plPlugMapM'
+        if plugid is not None:
+            base,ext = os.path.splitext(os.path.basename(plugid))
+            if base.find('plPlug')>-1:
+                tplugid = base[11:]
+            else:
+                tplugid = base
+            plugfile = root+'-'+tplugid+'.par'
+        else:
+            #tplugid = root+'-'+str(plate)
+            #plugfile = tplugid+'.par'            
+            tplugid = str(plate)+'-'+str(mjd)+'-01'
+            plugfile = root+'-'+tplugid+'.par'
+        if mapa==True:
+            plugdir = os.path.join(datadir,str(mjd))
+        else:
+            plugmjd = tplugid.split('-')[1]
+            plugdir = os.path.join(mapper_data,plugmjd)
+
+        # Rare cases where the plugmap exists in the data directory but NOT in the mapper directory
+        if os.path.exists(os.path.join(plugdir,plugfile))==False:
+            if os.path.exists(os.path.join(datadir,str(mjd),plugfile.replace('MapM','MapA')))==True:
+                if verbose:
+                    logger.info('Cannot find plPlugMapM file in mapper directory.  Using plPlugMapA file in data directory instead.')
+                plugdir = os.path.join(datadir,str(mjd))
+                root = 'plPlugMapA'
+                plugfile = plugfile.replace('MapM','MapA')
+            else:
+                logger.info('Cannot find plugmap file for '+str(mjd)+' '+str(plugfile))
+                return ''
+
+    return os.path.join(plugdir,plugfile)
+
 def load(plugfile,verbose=False,fixfiberid=None):
     """
     This program loads an APOGEE plugmap file.

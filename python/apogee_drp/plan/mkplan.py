@@ -679,7 +679,8 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             if plate != 0:
                 logger.info('getting plate data')
                 plug = platedata.getdata(plate,mjd,plugid=plugid,noobject=True,mapper_data=mapper_data,
-                                         apred=apred,telescope=telescope,mapa=mapa,clobber=clobber)
+                                         apred=apred,telescope=telescope,mapa=mapa,clobber=clobber,
+                                         logger=logger)
                 loc = plug['locationid']
                 spectro_dir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
                 if os.path.exists(spectro_dir+'fields/'+telescope+'/'+str(loc))==False:
@@ -1183,6 +1184,10 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
             else:  # plates
                 objplan = {'apred':str(apred), 'telescope':str(load.telescope), 'mjd':int(mjd),
                            'plate':plate, 'psfid':psf1, 'fluxid':flux1, 'ims':exp, 'fps':fps}
+                if expinfo['designid'][i] != 'None':
+                    objplan['designid'] = str(expinfo['designid'][i])
+                if expinfo['fieldid'][i] != 'None':
+                    objplan['fieldid'] = str(expinfo['fieldid'][i])                
             if waveid:
                 objplan['waveid'] = str(waveid)
             out.append(objplan)

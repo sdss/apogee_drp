@@ -68,7 +68,8 @@ def mkdet(detid,apred='daily',telescope='apo25m',linid=None,
         lincorr[:, iquad] = [1.0, 0.0, 0.0]
 
     if linid is not None and linid > 0:
-        linpar = mklinearity.mklinearity(linid,apred=apred,telescope=telescope,unlock=unlock)
+        linpar = mklinearity.mklinearity(linid,apred=apred,
+                                         telescope=telescope,unlock=unlock)
         for iquad in range(4):
             lincorr[iquad, :] = linpar
 

@@ -18,9 +18,10 @@ from apogee_drp.apred import mkcal
 from apogee_drp.database import catalogdb,apogeedb
 from sdss_access.path import path
 from astropy.io import fits
-from astropy.table import Table,vstack
+from astropy.table import Table,vstack,hstack
 from astropy.coordinates import Angle
 from astropy import units as u
+import numpy.lib.recfunctions as rfn
 
 # filter the warnings
 
@@ -39,7 +40,6 @@ def coords2tmass(ra,dec):
     name += Angle(dec,unit=u.degree).to_string(unit=u.degree,sep='',pad=True,alwayssign=True,precision=1).replace('.','')[0:8]
 
     return name
-
 
 def save(filename,plug):
     """
@@ -140,7 +140,8 @@ def read(filename):
 
 def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=None,
             fixfiberid=False,noobject=False,skip=False,twilight=False,
-            badfiberid=None,mapper_data=None,starfiber=None,clobber=False):
+            badfiberid=None,mapper_data=None,starfiber=None,clobber=False,
+            logger=None):
     """
     Getdata loads up a structure with plate information and information about the 300 APOGEE fibers
     This is obtained from a plPlugMapA file or from a 
@@ -184,6 +185,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
        Don't load the plugmap information.  Default is False.
     clobber : bool, optional
        Overwrite any existing apPlateData file.  Default is False.
+    logger : logger, optional
+       Logging object.  If not is input, then a default one will be created.   
 
     Returns
     -------
@@ -197,9 +200,12 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
 
     By J. Holtzman, 2011?
     Doc updates by D. Nidever, Sep 2020
-
+    Many updates and fixed by D. Nidever, 2020-2024
     """
 
+    if logger is None:
+        logger = dln.basiclogger()
+    
     load = apload.ApLoad(apred=apred,telescope=telescope)
     if mapper_data is None:
         if load.instrument=='apogee-n':
@@ -207,7 +213,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         else:
             mapper_data = os.environ['MAPPER_DATA_S']
     # Data directory
-    datadir = {'apo25m':os.environ['APOGEE_DATA_N'],'apo1m':os.environ['APOGEE_DATA_N'],
+    datadir = {'apo25m':os.environ['APOGEE_DATA_N'],
+               'apo1m':os.environ['APOGEE_DATA_N'],
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
     observatory = {'apo25m':'apo','apo1m':'apo','lco25m':'lco'}[telescope]
 
@@ -215,7 +222,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     #  if yes, load it unless clobber is set
     # Use planfile name to construct PlateData filename
     if obj1m is not None:
-        planfile = load.filename('Plan',plate=plate,reduction=objid,mjd=mjd) 
+        planfile = load.filename('Plan',plate=plate,reduction=objid,mjd=mjd)
     else:
         if int(mjd)>=59556:  # FPS
             # get fieldid from confSummary file
@@ -223,34 +230,46 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             configlines = dln.readlines(configfile)
             cline = dln.grep(configlines,'field_id')
             fieldid = cline[0].split()[1]
-            planfile = load.filename('Plan',plate=plate,mjd=mjd,field=str(fieldid)) 
+            planfile = load.filename('Plan',plate=plate,mjd=mjd,
+                                     field=str(fieldid)) 
         else:
             planfile = load.filename('Plan',plate=plate,mjd=mjd)
     platedatafile = planfile.replace('Plan','PlateData').replace('.yaml','.fits')
     if os.path.exists(platedatafile) and clobber==False:
-        print('Reading platedata from '+platedatafile)
+        logger.info('Reading platedata from '+platedatafile)
         pdata = read(platedatafile)
-        fiber = Table(pdata['fiberdata'])  # make sure the fiberdata columns are lowercase
+        fiber = Table(pdata['fiberdata'])  # make sure columns are lowercase
         for c in fiber.colnames: fiber[c].name = c.lower()
         pdata['fiberdata'] = fiber
         return pdata
 
     
     # Create the output fiber structure
-    dtype = np.dtype([('fiberid',int),('ra',np.float64),('dec',np.float64),('eta',np.float64),('zeta',np.float64),
-                      ('objtype',str,10),('holetype',str,10),('object',str,30),('assigned',int),('on_target',int),
-                      ('valid',int),('tmass_style',str,30),('sdss_id',int),
-                      ('target1',int),('target2',int),('target3',int),('target4',int),
-                      ('spectrographid',int),('mag',float,5),('alt_id',str,30),('twomass_designation',str,30),
-                      ('jmag',float),('jerr',float),('hmag',float),('herr',float),('kmag',float),('kerr',float),
-                      ('phflag',str,50),('src_h',str,50),('pmra',float),('pmdec',float),('pm_src',str,50),
-                      ('catalogid',int),('sdssv_apogee_target0',int),('firstcarton',str,100),
+    dtype = np.dtype([('fiberid',int),('ra',np.float64),('dec',np.float64),
+                      ('raobs',float),('decobs',float),
+                      ('eta',np.float64),('zeta',np.float64),('objtype',str,10),
+                      ('holetype',str,10),('object',str,30),('assigned',int),
+                      ('on_target',int),('valid',int),('tmass_style',str,30),
+                      ('sdss_id',int),('ra_sdss_id',float),('dec_sdss_id',float),
+                      ('healpix',int),('target1',int),('target2',int),('target3',int),
+                      ('target4',int),('spectrographid',int),('mag',float,5),
+                      ('alt_id',str,30),('twomass_designation',str,30),('jmag',float),
+                      ('jerr',float),('hmag',float),('herr',float),('kmag',float),
+                      ('kerr',float),('phflag',str,50),('src_h',str,50),('pmra',float),
+                      ('pmdec',float),('pm_src',str,50),('sdss5_target_pks',str,1000),
+                      ('sdss5_target_catalogids',str,1000),('sdss5_target_carton_pks',str,1000),
+                      ('sdss5_target_cartons',str,1000),('sdss5_target_flagshex',str,150),
+                      ('brightneicount',np.int16),('brightneiflag',np.int16),
+                      ('brightneifluxfrac',np.float32),('catalogid',int),
+                      ('version_id',int),('sdssv_apogee_target0',int),('firstcarton',str,100),
                       ('cadence',str,100),('program',str,100),('category',str,100),
-                      ('gaia_g',float),('gaia_bp',float),('gaia_rp',float),
-                      ('gaia_release',str,10),('gaia_sourceid',str,25),('gaia_ra',float),('gaia_dec',float),
-                      ('gaia_plx',float),('gaia_plx_error',float),('gaia_pmra',float),('gaia_pmra_error',float),
-                      ('gaia_pmdec',float),('gaia_pmdec_error',float),('gaia_gmag',float),('gaia_gerr',float),
-                      ('gaia_bpmag',float),('gaia_bperr',float),('gaia_rpmag',float),('gaia_rperr',float)])    
+                      ('gaia_release',str,10),('gaia_sourceid',str,25),
+                      ('gaia_ra',float),('gaia_dec',float),('gaia_plx',float),
+                      ('gaia_plx_error',float),('gaia_pmra',float),
+                      ('gaia_pmra_error',float),('gaia_pmdec',float),
+                      ('gaia_pmdec_error',float),('gaia_gmag',float),('gaia_gerr',float),
+                      ('gaia_bpmag',float),('gaia_bperr',float),('gaia_rpmag',float),
+                      ('gaia_rperr',float)])    
     guide = np.zeros(16,dtype=dtype)
     loc = 0
 
@@ -314,23 +333,33 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     if mjd>=59556:
         fps = True
 
+    # INITIALIZING the FIBER table
     fiber = np.zeros(300,dtype=dtype)
     # default values
     fiber['holetype'] = 'OBJECT'
     fiber['spectrographid'] = 2
     fiber['catalogid'] = -1
-    for c in ['ra','dec','eta','zeta']: fiber[c] = 999999.9
-    gaia_cols = ['gaia_g','gaia_bp','gaia_rp','gaia_ra','gaia_dec','gaia_plx','gaia_plx_error',
-                 'gaia_pmra','gaia_pmra_error','gaia_pmdec','gaia_pmdec_error',
-                 'gaia_gmag','gaia_gerr','gaia_bpmag','gaia_bperr','gaia_rpmag','gaia_rperr']
-    for c in gaia_cols: fiber[c] = -9999.99
+    fiber['version_id'] = -1
+    fiber['ra_sdss_id'] = -9999.0
+    fiber['dec_sdss_id'] = -9999.0
+    fiber['healpix'] = -1
+    for c in ['ra','dec','raobs','decobs','eta','zeta']:
+        fiber[c] = 999999.9
+    gaia_cols = ['gaia_ra','gaia_dec','gaia_plx',
+                 'gaia_plx_error','gaia_pmra','gaia_pmra_error','gaia_pmdec',
+                 'gaia_pmdec_error','gaia_gmag','gaia_gerr','gaia_bpmag',
+                 'gaia_bperr','gaia_rpmag','gaia_rperr']
+    for c in gaia_cols:
+        fiber[c] = -9999.99
     fiber['mag'] = 99.99  # default to faint magnitudes
     fiber['jmag'] = 99.99  # default to faint magnitudes
     fiber['hmag'] = 99.99  # default to faint magnitudes
     fiber['kmag'] = 99.99  # default to faint magnitudes
-    platedata = {'plate':plate, 'mjd':mjd, 'locationid':0, 'field':' ', 'programname':'',
-                 'ha':[-99.,-99.,-99.], 'fiberdata':fiber, 'guidedata':guide}
-    field, survey, programname = apload.apfield(plate,loc,telescope=load.telescope,fps=fps)
+    platedata = {'plate':plate, 'mjd':mjd, 'locationid':0, 'field':' ',
+                 'programname':'', 'ha':[-99.,-99.,-99.], 'fiberdata':fiber,
+                 'guidedata':guide}
+    field, survey, programname = apload.apfield(plate,loc,telescope=load.telescope,
+                                                fps=fps)
     platedata['field'] = field
     platedata['locationid'] = loc
     platedata['programname'] = programname
@@ -338,6 +367,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     # SDSS-V FPS configuration files
     #-------------------------------
     if fps:
+        # ra/dec are the observed epoch coordinates
+        # racat/deccat are the catalog coordinates
         plugmapfile = load.filename('confSummary',configid=plate)
         plugdir = os.path.dirname(plugmapfile)+'/'
         plugfile = os.path.basename(plugmapfile)
@@ -372,7 +403,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         # Rare cases where the plugmap exists in the data directory but NOT in the mapper directory
         if os.path.exists(plugdir+'/'+plugfile)==False:
             if os.path.exists(datadir+'/'+str(mjd)+'/'+plugfile.replace('MapM','MapA'))==True:
-                print('Cannot find plPlugMapM file in mapper directory.  Using plPlugMapA file in data directory instead.')
+                logger.info('Cannot find plPlugMapM file in mapper directory.  Using plPlugMapA file in data directory instead.')
                 plugdir = datadir+'/'+str(mjd)+'/'
                 root = 'plPlugMapA'
                 plugfile = plugfile.replace('MapM','MapA')
@@ -401,26 +432,32 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     #pdata = yanny.yanny(platedir+'/'+holefile,np=True)
     #gd, = np.where(pdata['STRUCT1']['holetype'].astype(str)=='APOGEE')   
     #pdata['STRUCT1']['targetids'][gd].astype(str)
-
+    
     if mapa==False and fps==False:
         # Get the plateHolesSorted file for this plate and read it
         platestr = '{:06d}'.format(plate)
         platedir = os.environ['PLATELIST_DIR']+'/plates/%04dXX/%06d' % (plate//100,plate)
         holefile = 'plateHolesSorted-'+platestr+'.par'
-        print('yanny_read,'+platedir+'/'+holefile)
+        logger.info('yanny_read,'+platedir+'/'+holefile)
         pdata = yanny.yanny(platedir+'/'+holefile,np=True)
-        ph = pdata['STRUCT1']
+        ph = Table(pdata['STRUCT1'])
         # Use locationid from plateHoles files as there are a few cases
         #  where plugmapM is wrong
         loc = pdata['locationId']
         platedata['locationid'] = loc
+
+        # Rename a few columns
+        ph['tmass_id'].name = 'twomass'
+        ph['tmass_j'].name = 'jmag'
+        ph['tmass_h'].name = 'hmag'
+        ph['tmass_k'].name = 'kmag'
 
         # Sometimes TMASS_ID in "p" is 2MASS-J23580454-0007415
         for i in range(len(ph)):
             if 'tmass_id' in ph.dtype.names:
                 if ph['tmass_id'][i].astype(str).find('2MASS-J') > -1:
                     ph['tmass_id'][i] = ph['tmass_id'][i].astype(str).replace('2MASS-J','2M')
-                
+                    
         # Fix telluric catalogIDs
         # There is a problem with some of the telluric catalogIDs due to
         # overflow.  We need to add 2**32 to them.
@@ -431,81 +468,141 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             bdcatid, = np.where((np.char.array(ph['holetype']).astype(str).find('APOGEE') > -1) & 
                                 (ph['catalogid']>0) & (ph['catalogid']<4204681993))
         if len(bdcatid)>0:
-            print('KLUDGE!!!  Fixing overflow catalogIDs for '+str(len(bdcatid))+' telluric stars')
-            print(ph['catalogid'][bdcatid])
+            logger.info('KLUDGE!!!  Fixing overflow catalogIDs for '+str(len(bdcatid))+' telluric stars')
+            logger.info(ph['catalogid'][bdcatid])
             ph['catalogid'][bdcatid] += 2**32
 
         # Read flag correction data
         have_flag_changes = 0
-        print(platedir+'/flagModifications-'+platestr+'.txt')
+        logger.info(platedir+'/flagModifications-'+platestr+'.txt')
         if os.path.exists(platedir+'/flagModifications-'+platestr+'.txt'):
-            print('Reading flagModifications file: ','flagModifications-'+platestr+'.txt')
+            logg.erinfo('Reading flagModifications file: flagModifications-'+platestr+'.txt')
             flag_changes = Table.read(platedir+'/flagModifications-'+platestr+'.txt',format='ascii')
             have_flag_changes = 1
-
-    # Get SDSS-V FPS photometry from targetdb
+            
+        # Get SDSS_ID, Gaia DR3 and other catalogdb information
+        gdcat, = np.where(ph['catalogid']>0)
+        if len(gdcat)>0:
+            cdata = catalogdb.getdata(catid=ph['catalogid'][gdcat])
+            dt = [('version_id',int),('sdss_id',int),('ra_sdss_id',float),
+                  ('dec_sdss_id',float),('gaia_sourceid',int),('gaia_ra',float),
+                  ('gaia_dec',float),('gaia_pmra',float),('gaia_pmra_error',float),
+                  ('gaia_pmdec',float),('gaia_pmdec_error',float),('gaia_plx',float),
+                  ('gaia_plx_error',float),('gaia_gmag',float),('gaia_gerr',float),
+                  ('gaia_bpmag',float),('gaia_bperr',float),('gaia_rpmag',float),
+                  ('gaia_rperr',float),('gaia_release',str,10),
+                  ('healpix',int),('sdss5_target_pks',str,1000),
+                  ('sdss5_target_catalogids',str,1000),
+                  ('sdss5_target_carton_pks',str,1000),
+                  ('sdss5_target_cartons',str,1000),
+                  ('sdss5_target_flagshex',str,1000)]
+            temp = Table(np.zeros(len(ph),dtype=np.dtype(dt)))
+            temp['version_id'] = -1
+            temp['sdss_id'] = -1
+            temp['ra_sdss_id'] = -9999
+            temp['dec_sdss_id'] = -9999
+            _,ind1,ind2 = np.intersect1d(ph['catalogid'],cdata['catalogid'],
+                                         return_indices=True)
+            for c in temp.colnames:
+                temp[c][ind1] = cdata[c][ind2]
+            ph = hstack((ph,temp))
+            
+    # Get SDSS-V FPS photometry from catalogdb/targetdb
     if fps:
-        print('Querying targetdb/catalogdb')
+        logger.info('Querying catalogdb/targetdb')
         ph = catalogdb.getdata(designid=plugmap['design_id'])
-        ph['target_ra'] = ph['ra']
-        ph['target_dec'] = ph['dec']
-        ph['tmass_j'] = ph['jmag']
-        ph['tmass_h'] = ph['hmag']
-        ph['tmass_k'] = ph['kmag']
-        # get 2MASS IDs and other info from catalogdb
-        gdid, = np.where( (plugmap['fiberdata']['catalogid']>0) & (plugmap['fiberdata']['spectrographId']==2) &
-                          (plugmap['fiberdata']['objType']!='SKY'))
-        if len(gdid)>0:
-            catinfo = catalogdb.getdata(catid=plugmap['fiberdata']['catalogid'][gdid])
-            if len(catinfo)>0:
-                dum,ind1,ind2 = np.intersect1d(ph['catalogid'],catinfo['catalogid'],return_indices=True)
-            else:
-                ind1 = []
-            if len(ind1)>0:
-                ph['tmass_id'] = '                      '
-                ph['tmass_id'][ind1] = catinfo['twomass'][ind2]
-                ph['sdss_id'] = 0
-                ph['sdss_id'][ind1] = catinfo['sdss_id'][ind2]
-                ph['e_jmag'] = 0.0
-                ph['e_jmag'][ind1] = catinfo['e_jmag'][ind2]
-                ph['e_hmag'] = 0.0
-                ph['e_hmag'][ind1] = catinfo['e_hmag'][ind2]
-                ph['e_kmag'] = 0.0
-                ph['e_kmag'][ind1] = catinfo['e_kmag'][ind2]
-                ph['phflag'] = '                                  '
-                ph['phflag'][ind1] = catinfo['twomflag'][ind2]
-                #ph['gaia_release'] = '          '
-                #ph['gaia_release'][ind1] = catinfo['gaia_release'][ind2]
-                ph['gaia_sourceid'] = '                                  '
-                ph['gaia_sourceid'][ind1] = catinfo['gaia'][ind2]
-                ph['gaia_ra'] = 0.0
-                ph['gaia_ra'][ind1] = catinfo['ra'][ind2]
-                ph['gaia_dec'] = 0.0
-                ph['gaia_dec'][ind1] = catinfo['dec'][ind2]
-                ph['gaia_pmra'] = 0.0
-                ph['gaia_pmra'][ind1] = catinfo['pmra'][ind2]
-                ph['gaia_pmdec'] = 0.0
-                ph['gaia_pmdec'][ind1] = catinfo['pmdec'][ind2]
-                ph['gaia_pmra_error'] = 0.0
-                ph['gaia_pmra_error'][ind1] = catinfo['e_pmra'][ind2]
-                ph['gaia_pmdec_error'] = 0.0
-                ph['gaia_pmdec_error'][ind1] = catinfo['e_pmdec'][ind2]
-                ph['gaia_plx'] = 0.0
-                ph['gaia_plx'][ind1] = catinfo['plx'][ind2]
-                ph['gaia_plx_error'] = 0.0
-                ph['gaia_plx_error'][ind1] = catinfo['e_plx'][ind2]
-                ph['gaia_gmag'] = 0.0
-                ph['gaia_gmag'][ind1] = catinfo['gaiamag'][ind2]
-                ph['gaia_gerr'] = 0.0
-                ph['gaia_gerr'][ind1] = catinfo['e_gaiamag'][ind2]
-                ph['gaia_bpmag'] = 0.0
-                ph['gaia_bpmag'][ind1] = catinfo['gaiabp'][ind2]
-                ph['gaia_bperr'] = 0.0
-                ph['gaia_bperr'][ind1] = catinfo['e_gaiabp'][ind2]
-                ph['gaia_rpmag'] = 0.0
-                ph['gaia_rpmag'][ind1] = catinfo['gaiarp'][ind2]
-                ph['gaia_rperr'] = 0.0
-                ph['gaia_rperr'][ind1] = catinfo['e_gaiarp'][ind2]
+        if len(ph)>0:
+            ph['target_ra'] = ph['ra']
+            ph['target_dec'] = ph['dec']
+        else:
+            print('No APOGEE assignments for this design.')
+
+            
+    # I don't understand the purpose of this next section???
+    # querying by design or by catalogid gives the same results!
+    # Maybe that used to be the case
+        
+    #if fps and len(ph)>0:
+    #    # The extra "if" statement is to deal with cases when there are no apogee
+    #    # assigned targets for a design and therefore "ph" is empty
+    #    # Add missing columns
+    #    for c in ['jmag','hmag','kmag','gaia_gmag','gaia_bpmag','gaia_rpmag']:
+    #        if c not in ph.colnames: ph[c]=99.99
+    #    for c in ['e_jmag','e_hmag','e_kmag','gaia_gerr','gaia_bperr','gaia_rperr']:
+    #        if c not in ph.colnames: ph[c]=9.99            
+    #    for c in ['pmra','pmdec','gaia_ra','gaia_dec','gaia_pmra','gaia_pmra_error',
+    #              'gaia_pmdec','gaia_pmdec_error','gaia_plx','gaia_plx_error']:
+    #        if c not in ph.colnames: ph[c]=np.nan
+    #    if 'tmass_id' not in ph.colnames: ph['tmass_id'] = 18*' '
+    #    if 'gaia_sourceid' not in ph.colnames: ph['gaia_sourceid'] = 0
+    #    if 'gaia_release' not in ph.colnames: ph['gaia_release'] = 0
+    #    ph['target_ra'] = ph['ra']
+    #    ph['target_dec'] = ph['dec']
+    #    ph['tmass_j'] = ph['jmag']
+    #    ph['tmass_h'] = ph['hmag']
+    #    ph['tmass_k'] = ph['kmag']
+    #    # get 2MASS IDs and other info from catalogdb
+    #    gdid, = np.where( (plugmap['fiberdata']['catalogid']>0) &
+    #                      (plugmap['fiberdata']['spectrographId']==2) &
+    #                      (plugmap['fiberdata']['objType']!='SKY'))
+    #    if len(gdid)>0:
+    #        catinfo = catalogdb.getdata(catid=plugmap['fiberdata']['catalogid'][gdid])
+    #        if len(catinfo)>0:
+    #            dum,ind1,ind2 = np.intersect1d(ph['catalogid'],catinfo['catalogid'],return_indices=True)
+    #        else:
+    #            ind1 = []
+    #        if len(ind1)>0:
+    #            ph['tmass_id'] = '                      '
+    #            ph['tmass_id'][ind1] = catinfo['twomass'][ind2]
+    #            ph['sdss_id'] = 0
+    #            ph['sdss_id'][ind1] = catinfo['sdss_id'][ind2]
+    #            ph['sdss_ra'] = -9999.0
+    #            ph['sdss_ra'][ind1] = catinfo['ra_sdss_id'][ind2]
+    #            ph['sdss_dec'] = -9999.0
+    #            ph['sdss_dec'][ind1] = catinfo['dec_sdss_id'][ind2]
+    #            ph['healpix'] = -1
+    #            ph['healpix'] = catinfo['healpix'][ind2]
+    #            ph['e_jmag'] = 0.0
+    #            ph['e_jmag'][ind1] = catinfo['e_jmag'][ind2]
+    #            ph['e_hmag'] = 0.0
+    #            ph['e_hmag'][ind1] = catinfo['e_hmag'][ind2]
+    #            ph['e_kmag'] = 0.0
+    #            ph['e_kmag'][ind1] = catinfo['e_kmag'][ind2]
+    #            ph['phflag'] = '                                  '
+    #            ph['phflag'][ind1] = catinfo['twomflag'][ind2]
+    #            #ph['gaia_release'] = '          '
+    #            #ph['gaia_release'][ind1] = catinfo['gaia_release'][ind2]
+    #            #ph['gaia_sourceid'] = '                                  '
+    #            ph['gaia_sourceid'] = -1                
+    #            ph['gaia_sourceid'][ind1] = catinfo['gaia'][ind2]
+    #            ph['gaia_ra'] = 0.0
+    #            ph['gaia_ra'][ind1] = catinfo['ra'][ind2]
+    #            ph['gaia_dec'] = 0.0
+    #            ph['gaia_dec'][ind1] = catinfo['dec'][ind2]
+    #            ph['gaia_pmra'] = 0.0
+    #            ph['gaia_pmra'][ind1] = catinfo['pmra'][ind2]
+    #            ph['gaia_pmdec'] = 0.0
+    #            ph['gaia_pmdec'][ind1] = catinfo['pmdec'][ind2]
+    #            ph['gaia_pmra_error'] = 0.0
+    #            ph['gaia_pmra_error'][ind1] = catinfo['e_pmra'][ind2]
+    #            ph['gaia_pmdec_error'] = 0.0
+    #            ph['gaia_pmdec_error'][ind1] = catinfo['e_pmdec'][ind2]
+    #            ph['gaia_plx'] = 0.0
+    #            ph['gaia_plx'][ind1] = catinfo['plx'][ind2]
+    #            ph['gaia_plx_error'] = 0.0
+    #            ph['gaia_plx_error'][ind1] = catinfo['e_plx'][ind2]
+    #            ph['gaia_gmag'] = 0.0
+    #            ph['gaia_gmag'][ind1] = catinfo['gaiamag'][ind2]
+    #            ph['gaia_gerr'] = 0.0
+    #            ph['gaia_gerr'][ind1] = catinfo['e_gaiamag'][ind2]
+    #            ph['gaia_bpmag'] = 0.0
+    #            ph['gaia_bpmag'][ind1] = catinfo['gaiabp'][ind2]
+    #            ph['gaia_bperr'] = 0.0
+    #            ph['gaia_bperr'][ind1] = catinfo['e_gaiabp'][ind2]
+    #            ph['gaia_rpmag'] = 0.0
+    #            ph['gaia_rpmag'][ind1] = catinfo['gaiarp'][ind2]
+    #            ph['gaia_rperr'] = 0.0
+    #            ph['gaia_rperr'][ind1] = catinfo['e_gaiarp'][ind2]
 
     # Load guide stars
     if fps==False:
@@ -534,19 +631,19 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         if badfiberid is not None:
             j, = np.where(badfiberid == 300-i)
             if len(j)>0:
-                print('fiber index ',i,' declared as bad')
+                logger.info('fiber index '+str(i)+' declared as bad')
                 nm = 0
         
         if nm>1:
-            print('halt: more than one match for fiber id !! MARVELS??')
-            #print(plugmap['fiberdata']['fiberId'][m],plugmap['fiberdata']['primTarget'][m],
+            logger.info('halt: more than one match for fiber id !! MARVELS??')
+            #logger.info(plugmap['fiberdata']['fiberId'][m],plugmap['fiberdata']['primTarget'][m],
             #      plugmap['fiberdata']['secTarget'][m])
             import pdb; pdb.set_trace()
         if nm==1:
             m = m[0]
             fiber['fiberid'][i] = plugmap['fiberdata']['fiberId'][m]
-            fiber['ra'][i] = plugmap['fiberdata']['ra'][m]
-            fiber['dec'][i] = plugmap['fiberdata']['dec'][m]
+            fiber['raobs'][i] = plugmap['fiberdata']['ra'][m]
+            fiber['decobs'][i] = plugmap['fiberdata']['dec'][m]
             fiber['eta'][i] = plugmap['fiberdata']['eta'][m]
             fiber['zeta'][i] = plugmap['fiberdata']['zeta'][m]
             if fps:
@@ -580,7 +677,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     if fiber['on_target'][i]==0: badcmt.append('NOT on target')
                     if fiber['valid'][i]==0: badcmt.append('INVALID')
                     cmt += ', '.join(badcmt)
-                    print(cmt)
+                    logger.info(cmt)
                 # Unassigned, no information for this target
                 if fiber['assigned'][i]==0:
                     fiber['hmag'][i] = 99.99
@@ -628,8 +725,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                         match, = np.where(fiber['catalogid'][i]==ph['catalogid'])
                     # Get matching stars from coordinate match
                     else:
-                        match, = np.where((np.abs(ph['target_ra']-fiber['ra'][i]) < 0.00002) &
-                                          (np.abs(ph['target_dec']-fiber['dec'][i]) < 0.00002))
+                        match, = np.where((np.abs(ph['target_ra']-fiber['raobs'][i]) < 0.00002) &
+                                          (np.abs(ph['target_dec']-fiber['decobs'][i]) < 0.00002))
                     if len(match)>0:
                         # APOGEE-2 plate
                         if ('apogee2_target1' in ph.dtype.names) and (plate > 7500) and (plate < 15000) and fps==False:
@@ -641,7 +738,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 jj, = np.where((flag_changes['PlateID'] == plate) &
                                                (flag_changes['TARGETID'] == ph['targetids'][match]))
                                 if len(jj)>0:
-                                    print('modifying flags for',ph['targetids'][match])
+                                    logger.info('modifying flags for '+str(ph['targetids'][match]))
                                     fiber['target1'][i] = flag_changes['at1'][jj]
                                     fiber['target2'][i] = flag_changes['at2'][jj]
                                     fiber['target3'][i] = flag_changes['at3'][jj]
@@ -655,38 +752,67 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                         if (plate >= 15000) or fps:
                             sdss5 = True
                             if fps==False:   # SDSS-V plate data
+                                fiber['ra'][i] = ph['target_ra'][match]
+                                fiber['dec'][i] = ph['target_dec'][match]                                
                                 fiber['catalogid'][i] = ph['catalogid'][match]
+                                fiber['version_id'][i] = ph['version_id'][match]
                                 fiber['sdss_id'][i] = ph['sdss_id'][match]
-                                fiber['gaia_g'][i] = ph['gaia_g'][match]
-                                fiber['gaia_bp'][i] = ph['gaia_bp'][match]
-                                fiber['gaia_rp'][i] = ph['gaia_rp'][match]
+                                fiber['ra_sdss_id'][i] = ph['ra_sdss_id'][match]
+                                fiber['dec_sdss_id'][i] = ph['dec_sdss_id'][match]
+                                fiber['healpix'][i] = ph['healpix'][match]
                                 fiber['sdssv_apogee_target0'][i] = ph['sdssv_apogee_target0'][match]
-                                fiber['firstcarton'][i] = ph['firstcarton'][match][0].astype(str)
+                                fiber['firstcarton'][i] = ph['firstcarton'].astype(str)[match][0]
                                 fiber['pmra'][i] = ph['pmra'][match]
                                 fiber['pmdec'][i] = ph['pmdec'][match]
+                                # Copy S-V catalogdb information if available
+                                if 'sdss5_target_pks' in ph.colnames:
+                                    fiber['sdss5_target_pks'][i] = ph['sdss5_target_pks'][match[0]]
+                                    fiber['sdss5_target_catalogids'][i] = ph['sdss5_target_catalogids'][match[0]]
+                                    fiber['sdss5_target_carton_pks'][i] = ph['sdss5_target_carton_pks'][match[0]]
+                                    fiber['sdss5_target_cartons'][i] = ph['sdss5_target_cartons'][match[0]]
+                                    fiber['sdss5_target_flagshex'][i] = ph['sdss5_target_flagshex'][match[0]]
+                                if 'gaia_sourceid' in ph.colnames:
+                                    fiber['gaia_sourceid'][i] = ph['gaia_sourceid'][match][0].astype(str)
+                                    fiber['gaia_release'][i] = ph['gaia_release'][match][0].astype(str)
+                                    for n in ['gaia_ra','gaia_dec','gaia_plx','gaia_plx_error',
+                                              'gaia_pmra','gaia_pmra_error','gaia_pmdec','gaia_pmdec_error',
+                                              'gaia_gmag','gaia_gerr','gaia_bpmag','gaia_bperr','gaia_rpmag',
+                                              'gaia_rperr']:
+                                        fiber[n][i] = ph[n][match]
                                 # objtype: STAR, HOT_STD, or SKY
                                 objtype = 'STAR'
                                 if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],0)==1: objtype='SKY'
                                 if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],1)==1: objtype='HOT_STD'
                             else:
+                                fiber['ra'][i] = ph['ra'][match]
+                                fiber['dec'][i] = ph['dec'][match]
                                 fiber['catalogid'][i] = ph['catalogid'][match]
-                                fiber['sdss_id'][i] = ph['sdss_id'][match]                                
-                                fiber['twomass_designation'][i] = ph['tmass_id'][match][0].astype(str)
-                                fiber['gaia_g'][i] = ph['gaia_gmag'][match]
-                                fiber['gaia_bp'][i] = ph['gaia_bpmag'][match]
-                                fiber['gaia_rp'][i] = ph['gaia_rpmag'][match]
+                                fiber['version_id'][i] = ph['version_id'][match]
+                                fiber['sdss_id'][i] = ph['sdss_id'][match]
+                                fiber['ra_sdss_id'][i] = ph['ra_sdss_id'][match]
+                                fiber['dec_sdss_id'][i] = ph['dec_sdss_id'][match]
+                                fiber['healpix'][i] = ph['healpix'][match]
+                                fiber['twomass_designation'][i] = ph['twomass'][match][0].astype(str)
                                 fiber['jmag'][i] = ph['jmag'][match]
                                 fiber['jerr'][i] = ph['e_jmag'][match]
                                 fiber['hmag'][i] = ph['hmag'][match]
                                 fiber['herr'][i] = ph['e_hmag'][match]
                                 fiber['kmag'][i] = ph['kmag'][match]
                                 fiber['kerr'][i] = ph['e_kmag'][match]
+                                fiber['sdss5_target_pks'][i] = ph['sdss5_target_pks'][match[0]]
+                                fiber['sdss5_target_catalogids'][i] = ph['sdss5_target_catalogids'][match[0]]
+                                fiber['sdss5_target_carton_pks'][i] = ph['sdss5_target_carton_pks'][match[0]]
+                                fiber['sdss5_target_cartons'][i] = ph['sdss5_target_cartons'][match[0]]
+                                fiber['sdss5_target_flagshex'][i] = ph['sdss5_target_flagshex'][match[0]]
+                                fiber['brightneicount'][i] = ph['brightneicount'][match[0]]
+                                fiber['brightneiflag'][i] = ph['brightneiflag'][match[0]]
+                                fiber['brightneifluxfrac'][i] = ph['brightneifluxfrac'][match[0]]
                                 fiber['firstcarton'][i] = plugmap['fiberdata']['firstcarton'][m]
                                 fiber['cadence'][i] = plugmap['fiberdata']['cadence'][m]
                                 fiber['program'][i] = plugmap['fiberdata']['program'][m]
                                 fiber['category'][i] = plugmap['fiberdata']['category'][m]
-                                fiber['pmra'][i] = ph['pmra'][match]
-                                fiber['pmdec'][i] = ph['pmdec'][match]
+                                fiber['pmra'][i] = ph['gaia_pmra'][match]
+                                fiber['pmdec'][i] = ph['gaia_pmdec'][match]
                                 fiber['gaia_sourceid'][i] = ph['gaia_sourceid'][match][0].astype(str)
                                 fiber['gaia_release'][i] = ph['gaia_release'][match][0].astype(str)
                                 for n in ['gaia_ra','gaia_dec','gaia_plx','gaia_plx_error',
@@ -709,9 +835,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                         else:
                             fiber['objtype'][i] = objtype
                             if (plate<15000) and fps==False:
-                                tmp = ph['targetids'][match][0].astype(str)
+                                tmp = ph['targetids'].astype(str)[match][0]
                             else:
-                                tmp = ph['tmass_id'][match][0].astype(str)
+                                tmp = ph['twomass'].astype(str)[match][0]
                             objname = tmp
                             if len(tmp) != 16:
                                 # use +/- sign to figure out what characters to use
@@ -729,8 +855,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 objname = 'AP'+objname
                             else:
                                 objname = '2M'+objname
-                            hmag = ph['tmass_h'][match]
-                            fiber['mag'][i] = [ph['tmass_j'][match],ph['tmass_h'][match],ph['tmass_k'][match],0.,0.]
+                            hmag = ph['hmag'][match]
+                            fiber['mag'][i] = [ph['jmag'][match],ph['hmag'][match],
+                                               ph['kmag'][match],0.,0.]
                             # Adopt PM un-adjusted  coordinates
                             #fiber['ra'][i] -= ph['pmra'][match]/1000./3600./np.cos(fiber['dec'][i]*np.pi/180.)*(ph['epoch'][match]-2000.)
                             #fiber['dec'][i] -= ph['pmdec'][match]/1000./3600.*(ph['epoch'][match]-2000.)
@@ -739,101 +866,42 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                         fiber['tmass_style'][i] = objname
                     else:
                         #raise Exception('no match found in plateHoles!',fiber['ra'][i],fiber['dec'][i], i)
-                        print('no match found to photometry',fiber['ra'][i],fiber['dec'][i], 300-i)
+                        logger.info('no match found to photometry '+str(fiber['ra'][i])+' '+str(fiber['dec'][i])+' '+str(300-i))
                         nomatch += 1
         else:
             fiber['fiberid'][i] = -1
-            print('no match for fiber index',i)
-
-    # SDSS-V, get catalogdb information
-    #----------------------------------
+            logger.info('no match for fiber index '+str(i))
+            
+    # SDSS-V, get catalogdb information for stars that are missing it
+    #----------------------------------------------------------------
+    # early on tellurics didn't have catalogids
     if plate >= 15000:
-        print('Getting catalogdb information')
+        logger.info('Getting catalogdb information')
         objind, = np.where((fiber['objtype']=='OBJECT') | (fiber['objtype']=='STAR') |
                            (fiber['objtype']=='HOT_STD'))
         nobjind = len(objind)
         objdata = fiber[objind]
-        gdid,ngdid,bdid,nbdid = dln.where(objdata['catalogid'] > 0,comp=True)
-        # Get catalogdb information using catalogID
-        catdb = None
-        if ngdid>0:
-            print('Querying catalogdb using catalogID for '+str(ngdid)+' stars')
-            catdb1 = catalogdb.getdata(catid=objdata['catalogid'][gdid])
-            # Got some results
-            if len(catdb1)>0:
-                print('Got results for '+str(len(catdb1))+' stars')
-                catdb = catdb1.copy()
-            else:
-                print('No results')
-        # Get catalogdb information using coordinates (tellurics don't have IDs)    
-        if nbdid>0:
-            print('Querying catalogdb using coordinates for ',str(nbdid)+' stars')
-            catdb2 = catalogdb.getdata(ra=objdata['ra'][bdid],dec=objdata['dec'][bdid])
-            # this returns a q3c_dist column that we don't want to keep
-            if len(catdb2)>0:
-                print('Got results for '+str(len(catdb2))+' stars')
-                del catdb2['q3c_dist']
-                if catdb is None:
-                    catdb = catdb2.copy()
-                else:
-                    catdb = vstack((catdb,catdb2))
-            else:
-                print('No results')
-        # Add catalogdb information
+        # Loop over objects
         for i in range(nobjind):
             istar = objind[i]
-            ind1,ind2 = dln.match(catdb['catalogid'],fiber['catalogid'][istar])
-            nmatch = len(ind1)
-            # some stars are missing ids, use coordinate matching indeas   
-            if nmatch==0:
-                dist = coords.sphdist(catdb['ra'],catdb['dec'],fiber['ra'][istar],fiber['dec'][istar])*3600
-                ind1, = np.where(dist < 0.5)
-                nmatch = len(ind1)
-                if nmatch > 1:
-                    ind1 = np.argmin(dist)
-            # Still no match, just get catalogdb.catalog information
-            if nmatch==0:
-                # We have catalogid
-                db = apogeedb.DBSession()
-                if fiber['catalogid'][istar]>0:
-                    cat = db.query(sql="select catalogid,ra,dec,version_id from catalogdb.catalog where catalogid="+str(fiber['catalogid'][istar]))
-                # Use coordinates instead
-                else:
-                    cat = db.query(sql="select catalogid,ra,dec,version_id from catalogdb.catalog where q3c_radial_query(ra,dec,%f,%f,0.0001)" % 
-                                   (fiber['ra'][istar],fiber['dec'][istar]))
-                # Still no match, try using 2MASS ID in TIC
-                if len(cat)==0:
-                    tmass = fiber['tmass_style'][istar][2:]
-                    sql =  "select c2t.* from catalog_to_tic_v8 c2t join tic_v8 t on t.id=c2t.target_id join twomass_psc tm on "
-                    sql += "tm.designation = t.twomass_psc join catalogdb.version v on v.id = c2t.version_id where tm.designation = '"+tmass+"'"
-                    sql += " and v.plan = '0.1.0' and c2t.best is true"
-                    cat = db.query(sql=sql)
-                    if len(cat)>0:
-                        catalogid = cat['catalogid'][0]
-                        cat = db.query(sql="select catalogid,ra,dec,version_id from catalogdb.catalog where catalogid="+str(catalogid))
-                db.close()
-                # If there are multiple results, pick the closest
-                if len(cat)>1:
-                    dist = coords.sphdist(fiber['ra'][istar],fiber['dec'][istar],cat['ra'],cat['dec'])*3600
-                    cat = cat[np.argmin(dist)]
-                # Add to catdb
-                if len(cat)>0:
-                    addcat = catdb[0]
-                    for n in addcat.colnames:  # initialize
-                        if isinstance(addcat[n],str): addcat[n]='None'
-                        if isinstance(addcat[n],np.floating): addcat[n]=np.nan
-                        if isinstance(addcat[n],np.int): addcat[n]=-1
-                    addcat['catalogid'] = cat['catalogid']
-                    try:
-                        addcat['sdss_id'] = catalogdb.get_sdssid([cat['catalogid'][0]])
-                    except:
-                        pass
-                    addcat['ra'] = cat['ra']
-                    addcat['dec'] = cat['dec']
-                    addcat['hmag'] = 99.99
-                    catdb.add_row(addcat)
-                    ind1 = len(catdb)-1   # the match for this star, last one in catdb
+            # Already have catalogdb information, skip
+            if fiber['hmag'][istar] < 50:
+                continue
+            nmatch = 0
+            
+            # Try catalogid
+            if fiber['catalogid'][istar] > 0:
+                catdb = catalogdb.getdata(catid=fiber['catalogid'][istar])
+                if len(catdb)>0 and 'sdss_id' in catdb.colnames:
+                    ind1 = [0]
                     nmatch = 1
+            # Try coordinates
+            if nmatch==0:
+                catdb = catalogdb.getdata(ra=fiber['ra'][istar],dec=fiber['dec'][istar])
+                if len(catdb)>0 and 'sdss_id' in catdb.colnames:
+                    ind1 = [0]
+                    nmatch = 1
+            # There's a match, fill in the information
             if nmatch>0:
                 ind1 = np.atleast_1d(ind1)
                 # Sometimes the plateHoles tmass_style are "None", try to fix with catalogdb information
@@ -844,11 +912,15 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     # Construct 2MASS-style name from GaiaDR2 RA/DEC
                     else:
                         fiber['tmass_style'][istar] = '2M'+coords2tmass(catdb['ra'][ind1[0]],catdb['dec'][ind1[0]])
-                    print('Fixing tmass_style ID for '+fiber['tmass_style'][istar])
+                    logger.info('Fixing tmass_style ID for '+fiber['tmass_style'][istar])
                 if fiber['catalogid'][istar]<0:
                     fiber['catalogid'][istar]=catdb['catalogid'][ind1[0]]
                 fiber['twomass_designation'][istar] = catdb['twomass'][ind1[0]]
+                fiber['version_id'][istar] = catdb['version_id'][ind1[0]]
                 fiber['sdss_id'][istar] = catdb['sdss_id'][ind1[0]]
+                fiber['ra_sdss_id'][istar] = catdb['ra_sdss_id'][ind1[0]]
+                fiber['dec_sdss_id'][istar] = catdb['dec_sdss_id'][ind1[0]]
+                fiber['healpix'][istar] = catdb['healpix'][ind1[0]]
                 fiber['jmag'][istar] = catdb['jmag'][ind1[0]]
                 fiber['jerr'][istar] = catdb['e_jmag'][ind1[0]]
                 fiber['hmag'][istar] = catdb['hmag'][ind1[0]]
@@ -857,30 +929,30 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 fiber['kerr'][istar] = catdb['e_kmag'][ind1[0]]
                 fiber['phflag'][istar] = catdb['twomflag'][ind1[0]]
                 fiber['gaia_release'][istar] = catdb['gaia_release'][ind1[0]]
-                fiber['gaia_sourceid'][istar] = catdb['gaia'][ind1[0]]                
-                fiber['gaia_ra'][istar] = catdb['ra'][ind1[0]]
-                fiber['gaia_dec'][istar] = catdb['dec'][ind1[0]]
-                fiber['gaia_pmra'][istar] = catdb['pmra'][ind1[0]]
-                fiber['gaia_pmra_error'][istar] = catdb['e_pmra'][ind1[0]]
-                fiber['gaia_pmdec'][istar] = catdb['pmdec'][ind1[0]]
-                fiber['gaia_pmdec_error'][istar] = catdb['e_pmdec'][ind1[0]]
-                fiber['gaia_plx'][istar] = catdb['plx'][ind1[0]]
-                fiber['gaia_plx_error'][istar] = catdb['e_plx'][ind1[0]]
-                fiber['gaia_gmag'][istar] = catdb['gaiamag'][ind1[0]]
-                fiber['gaia_gerr'][istar] = catdb['e_gaiamag'][ind1[0]]
-                fiber['gaia_bpmag'][istar] = catdb['gaiabp'][ind1[0]]
-                fiber['gaia_bperr'][istar] = catdb['e_gaiabp'][ind1[0]]
-                fiber['gaia_rpmag'][istar] = catdb['gaiarp'][ind1[0]]
-                fiber['gaia_rperr'][istar] = catdb['e_gaiarp'][ind1[0]]
+                fiber['gaia_sourceid'][istar] = catdb['gaia_sourceid'][ind1[0]]                
+                fiber['gaia_ra'][istar] = catdb['gaia_ra'][ind1[0]]
+                fiber['gaia_dec'][istar] = catdb['gaia_dec'][ind1[0]]
+                fiber['gaia_pmra'][istar] = catdb['gaia_pmra'][ind1[0]]
+                fiber['gaia_pmra_error'][istar] = catdb['gaia_pmra_error'][ind1[0]]
+                fiber['gaia_pmdec'][istar] = catdb['gaia_pmdec'][ind1[0]]
+                fiber['gaia_pmdec_error'][istar] = catdb['gaia_pmdec_error'][ind1[0]]
+                fiber['gaia_plx'][istar] = catdb['gaia_plx'][ind1[0]]
+                fiber['gaia_plx_error'][istar] = catdb['gaia_plx_error'][ind1[0]]
+                fiber['gaia_gmag'][istar] = catdb['gaia_gmag'][ind1[0]]
+                fiber['gaia_gerr'][istar] = catdb['gaia_gerr'][ind1[0]]
+                fiber['gaia_bpmag'][istar] = catdb['gaia_bpmag'][ind1[0]]
+                fiber['gaia_bperr'][istar] = catdb['gaia_bperr'][ind1[0]]
+                fiber['gaia_rpmag'][istar] = catdb['gaia_rpmag'][ind1[0]]
+                fiber['gaia_rperr'][istar] = catdb['gaia_rperr'][ind1[0]]
             else:
-                print('no match catalogdb match for ',fiber['object'][istar])
+                logger.info('no match catalogdb match for '+str(fiber['object'][istar]))
 
     # SDSS-V FPS data
     if fps:
         platedata['field'] = plugmap['field_id']
         if len(ph)>0:
             platedata['programname'] = ph['carton'][0]
-
+            
     ## Load apogeeObject file to get proper name and coordinates
     ## Get apogeeObject catalog info for this field
     #if apogee2 then apogeeobject='apogee2Object' else apogeeobject='apogeeObject'
@@ -963,7 +1035,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     platedata['fiberdata'] = fiber
 
     # Save the platedata to file
-    print('Saving platedata to '+platedatafile)    
+    logger.info('Saving platedata to '+platedatafile)    
     save(platedatafile,platedata)
     
     return platedata

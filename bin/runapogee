@@ -19,12 +19,13 @@ if __name__ == "__main__":
     parser.add_argument('observatory', type=str, nargs=1, default='apo', help='Observatory (apo or lco)')
     parser.add_argument('--mjd', type=str, nargs=1, default='', help='MJD to run')
     parser.add_argument('--qos', type=str, nargs=1, default='', help='Which SDSS queue to use.')
+    parser.add_argument('--incremental', action='store_true', help='Incremental processing.')
     parser.add_argument('--alloc', type=str, nargs=1, default='', help='Which SDSS slurm partition to use.')
     parser.add_argument('-v', '--vers', type=str, nargs=1, default='daily', help='APOGEE Reduction version')    
     parser.add_argument('-c', '--clobber', action='store_true', help='Overwrite any existing data')
 
     args = parser.parse_args()
-
+    
     t0 = time.time()
     observatory = args.observatory[0]
     if isinstance(args.vers,list):
@@ -35,7 +36,7 @@ if __name__ == "__main__":
         mjd = int(args.mjd[0])
     else:
         mjd = None
-        mjd5 = runapogee.getNextMJD(observatory)  # only used below, if there is a crash
+        mjd5 = runapogee.getNextMJD(observatory,vers)  # only used below, if there is a crash
     if isinstance(args.alloc,list):
         alloc = args.alloc[0]
     else:
@@ -45,7 +46,8 @@ if __name__ == "__main__":
     else:
         qos = 'sdss-fast'
     clobber = args.clobber
-
+    incremental = args.incremental
+    
     # Set unix environment variables for kingspeak
     #  we use notchpea by default
     if alloc=='sdss-kp':
@@ -59,10 +61,11 @@ if __name__ == "__main__":
         os.environ['SLURM_MEM_PER_CPU'] = '3750'
         os.environ['SLURM_VERS'] = 'kingspeak' # 'sdss-kp'
         #set-alias	squeue	squeue --account=sdss-kp,sdss-kp-fast --format="%18i %18j %10u %10g %12a %10P %11l %11L %2t %R"
-    
+        
     # Run daily reduction
     try:
-        runapogee.run_daily(observatory,mjd5=mjd,apred=vers,alloc=alloc,qos=qos,clobber=clobber)
+        runapogee.run_daily(observatory,mjd5=mjd,apred=vers,alloc=alloc,qos=qos,
+                            clobber=clobber,incremental=incremental)
     except KeyboardInterrupt:
         print('Quitting')
         # quit

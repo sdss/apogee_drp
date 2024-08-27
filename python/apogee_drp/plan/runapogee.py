@@ -55,13 +55,13 @@ def nextmjd5(observatory,apred='t14'):
 
 def getNextMJD(observatory,apred='daily',mjdrange=None):
     ''' Returns the next MJD to reduce.  Either a list or one. '''
-
+    
     # Grab the MJD from the currentmjd file
     nextfile = os.path.join(os.getenv('APOGEE_REDUX'), apred, 'log', observatory, 'currentmjd')
     f = open(nextfile, 'r')
     mjd = f.read()
     f.close()
-
+    
     # Increment MJD from file by 1
     nextmjd = str(int(mjd) + 1)
 
@@ -69,10 +69,11 @@ def getNextMJD(observatory,apred='daily',mjdrange=None):
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
     mjdlist = os.listdir(datadir)
     newmjds = [mjd for mjd in mjdlist if mjd >= nextmjd and mjd.isdigit()]
-
+    newmjds.sort()
+    
     # Set next mjd or list of next mjds
     finalmjd = [nextmjd] if newmjds == [] else newmjds
-
+    
     # Filter out list based on any MJD range
     if mjdrange is not None:
         start, end = mjdrange.split('-')
@@ -147,7 +148,7 @@ def summary_email(observatory,apred,mjd5,chkcal,chkexp,chkvisit,chkrv,logfiles=N
 
 
 def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
-              qos='sdss-fast',clobber=False,debug=False):
+              qos='sdss-fast',incremental=False,clobber=False,debug=False):
     """
     Perform daily APOGEE data reduction.
 
@@ -164,6 +165,8 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
        The slurm partition to use.  Default is 'sdss-np'.
     qos : str, optional
        The type of slurm queue to use.  Default is "sdss-fast".
+    incremental : bool, optional
+       Perform incremental DRP nightly processing.
     clobber : boolean, optional
        Overwrite any existing files.
     debug : boolean, optional
@@ -209,9 +212,9 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     gitvers = plan.getgitvers()
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
-
+    
     # Daily reduction logs directory
-    logdir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'
+    logdir = os.path.join(os.environ['APOGEE_REDUX'],apred,'log',observatory)
     if os.path.exists(logdir)==False:
         os.makedirs(logdir)
 
@@ -227,37 +230,47 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
         else:
             mjd5 = int(mjd5[0])
         updatemjdfile = True
-
+        
     # SDSS-V FPS
     fps = False
     if int(mjd5)>=59556:
         fps = True
 
     # Make sure the data is there
-    mjddatadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory] + '/'+str(mjd5)
+    mjddatadir = {'apo':os.environ['APOGEE_DATA_N'],
+                  'lco':os.environ['APOGEE_DATA_S']}[observatory] + '/'+str(mjd5)
     if os.path.exists(mjddatadir)==False:
         print('Data for '+str(mjd5)+' has not finished transferring yet')
         return
 
+    # If incremental, check day MJD+3
+    if incremental:
+        datadir3 = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
+        datadir3 += '/'+str(mjd5+3)+'/'
+        if os.path.exists(datadir3)==False:
+            print('Incremental processing. MJD+3 data not there yet')
+            return
+        
     # Check if there are apz files to process
     allfiles = os.listdir(mjddatadir)
     apzfiles = [f for f in allfiles if f.endswith('.apz')]  # need apz files
     # If no data was taken, then there's just a dummy and md5sum file
     md5sumfile = mjddatadir+'/'+str(mjd5)+'.md5sum'
     dummyfile = mjddatadir+'/'+str(mjd5)+'.dummy'
+    
     if len(apzfiles)==0 and os.path.exists(md5sumfile) and os.path.exists(dummyfile):
         print('No data for MJD5='+str(mjd5)+'. Incrementing to next night.')
         writeNewMJD(observatory,mjd5,apred=apred)        
         return
-        
+    
     # Set up logging to screen and logfile
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
     rootLogger = logging.getLogger() 
     while rootLogger.hasHandlers(): # some existing loggers, remove them   
-        rootLogger.removeHandler(rootLogger.handlers[0]) 
+        rootLogger.removeHandler(rootLogger.handlers[0])
     rootLogger = logging.getLogger()
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")     
-    logfile = logdir+str(mjd5)+'.'+logtime+'.log'
+    logfile = os.path.join(logdir,str(mjd5)+'.'+logtime+'.log')
     if os.path.exists(logfile): os.remove(logfile)
     fileHandler = logging.FileHandler(logfile)
     fileHandler.setFormatter(logFormatter)
@@ -266,7 +279,6 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     consoleHandler.setFormatter(logFormatter)
     rootLogger.addHandler(consoleHandler)
     rootLogger.setLevel(logging.NOTSET)
-
     
     rootLogger.info('Running daily APOGEE data reduction for '+str(observatory).upper()+' '+str(mjd5)+' '+apred)
 
@@ -308,7 +320,12 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
         rootLogger.info('--------------------------------')
         rootLogger.info('1) Running AP3D on all exposures')
         rootLogger.info('================================')
-        chk3d = apogeedrp.runap3d(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
+        if incremental:
+            rootLogger.info('Incremental processing: Running 3D on 4 nights {:d}-{:d}'.format(mjd5,mjd5+3))
+            mjds = [mjd5,mjd5+1,mjd5+2,mjd5+3]
+        else:
+            mjds = [mjd5]
+        chk3d = apogeedrp.runap3d(load,mjds,slurm,clobber=clobber,logger=rootLogger)        
     else:
         rootLogger.info('No exposures to process with AP3D')
         chk3d = None
@@ -334,6 +351,17 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
         rootLogger.info('----------------------------------------')
         rootLogger.info('2) Generating daily calibration products')
         rootLogger.info('========================================')
+        # For incremental we need to make the cal products for the three days
+        # "in the future".  Just need the arcs but also need the psf+flux for
+        # the arcs.
+        if incremental:
+            mjds = [mjd5+1,mjd5+2,mjd5+3]
+            caltypes = ['psf','flux','arcs']
+            rootLogger.info('Incremental processing: Running psf/flux/arcs on MJD-MJD+3')
+            chkcal = apogeedrp.rundailycals(load,mjds,slurm,caltypes=caltypes,
+                                            clobber=clobber,logger=rootLogger)
+            rootLogger.info('Incremental processing: Regular daily calibration products')
+        # Now make regular daily cals for this night
         chkcal = apogeedrp.rundailycals(load,[mjd5],slurm,clobber=clobber,logger=rootLogger)
     else:
         rootLogger.info('No calibration files to run')
@@ -350,7 +378,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     # Default is to remake the plan files, just in case something changed since
     #  the same thing this was run.  For example, the daily wave crashed and it
     #  tried to use an old multiwave file
-    planfiles = apogeedrp.makeplanfiles(load,[mjd5],slurm,clobber=True,logger=rootLogger)
+    planfiles = apogeedrp.makeplanfiles(load,[mjd5],slurm,clobber=True,logger=rootLogger)        
     nplanfiles = len(planfiles)
     # Start entry in daily_status table
     daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(np.str,10)),('nplanfiles',int),

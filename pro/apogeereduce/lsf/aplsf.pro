@@ -56,7 +56,7 @@ pro aplsf,lampframes,waveid,lsfim,fitmethod=fitmethod,nsigfit=nsigfit,gauss=gaus
 t0_0 = systime(1)
 
 ; Get APOGEE directories
-dirs=getdir(apogee_dir,cal_dir,spectro_dir,apogee_vers,lib_dir)
+dirs = getdir(apogee_dir,cal_dir,spectro_dir,apogee_vers,lib_dir)
 lsf_dir = cal_dir+'/lsf/'
 linelist_dir = lib_dir+'skylines/'
 
@@ -269,7 +269,6 @@ print,'Fitmethod = ',strtrim(fitmethod,2),'  ',fitmethod_str
 
 lsfid = file_basename(lampframes[0])
 
-
 ; DITHER COMBINING
 ;----------------------
 if nlampframes gt 1 then begin
@@ -363,7 +362,7 @@ for i=0,2 do begin
   ;mederr = median(combframe.(i).err)
   ;adderr = sqrt(sig^2 - mederr^2)  ; want total median err to be SIG
   ;combframe.(i).err = sqrt( combframe.(i).err^2 + adderr^2 )
-end
+endfor
 
 
 
@@ -459,42 +458,51 @@ if keyword_set(gauss) then begin
     outfile = lsf_dir+dirs.prefix+'LSF-'+lampframeid1+'.dat'
     openw,lun,/get_lun,outfile
     ; initialize splines for wave2pix
-    for ichip=0,2 do $
-      for ifiber=0,299 do waveframe.(ichip).wave2[*,ifiber] = spl_init(reverse(waveframe.(ichip).wave[*,ifiber]),reverse(indgen(n_elements(waveframe.(ichip).wave[*,ifiber]))))
-
+    for ichip=0,2 do begin
+       for ifiber=0,299 do $
+          waveframe.(ichip).wave2[*,ifiber] = spl_init(reverse(waveframe.(ichip).wave[*,ifiber]),$
+                                                       reverse(indgen(n_elements(waveframe.(ichip).wave[*,ifiber]))))
+    endfor
+          
     if lamptype eq 'SKY' then begin
       ;readcol,linelist_dir+'airglow.new',iair,airw,airf,airs,airsep,airname,airuse,format='(i,f,f,i,f,a,x,i)'
-      readcol,linelist_dir+'airglow.txt',iair,airw,airf,airs,airsep,airname,airuse,format='(i,x,x,f,f,i,f,a,i)'
+      readcol,linelist_dir+'airglow.txt',iair,airw,airf,airs,airsep,airname,airuse,$
+              format='(i,x,x,f,f,i,f,a,i)',comment='#'
       for i=0,n_elements(airw)-1 do begin
         if (airuse[i]) then begin
           ;good=where(abs(linestr.wave-airw[i]) lt 1 and linestr.height gt 2000)
-          good=where(abs(linestr.wave-airw[i]) lt 1)
+          good = where(abs(linestr.wave-airw[i]) lt 1)
           if good[0] ge 0 then begin
             if keyword_set(pl) then oplot,[linestr[good].x],[linestr[good].gpar[2]],color=3,ps=1
-            g150=where(linestr[good].fiber eq 150 or linestr[good].fiber eq 10 or linestr[good].fiber eq 290)
+            g150 = where(linestr[good].fiber eq 150 or linestr[good].fiber eq 10 or linestr[good].fiber eq 290)
             for j=0,n_elements(g150)-1 do begin
-              k=good[g150[j]]
-              fwhm=2.354*linestr[k].gpar[2]
-              ichip=linestr[k].chip-1
-              ifiber=linestr[k].fiber
-              xpred=spl_interp(reverse(waveframe.(ichip).wave[*,ifiber]),reverse(indgen(n_elements(waveframe.(ichip).wave[*,ifiber]))),waveframe.(ichip).wave2[*,ifiber],airw[i])
-              printf,lun,getmjd5(combframe.chipa.header),linestr[k].wave,linestr[k].x,fwhm,fwhm*linestr[k].disp,$
-                     linestr[k].gaussx,airw[i],xpred,linestr[k].chip,linestr[k].fiber,linestr[k].height,airw[i],lamptype,$
+              k = good[g150[j]]
+              fwhm = 2.354*linestr[k].gpar[2]
+              ichip = linestr[k].chip-1
+              ifiber = linestr[k].fiber
+              xpred = spl_interp(reverse(waveframe.(ichip).wave[*,ifiber]),$
+                                 reverse(indgen(n_elements(waveframe.(ichip).wave[*,ifiber]))),$
+                                 waveframe.(ichip).wave2[*,ifiber],airw[i])
+              printf,lun,getmjd5(combframe.chipa.header),linestr[k].wave,linestr[k].x,fwhm,$
+                     fwhm*linestr[k].disp,linestr[k].gaussx,airw[i],xpred,linestr[k].chip,$
+                     linestr[k].fiber,linestr[k].height,airw[i],lamptype,$
                      format='(i8,f12.2,6f10.2,i6,i6,f12.1,f12.2,2x,a)'
-            endfor
-          endif
-        endif
-      endfor
+            endfor  ;; g150 loop
+          endif     ;; if good > 0
+        endif       ;; if airuse=1
+      endfor         ;; skyline loop
+    ;; Not SKY lines
     endif else begin
-      good=where(linestr.height gt 2000)
+      good = where(linestr.height gt 2000)
       if good[0] ge 0 then begin
         if keyword_set(pl) then oplot,[linestr[good].x],[linestr[good].gpar[2]],color=3,ps=1
-        g150=where(linestr[good].fiber eq 150 or linestr[good].fiber eq 10 or linestr[good].fiber eq 290)
+        g150 = where(linestr[good].fiber eq 150 or linestr[good].fiber eq 10 or linestr[good].fiber eq 290)
         for j=0,n_elements(g150)-1 do begin
-          k=good[g150[j]]
-          fwhm=2.354*linestr[k].gpar[2]
-          printf,lun,getmjd5(combframe.chipa.header),linestr[k].wave,linestr[k].x,fwhm,fwhm*linestr[k].disp,$
-                 linestr[k].gaussx,linestr[k].chip,linestr[k].fiber,linestr[k].height,lamptype,format='(i8,f12.2,4f10.2,i6,i6,f12.1,2x,a)'
+          k = good[g150[j]]
+          fwhm = 2.354*linestr[k].gpar[2]
+          printf,lun,getmjd5(combframe.chipa.header),linestr[k].wave,linestr[k].x,fwhm,$
+                 fwhm*linestr[k].disp,linestr[k].gaussx,linestr[k].chip,linestr[k].fiber,$
+                 linestr[k].height,lamptype,format='(i8,f12.2,4f10.2,i6,i6,f12.1,2x,a)'
         endfor
       endif
     endelse

@@ -6,7 +6,7 @@ from glob import glob
 import pdb
 
 from dlnpyutils import utils as dln
-from . import apload
+from . import apload,plugmap as plmap
 from astropy.io import fits
 from astropy.table import Table
 
@@ -43,7 +43,8 @@ def file_status(filename):
 
     return out
                 
-def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
+def expinfo(observatory=None,mjd5=None,files=None,expnum=None,
+            logger=None,verbose=False):
     """
     Get header information about raw APOGEE files.
     This program can be run with observatory+mjd5 or
@@ -52,21 +53,26 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
     Parameters
     ----------
     observatory : str, optional
-        APOGEE observatory (apo or lco).
+       APOGEE observatory (apo or lco).
     mjd5 : int, optional
-        The MJD5 night to get exposure information for.
+       The MJD5 night to get exposure information for.
     files : list of str, optional
-        List of APOGEE apz filenames.
+       List of APOGEE apz filenames.
     expnum : list, optional
-        List of exposure numbers.
+       List of exposure numbers.
+    logger : logging object, optional
+       Logging object for printing logs.
+    verbose : bool, optional
+       Verbose output to the screen.  Default is False.
 
     Returns
     -------
     cat : numpy structured array
-        Table with information for each file grabbed from the header.
+       Table with information for each file grabbed from the header.
 
     Examples
     --------
+
     info = expinfo(files)
 
     By D.Nidever,  Oct 2020
@@ -79,8 +85,13 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
     if (mjd5 is not None and expnum is not None):
         raise ValueError('Input either observatory+mjd5 or observatory+expnum')
 
-    
-    load = apload.ApLoad(apred='daily',telescope='apo25m')
+    if logger is None and verbose:
+        logger = dln.basiclogger()
+
+    telescope = 'apo25m'
+    if observatory is not None:
+        telescope = {'apo':'apo25m','lco':'lco25m'}[observatory]
+    load = apload.ApLoad(apred='daily',telescope=telescope)
 
     # Get the exposures info for this MJD5        
     if files is None and expnum is None:
@@ -116,6 +127,8 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
                       ('dateobs',np.str,50),('gangstate',np.str,20),('shutter',np.str,20),('calshutter',np.str,20),
                       ('mjd',int),('observatory',(np.str,10)),('dithpix',float)])
     tab = np.zeros(nfiles,dtype=dtype)
+    plate2field = {}
+    plate2plugmap = {}
     # Loop over the files
     for i in range(nfiles):
         if os.path.exists(files[i]):
@@ -135,6 +148,24 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
             mjd = int(load.cmjd(int(num)))
             tab['mjd'] = mjd
             #    tab['mjd'] = utils.getmjd5(head['date-obs'])
+            plate = head.get('plateid')            
+            if mjd<59556 and plate is not None and str(plate) != '' and int(plate)>0:
+                plugid = head.get('name')
+                if plate2plugmap.get(plate) is not None:
+                    plfilename = plate2plugmap.get(plate)
+                else:
+                    plfilename = plmap.plugmapfilename(plate,mjd,load.instrument,
+                                                       plugid=plugid,verbose=verbose)
+                    plate2plugmap[plate] = plfilename
+                plugmap = plmap.load(plfilename)
+                tab['designid'][i] = plugmap.get('designid')
+                locationID = plugmap.get('locationId')
+                if plate2field.get(plate) is not None:
+                    fieldid = plate2field.get(plate)
+                else:
+                    fieldid,_,_ = apload.apfield(plate,telescope=load.telescope,fps=False)
+                    plate2field[plate] = fieldid
+                tab['fieldid'][i] = fieldid
             if observatory is not None:
                 tab['observatory'] = observatory
             else:
@@ -148,7 +179,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
                 else:
                     tab['arctype'][i] = 'None'
             # FPI
-            if tab['exptype'][i]=='ARCLAMP' and tab['arctype'][i]=='None' and head.get('OBSCMNT')=='FPI':
+            if tab['exptype'][i]=='ARCLAMP' and tab['arctype'][i]=='None' and head.get('OBSCMNT').startswith('FPI'):
                 tab['exptype'][i] = 'FPI'
 
             # Sky flat
@@ -172,7 +203,10 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None):
                     tab['calshutter'][i] = 'Open'
                 else:
                     tab['calshutter'][i] = 'Closed'
-                    
+
+            if verbose:
+                logger.info(tab[i])
+                
     return tab
 
 def getdithergroups(expinfo):

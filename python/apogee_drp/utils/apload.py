@@ -15,7 +15,7 @@ from astropy.io import fits
 from astropy.table import Table
 import os
 try :
-    from sdss_access.path import path
+    from sdss_access.path import path,Path
     from sdss_access.sync.http import HttpAccess
 except :
     print('sdss_access or dependencies not available!')
@@ -27,6 +27,7 @@ import healpy as hp
 from ..apred import wave,sincint
 from . import spectra,yanny
 from .apspec import ApSpec
+from ..database import apogeedb
 
 class ApData(object):
     def __init__(self,filename=None,datatype=None,header=None,chip=None,flux=None,error=None,mask=None):
@@ -866,7 +867,7 @@ class ApLoad:
                 healpix = obj2healpix(obj)
             else:
                 healpix = None
-
+                
             filePath = self.sdss_path.full(sdssroot,
                                            apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
                                            field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
@@ -1047,8 +1048,9 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m',fps=False):
     if nj==0 or fps:
         # Pull this from the confSummary file
         observatory = {'apo25m':'apo','apo1m':'apo','lco25m':'lco'}[telescope]
-        configgrp = '{:0>4d}XX'.format(int(plateid) // 100)
-        configfile = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/confSummary-'+str(plateid)+'.par'
+        #configgrp = '{:0>4d}XX'.format(int(plateid) // 100)
+        #configfile = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/confSummary-'+str(plateid)+'.par'
+        configfile = Path().full('confSummary', obs=observatory, configid=plateid)
         planstr = yanny.yanny(configfile)
         field = planstr.get('field_id')
         return field, 'SDSS-V', None
@@ -1096,16 +1098,26 @@ def obj2coords(tmassname):
     return ra,dec
 
 
-def obj2healpix(tmassname,nside=128):
-    """ Calculate healpix number for a star given it's 2MASS-style name."""
-    
+def obj2healpix(obj,nside=128):
+    """
+    Calculate healpix number for a star given EITHER it's 2MASS-style name
+    or catalogid.
+    """
+        
     # Check length of string
-    if len(tmassname)!=18:
-        print(tmassname+' is not in the correct format')
+    if len(obj)!=18:
+        print(obj+' is not in the correct format')
         return None
 
     # Get coordinates from the 2MASS-style name
-    ra,dec = obj2coords(tmassname)
+    ra,dec = obj2coords(obj)
+
+    # Calculate HEALPix number
+    pix = hp.ang2pix(nside,ra,dec,lonlat=True)
+    return pix
+
+def coords2healpix(ra,dec,nside=128):
+    """ Calculate healpix number for a set of ra/dec coordinates."""
 
     # Calculate HEALPix number
     pix = hp.ang2pix(nside,ra,dec,lonlat=True)

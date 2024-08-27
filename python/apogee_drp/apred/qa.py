@@ -1048,6 +1048,23 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
         html.close()
         return
 
+    # Checking that we have good targets for this visit
+    targs = platefile['a'][11].data
+    if fps:
+        gdtargs, = np.where((targs['HMAG'] > 5) & (targs['HMAG'] < 15) & (np.isnan(targs['HMAG']) == False) &
+                            (targs['TMASS_STYLE'] != '') & (targs['SPECTROGRAPHID']==2) &
+                            (targs['ASSIGNED']) & (targs['ON_TARGET']) & (targs['VALID']) &
+                            (targs['OBJTYPE'] != 'none') & (targs['OBJTYPE'] != ''))
+    else:
+        gdtargs, = np.where((targs['HMAG'] > 5) & (targs['HMAG'] < 15) & (np.isnan(targs['HMAG']) == False) &
+                            (targs['TMASS_STYLE'] != '') & (targs['SPECTROGRAPHID']==2) &
+                            (targs['OBJTYPE'] != 'none') & (targs['OBJTYPE'] != ''))
+    ntargs = len(gdtargs)
+    if ntargs==0:
+        print('No APOGEE targets for this visit')
+        html.write('<H3><FONT COLOR=red>No APOGEE Targets for this visit</FONT></H3>\n')
+        html.write('<HR>\n')
+    
     # Link to combined spectra page.
     html.write('<H3> Plots of apVisit spectra ---> <A HREF='+prefix+'Plate-'+plate+'-'+mjd+'.html>' + prefix + 'Plate-'+plate+'-'+mjd+'</a></H3>\n')
     html.write('<HR>\n')
@@ -1061,6 +1078,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     html.write('<HR>\n')
 
     # Flat field/throughput plots.
+    fluxfile = ''
     if fluxid is not None:
         fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
         plotfile = fluxfile.replace('Flux','Tput')
@@ -2496,12 +2514,14 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 snr = '-9.9'
                 relsnr = '-1%'
                 fcolor = 'red'
+                plotwidth = '1000'
                 if objtype != 'SKY': 
                     objtype = 'BLANK'
                     snr = '-99.9'
                     relsnr = '-1%'
                     bgcolor = 'grey'
                     fcolor = 'Black'
+                    plotwidth = '10'
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
                 vishtml.write('<TD align="center">' + cfiber + '<BR>(' + cblock + ')')
                 vishtml.write('<TD align="center">' + objtype)
@@ -2533,7 +2553,6 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
                 vishtml.write('<TD align="center">-9.999')
-                plotwidth = '10'
                 
             tmp2 = plotdir + os.path.basename(visitplotfile)
             if (firstcarton != 'UNASSIGNED!!!') & (starflags != 'BAD_PIXELS'):# & (os.path.exists(tmp2)):
@@ -2701,9 +2720,9 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         rvteff = '----'; rvlogg = '----'; rvfeh = '---'
         #gd, = np.where((jdata['rv_teff'] > 0) & (np.absolute(jdata['rv_teff']) < 99999))
         #if len(gd) > 0:
-        rvteff = str(int(round(jdata['rv_teff'])))
-        rvlogg = str("%.3f" % round(jdata['rv_logg'],3))
-        rvfeh = str("%.3f" % round(jdata['rv_feh'],3))
+        rvteff = str("%.0f" % np.round(jdata['rv_teff'],0))
+        rvlogg = str("%.3f" % np.round(jdata['rv_logg'],3))
+        rvfeh = str("%.3f" % np.round(jdata['rv_feh'],3))
 
         starHTML = open(starHTMLpath, 'w')
         starHTML.write('<HTML>\n')
@@ -4873,7 +4892,10 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
             apStarRelPath = None
             if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
                 # Find which healpix this star is in
-                healpix = apload.obj2healpix(objid)
+                if 'HEALPIX' in jdata.dtype.names:
+                    healpix = jdata['HEALPIX']
+                else:
+                    healpix = apload.obj2healpix(objid)
                 healpixgroup = str(healpix // 1000)
                 healpix = str(healpix)
 

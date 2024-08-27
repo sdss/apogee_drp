@@ -28,17 +28,8 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
   telldir = apogee_filename('Telluric',num=0,chip='a',/dir)
   file = dirs.prefix+'Telluric-'+name
   tellfile = telldir+file
-  ;;lockfile = telldir+file+'.lock'
   
   ;; If another process is alreadying make this file, wait!
-  ;;if not keyword_set(unlock) then begin
-  ;;  while file_test(lockfile) do begin
-  ;;    if keyword_set(nowait) then return
-  ;;    apwait,file,10
-  ;;  endwhile
-  ;;endif else begin
-  ;;  if file_test(lockfile) then file_delete,lockfile,/allow
-  ;;endelse
   aplock,tellfile,waittime=10,unlock=unlock
   
   ;; Does product already exist?
@@ -53,8 +44,6 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
 
   print,'Making telluric: ', name
   ;; Open .lock file
-  ;;openw,lock,/get_lun,lockfile
-  ;;free_lun,lock
   aplock,tellfile,/lock
   
   ;; Get the wavelength calibration files
@@ -106,7 +95,7 @@ pro mktelluric,tellid,clobber=clobber,nowait=nowait,unlock=unlock
     free_lun,lock
   endif else print,'PROBLEMS with apTelluric-'+strtrim(tellid,2)+' files'
 
-  ;;file_delete,lockfile,/allow
+  ;; Remove the lock file
   aplock,tellfile,/clear
   
 end
