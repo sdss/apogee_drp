@@ -48,6 +48,7 @@ for i=0,3 do begin
     for j=0,1 do corr[*,j]=corr[*,2]     ;+(corr[*,2]-corr[*,3]) needs to work if only 3 reads!
 endfor
 slice_out[0:2047] = slice_in[0:2047]/corr
+; this is a bug! it only corrects the FIRST read
 
 if keyword_set(stp) then stop
 end

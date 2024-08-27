@@ -952,7 +952,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         platedata['field'] = plugmap['field_id']
         if len(ph)>0:
             platedata['programname'] = ph['carton'][0]
-
+            
     ## Load apogeeObject file to get proper name and coordinates
     ## Get apogeeObject catalog info for this field
     #if apogee2 then apogeeobject='apogee2Object' else apogeeobject='apogeeObject'
