@@ -325,7 +325,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
     outtest = [os.path.exists(f) for f in outfiles]
     if np.sum(outtest)==3 and not clobber:
         print(outdir+load.prefix+'1D-'+baseframeid+'.fits already exists and clobber not set')
-        if os.path.exists(lockfile): os.remove(lockfile)
+        lock.lock(onedfile,clear=True)
         return [],[]
 
     # Lock the file
