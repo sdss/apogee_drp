@@ -3198,7 +3198,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
                 if len(outlog)>0:                
                     outlog = np.flip(np.sort(outlog))
                     loglines = dln.readlines(outlog[0])
-                    if loglines[-1]=='apred completed successfully':
+                    if len(loglines)>0 and loglines[-1]=='apred completed successfully':
                         outexists = True                
             # apPlan
             elif pfbase.startswith(load.prefix+'Plan'):
@@ -3218,7 +3218,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
                 if len(outlog)>0:                
                     outlog = np.flip(np.sort(outlog))
                     loglines = dln.readlines(outlog[0])
-                    if loglines[-1]=='apred completed successfully':
+                    if len(loglines)>0 and loglines[-1]=='apred completed successfully':
                         outexists = True
             # apDarkPlan
             elif pfbase.startswith(load.prefix+'DarkPlan'):
@@ -3231,7 +3231,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
                 if len(outlog)>0:                
                     outlog = np.flip(np.sort(outlog))
                     loglines = dln.readlines(outlog[0])
-                    if loglines[-1]=='apred completed successfully':
+                    if len(loglines)>0 and loglines[-1]=='apred completed successfully':
                         outexists = True
             # apExtraPlan
             elif pfbase.startswith(load.prefix+'ExtraPlan'):
@@ -3244,7 +3244,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
                 if len(outlog)>0:                
                     outlog = np.flip(np.sort(outlog))
                     loglines = dln.readlines(outlog[0])
-                    if loglines[-1]=='apred completed successfully':
+                    if len(loglines)>0 and loglines[-1]=='apred completed successfully':
                         outexists = True
             else:
                 outexists = False
