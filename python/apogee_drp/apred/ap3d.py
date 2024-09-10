@@ -41,6 +41,149 @@ warnings.filterwarnings("ignore", message="numpy.ufunc size changed")
 pixelmask = bitmask.PixelBitMask()
 BADERR = 1.0000000e+10
 
+def sutr_tb(datacube,read_var_mat,good_diffs=None):
+    #datacube has shape (npix_x,npix_y,n_reads)
+    #read_var_mat has shape (npix_x,npix_y)
+    #good_diffs is boolean and has shape (npix_x,npix_y,n_reads-1)
+
+    #assumes all images are sequential (ie separated by one read time)
+
+    n_reads = len(datacube[0,0])
+    read_times = np.arange(n_reads)
+    mean_t = read_times
+    tau = read_times
+    N = np.ones(n_reads)
+
+    delta_t = mean_t[1:] - mean_t[:-1]
+
+    alpha_readnoise = (1/N[:-1] + 1/N[1:])/np.power(delta_t,2)
+    beta_readnoise = -1/N[1:-1]/(delta_t[1:]*delta_t[:-1])
+
+    alpha_phnoise = (tau[:-1] + tau[1:] - 2*mean_t[:-1])/np.power(delta_t,2)
+    beta_phnoise = (mean_t[1:-1] - tau[1:-1])/(delta_t[1:]*delta_t[:-1])
+
+    dimages = datacube[:,:,1:]-datacube[:,:,:-1]
+    if good_diffs is None:
+        good_diffs = np.ones(dimages.shape).astype(bool)
+    good_diffs = good_diffs & np.isfinite(dimages)
+
+    final_countrates = np.zeros(datacube.shape[:2])
+    final_vars = np.zeros(datacube.shape[:2])
+
+    #slice the datacube to analyze each row sequentially to keep runtime down
+    for s_ind in range(len(dimages)):
+        diffs = dimages[s_ind].T #shape = (ndiffs,npix)
+        read_var = read_var_mat[s_ind] #shape = (npix)
+        diffs2use = good_diffs[s_ind].T #shape = (ndiffs,npix)
+
+        n_repeat = 2 #DO NOT CHANGE THIS!
+        for r_ind in range(n_repeat):
+            #repeat the process after getting a good first guess
+            #to remove a bias (as discussed in the paper)
+            if r_ind == 0:
+                #initialize first guess of countrates with mean
+#                countrateguess = np.maximum(0,np.sum((diffs*diffs2use), axis=0)/np.sum(diffs2use, axis=0))
+                #use median to guard against outliers
+                curr_diffs = np.copy(diffs)
+                curr_diffs[~diffs2use] = np.nan
+                countrateguess = np.nanmedian(curr_diffs,axis=0)
+                countrateguess[~np.isfinite(countrateguess)] = 0
+                countrateguess = np.maximum(0,countrateguess)
+            else:
+                countrateguess = np.maximum(0,countrate)
+
+            # Elements of the covariance matrix
+
+            alpha = countrateguess*alpha_phnoise[:, np.newaxis]
+            alpha += read_var[None,:]*alpha_readnoise[:, np.newaxis]
+            beta = countrateguess*beta_phnoise[:, np.newaxis]
+            beta += read_var[None,:]*beta_readnoise[:, np.newaxis]
+
+            # rescale the covariance matrix to a determinant of order 1 to
+            # avoid possible overflow/underflow.  The uncertainty and chi
+            # squared value will need to be scaled back later.
+
+            scale = np.exp(np.mean(np.log(alpha), axis=0))
+
+            alpha /= scale
+            beta /= scale
+
+            ndiffs, npix = alpha.shape
+
+            # Mask resultant differences that should be ignored.  This is half
+            # of what we need to do to mask these resultant differences; the
+            # rest comes later.
+
+            d = diffs*diffs2use
+            beta = beta*diffs2use[1:]*diffs2use[:-1]
+
+            # All definitions and formulas here are in the paper.
+
+            theta = np.ones((ndiffs + 1, npix))
+            theta[1] = alpha[0]
+            for i in range(2, ndiffs + 1):
+                theta[i] = alpha[i - 1]*theta[i - 1] - np.power(beta[i - 2],2)*theta[i - 2]
+
+            phi = np.ones((ndiffs + 1, npix))
+            phi[ndiffs - 1] = alpha[ndiffs - 1]
+            for i in range(ndiffs - 2, -1, -1):
+                phi[i] = alpha[i]*phi[i + 1] - np.power(beta[i],2)*phi[i + 2]
+
+            sgn = np.ones((ndiffs, npix))
+            sgn[::2] = -1
+
+            Phi = np.zeros((ndiffs, npix))
+            for i in range(ndiffs - 2, -1, -1):
+                Phi[i] = Phi[i + 1]*beta[i] + sgn[i + 1]*beta[i]*phi[i + 2]
+
+            # This one is defined later in the paper and is used for jump
+            # detection and pedestal fitting.
+
+            PhiD = np.zeros((ndiffs, npix))
+            for i in range(ndiffs - 2, -1, -1):
+                PhiD[i] = (PhiD[i + 1] + sgn[i + 1]*d[i + 1]*phi[i + 2])*beta[i]
+
+            Theta = np.zeros((ndiffs, npix))
+            Theta[0] = -theta[0]
+            for i in range(1, ndiffs):
+                Theta[i] = Theta[i - 1]*beta[i - 1] + sgn[i]*theta[i]
+
+            ThetaD = np.zeros((ndiffs + 1, npix))
+            ThetaD[1] = -d[0]*theta[0]
+            for i in range(1, ndiffs):
+                ThetaD[i + 1] = beta[i - 1]*ThetaD[i] + sgn[i]*d[i]*theta[i]
+
+            beta_extended = np.ones((ndiffs, npix))
+            beta_extended[1:] = beta
+
+            # C' and B' in the paper
+
+            dC = sgn/theta[ndiffs]*(phi[1:]*Theta + theta[:-1]*Phi)
+            dC *= diffs2use
+
+            dB = sgn/theta[ndiffs]*(phi[1:]*ThetaD[1:] + theta[:-1]*PhiD)
+
+            # {\cal A}, {\cal B}, {\cal C} in the paper
+
+            A = 2*np.sum(d*sgn/theta[-1]*beta_extended*phi[1:]*ThetaD[:-1], axis=0)
+            A += np.sum(np.power(d,2)*theta[:-1]*phi[1:]/theta[ndiffs], axis=0)
+
+            B = np.sum(d*dC, axis=0)
+            C = np.sum(dC, axis=0)
+
+            countrate = B/C
+            chisq = (A - np.power(B,2)/C)/scale
+            var = scale/C
+            weights = dC/C
+
+            #use first countrate measurement to improve alpha,beta definitions
+            #and extract better, unbiased countrate
+        final_countrates[s_ind] = countrate
+        final_vars[s_ind] = var
+
+    return final_countrates,final_vars
+
+
 def loaddata(filename,fitsdir=None,maxread=None,cleanuprawfile=True,
              verbose=False):
     """
@@ -674,8 +817,11 @@ def checkbadreads(cube):
     # Use reference output and pixels
     if shape[1] == 2560:
         if nreads>2:
-            med_rms_refpix_arr = medfilt(rms_refpix_arr,np.minimum(nreads,11))
-            med_rms_refout_arr = medfilt(rms_refout_arr,np.minimum(nreads,11))
+            filt_size = np.minimum(nreads,11)
+            if filt_size%2 == 0:
+                filt_size += 1
+            med_rms_refpix_arr = medfilt(rms_refpix_arr,filt_size)
+            med_rms_refout_arr = medfilt(rms_refout_arr,filt_size)
         else:
             med_rms_refpix_arr = np.zeros(nreads,float)+np.median(rms_refpix_arr)
             med_rms_refout_arr = np.zeros(nreads,float)+np.median(rms_refout_arr)
@@ -1584,7 +1730,7 @@ def fixsatreads(dCounts,med_dCounts,bdsat,satmask,
     nfixable = len(fixable)
 
     minsatread = satmask[:,1]
-    
+
     # Loop through the fixable saturated pixels
     for j in range(nfixable):
         ibdsatx = fixable[j]
@@ -1750,9 +1896,10 @@ def process_slice(slc,mask,caldata,crfix=True,nocr=False,
     # Only 2 reads, Cannot detect or fix CRs
     else:
         crtab = {'ncr':0}
-        med_dCounts = dCounts
+#        med_dCounts = dCounts
+        med_dCounts = np.nanmedian(dCounts,axis=1)
         variability = np.zeros(nx,float)
-        
+
     # Fix Saturated reads
     #----------------------
     #  do this after CR fixing, so we don't have to worry about CRs here
@@ -2262,25 +2409,25 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
         #------------------
         if uptheramp == False:  
             # Make sure that Nfowler isn't too large
-            Nfowler_used = Nfowler
-            if Nfowler > Nreads//2:
-                Nfowler_used = Ngdreads//2
+            nfowler_used = nfowler
+            if nfowler > nreads//2:
+                nfowler_used = ngdreads//2
   
             # Use the mean of Nfowler reads
 
             # Beginning sample
             gd_beg = gdreads[:nfowler_used]
             if len(gd_beg) == 1:
-                im_beg = cube[:,:,gd_beg]/float(Nfowler_used)
+                im_beg = cube[:,:,gd_beg]/float(nfowler_used)
             else:
-                im_beg = np.sum(cube[:,:,gd_beg],axis=2)/float(Nfowler_used)
+                im_beg = np.sum(cube[:,:,gd_beg],axis=2)/float(nfowler_used)
 
             # End sample
             gd_end = gdreads[ngdreads-nfowler_used:ngdreads]
             if len(gd_end) == 1:
-                im_end = cube[:,:,gd_end]/float(Nfowler_used)
+                im_end = cube[:,:,gd_end]/float(nfowler_used)
             else:
-                im_end = np.sum(cube[:,:,gd_end],axis=2)/float(Nfowler_used)
+                im_end = np.sum(cube[:,:,gd_end],axis=2)/float(nfowler_used)
 
             # The middle read will be used twice for 3 reads
 
@@ -2288,7 +2435,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
             im = im_end - im_beg
   
             # Noise contribution to the variance
-            sample_noise = noise * np.sqrt(2.0/Nfowler_used)
+            sample_noise = noise * np.sqrt(2.0/nfowler_used)
   
         # Up-the-ramp sampling
         #---------------------
@@ -2304,34 +2451,88 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
             # Calculating the slope for each pixel
             #  t is the exptime, s is the signal
             #  we will use the read index for t
-            sumts = np.zeros((shape[0],shape[1]),float)   # SUM t*s
-            sums = np.zeros((shape[0],shape[1]),float)    # SUM s
-            sumn = np.zeros((shape[0],shape[1]),int)      # SUM s
-            sumt = np.zeros((shape[0],shape[1]),float)    # SUM t*s
-            sumt2 = np.zeros((shape[0],shape[1]),float)   # SUM t*s
-            for k in range(ngdreads):
-                slc = cube[:,:,gdreads[k]]
-                if satfix==False:
-                    good = ((satmask[:,:,0] == 0) | ((satmask[:,:,0] == 1) & (satmask[:,:,1] > i)))
-                else:
-                    good = np.isfinite(slc)
-                sumts[good] += gdreads[k]*slc[good]
-                sums[good] += slc[good]
-                sumn[good] += 1
-                sumt[good] += gdreads[k]
-                sumt2[good] += gdreads[k]**2
-            # The slope in Counts per read, similar to med_dCounts_im
-            slope = (sumn*sumts - sumt*sums)/(sumn*sumt2 - sumt**2)
-            # To get the total counts just multiply by nread
-            im = slope * (ngdreads-1)
-            # the first read doesn't really add any signal, just a zero-point
-            
-            # See Equation 1 in Rauscher et al.(2007), SPIE
-            #  with m=1
-            #  noise and image/flux should be in electrons, sample_noise is in electrons
-            sample_noise = np.sqrt( 12*(ngdreads-1.)/(nreads*(ngdreads+1.))*noise**2 + \
-                                    6.*(ngdreads**2+1)/(5.*ngdreads*(ngdreads+1))*im[:,:2048]*gainim )
-            sample_noise /= gainim  # convert to ADU
+
+#            start_time = time.time()
+#            sumts = np.zeros((shape[0],shape[1]),float)   # SUM t*s
+#            sums = np.zeros((shape[0],shape[1]),float)    # SUM s
+#            sumn = np.zeros((shape[0],shape[1]),int)      # SUM s
+#            sumt = np.zeros((shape[0],shape[1]),float)    # SUM t*s
+#            sumt2 = np.zeros((shape[0],shape[1]),float)   # SUM t*s
+#            for k in range(ngdreads):
+#                slc = cube[:,:,gdreads[k]]
+#                if satfix==False:
+#                    #ERROR Here with (satmask[:,:,1] > i)?
+#                    good = ((satmask[:,:,0] == 0) | ((satmask[:,:,0] == 1) & (satmask[:,:,1] > i)))
+#                else:
+#                    good = np.isfinite(slc)
+#                sumts[good] += gdreads[k]*slc[good]
+#                sums[good] += slc[good]
+#                sumn[good] += 1
+#                sumt[good] += gdreads[k]
+#                sumt2[good] += gdreads[k]**2
+#            # The slope in Counts per read, similar to med_dCounts_im
+#            slope = (sumn*sumts - sumt*sums)/(sumn*sumt2 - sumt**2)
+#            # To get the total counts just multiply by nread
+#            im = slope * (ngdreads-1)
+#            # the first read doesn't really add any signal, just a zero-point
+#            
+#            # See Equation 1 in Rauscher et al.(2007), SPIE
+#            #  with m=1
+#            #  noise and image/flux should be in electrons, sample_noise is in electrons
+#            sample_noise = np.sqrt( 12*(ngdreads-1.)/(nreads*(ngdreads+1.))*noise**2 + \
+#                                    6.*(ngdreads**2+1)/(5.*ngdreads*(ngdreads+1))*im[:,:2048]*gainim )
+#            sample_noise /= gainim  # convert to ADU
+#            print('Orig ramp fitting took %.2f sec'%(time.time()-start_time))
+            start_time = time.time()
+
+            orig_noise = np.copy(sample_noise)
+            orig_im = np.copy(im)
+
+            use_new_sutr = False
+            use_new_sutr = True
+
+            if use_new_sutr:
+
+                full_gainim = np.ones_like(cube[:,:,0]).astype(float)
+                full_gainim[:,:2048] *= gainim
+                #gainim should contain the gain in the ref region, but it doesn't... Probably want to fix this
+                full_gainim[:,2048:] *= np.nanmedian(gainim[gainim > 0])
+
+#                print('Gain summary:',np.median(gainim),np.std(gainim),np.median(full_gainim),np.std(full_gainim),np.median(full_gainim[:,2048:]))
+
+                gdreads_bool = np.zeros(cube.shape[-1]).astype(bool)
+                gdreads_bool[gdreads] = True
+                gddiffs = gdreads_bool[:-1] & gdreads_bool[1:]
+                ndiffs = cube.shape[-1]-1
+
+                good_diffs = np.ones((len(cube),len(cube[0]),ndiffs)).astype(bool)
+                good_diffs[:,:,~gddiffs] = False
+    #            if satfix==False:
+    #                #ERROR Here with (satmask[:,:,1] > i)?
+    #                good_sat = ((satmask[:,:,0] == 0) | ((satmask[:,:,0] == 1) & (satmask[:,:,1] > i)))
+    #                good_diffs[~good_sat] = False
+
+#                #remember to convert to electrons before SUTR for proper comparison of noise and cube
+                slope,slope_var = sutr_tb(cube*full_gainim[:,:,None],noise**2*np.ones(cube.shape[:2]),good_diffs)
+                im = (slope*(ngdreads-1))/full_gainim #change back to ADU
+                sample_noise = np.sqrt(slope_var[:,:2048])*(ngdreads-1)/gainim
+
+                print('New SUTR fitting took %.2f sec'%(time.time()-start_time))
+
+#                im_diff = np.nanmean(im-orig_im),np.nanstd(im-orig_im)
+#                im_rat = np.nanmean(im/orig_im),np.nanstd(im/orig_im)
+#                err_diff = np.nanmean(sample_noise-orig_noise),np.nanstd(sample_noise-orig_noise)
+#                err_rat = np.nanmean(sample_noise/orig_noise),np.nanstd(sample_noise/orig_noise)
+
+#                print('orig flux',np.nanmean(orig_im),np.nanstd(orig_im),np.sum(np.isfinite(orig_im))/orig_im.size)
+#                print('new flux ',np.nanmean(im),np.nanstd(im),np.sum(np.isfinite(im))/im.size)
+#                print('orig flux err',np.nanmean(orig_noise),np.nanstd(orig_noise))
+#                print('new flux err ',np.nanmean(sample_noise),np.nanstd(sample_noise))
+
+#                print('flux diff',im_diff)
+#                print('flux ratio',im_rat)
+#                print('err diff',err_diff)
+#                print('err ratio',err_rat)
             
         # With userference, subtract off the reference array to reduce/remove
         #   crosstalk. 
@@ -2341,7 +2542,8 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
             ref = im[:2048,2048:2560].copy()
             # subtract smoothed horizontal structure
             smref = medfilt(np.median(ref,axis=1),7)
-            ref -= smref.reshape(-1,1) + np.zeros((2048,512),float)
+            ref -= (smref.reshape(-1,1) + np.zeros((2048,512),float))
+#            ref -= (smref.reshape(-1)[:,None] + np.zeros((2048,512),float))[:,:,None]
             im = refcorrect_sub(tmp,ref)
             nx = 2048
 
@@ -2569,7 +2771,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
         if uptheramp:
             head['HISTORY'] = leadstr+'UP-THE-RAMP Sampling'
         else:
-            head['HISTORY'] = leadstr+'Fowler Sampling, Nfowler='+str(int(Nfowler_used))
+            head['HISTORY'] = leadstr+'Fowler Sampling, Nfowler='+str(int(nfowler_used))
         # Persistence correction factor
         if pmodelim is not None and ppar is not None:
             sppar = ['{:7.3g}'.format(p) for p in ppar]
@@ -3006,7 +3208,7 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,unlock=
                 outfile = load.filename('2D',num=framenum,mjd=planstr['mjd'],chips=True)
                 outfile = outfile.replace('2D-','2D-'+chips[k]+'-')
                 # Does the output directory exist?
-                fitsdir = os.path.join(utils.localdir(),load.apred)
+                fitsdir = os.path.join(utils.localdir(),load.apred)+'/'
                 if os.path.exists(os.path.dirname(outfile))==False:
                     os.makedirs(os.path.dirname(outfile))
                 # Does the file exist already
