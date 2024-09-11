@@ -58,6 +58,8 @@ if __name__ == '__main__' :
         planfile = args.planfile[0]
 
     try:
-        subprocess.call(["idl","-e","ap3d,'"+planfile+"',clobber="+clobber+",unlock="+unlock])
+        #subprocess.call(["idl","-e","ap3d,'"+planfile+"',clobber="+clobber+",unlock="+unlock])
+        from apogee_drp.apred import ap3d
+        ap3d.ap3d(planfile,clobber=clobber,unlock=unlock)
     except:
         traceback.print_exc()
