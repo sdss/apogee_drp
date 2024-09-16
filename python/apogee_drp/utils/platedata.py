@@ -446,6 +446,14 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         loc = pdata['locationId']
         platedata['locationid'] = loc
 
+        # Early S-V plate data were missing some columns
+        if 'tmass_id' not in ph.colnames and 'targetids' in ph.colnames:
+            ph['tmass_id'] = ph['targetids']
+        if 'ra' not in ph.colnames and 'target_ra' in ph.colnames:
+            ph['ra'] = ph['target_ra']
+        if 'dec' not in ph.colnames and 'target_dec' in ph.colnames:
+            ph['dec'] = ph['target_dec']
+            
         # Rename a few columns
         ph['tmass_id'].name = 'twomass'
         ph['tmass_j'].name = 'jmag'
@@ -454,9 +462,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
 
         # Sometimes TMASS_ID in "p" is 2MASS-J23580454-0007415
         for i in range(len(ph)):
-            if 'tmass_id' in ph.dtype.names:
-                if ph['tmass_id'][i].astype(str).find('2MASS-J') > -1:
-                    ph['tmass_id'][i] = ph['tmass_id'][i].astype(str).replace('2MASS-J','2M')
+            if 'twomass' in ph.dtype.names:
+                if str(ph['twomass'][i]).find('2MASS-J') > -1:
+                    ph['twomass'][i] = str(ph['twomass'][i]).replace('2MASS-J','2M')
                     
         # Fix telluric catalogIDs
         # There is a problem with some of the telluric catalogIDs due to
@@ -476,37 +484,71 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         have_flag_changes = 0
         logger.info(platedir+'/flagModifications-'+platestr+'.txt')
         if os.path.exists(platedir+'/flagModifications-'+platestr+'.txt'):
-            logg.erinfo('Reading flagModifications file: flagModifications-'+platestr+'.txt')
+            logger.info('Reading flagModifications file: flagModifications-'+platestr+'.txt')
             flag_changes = Table.read(platedir+'/flagModifications-'+platestr+'.txt',format='ascii')
             have_flag_changes = 1
             
         # Get SDSS_ID, Gaia DR3 and other catalogdb information
-        gdcat, = np.where(ph['catalogid']>0)
-        if len(gdcat)>0:
-            cdata = catalogdb.getdata(catid=ph['catalogid'][gdcat])
-            dt = [('version_id',int),('sdss_id',int),('ra_sdss_id',float),
-                  ('dec_sdss_id',float),('gaia_sourceid',int),('gaia_ra',float),
-                  ('gaia_dec',float),('gaia_pmra',float),('gaia_pmra_error',float),
-                  ('gaia_pmdec',float),('gaia_pmdec_error',float),('gaia_plx',float),
-                  ('gaia_plx_error',float),('gaia_gmag',float),('gaia_gerr',float),
-                  ('gaia_bpmag',float),('gaia_bperr',float),('gaia_rpmag',float),
-                  ('gaia_rperr',float),('gaia_release',str,10),
-                  ('healpix',int),('sdss5_target_pks',str,1000),
-                  ('sdss5_target_catalogids',str,1000),
-                  ('sdss5_target_carton_pks',str,1000),
-                  ('sdss5_target_cartons',str,1000),
-                  ('sdss5_target_flagshex',str,1000)]
-            temp = Table(np.zeros(len(ph),dtype=np.dtype(dt)))
-            temp['version_id'] = -1
-            temp['sdss_id'] = -1
-            temp['ra_sdss_id'] = -9999
-            temp['dec_sdss_id'] = -9999
-            _,ind1,ind2 = np.intersect1d(ph['catalogid'],cdata['catalogid'],
-                                         return_indices=True)
-            for c in temp.colnames:
-                temp[c][ind1] = cdata[c][ind2]
-            ph = hstack((ph,temp))
-            
+        if 'catalogid' in ph.colnames:
+            gdcat, = np.where(ph['catalogid']>0)
+            if len(gdcat)>0:
+                cdata = catalogdb.getdata(catid=ph['catalogid'][gdcat])
+                dt = [('version_id',int),('sdss_id',int),('ra_sdss_id',float),
+                      ('dec_sdss_id',float),('gaia_sourceid',int),('gaia_ra',float),
+                      ('gaia_dec',float),('gaia_pmra',float),('gaia_pmra_error',float),
+                      ('gaia_pmdec',float),('gaia_pmdec_error',float),('gaia_plx',float),
+                      ('gaia_plx_error',float),('gaia_gmag',float),('gaia_gerr',float),
+                      ('gaia_bpmag',float),('gaia_bperr',float),('gaia_rpmag',float),
+                      ('gaia_rperr',float),('gaia_release',str,10),
+                      ('healpix',int),('sdss5_target_pks',str,1000),
+                      ('sdss5_target_catalogids',str,1000),
+                      ('sdss5_target_carton_pks',str,1000),
+                      ('sdss5_target_cartons',str,1000),
+                      ('sdss5_target_flagshex',str,1000)]
+                temp = Table(np.zeros(len(ph),dtype=np.dtype(dt)))
+                temp['version_id'] = -1
+                temp['sdss_id'] = -1
+                temp['ra_sdss_id'] = -9999
+                temp['dec_sdss_id'] = -9999
+                _,ind1,ind2 = np.intersect1d(ph['catalogid'],cdata['catalogid'],
+                                             return_indices=True)
+                for c in temp.colnames:
+                    temp[c][ind1] = cdata[c][ind2]
+                ph = hstack((ph,temp))
+        else:
+            apgind, = np.where(np.char.array(ph['holetype'].astype(str)).find('APOGEE')>-1)
+            ph = ph[apgind]
+            gdph, = np.where(ph['targettype'].astype(str)!='sky')
+            cdata = catalogdb.getdata(ra=ph['ra'][gdph],dec=ph['dec'][gdph])
+            if len(gdph)>0:
+                dt = [('version_id',int),('sdss_id',int),('ra_sdss_id',float),
+                      ('dec_sdss_id',float),('gaia_sourceid',int),('gaia_ra',float),
+                      ('gaia_dec',float),('gaia_pmra',float),('gaia_pmra_error',float),
+                      ('gaia_pmdec',float),('gaia_pmdec_error',float),('gaia_plx',float),
+                      ('gaia_plx_error',float),('gaia_gmag',float),('gaia_gerr',float),
+                      ('gaia_bpmag',float),('gaia_bperr',float),('gaia_rpmag',float),
+                      ('gaia_rperr',float),('gaia_release',str,10),
+                      ('healpix',int),('sdss5_target_pks',str,1000),
+                      ('sdss5_target_catalogids',str,1000),
+                      ('sdss5_target_carton_pks',str,1000),
+                      ('sdss5_target_cartons',str,1000),
+                      ('sdss5_target_flagshex',str,1000)]
+                temp = Table(np.zeros(len(ph),dtype=np.dtype(dt)))
+                temp['version_id'] = -1
+                temp['sdss_id'] = -1
+                temp['ra_sdss_id'] = -9999
+                temp['dec_sdss_id'] = -9999
+                ind1,ind2,dist = coords.xmatch(ph['ra'],ph['dec'],cdata['ra_sdss_id'],
+                                               cdata['dec_sdss_id'],2,unique=True)
+                if len(ind1)>0:
+                    for c in temp.colnames:
+                        if c in cdata.colnames:
+                            temp[c][ind1] = cdata[c][ind2]
+                    if 'catalogid' not in ph.colnames:
+                        ph['catalogid'] = -1
+                        ph['catalogid'][ind1] = cdata['catalogid31'][ind2]                            
+                ph = hstack((ph,temp))
+                
     # Get SDSS-V FPS photometry from catalogdb/targetdb
     if fps:
         logger.info('Querying catalogdb/targetdb')
@@ -516,7 +558,6 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             ph['target_dec'] = ph['dec']
         else:
             print('No APOGEE assignments for this design.')
-
             
     # I don't understand the purpose of this next section???
     # querying by design or by catalogid gives the same results!
