@@ -760,7 +760,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                         if plugmap['fiberdata']['category'][m].astype(str).upper() == 'STANDARD_APOGEE': objtype='HOT_STD'
                         fiber['objtype'][i] = objtype
                         if objtype=='SKY': continue
-
+                        
                     # Get matching stars using catalogid for FPS
                     if fps:
                         match, = np.where(fiber['catalogid'][i]==ph['catalogid'])
@@ -789,71 +789,31 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             fiber['target1'][i] = ph['apogee_target1'][match]
                             fiber['target2'][i] = ph['apogee_target2'][match]
                             apogee2 = 0
-                        # SDSS-V plate or configuration
+                        # SDSS-V data
                         if (plate >= 15000) or fps:
                             sdss5 = True
-                            if fps==False:   # SDSS-V plate data
-                                fiber['ra'][i] = ph['target_ra'][match]
-                                fiber['dec'][i] = ph['target_dec'][match]                                
-                                fiber['catalogid'][i] = ph['catalogid'][match]
-                                fiber['version_id'][i] = ph['version_id'][match]
-                                fiber['sdss_id'][i] = ph['sdss_id'][match]
-                                fiber['ra_sdss_id'][i] = ph['ra_sdss_id'][match]
-                                fiber['dec_sdss_id'][i] = ph['dec_sdss_id'][match]
-                                fiber['healpix'][i] = ph['healpix'][match]
+                        if fps==False:   # plate data
+                            fiber['ra'][i] = ph['target_ra'][match]
+                            fiber['dec'][i] = ph['target_dec'][match]                                
+                            fiber['catalogid'][i] = ph['catalogid'][match]
+                            fiber['version_id'][i] = ph['version_id'][match]
+                            fiber['sdss_id'][i] = ph['sdss_id'][match]
+                            fiber['ra_sdss_id'][i] = ph['ra_sdss_id'][match]
+                            fiber['dec_sdss_id'][i] = ph['dec_sdss_id'][match]
+                            fiber['healpix'][i] = ph['healpix'][match]
+                            fiber['pmra'][i] = ph['pmra'][match]
+                            fiber['pmdec'][i] = ph['pmdec'][match]
+                            # Copy S-V catalogdb information if available
+                            if plate >= 15000:
                                 fiber['sdssv_apogee_target0'][i] = ph['sdssv_apogee_target0'][match]
-                                fiber['firstcarton'][i] = ph['firstcarton'].astype(str)[match][0]
-                                fiber['pmra'][i] = ph['pmra'][match]
-                                fiber['pmdec'][i] = ph['pmdec'][match]
-                                # Copy S-V catalogdb information if available
+                                fiber['firstcarton'][i] = ph['firstcarton'].astype(str)[match][0]                            
                                 if 'sdss5_target_pks' in ph.colnames:
                                     fiber['sdss5_target_pks'][i] = ph['sdss5_target_pks'][match[0]]
                                     fiber['sdss5_target_catalogids'][i] = ph['sdss5_target_catalogids'][match[0]]
                                     fiber['sdss5_target_carton_pks'][i] = ph['sdss5_target_carton_pks'][match[0]]
                                     fiber['sdss5_target_cartons'][i] = ph['sdss5_target_cartons'][match[0]]
                                     fiber['sdss5_target_flagshex'][i] = ph['sdss5_target_flagshex'][match[0]]
-                                if 'gaia_sourceid' in ph.colnames:
-                                    fiber['gaia_sourceid'][i] = ph['gaia_sourceid'][match][0].astype(str)
-                                    fiber['gaia_release'][i] = ph['gaia_release'][match][0].astype(str)
-                                    for n in ['gaia_ra','gaia_dec','gaia_plx','gaia_plx_error',
-                                              'gaia_pmra','gaia_pmra_error','gaia_pmdec','gaia_pmdec_error',
-                                              'gaia_gmag','gaia_gerr','gaia_bpmag','gaia_bperr','gaia_rpmag',
-                                              'gaia_rperr']:
-                                        fiber[n][i] = ph[n][match]
-                                # objtype: STAR, HOT_STD, or SKY
-                                objtype = 'STAR'
-                                if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],0)==1: objtype='SKY'
-                                if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],1)==1: objtype='HOT_STD'
-                            else:
-                                fiber['ra'][i] = ph['ra'][match]
-                                fiber['dec'][i] = ph['dec'][match]
-                                fiber['catalogid'][i] = ph['catalogid'][match]
-                                fiber['version_id'][i] = ph['version_id'][match]
-                                fiber['sdss_id'][i] = ph['sdss_id'][match]
-                                fiber['ra_sdss_id'][i] = ph['ra_sdss_id'][match]
-                                fiber['dec_sdss_id'][i] = ph['dec_sdss_id'][match]
-                                fiber['healpix'][i] = ph['healpix'][match]
-                                fiber['twomass_designation'][i] = ph['twomass'][match][0].astype(str)
-                                fiber['jmag'][i] = ph['jmag'][match]
-                                fiber['jerr'][i] = ph['e_jmag'][match]
-                                fiber['hmag'][i] = ph['hmag'][match]
-                                fiber['herr'][i] = ph['e_hmag'][match]
-                                fiber['kmag'][i] = ph['kmag'][match]
-                                fiber['kerr'][i] = ph['e_kmag'][match]
-                                fiber['sdss5_target_pks'][i] = ph['sdss5_target_pks'][match[0]]
-                                fiber['sdss5_target_catalogids'][i] = ph['sdss5_target_catalogids'][match[0]]
-                                fiber['sdss5_target_carton_pks'][i] = ph['sdss5_target_carton_pks'][match[0]]
-                                fiber['sdss5_target_cartons'][i] = ph['sdss5_target_cartons'][match[0]]
-                                fiber['sdss5_target_flagshex'][i] = ph['sdss5_target_flagshex'][match[0]]
-                                fiber['brightneicount'][i] = ph['brightneicount'][match[0]]
-                                fiber['brightneiflag'][i] = ph['brightneiflag'][match[0]]
-                                fiber['brightneifluxfrac'][i] = ph['brightneifluxfrac'][match[0]]
-                                fiber['firstcarton'][i] = plugmap['fiberdata']['firstcarton'][m]
-                                fiber['cadence'][i] = plugmap['fiberdata']['cadence'][m]
-                                fiber['program'][i] = plugmap['fiberdata']['program'][m]
-                                fiber['category'][i] = plugmap['fiberdata']['category'][m]
-                                fiber['pmra'][i] = ph['gaia_pmra'][match]
-                                fiber['pmdec'][i] = ph['gaia_pmdec'][match]
+                            if 'gaia_sourceid' in ph.colnames:
                                 fiber['gaia_sourceid'][i] = ph['gaia_sourceid'][match][0].astype(str)
                                 fiber['gaia_release'][i] = ph['gaia_release'][match][0].astype(str)
                                 for n in ['gaia_ra','gaia_dec','gaia_plx','gaia_plx_error',
@@ -861,6 +821,48 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                           'gaia_gmag','gaia_gerr','gaia_bpmag','gaia_bperr','gaia_rpmag',
                                           'gaia_rperr']:
                                     fiber[n][i] = ph[n][match]
+                            # objtype: STAR, HOT_STD, or SKY
+                            objtype = 'STAR'
+                            if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],0)==1: objtype='SKY'
+                            if bmask.is_bit_set(fiber['sdssv_apogee_target0'][i],1)==1: objtype='HOT_STD'
+                        # SDSS-V FPS data
+                        else:
+                            fiber['ra'][i] = ph['ra'][match]
+                            fiber['dec'][i] = ph['dec'][match]
+                            fiber['catalogid'][i] = ph['catalogid'][match]
+                            fiber['version_id'][i] = ph['version_id'][match]
+                            fiber['sdss_id'][i] = ph['sdss_id'][match]
+                            fiber['ra_sdss_id'][i] = ph['ra_sdss_id'][match]
+                            fiber['dec_sdss_id'][i] = ph['dec_sdss_id'][match]
+                            fiber['healpix'][i] = ph['healpix'][match]
+                            fiber['twomass_designation'][i] = ph['twomass'][match][0].astype(str)
+                            fiber['jmag'][i] = ph['jmag'][match]
+                            fiber['jerr'][i] = ph['e_jmag'][match]
+                            fiber['hmag'][i] = ph['hmag'][match]
+                            fiber['herr'][i] = ph['e_hmag'][match]
+                            fiber['kmag'][i] = ph['kmag'][match]
+                            fiber['kerr'][i] = ph['e_kmag'][match]
+                            fiber['sdss5_target_pks'][i] = ph['sdss5_target_pks'][match[0]]
+                            fiber['sdss5_target_catalogids'][i] = ph['sdss5_target_catalogids'][match[0]]
+                            fiber['sdss5_target_carton_pks'][i] = ph['sdss5_target_carton_pks'][match[0]]
+                            fiber['sdss5_target_cartons'][i] = ph['sdss5_target_cartons'][match[0]]
+                            fiber['sdss5_target_flagshex'][i] = ph['sdss5_target_flagshex'][match[0]]
+                            fiber['brightneicount'][i] = ph['brightneicount'][match[0]]
+                            fiber['brightneiflag'][i] = ph['brightneiflag'][match[0]]
+                            fiber['brightneifluxfrac'][i] = ph['brightneifluxfrac'][match[0]]
+                            fiber['firstcarton'][i] = plugmap['fiberdata']['firstcarton'][m]
+                            fiber['cadence'][i] = plugmap['fiberdata']['cadence'][m]
+                            fiber['program'][i] = plugmap['fiberdata']['program'][m]
+                            fiber['category'][i] = plugmap['fiberdata']['category'][m]
+                            fiber['pmra'][i] = ph['gaia_pmra'][match]
+                            fiber['pmdec'][i] = ph['gaia_pmdec'][match]
+                            fiber['gaia_sourceid'][i] = ph['gaia_sourceid'][match][0].astype(str)
+                            fiber['gaia_release'][i] = ph['gaia_release'][match][0].astype(str)
+                            for n in ['gaia_ra','gaia_dec','gaia_plx','gaia_plx_error',
+                                      'gaia_pmra','gaia_pmra_error','gaia_pmdec','gaia_pmdec_error',
+                                      'gaia_gmag','gaia_gerr','gaia_bpmag','gaia_bperr','gaia_rpmag',
+                                      'gaia_rperr']:
+                                fiber[n][i] = ph[n][match]
 
                         # APOGEE-1/2 target types
                         if (plate < 15000) and not fps:
@@ -1074,7 +1076,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     #            print('not halted: no match in object')
 
     platedata['fiberdata'] = fiber
-
+    
     # Save the platedata to file
     logger.info('Saving platedata to '+platedatafile)    
     save(platedatafile,platedata)
