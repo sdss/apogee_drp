@@ -146,14 +146,19 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['mjdbeg'] = np.min(allvisits['mjd'].astype(int))
     startab['mjdend'] = np.max(allvisits['mjd'].astype(int))
     startab['healpix'] = -1
+
     if 'healpix' in allvisits.colnames:
         # Use visit healpix, if it exists
         startab['healpix'] = allvisits['healpix'][0]
-    if startab['healpix'][0] == -1 and 'ra_sdss_id' in allvisits.colnames and 'dec_sdss_id' in allvisits.colnames:
-        # Use ra_sdss_id/dec_sdss_id        
+    if (startab['healpix'][0] == -1 and 'ra_sdss_id' in allvisits.colnames and
+        'dec_sdss_id' in allvisits.colnames and allvisits['ra_sdss_id'][0] > -1 and
+        allvisits['dec_sdss_id'][0] > -1):
+        # Use ra_sdss_id/dec_sdss_id
         startab['healpix'] = apload.coords2healpix(allvisits['ra_sdss_id'][0],allvisits['dec_sdss_id'][0])
+
     # This used to be the default until 07/03/2024
     if startab['healpix'][0] == -1:
+        logger.info('Using 2MASS-style coordinates to calculate HEALPix')
         startab['healpix'] = apload.obj2healpix(star)    
     startab['nvisits'] = nallvisits
     # Copy data from visit
@@ -470,7 +475,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
                     gd.extend(np.where((spec.wave[:,ichip] > window[0]) & (spec.wave[:,ichip] < window[1]))[0])
                 mask[gd] = False
                 spec.mask[:,ichip] |= mask
-                 
+
         if spec is not None:
             speclist.append(spec)
             allvisit['bc'][i] = spec.barycorr()
