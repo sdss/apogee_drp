@@ -489,7 +489,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             have_flag_changes = 1
             
         # Get SDSS_ID, Gaia DR3 and other catalogdb information
-        if 'catalogid' in ph.colnames:
+        if 'catalogid' in ph.colnames and np.sum(ph['catalogid']>0)>0:
             gdcat, = np.where(ph['catalogid']>0)
             if len(gdcat)>0:
                 cdata = catalogdb.getdata(catid=ph['catalogid'][gdcat])
@@ -521,7 +521,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             gdph, = np.where(ph['targettype'].astype(str)!='sky')
             cdata = catalogdb.getdata(ra=ph['ra'][gdph],dec=ph['dec'][gdph])
             if len(gdph)>0:
-                dt = [('version_id',int),('sdss_id',int),('ra_sdss_id',float),
+                dt = [('catalogid',int),('version_id',int),('sdss_id',int),('ra_sdss_id',float),
                       ('dec_sdss_id',float),('gaia_sourceid',int),('gaia_ra',float),
                       ('gaia_dec',float),('gaia_pmra',float),('gaia_pmra_error',float),
                       ('gaia_pmdec',float),('gaia_pmdec_error',float),('gaia_plx',float),
@@ -534,6 +534,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                       ('sdss5_target_cartons',str,1000),
                       ('sdss5_target_flagshex',str,1000)]
                 temp = Table(np.zeros(len(ph),dtype=np.dtype(dt)))
+                temp['catalogid'] = -1
                 temp['version_id'] = -1
                 temp['sdss_id'] = -1
                 temp['ra_sdss_id'] = -9999
@@ -544,9 +545,14 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     for c in temp.colnames:
                         if c in cdata.colnames:
                             temp[c][ind1] = cdata[c][ind2]
-                    if 'catalogid' not in ph.colnames:
-                        ph['catalogid'] = -1
-                        ph['catalogid'][ind1] = cdata['catalogid31'][ind2]                            
+                    temp['catalogid'][ind1] = cdata['catalogid31'][ind2]
+                    temp['version_id'][ind1] = 31
+
+                # Delete catalogid and version_id in ph, if they exist already
+                if 'catalogid' in ph.colnames: del ph['catalogid']
+                if 'version_id' in ph.colnames: del ph['version_id']
+
+                # Add the new columns to ph
                 ph = hstack((ph,temp))
                 
     # Get SDSS-V FPS photometry from catalogdb/targetdb
@@ -558,7 +564,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             ph['target_dec'] = ph['dec']
         else:
             print('No APOGEE assignments for this design.')
-            
+
     # I don't understand the purpose of this next section???
     # querying by design or by catalogid gives the same results!
     # Maybe that used to be the case
@@ -794,7 +800,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             sdss5 = True
                         if fps==False:   # plate data
                             fiber['ra'][i] = ph['target_ra'][match]
-                            fiber['dec'][i] = ph['target_dec'][match]                                
+                            fiber['dec'][i] = ph['target_dec'][match]
                             fiber['catalogid'][i] = ph['catalogid'][match]
                             fiber['version_id'][i] = ph['version_id'][match]
                             fiber['sdss_id'][i] = ph['sdss_id'][match]
@@ -806,7 +812,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             # Copy S-V catalogdb information if available
                             if plate >= 15000:
                                 fiber['sdssv_apogee_target0'][i] = ph['sdssv_apogee_target0'][match]
-                                fiber['firstcarton'][i] = ph['firstcarton'].astype(str)[match][0]                            
+                                fiber['firstcarton'][i] = ph['firstcarton'].astype(str)[match][0]
                                 if 'sdss5_target_pks' in ph.colnames:
                                     fiber['sdss5_target_pks'][i] = ph['sdss5_target_pks'][match[0]]
                                     fiber['sdss5_target_catalogids'][i] = ph['sdss5_target_catalogids'][match[0]]
