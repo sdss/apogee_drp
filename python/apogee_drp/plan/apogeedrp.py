@@ -1808,6 +1808,11 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if flatdict is None or len(flatdict)==0:
             flatdict = []
             logger.info('No master Flat calibration files to make')
+        # Give each job LOTS of memory
+        slurmpars1 = slurmpars.copy()
+        slurmpars1['nodes'] = np.minimum(slurmpars1['nodes'],2)
+        slurmpars1['cpus'] = 4
+        slurmpars1['memory'] = 55000  # in MB
         dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
               ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(flatdict),dtype=np.dtype(dt))
