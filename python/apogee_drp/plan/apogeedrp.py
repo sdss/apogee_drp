@@ -1853,7 +1853,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Flat files to run')        
-            key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars)
+            key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars1)
             slrm.queue_wait('mkflat',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,
