@@ -1808,6 +1808,11 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if flatdict is None or len(flatdict)==0:
             flatdict = []
             logger.info('No master Flat calibration files to make')
+        # Give each job LOTS of memory
+        slurmpars1 = slurmpars.copy()
+        slurmpars1['nodes'] = np.minimum(slurmpars1['nodes'],2)
+        slurmpars1['cpus'] = 4
+        slurmpars1['memory'] = 55000  # in MB
         dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
               ('errfile',str,1000),('dir',str,1000)] 
         tasks = np.zeros(len(flatdict),dtype=np.dtype(dt))
@@ -1848,7 +1853,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Flat files to run')        
-            key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars)
+            key,jobid = slrm.submit(tasks,label='mkflat',verbose=True,logger=logger,**slurmpars1)
             slrm.queue_wait('mkflat',key,jobid,sleeptime=120,verbose=True,logger=logger) # wait for jobs to complete
             # This should check if the ran okay and puts the status in the database            
             chkmaster1 = check_mastercals(tasks['name'],'Flat',logfiles,key,apred,
