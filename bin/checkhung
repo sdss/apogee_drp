@@ -1,0 +1,53 @@
+#!/usr/bin/env python
+import os
+import numpy as np
+import time
+from apogee_drp.utils import email
+import psutil
+
+def checkhung():
+    """ Check for long-running and possibly hung daily processing jobs."""
+
+    # Get information about all processes
+    for proc in psutil.process_iter(['pid', 'name', 'username', 'cpu_percent', 'memory_percent']):
+    	print(proc.info)
+
+# Main command-line program
+if __name__ == "__main__":
+
+    username = 'u0914350'
+
+    # Get information about all processes
+    cols = ['pid','name','username','cpu_percent','memory_percent','cmdline','status','create_time']
+    badproc = []
+    for proc in psutil.process_iter(cols):
+        if proc.username()==username:
+            if str(proc.cmdline()).find('runapogee')>-1:
+                dt = (time.time()-proc.create_time())/3600.0
+                if dt>20:
+                    badproc.append(proc)
+                    print(proc.pid,proc.status(),proc.create_time(),dt,proc.cmdline())
+
+    print(len(badproc),'long-running processes')
+    if len(badproc)>0:
+        print(badproc)
+
+        address = 'dnidever@montana.edu'
+        subject = 'WARNING: '+str(len(badproc))+' long-running runapogee processes'
+        message = """\
+                  <html>
+                    <body>
+                  """
+        message = '<b>'+str(len(badproc))+' long-running runapogee processes</b><br>\n'
+        message = '<b>NUM   PID     DT    COMMAND</b><br>\n'
+        for i,p in enumerate(badproc):
+            dt = (time.time()-p.create_time())/3600.0
+            cmd = ' '.join(p.cmdline())
+            message += '{:d}  {:d}  {:.1f} hours  {:} <br>\n'.format(i+1,p.pid,dt,cmd)
+        message += """\
+                     </p>
+                     </body>
+                     </html>
+                   """
+        email.send(address,subject,message,send_from='noreply.apogeedrp')
+        print(message)
