@@ -369,7 +369,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
     if fps:
         # ra/dec are the observed epoch coordinates
         # racat/deccat are the catalog coordinates
-        plugmapfile = load.filename('confSummary',configid=plate)
+        plugmapfile = plmap.plugmapfilename(plate,60000,load.instrument)
+        #plugmapfile = load.filename('confSummary',configid=plate)
         plugdir = os.path.dirname(plugmapfile)+'/'
         plugfile = os.path.basename(plugmapfile)
 
@@ -699,6 +700,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 fiber['valid'][i] = plugmap['fiberdata']['valid'][m]
                 fiber['sdssv_apogee_target0'][i] = plugmap['fiberdata']['sdssv_apogee_target0'][m]
                 fiber['catalogid'][i] = plugmap['fiberdata']['catalogid'][m]
+                fiber['category'][i] = plugmap['fiberdata']['category'][m]
             else:
                 fiber['target1'][i] = plugmap['fiberdata']['primTarget'][m]
                 fiber['target2'][i] = plugmap['fiberdata']['secTarget'][m]
@@ -725,8 +727,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     if fiber['valid'][i]==0: badcmt.append('INVALID')
                     cmt += ', '.join(badcmt)
                     logger.info(cmt)
-                # Unassigned, no information for this target
-                if fiber['assigned'][i]==0:
+                # Unassigned, generaly no information for this target
+                #   but allow for use of sky fibers for boss-assigned robots
+                if fiber['assigned'][i]==0 and str(fiber['category'][i]).upper().find('SKY')==-1:
                     fiber['hmag'][i] = 99.99
                     fiber['mag'][i] = 99.99
                     continue

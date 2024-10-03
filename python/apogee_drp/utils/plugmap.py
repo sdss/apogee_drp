@@ -11,7 +11,7 @@ from astropy.io import fits
 from . import bitmask as bmask
 
 def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None,
-                    logger=None,verbose=True):
+                    sky=True,logger=None,verbose=True):
     """
     Construct the plugmap filename using plate and mjd.
     Works for both plate and FPS data.
@@ -32,6 +32,8 @@ def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None
     mapper_data : str, optional
        Directory for mapper information (optional).  If not input, this will
          be obtained from the environmental variables MAPPER_DATA_N/S.
+    sky : bool, optional
+       Use the confSummaryS files with boss skies added.  Default is True.
     logger : logging object, optional
        Logging object used for logging output.
     verbose : bool, optional
@@ -75,6 +77,8 @@ def plugmapfilename(plate,mjd,instrument,plugid=None,mapa=False,mapper_data=None
     if fps:
         aload = apload.ApLoad(apred='daily',telescope=telescope)
         plugmapfile = aload.filename('confSummary',configid=plate)
+        if sky:
+            plugmapfile = plugmapfile.replace('confSummary','confSummaryS')
         plugdir = os.path.dirname(plugmapfile)+'/'
         plugfile = os.path.basename(plugmapfile)
 
