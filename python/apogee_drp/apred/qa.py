@@ -45,7 +45,7 @@ logging.getLogger('matplotlib.font_manager').disabled = True
 
 cspeed = 299792.458e0
 
-sdss_path = path.Path()
+sdss_path = path.Path(preserve_envvars=True)
 
 sort_table_link = 'https://www.kryogenix.org/code/browser/sorttable/sorttable.js'
 

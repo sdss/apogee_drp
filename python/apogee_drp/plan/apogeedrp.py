@@ -1320,7 +1320,7 @@ def mkvers(apred,logger=None):
     apogee_drp_dir = os.environ['APOGEE_DRP_DIR']+'/'
 
     logger.info('Setting up directory structure for APOGEE DRP version = '+apred)
-
+    
     # Main directory
     if os.path.exists(apogee_redux+apred)==False:
         logger.info('Creating '+apogee_redux+apred)
@@ -3885,7 +3885,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     run('apo','v1.1',mjd=[54566,56666])
 
     """
-
+    
     begtime = str(datetime.now())
 
     telescope = observatory+'25m'
@@ -3928,7 +3928,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
 
     # Data directory 
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
-
+    
     # Starting fresh
     #  need to do this before we start the log file
     if 'setup' in steps and fresh:

@@ -628,7 +628,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     else:
         out['platetype'] = 'normal'
 
-    sdss_path = path.Path()
+    sdss_path = path.Path(preserve_envvars=True)
     rawfile = sdss_path.full(load.prefix+'R',num=im1,chip='a',mjd=mjd)
     if os.path.exists(rawfile)==False:
         raise ValueError('Cannot find file '+rawfile)

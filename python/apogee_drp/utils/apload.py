@@ -163,7 +163,7 @@ class ApLoad:
         elif dr == 'dr14' : self.dr14()
         elif dr == 'dr16' : self.dr16()
         # set up 
-        self.sdss_path=path.Path()
+        self.sdss_path=path.Path(preserve_envvars=True)
         self.http_access=HttpAccess(verbose=verbose)
         self.http_access.remote()
    

@@ -63,7 +63,7 @@ class AP1DVISIT(BaseTask):
         visitfiles = glob.glob(visitdir+"/"+self.prefix+"Visit-"+self.apred+"-"+str(self.plate)+"-"+str(self.mjd)+"-???.fits")
 
         # Check apVisitSum file
-        sdss_path = path.Path()
+        sdss_path = path.Path(preserve_envvars=True)
         apvisitsum = sdss_path.full('apVisitSum',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
                                     field=self.field,plate=self.plate,mjd=self.mjd,prefix=self.prefix)
 

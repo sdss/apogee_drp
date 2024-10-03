@@ -52,7 +52,7 @@ class AP2D(BaseTask):
 
         # Check if the ap1D files were created
         # Get the exposures directory
-        sdss_path = path.Path()
+        sdss_path = path.Path(preserve_envvars=True)
         expdir = os.path.dirname(sdss_path.full('ap1D',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
                                                 plate=self.plate,mjd=self.mjd,prefix=self.prefix,num=0,chip='a'))
         counter = 0

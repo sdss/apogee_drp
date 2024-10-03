@@ -64,7 +64,7 @@ if __name__ == "__main__":
         linkvers = args.linkvers[0]
     else:
         linkvers = None
-
+        
     # Set unix environment variables for kingspeak
     #  we use notchpea by default
     if alloc=='sdss-kp':
