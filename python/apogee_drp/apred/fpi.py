@@ -88,7 +88,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         fpinum = int(num)
     print('FPI full-frame exposure ',fpinum)
     fpiframe = load.ap1D(fpinum)
-
+    
     # Load the daily wavelength solution for this night
     daynum = mjd2day(mjd5)
     print('Using ',wfile,' wavelength calibration file')
@@ -185,6 +185,12 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         fpilines.write(fpilinesfile,overwrite=True)
     # write out median numbes of lines per chip
 
+    # Throw out exposures that don't have enough lines detected
+    #  this can happen if this isn't actually an FPI exposure
+    if len(fpilines)/900 < 50:
+        print('No enough lines for this exposure. Skipping this one')
+        continue
+    
     # Determine median wavelength per FPI lines
     # -----------------------------------------
     print(' ')
@@ -652,7 +658,7 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
     mjd = int(load.cmjd(fpiid))
         
     # Load the wavelength array/solution
-    print('loading fpiid wavelengtth solution: ', fpiid)
+    print('loading fpiid wavelength solution: ', fpiid)
     fpiwavefile = reduxdir+'cal/'+instrument+'/wave/'+load.prefix+'WaveFPI-%5d-%8d.fits' % (mjd,fpiid)
     waveframe = load._readchip(fpiwavefile,load.prefix+'WaveFPI')
     npoly = waveframe['a'][0].header['NPOLY']
@@ -687,7 +693,7 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
             # Find the FPI lines
             linestr = fitlines(frame,fpirows,chips=[chip],verbose=verbose)
             linestr['x'] = linestr['pars'][:,1]
-
+            
             # Match up the lines with the reference frame
             fpilinestr = Table(waveframe[chip][3].data)   # unique FPI lines
             fpilines = Table(waveframe[chip][4].data)     # all lines, these already have lineid's and linewave 
