@@ -184,12 +184,6 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
         print('Writing FPI lines to ',fpilinesfile)
         fpilines.write(fpilinesfile,overwrite=True)
     # write out median numbes of lines per chip
-
-    # Throw out exposures that don't have enough lines detected
-    #  this can happen if this isn't actually an FPI exposure
-    if len(fpilines)/900 < 50:
-        print('No enough lines for this exposure. Skipping this one')
-        continue
     
     # Determine median wavelength per FPI lines
     # -----------------------------------------
@@ -245,6 +239,11 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
             # Save the catalog
             print('  Writing FPI lines to ',fpilinesfile)
             fpilines.write(fpilinesfile,overwrite=True)
+        # Throw out exposures that don't have enough lines detected
+        #  this can happen if this isn't actually an FPI exposure
+        if len(fpilines)/900 < 50:
+            print('No enough lines for this exposure. Skipping this one')
+            continue
         # 2) Apply the daily wavelenth solution
         print('  2) Apply the daily wavelength solution for FPI-line identification')
         # These wavelengths are ONLY used to identify which unique FPI line it is
