@@ -197,6 +197,9 @@ def gettargeting(sdssid):
         if data['sdss_id'][i] == 0:
             continue
         if data['sdss5_target_carton_pks'][i] != '':
+            # Remove dangling comma, not sure why this happens
+            if data['sdss5_target_carton_pks'][i][-1]==',':
+                 data['sdss5_target_carton_pks'][i] =  data['sdss5_target_carton_pks'][i][:-1]
             carton_pks = np.array(data['sdss5_target_carton_pks'][i].split(',')).astype(int)
             flags = TargetingFlags()
             for k in carton_pks:
