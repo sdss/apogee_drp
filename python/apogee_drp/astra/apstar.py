@@ -57,7 +57,7 @@ class APSTAR(BaseTask):
 
     def output(self):
         # Output is similar to apStar file
-        sdss_path = path.Path()
+        sdss_path = path.Path(preserve_envvars=True)
         apstarfile = sdss_path.full('apStar',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
                                     field=self.field,prefix=self.prefix,obj=self.star,apstar='stars')
         output_path_prefix, ext = os.path.splitext(apstarfile)
@@ -69,7 +69,7 @@ class APSTAR(BaseTask):
         rv.doppler_rv_star(self.star,self.apred,self.instrument,self.field)
 
         # Check that the apStar file was created
-        sdss_path = path.Path()
+        sdss_path = path.Path(preserve_envvars=True)
         apstarfile = sdss_path.full('apStar',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
                                     field=self.field,prefix=self.prefix,obj=self.star,apstar='stars')
 

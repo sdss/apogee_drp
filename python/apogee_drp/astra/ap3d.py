@@ -52,7 +52,7 @@ class AP3D(BaseTask):
 
         # Check if three ap2D files per exposure were created
         # Get the exposures directory
-        sdss_path = path.Path()
+        sdss_path = path.Path(preserve_envvars=True)
         expdir = os.path.dirname(sdss_path.full('ap2D',apred=self.apred,telescope=self.telescope,instrument=self.instrument,
                                                 plate=self.plate,mjd=self.mjd,prefix=self.prefix,num=0,chip='a'))
         counter = 0
