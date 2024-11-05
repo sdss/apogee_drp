@@ -119,9 +119,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
                          ('src_h','U16'),('targ_pmra',float),('targ_pmdec',float),('targ_pm_src','U16'),
                          ('apogee_target1',int),('apogee_target2',int),
                          ('apogee2_target1',int),('apogee2_target2',int),('apogee2_target3',int),('apogee2_target4',int),
-                         ('sdss5_target_pks',int),('sdss5_target_catalogids',str,1000),
+                         ('sdss5_target_pks',str,1000),('sdss5_target_catalogids',str,1000),
                          ('sdss5_target_carton_pks',str,1000),('sdss5_target_cartons',str,1000),
-                         ('sdss5_target_flagshex',str,150),('catalogid',int),
+                         ('sdss5_target_flagshex',str,1000),('catalogid',int),
                          ('brightneicount',np.int16),('brightneiflag',np.int16),('brightneifluxfrac',np.float32),
                          ('sdss_id',int),('ra_sdss_id',float),('dec_sdss_id',float),('gaia_release',str,10),
                          ('gaia_sourceid',int),('gaia_plx',float),('gaia_plx_error',float),
@@ -166,7 +166,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
               'sdss_id','gaia_release','gaia_sourceid','gaia_plx','gaia_plx_error','gaia_pmra','gaia_pmra_error',
               'gaia_pmdec','gaia_pmdec_error','gaia_gmag','gaia_gerr','gaia_bpmag',
               'gaia_bperr','gaia_rpmag','gaia_rperr','sdssv_apogee_target0','firstcarton',
-              'targflags']
+              'targflags','sdss5_target_pks','sdss5_target_catalogids','sdss5_target_carton_pks',
+              'sdss5_target_cartons','sdss5_target_flagshex','brightneicount','brightneiflag',
+              'brightneifluxfrac','ra_sdss_id','dec_sdss_id','sdssv_apogee_target0','cadence',
+              'program','category','targflags']    
     for c in tocopy:
         startab[c] = allvisits[c][0]
     startab['targ_pmra'] = allvisits['pmra'][0]

@@ -1400,6 +1400,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             else:  # use sky lines
                 if skywave==False:
                     cmd += ['--nosky']
+            print(' '.join(cmd))
             sout = subprocess.run(cmd,shell=False)
      
         # Compress 2D files

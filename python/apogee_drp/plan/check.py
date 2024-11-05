@@ -524,7 +524,7 @@ def check_fpi(num,apred,telescope):
         # Check the flux
         if avgpeakflux/expinfo['nread']<70:
             mask |= 2**4
-
+            
     return mask
 
 
