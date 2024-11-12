@@ -903,6 +903,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                     objname = tmp[-16:]   # not sure what else to do
                             # sometimes objname can be "None", try to fix with catalogdb info below
                             # add prefix
+                            if objname=='None' or objname=='':
+                                logger.info('Fiber '+str(fiber['fiberid'][i])+' no objname. Creating one using sdss_id coordinates.')
+                                objname = coords2tmass(fiber['ra'][i],fiber['dec'][i])
+                                tmp = objname
                             if tmp.find('A')==0:
                                 objname = 'AP'+objname
                             else:
@@ -957,7 +961,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             if nmatch>0:
                 ind1 = np.atleast_1d(ind1)
                 # Sometimes the plateHoles tmass_style are "None", try to fix with catalogdb information
-                if fiber['tmass_style'][istar]=='2MNone':
+                if fiber['tmass_style'][istar]=='2MNone' or fiber['tmass_style'][istar]=='2M':
                     # Use catalogdb.tic_v8 twomass name
                     if catdb['twomass'][ind1[0]] != 'None':
                         fiber['tmass_style'][istar] = '2M'+catdb['twomass'][ind1[0]]
