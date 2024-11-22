@@ -3089,6 +3089,7 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
     
     # Loop over MJDs
     planfiles = []
+    error = []
     for m in mjds:
         logger.info(' ')
         logger.info('Making plan files for MJD='+str(m))
@@ -3102,6 +3103,8 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
             nplanfiles1 = len(planfiles1)
         except:
             logger.exception('Error making plan files')
+            e = traceback.format_exc()
+            error.append(e)
             nplanfiles1 = 0
             
         logger.info('Writing list of plan files to '+logdir+str(m)+'.plans')
@@ -3124,7 +3127,7 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
         #daycat['success'] = False
         #db.ingest('daily_status',daycat)
 
-    return planfiles
+    return planfiles,error
 
 
 def runapred(load,mjds,slurmpars,clobber=False,logger=None):
@@ -3750,7 +3753,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
     
 def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=None, 
                   planfiles=None,chkexp=None,chkvisit=None,chkrv=None,logfile=None,slurmpars=None,
-                  clobber=None,debug=False):   
+                  clobber=None,debug=False,error=None):
     """ Send a summary email."""
 
     urlbase = 'https://data.sdss5.org/sas/sdsswork/mwm/apogee/spectro/redux/'
@@ -3818,6 +3821,14 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
     #   If logfile is too large (>1MB), then do not attach the file    
     if os.path.getsize(logfile)>1e6:
         message += 'Log file is too large to attach\n'
+
+    # Print out any error messages
+    if error is not None:
+        if isinstance(error,list):
+            for e in error:
+                message += e
+        else:
+            message += str(error)
         
     message += """\
                  </p>
@@ -4038,7 +4049,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('6) Making plan files')
         rootLogger.info('====================')
         rootLogger.info('')
-        planfiles = makeplanfiles(load,mjds,**kws)
+        planfiles,planerror = makeplanfiles(load,mjds,**kws)
         
     # 6) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
@@ -4122,5 +4133,5 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     # Summary email
     summary_email(observatory,apred,mjd,steps,chkmaster=chkmaster,chk3d=chk3d,chkcal=chkcal,
                   planfiles=planfiles,chkexp=chkexp,chkvisit=chkvisit,chkrv=chkrv,logfile=logfile,
-                  slurmpars=slurmpars,clobber=clobber,debug=debug)
+                  slurmpars=slurmpars,clobber=clobber,debug=debug,error=planerror)
 
