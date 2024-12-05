@@ -99,11 +99,10 @@ def mkbpm(bpmid, apred='daily', telescope='apo25m', darkid=None, flatid=None, ba
                 if row.chip == ichip:
                     mask[:, row.row] = mask[:, row.row] | maskval('BADPIX')
 
-        file = load.filename('BPM', chip=chip, num=bpmid)
-        head1 = MRDFITS(file, 0, header=True)
-        head1['EXTNAME'] = 'BPM'
-        MKHDR(head1, mask)
-        SXADDPAR(head1, 'EXTNAME', 'BPM')
-        MWRFITS(mask, file, head1, create=True)
+        outfile = load.filename('BPM', chip=chip, num=bpmid)
+        hdulist = fits.HDUList()
+        hdulist.append(fits.PrimaryHDU(mask))
+        hdulist[0].header['EXTNAME'] = 'BPM'
+        hdulist.writeto(outfile,overwrite=True)
 
     lock.unlock(lockfile, clear=True)

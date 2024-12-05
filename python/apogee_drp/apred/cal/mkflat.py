@@ -33,22 +33,27 @@ def mkflat(ims, cmjd=None, darkid=None, clobber=False, kludge=False, nrep=None,
     Added doc strings, updates to use data model  D. Nidever, Sep 2020 
     """
 
-    
-    i1 = ims[0]
-    nframes = len(ims)
+
+    images = np.atleast_1d(ims)
+    flatid = images[0]
+    nframes = len(images)
     if nrep is None:
         nrep = 1
 
-    dirs = getdir(apodir, caldir, specdir, apovers, libdir, datadir=datadir)
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    flatdir = os.path.dirname(load.filename('Flat', num=flatid, chips=True))
+    flatfile = load.filename('Flat', num=flatid, chips=True)
 
-    flatdir = apogee_filename('Flat', num=i1, chip='c', _dir=True)
-    flatfile = os.path.join(flatdir, dirs.prefix + f"Flat-{i1:08}.tab")
-    # Is another process already creating file?
-    aplock(flatfile, waittime=10, unlock=unlock)
+    #dirs = getdir(apodir, caldir, specdir, apovers, libdir, datadir=datadir)
+    #flatdir = apogee_filename('Flat', num=i1, chip='c', _dir=True)
+    #flatfile = os.path.join(flatdir, dirs.prefix + f"Flat-{i1:08}.tab")
+    
+    # If another process is already making this file, wait!
+    lock.lock(flatfile, waittime=10, unlock=unlock)
 
     # Does the file already exist?
     # check all three chip files
-    sflatid = str(ims[0]).zfill(8)
+    sflatid = str(images[0]).zfill(8)
     chip = ['a', 'b', 'c']
     allfiles = [os.path.join(flatdir, dirs.prefix + f"Flat-{chip_i}-{sflatid}.fits") for chip_i in chip]
     allfiles.append(os.path.join(flatdir, dirs.prefix + f"Flat-{sflatid}.tab"))
@@ -86,7 +91,7 @@ def mkflat(ims, cmjd=None, darkid=None, clobber=False, kludge=False, nrep=None,
     nocr = 1
 
     if cmjd is None:
-        cmjd = getcmjd(ims[0], mjd=mjd)
+        cmjd = getcmjd(images[0], mjd=mjd)
 
     getcal(mjd, dirs.calfile, dark=darkid, bpm=bpmid, det=detid)
 
@@ -94,7 +99,7 @@ def mkflat(ims, cmjd=None, darkid=None, clobber=False, kludge=False, nrep=None,
     for ichip in range(3):
         darkcorr = apogee_filename('Dark', num=darkid, chip=chip[ichip]) if darkid > 0 else None
         detcorr = apogee_filename('Detector', num=detid, chip=chip[ichip]) if detid > 0 else None
-        for inum in ims:
+        for inum in images:
             ifile = apogee_filename('R', num=inum, chip=chip[ichip])
             ofile = apogee_filename('2D', num=inum, chip=chip[ichip], _base=True)
             ap3dproc(ifile, os.path.join(outdir, ofile), detcorr=detcorr, darkcorr=darkcorr, nocr=nocr,
@@ -107,7 +112,7 @@ def mkflat(ims, cmjd=None, darkid=None, clobber=False, kludge=False, nrep=None,
     flatsum = np.zeros((2048, 2048, 3), dtype=float)
     for ii in range(0, nframes, nrep):
         for irep in range(nrep):
-            i = ims[ii + irep]
+            i = images[ii + irep]
             for ichip in range(3):
                 ofile = apogee_filename('2D', num=i, chip=chip[ichip], _base=True)
                 f = mrdfits(os.path.join(outdir, ofile), 0, head)
@@ -223,7 +228,7 @@ def mkflat(ims, cmjd=None, darkid=None, clobber=False, kludge=False, nrep=None,
         bad = np.where(np.isnan(flat))
         flat[bad] = 0
 
-        file = apogee_filename('Flat', num=i1, chip=chip[ichip])
+        outfile = load.filename('Flat', num=flatid, chip=chip[ichip])
         leadstr = 'APMKFLAT: '
         head['HISTORY'] = leadstr+time.asctime()
         import socket
@@ -232,31 +237,31 @@ def mkflat(ims, cmjd=None, darkid=None, clobber=False, kludge=False, nrep=None,
         head['HISTORY'] = leadstr+'Python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
         # add reduction pipeline version to the header
         head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+load.apred
-        MWRFITS(0, file, head0, create=True)
-        MKHDR(head1, flat, image=True)
-        sxaddpar(head1, 'EXTNAME', 'FLAT')
-        MWRFITS(flat, file, head1)
-        MKHDR(head2, sflat, image=True)
-        sxaddpar(head2, 'EXTNAME', 'SPECTRAL FLAT')
-        MWRFITS(sflat, file, head2)
-        MKHDR(head3, mask, image=True)
-        sxaddpar(head3, 'EXTNAME', 'MASK')
-        MWRFITS(mask, file, head3)
+
+        hdulist = fits.HDUList()
+        hdulist.append(fits.PrimaryHDU(header=head))
+        hdulist.append(fits.ImageHDU(flat))
+        hdulist[1].header['EXTNAME'] = 'FLAT'
+        hdulist.append(fits.ImageHDU(sflat))
+        hdulist[2].header['EXTNAME'] = 'SPECTRAL FLAT'
+        hdulist.append(fits.ImageHDU(mask))
+        hdulist[3].header['EXTNAME'] = 'MASK'
+        hdulist.writeto(outfile,overwrite=True)
 
         # Make a jpg of the flat
         if not os.path.exists(flatdir + 'plots'):
             os.makedirs(flatdir + 'plots')
-        FLATPLOT(flat, flatdir + 'plots/' + file_basename(file, '.fits'))
-
-        flatlog[ichip]['name'] = file
-        flatlog[ichip]['num'] = i1
+        flatplot(flat, os.path.join(flatdir, 'plots', outfile), hard=True)
+        
+        flatlog[ichip]['name'] = outfile
+        flatlog[ichip]['num'] = flatid
         flatlog[ichip]['nframes'] = nframes
 
-    file = dirs.prefix + f"Flat-{i1:08}.tab"
-    MWRFITS(flatlog, flatdir + file, create=True)
-
+    outfile = load.prefix + 'Flat-{:08d}'.format(flatid)
+    fits.writeto(os.path.join(flatdir,outfile+'.tab'),flatlog,overwrite=True)
+    
     # Remove lock file
-    aplock(flatfile, clear=True)
+    lock.lock(flatfile, clear=True)
 
     # Compile summary web page (Python equivalent)
-    FLATHTML(flatdir)
+    flathtml(flatdir)

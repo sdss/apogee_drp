@@ -14,18 +14,29 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
 
     Parameters
     ----------
-    waveid      The ID8 numbers of the arc lamp exposures to use.
-    =name       Output filename base.  By default waveid[0] is used.
-    =darkid     Dark frame to be used if images are reduced.
-    =flatid     Flat frame to be used if images are reduced.
-    =psfid      PSF frame to be used if images are reduced.
-    =modelpsf   Model PSF calibration frame to use.
-    =fiberid    ETrace frame to be used if images are reduced.
-    /nowait     If file is already being made then don't wait
-                just return.
-    /clobber    Overwrite existing files.
-    /nofit      Skip fit (find lines only).
-    /unlock     Delete the lock file and start fresh.
+    waveid : list or array
+       The ID8 numbers of the arc lamp exposures to use.
+    name : str, optional
+       Output filename base.  By default waveid[0] is used.
+    darkid : int
+       Dark frame to be used if images are reduced.
+    flatid : int
+       Flat frame to be used if images are reduced.
+    psfid : int
+       PSF frame to be used if images are reduced.
+    modelpsf : int
+       Model PSF calibration frame to use.
+    fiberid : int
+       ETrace frame to be used if images are reduced.
+    nowait : bool, optional
+       If file is already being made then don't wait just return.
+          Default is False.
+    clobber : bool, optional
+       Overwrite existing files.  Default is False.
+    nofit : bool, optional
+       Skip fit (find lines only).  Default is False.
+    unlock : bool, optional
+       Delete the lock file and start fresh.  Default is False.
 
     Returns
     -------
@@ -35,43 +46,41 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
     Example
     -------
 
-    mkwave,ims,name=name,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,/clobber
+    mkwave(ims,name=name,darkid=darkid,flatid=flatid,psfid=psfid,fiberid=fiberid,clobber=True)
 
     By J. Holtzman, 2011
-      Added doc strings, updates to use data model  D. Nidever, Sep 2020 
+    Added doc strings, updates to use data model  D. Nidever, Sep 2020 
+    Translated to Python  D. Nidever  2023/2024
+
     """
 
-
+    images = np.atleast_id(waveid)
     if name is None:
-        name = str(waveid[0])
+        name = str(image[0])
 
-    dirs = getdir(apodir, caldir, spectrodir, vers)
-    wavedir = apogee_filename('Wave', num=name, chip='a', dir=True)
-    file = os.path.join(dirs.prefix, f"Wave-{name:08d}")
-    wavefile = os.path.join(wavedir, file)
-
-    # If another process is alreadying make this file, wait!
-    aplock(wavefile, waittime=10, unlock=unlock)
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    wavedir = os.path.dirname(load.filename('Wave',num=name, chips=True))
+    wavefile = load.filename('Wave',num=name, chips=True)
 
     # Does product already exist?
     # check all three chips and .dat file
     chips = ['a', 'b', 'c']
-    swaveid = f"{waveid[0]:08d}"
-    allfiles = [os.path.join(wavedir, dirs.prefix, f"Wave-{chip}-{swaveid}.fits") for chip in chips]
-    if all(np.array([os.path.exists(file) for file in allfiles])) and not clobber:
-        print(f"Wavecal file: {os.path.join(wavedir, file)}.dat already exists")
+    chipfiles = [wavefile.replace('Wave-','Wave-'+c) for c in chips]
+    if all(np.array([os.path.exists(fil) for fil in allfiles])) and clobber==False:
+        print('Wavecal file:',wavefile,'already exists')
         return
 
+    # If another process is alreadying make this file, wait!
+    lock.lock(wavefile, waittime=10, unlock=unlock)
+    
     # Delete existing files to start fresh
-    for file in allfiles:
-        if os.path.exists(file):
-            os.remove(file)
+    for fil in allfiles:
+        if os.path.exists(fil): os.remove(fil)
 
-    print('Making wave:', waveid)
+    print('Making wave:', name)
 
     # Process the frame if necessary
-    chipfiles = apogee_filename('1D', num=waveid, chip=['a', 'b', 'c'])
-    if not all([os.path.exists(file) for file in chipfiles]):
+    if not all([os.path.exists(fil) for fil in chipfiles]):
         if psfid is not None:
             cmjd = getcmjd(psfid)
             mkpsf(psfid, darkid=darkid, flatid=flatid, fiberid=fiberid, unlock=unlock)
@@ -79,10 +88,10 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
                       doproc=True, unlock=unlock)
 
     # Check that the data is okay
-    chfile = apogee_filename('2D', num=waveid, chip='b')
-    if not os.path.exists(chfile):
-        print(f"{chfile} NOT FOUND")
-        aplock(wavefile, clear=True)
+    chfile = load.filename('2D', num=waveid, chip='b')
+    if os.path.exists(chfile)==False:
+        print(chfile,'NOT FOUND')
+        lock.lock(wavefile, clear=True)
         return
 
     head0 = fits.getheader(chfile, ext=0)
@@ -106,27 +115,34 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
 
     # Check the line flux
     if avgpeakflux / head0['nread'] < thresh:
-        print(f"Not enough flux in {chfile}")
-        aplock(wavefile, clear=True)
+        print('Not enough flux in',chfile)
+        lock.lock(wavefile, clear=True)
         return
 
     # Call external Python script using subprocess
-    cmd = ['apmultiwavecal', '--name', name.strip(), '--vers', dirs.apred]
+    cmd = ['apmultiwavecal', '--name', name.strip(), '--vers', load.apred]
     if nofit:
-        cmd.append('--nofit')
+        cmd += ['--nofit']
     if plot:
-        cmd.extend(['--plot', '--hard'])
+        cmd += ['--plot', '--hard']
     if clobber:
-        cmd.append('--clobber')
-    cmd.extend(['--inst', dirs.instrument, '--verbose'])
-    cmd.extend(map(str, waveid))
+        cmd += ['--clobber']
+    cmd += ['--inst', load.instrument, '--verbose']
+    cmd += [str(waveid)]
     subprocess.run(cmd)
-
+    res = subprocess.run(cmd,capture_output=True,shell=False)
+    stdout = res.stdout.decode()
+    stderr = res.stderr.decode()
+    if res.returncode != 0:
+        print('subprocess failed:')
+        print(stdout)
+        print(stderr)
+        lock.lock(wavefile, clear=True)
+        return
+    
     # Check if the calibration file was successfully created
-    outfile = os.path.join(wavedir, file.replace('apWave-', 'apWave-a-'))
-    if os.path.exists(outfile):
-        with open(wavedir + file + '.dat', 'w') as lock:
-            pass
+    if all(np.array([os.path.exists(fil) for fil in allfiles])):
+        open(wavefile.replace('.fits','.dat', 'a').close()
 
-    aplock(wavefile, clear=True)
+    lock.lock(wavefile, clear=True)
 

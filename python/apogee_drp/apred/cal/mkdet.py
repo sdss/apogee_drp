@@ -104,25 +104,13 @@ def mkdet(detid,apred='daily',telescope='apo25m',linid=None,
         # Create FITS headers and write the data to files
         hdulist = fits.HDUList()
         hdulist.append(fits.PrimaryHDU())
-        hdulist.append(fits.PrimaryHDU(rn))
+        hdulist.append(fits.ImageHDU(rn))
         hdulist[1].header['EXTNAME'] = 'READNOISE'
         hdulist.append(fits.ImageHDU(gain))
         hdulist[2].header['EXTNAME'] = 'GAIN'
         hdulist.append(fits.ImageHDU(lincorr))
         hdulist[3].header['EXTNAME'] = 'LINEARITY CORRECTION'
         hdulist.writeto(outfile,overwrite=True)
-        
-        #head = mkhdr(0)
-        #MWRFITS(0, file, head, create=True)
-        #head1 = MKHDR(rn)
-        #sxaddpar(head1, 'EXTNAME', 'READNOISE')
-        #MWRFITS(rn, file, head1)
-        #head2 = MKHDR(gain)
-        #sxaddpar(head2, 'EXTNAME', 'GAIN')
-        #MWRFITS(gain, file, head2)
-        #head3 = MKHDR(lincorr)
-        #sxaddpar(head3, 'EXTNAME', 'LINEARITY CORRECTION')
-        #MWRFITS(lincorr, file, head3)
 
     # Clear the lock file
     lock.lock(detfile, clear=True)

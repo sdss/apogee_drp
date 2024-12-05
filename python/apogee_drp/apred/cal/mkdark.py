@@ -39,7 +39,7 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
     """
 
     images = np.atleast_1d(ims)
-    i1 = images[0]
+    darkid = images[0]
     nframes = len(images)
     chips = ['a', 'b', 'c']
     
@@ -47,10 +47,10 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
     #caldir = dirs.caldir
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
-    adarkfile = load.filename('Dark',num=i1, chips=True)
+    adarkfile = load.filename('Dark',num=darkid, chips=True)
     adarkfile = adarkfile.replace('Dark-','Dark-a-')
     darkdir = os.path.dirname(filename)
-    darkfile = darkdir + load.prefix + 'Dark-{:08d}.tab'.format(i1)
+    darkfile = darkdir + load.prefix + 'Dark-{:08d}.tab'.format(darkid)
 
     # Does the file already exist?
     # Check all three chip files and the .tab file
@@ -72,7 +72,7 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
     dt = [('num',int), ('nframes',int), ('nreads',int), ('nsat',int), ('nhot',int),
           ('nhotneigh',int), ('nbad',int), ('medrate',float), ('psfid',int), ('nneg',int)]
     darklog = np.zeros(3,dtype=np.dtype(dt))
-    darklog['num'] = i1
+    darklog['num'] = darkid
 
     if step is None:
         step = 0
@@ -236,9 +236,9 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
 
         # Write them out
         if step:
-            outfile = load.prefix + 'Dark{:d}-{:s}-{:08d}'.format(step,chip,i1)
+            outfile = load.prefix + 'Dark{:d}-{:s}-{:08d}'.format(step,chip,darkid)
         else:
-            outfile = load.prefix + 'Dark-{:s}-{:08d}'.format(chip,i1)
+            outfile = load.prefix + 'Dark-{:s}-{:08d}'.format(chip,darkid)
 
         leadstr = 'APMKDARK: '
         head['HISTORY'] = leadstr+time.asctime()
@@ -251,25 +251,14 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
 
         hdulist = fits.HDUList()
         hdulist.append(fits.PrimaryHDU(header=head0))
-        hdulist.append(fits.PrimaryHDU(dark))
+        hdulist.append(fits.ImageHDU(dark))
         hdulist[1].header['EXTNAME'] = 'DARK'
         hdulist.append(fits.ImageHDU(chi2))
         hdulist[2].header['EXTNAME'] = 'CHI-SQUARED'
         hdulist.append(fits.ImageHDU(mask))
         hdulist[3].header['EXTNAME'] = 'MASK'
-        outfile = os.path.join(darkdir, file + '.fits')
+        outfile = os.path.join(darkdir, outfile + '.fits')
         hdulist.writeto(outfile,overwrite=True)
-        
-        #MWRFITS(0, os.path.join(darkdir, file + '.fits'), head0, create=True)
-        #MKHDR(head1, dark)
-        #sxaddpar(head1, 'EXTNAME', 'DARK')
-        #MWRFITS(dark, os.path.join(darkdir, file + '.fits'), head1)
-        #MKHDR(head2, chi2)
-        #sxaddpar(head2, 'EXTNAME', 'CHI-SQUARED')
-        #MWRFITS(chi2, os.path.join(darkdir, file + '.fits'), head2)
-        #MKHDR(head3, mask)
-        #sxaddpar(head3, 'EXTNAME', 'MASK')
-        #MWRFITS(mask, os.path.join(darkdir, file + '.fits'), head3)
 
         # Make some plots/images
         if not os.path.exists(os.path.join(darkdir, 'plots')):
@@ -278,7 +267,7 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
         darkplot(dark, mask, os.path.join(darkdir, 'plots', file), hard=True)
 
         # Summary data table
-        darklog[ichip]['num'] = i1
+        darklog[ichip]['num'] = darkid
         darklog[ichip]['nframes'] = nframes
         darklog[ichip]['nreads'] = nread
         darklog[ichip]['nsat'] = nsat
@@ -289,9 +278,8 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
         darklog[ichip]['nneg'] = nneg
 
         # Save the rate file
-        outfile = load.prefix + 'DarkRate-{:s}-{:08d}'.format(chip,i1)
-        fits.writeto(darkdir+outfile+'.fits',rate,overwrite=True)
-        #MWRFITS(rate, darkdir+outfile+'.fits', create=True)
+        outfile = load.prefix + 'DarkRate-{:s}-{:08d}'.format(chip,darkid)
+        fits.writeto(os.path.join(darkdir,outfile+'.fits'),rate,overwrite=True)
 
         dark = 0
         time = time.time()
@@ -300,9 +288,8 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
     del red
 
     # Write the summary log information
-    outfile = prefix + 'Dark-{:08d}'.format(i1)
-    fits.writeto(darkdir+outfile + '.tab',darklog,overwriteTrue)
-    #MWRFITS(darklog, darkdir+outfile + '.tab', create=True)
+    outfile = prefix + 'Dark-{:08d}'.format(darkid)
+    fits.writeto(os.path.join(darkdir,outfile + '.tab'),darklog,overwriteTrue)
 
     # Remove lock file
     lock.lock(darkfile, clear=True)
