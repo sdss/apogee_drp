@@ -717,7 +717,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             # Save the EPSF file
             outepsffile = outdir+load.prefix+'EPSFmodel-'+chiptag[i]+'-'+baseframeid+'.fits'  # output file
             print('Saving EPSF file to '+outepsffile)
-            psf.saveepsf(outepsffile,epsf)
+            #psf.saveepsf(outepsffile,epsf)
             # add chi-squared to header, mask bad pixels?
 
         # Add chi-squared to header
