@@ -5,7 +5,7 @@ from astropy.table import Table
 from ..apred import wav,sincint
 from ..utils import apload
 
-class ApStar(object):
+class Star(object):
     """
     Data model for apStar files
     """
@@ -44,7 +44,7 @@ class ApStar(object):
         self.ndim = flux.ndim
         self.npix = npix
         self.norder = norder
-        self.datatype = 'apStar'
+        self.datatype = 'Star'
         self.waveregime = 'NIR'
         self.instrument = 'APOGEE'
         
@@ -149,7 +149,6 @@ class ApStar(object):
     @property
     def snr(self):
         """ Return the median S/N per pixel."""
-        """ Return the S/N"""
         if self.flux is not None and self.err is not None:
             if self.badmask is not None:
                 return np.nanmedian(self.flux[~self.badmask]/self.err[~self.badmask])
@@ -172,13 +171,13 @@ class ApStar(object):
                 if getattr(self,c) is not None and getattr(self,c).ndim>1:
                     kw[c] = getattr(self,c)[index,:]
             # Initialize the object
-            sp = ApStar(self.flux[index,:],**kw)
+            sp = Star(self.flux[index,:],**kw)
         else:
             sp = self
         return sp
         
     def __repr__(self):
-        """ Print out the string representation of the Spec1D object."""
+        """ Print out the string representation of the apStar object."""
         s = repr(self.__class__)+"\n"
         if self.instrument is not None:
             s += self.instrument+" spectrum\n"
@@ -252,9 +251,9 @@ class ApStar(object):
             rvtab = None
 
         # Initialize the object
-        sp = ApStar(hdu[1].data,header=hdu[0].header,err=hdu[2].data,mask=hdu[3].data,
-                    sky=hdu[4].data,skyerr=hdu[5].data,telluric=hdu[6].data,
-                    telerr=hdu[7].data,lsfcoef=hdu[8].data,rvtab=rvtab,filename=filename)
+        sp = Star(hdu[1].data,header=hdu[0].header,err=hdu[2].data,mask=hdu[3].data,
+                  sky=hdu[4].data,skyerr=hdu[5].data,telluric=hdu[6].data,
+                  telerr=hdu[7].data,lsfcoef=hdu[8].data,rvtab=rvtab,filename=filename)
         hdu.close()
         
         return sp
