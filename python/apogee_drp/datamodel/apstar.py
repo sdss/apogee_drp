@@ -2,6 +2,7 @@ import os
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
+from ..apred import wav,sincint
 from ..utils import apload
 
 class ApStar(object):
@@ -26,9 +27,15 @@ class ApStar(object):
         self._skyerr = skyerr
         self._telluric = telluric
         self._telerr = telerr
-        self._filename = filename
-        self._rvtab = rvtab
-        self._lsfcoef = lsfcoef
+        if rvtab is not None:
+            self.rvtab = Table(rvtab)
+        else:
+            self.rvtab = None
+        if lsfcoef is not None and len(lsfcoef)!=0:
+            self._lsfcoef = lsfcoef
+        else:
+            self._lsfcoef = None
+        self.filename = filename
         if flux.ndim==1:
             npix = len(flux)
             norder = 1
@@ -66,7 +73,7 @@ class ApStar(object):
             badmask = (np.bitwise_and(self.mask,16639)!=0) | (np.isfinite(self.flux)==False)
             self.badmask = badmask
         else:
-            self.badmask = None
+            self.badmask = np.zeros(self.flux.shape,bool)
 
         if filename is not None and filename != '':
             if os.path.basename(filename)[:2]=='ap':
@@ -133,16 +140,23 @@ class ApStar(object):
         return self._telerr
 
     @property
-    def lsf(self):
+    def lsfcoef(self):
         """ Return the lsf coefficient array."""
-        if hasattr(self,'_lsf')==False or self._lsf is None:
+        if hasattr(self,'_lsfcoef')==False or self._lsfcoef is None:
             return None
         return self._lsfcoef
 
     @property
     def snr(self):
         """ Return the median S/N per pixel."""
-        return np.nanmedian(self.flux/self.err)
+        """ Return the S/N"""
+        if self.flux is not None and self.err is not None:
+            if self.badmask is not None:
+                return np.nanmedian(self.flux[~self.badmask]/self.err[~self.badmask])
+            else:
+                return np.nanmedian(self.flux/self.err)                
+        else:
+            return None
 
     def __getitem__(self,index):
         # return one of the spectra
@@ -151,18 +165,37 @@ class ApStar(object):
         if index>self.norder-1:
             raise IndexError('index '+str(index)+' is out of bounds for axis 0 with size '+str(self.norder))
         if self.norder > 1:
+            # Get the individual spectra
+            kw = {'header':self.header,'filename':self.filename,
+                  'lsfcoef':self.lsfcoef,'rvtab':self.rvtab}
+            for c in ['err','mask','sky','skyerr','telluric','telerr']:
+                if getattr(self,c) is not None and getattr(self,c).ndim>1:
+                    kw[c] = getattr(self,c)[index,:]
             # Initialize the object
-            sp = ApStar(self.flux[index,:],header=self.header,err=self.err[index,:],mask=self.mask[index,:],
-                        sky=self.sky[index,:],skyerr=self.skyerr[index,:],telluric=self.telluric[index,:],
-                        telerr=self.telerr[index,:],lsfcoef=self.lsfcoef,rvtab=self.rvtab,
-                        filename=self.filename)
+            sp = ApStar(self.flux[index,:],**kw)
         else:
             sp = self
         return sp
         
     def __repr__(self):
-        """ Representation of the object """
-        pass
+        """ Print out the string representation of the Spec1D object."""
+        s = repr(self.__class__)+"\n"
+        if self.instrument is not None:
+            s += self.instrument+" spectrum\n"
+        if self.filename is not None:
+            s += "File = "+self.filename+"\n"
+        if self.snr is not None:
+            s += ("S/N = %7.2f" % self.snr)+"\n"
+        if self.norder > 1:
+            s += 'Dimensions: ['+str(self.npix)+','+str(self.norder)+']\n'
+        else:
+            s += 'Dimensions: ['+str(self.npix)+']\n'
+        s += "Flux = "+str(self.flux)+"\n"
+        if self.err is not None:
+            s += "Err = "+str(self.err)+"\n"
+        if self.wave is not None:
+            s += "Wave = "+str(self.wave)
+        return s
     
     @classmethod
     def read(cls,fname=None,**kwargs):
@@ -179,8 +212,8 @@ class ApStar(object):
                 mjd = kwargs['mjd']
             else:
                 mjd = None
-            load = apload.ApLoad(apred=apred,telescope=telescope)
-            filename = load.filename(obj=kw['obj'],mjd=mjd)
+            load = apload.ApLoad(apred=kwargs['apred'],telescope=kwargs['telescope'])
+            filename = load.filename('Star',obj=kwargs['obj'],mjd=mjd)
         else:
             filename = fname
         
@@ -230,15 +263,14 @@ class ApStar(object):
         """ Make boolean mask from bitmask with input pixelmask for bad values """
         self.mask = (np.bitwise_and(self.bitmask,bdval)!=0) | (np.isfinite(self.flux)==False)
 
-    def interp(self,new,nres) :
+    def interp(self,newwave,nres) :
         """ Interpolate to new wavelengths """
-        pix = wave.wave2pix(new,self.wave)
+        pix = wav.wave2pix(newwave,self.wave)
         gd = np.where(np.isfinite(pix))[0]
         raw = [[self.flux,self.err]]
         out = sincint.sincint(pix[gd],nres,raw)
-        self.wave = new
-        self.flux = out[0][0]
-        self.err = out[0][1]
+        newflux,newerr = out[0][0],out[0][1]
+        return newflux,newerr
 
     def write(self,filename,overwrite=True):
         """ Write data to a file """
@@ -270,7 +302,7 @@ class ApStar(object):
         hdulist.append(fits.ImageHDU(self.err,header=header))
         header['BUNIT'] = 'Pixel bitmask'
         header['EXTNAME'] = 'MASK'
-        hdulist.append(fits.ImageHDU(self.bitmask,header=header))
+        hdulist.append(fits.ImageHDU(self.mask,header=header))
         header['BUNIT'] = 'Sky (10^-17 erg/s/cm^2/Ang)'
         header['EXTNAME'] = 'SKY FLUX'
         hdulist.append(fits.ImageHDU(self.sky,header=header))
@@ -283,9 +315,15 @@ class ApStar(object):
         header['BUNIT'] = 'Telluric error'
         header['EXTNAME'] = 'TELLURIC ERROR'
         hdulist.append(fits.ImageHDU(self.telerr,header=header))
-        hdulist.append(fits.table_to_hdu(self.lsftab))
+        if self.lsfcoef is not None:
+            hdulist.append(fits.ImageHDU(self.lsfcoef))
+        else:
+            hdulist.append(fits.ImageHDU())
         hdulist[-1].header['EXTNAME'] = 'LSF TABLE'
-        hdulist.append(fits.table_to_hdu(self.rvtab)) 
+        if self.rvtab is not None:
+            hdulist.append(fits.table_to_hdu(self.rvtab))
+        else:
+            hdulist.append(fits.ImageHDU())
         hdulist[-1].header['EXTNAME'] = 'RV TABLE'       
         hdulist.writeto(filename,overwrite=overwrite)
 
