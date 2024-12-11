@@ -2,7 +2,7 @@ import os
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
-from ..apred import wav,sincint
+from ..apred import sincint,wave as wav
 from ..utils import apload
 
 class Star(object):
@@ -276,7 +276,13 @@ class Star(object):
         hdulist = fits.HDUList()
         hdu = fits.PrimaryHDU()
         hdu.header = self.header
-        hdu.header['HISTORY'] = 'APOGEE Reduction Pipeline Version: {:s}'.format(os.environ['APOGEE_DRP_VER'])
+        leadstr = 'Star: '
+        hdu.header['HISTORY'] = leadstr+time.asctime()
+        hdu.header['HISTORY'] = leadstr+getpass.getuser()+' on '+socket.gethostname()
+        pyvers = sys.version.split()[0]
+        hdu.header['HISTORY'] = leadstr+'Python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
+        hdu.header['HISTORY'] = 'APOGEE software git hash:' +str(plan.getgitvers())
+        hdu.header['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: {:s}'.format(os.environ['APOGEE_DRP_VER'])
         hdu.header['HISTORY'] = 'HDU0 : header'
         hdu.header['HISTORY'] = 'HDU1 : flux'
         hdu.header['HISTORY'] = 'HDU2 : flux uncertainty'

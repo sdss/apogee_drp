@@ -3,12 +3,12 @@ import numpy as np
 from astropy.io import fits
 from ..utils import apload
 
-class Detector(object):
+class Frame(object):
     """
-    Data model for apDetector files
+    Data model for Frame/ap2D files
     """
 
-    def __init__(self,flux,header=None,err=None,wave=None,mask=None,filename=''):
+    def __init__(self,flux,header=None,err=None,mask=None,filename=''):
         # Initialize the object
         self._flux = flux
         if header is None:
@@ -25,7 +25,7 @@ class Detector(object):
             norder,npix = flux.shape
         self.ndim = flux.ndim
         self.npix = npix
-        self.datatype = 'BPM'
+        self.datatype = 'Frame'
         self.instrument = 'APOGEE'
         
         if filename is not None and filename != '':
@@ -65,13 +65,12 @@ class Detector(object):
             raise IndexError('index '+str(index)+' is out of bounds for axis 0 with size '+str(self.norder))
         if self.norder > 1:
             # Get the individual spectra
-            kw = {'header':self.header,'filename':self.filename,
-                  'lsfcoef':self.lsfcoef,'rvtab':self.rvtab}
-            for c in ['err','mask','sky','skyerr','telluric','telerr']:
+            kw = {'header':self.header,'filename':self.filename}
+            for c in ['err','mask']:
                 if getattr(self,c) is not None and getattr(self,c).ndim>1:
                     kw[c] = getattr(self,c)[index,:]
             # Initialize the object
-            sp = BPM(self.flux[index,:],**kw)
+            sp = Frame(self.flux[index,:],**kw)
         else:
             sp = self
         return sp
@@ -83,8 +82,6 @@ class Detector(object):
             s += self.instrument+"\n"
         if self.filename is not None:
             s += "File = "+self.filename+"\n"
-        if self.snr is not None:
-            s += ("S/N = %7.2f" % self.snr)+"\n"
         if self.norder > 1:
             s += 'Dimensions: ['+str(self.npix)+','+str(self.norder)+']\n'
         else:
@@ -106,26 +103,24 @@ class Detector(object):
                 if c not in kwargs.keys():
                     raise ValueError(c+' parameter must be input')
             load = apload.ApLoad(apred=kwargs['apred'],telescope=kwargs['telescope'])
-            filename = load.filename('BPM',num=kwargs['num'])
+            filename = load.filename('2D',num=kwargs['num'])
         else:
             filename = fname
-        
-        # APOGEE apBPM, bad pixel mask
-        # HISTORY APSTAR:  HDU0 = Header only
-        # HISTORY APSTAR:  HDU1 - Flux (10^-17 ergs/s/cm^2/Ang)
-        # HISTORY APSTAR:  HDU2 - Error (10^-17 ergs/s/cm^2/Ang)
-        # HISTORY APSTAR:  HDU3 - Flag mask:
-        # HISTORY APSTAR:    row 1: bitwise OR of all visits
-        # HISTORY APSTAR:    row 2: bitwise AND of all visits
-        # HISTORY APSTAR:    row 3-nvisits+2: individual visit masks
+
+        # APOGEE ap2D, bad pixel mask
+        # HISTORY AP2D: Output File:
+        # HISTORY AP2D:  HDU0 - Header only
+        # HISTORY AP2D:  HDU1 - image (ADU)                                               
+        # HISTORY AP2D:  HDU2 - error (ADU)                                               
+        # HISTORY AP2D:  HDU3 - flag mask
 
         if os.path.exists(filename)==False:
             raise FileNotFoundError(filename)
         hdu = fits.open(filename)
 
         # Initialize the object
-        data = BPM(hdu[1].data,header=hdu[0].header,err=hdu[2].data,mask=hdu[3].data,
-                   filename=filename)
+        data = Frame(hdu[1].data,header=hdu[0].header,err=hdu[2].data,
+                     mask=hdu[3].data,filename=filename)
         hdu.close()
         
         return data

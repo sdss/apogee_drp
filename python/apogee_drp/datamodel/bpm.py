@@ -1,16 +1,18 @@
 import os
+import sys
 import numpy as np
+import socket
+import platform
 from astropy.io import fits
 from astropy.table import Table
-from ..apred import wav,sincint
-from ..utils import apload
+from ..utils import apload,plan
 
 class BPM(object):
     """
     Data model for BPM files
     """
 
-    def __init__(self,flux,header=None,err=None,wave=None,mask=None,filename=''):
+    def __init__(self,flux,header=None,err=None,mask=None,filename=''):
         # Initialize the object
         self._flux = flux
         if header is None:
@@ -67,9 +69,8 @@ class BPM(object):
             raise IndexError('index '+str(index)+' is out of bounds for axis 0 with size '+str(self.norder))
         if self.norder > 1:
             # Get the individual spectra
-            kw = {'header':self.header,'filename':self.filename,
-                  'lsfcoef':self.lsfcoef,'rvtab':self.rvtab}
-            for c in ['err','mask','sky','skyerr','telluric','telerr']:
+            kw = {'header':self.header,'filename':self.filename}
+            for c in ['err','mask']:
                 if getattr(self,c) is not None and getattr(self,c).ndim>1:
                     kw[c] = getattr(self,c)[index,:]
             # Initialize the object
@@ -85,8 +86,6 @@ class BPM(object):
             s += self.instrument+"\n"
         if self.filename is not None:
             s += "File = "+self.filename+"\n"
-        if self.snr is not None:
-            s += ("S/N = %7.2f" % self.snr)+"\n"
         if self.norder > 1:
             s += 'Dimensions: ['+str(self.npix)+','+str(self.norder)+']\n'
         else:
@@ -111,23 +110,14 @@ class BPM(object):
             filename = load.filename('BPM',num=kwargs['num'])
         else:
             filename = fname
-        
-        # APOGEE apBPM, bad pixel mask
-        # HISTORY APSTAR:  HDU0 = Header only
-        # HISTORY APSTAR:  HDU1 - Flux (10^-17 ergs/s/cm^2/Ang)
-        # HISTORY APSTAR:  HDU2 - Error (10^-17 ergs/s/cm^2/Ang)
-        # HISTORY APSTAR:  HDU3 - Flag mask:
-        # HISTORY APSTAR:    row 1: bitwise OR of all visits
-        # HISTORY APSTAR:    row 2: bitwise AND of all visits
-        # HISTORY APSTAR:    row 3-nvisits+2: individual visit masks
 
         if os.path.exists(filename)==False:
             raise FileNotFoundError(filename)
         hdu = fits.open(filename)
 
         # Initialize the object
-        data = BPM(hdu[1].data,header=hdu[0].header,err=hdu[2].data,mask=hdu[3].data,
-                   filename=filename)
+        data = BPM(hdu[1].data,header=hdu[0].header,err=hdu[2].data,
+                   mask=hdu[3].data,filename=filename)
         hdu.close()
         
         return data
@@ -137,7 +127,13 @@ class BPM(object):
         hdulist = fits.HDUList()
         hdu = fits.PrimaryHDU()
         hdu.header = self.header
-        hdu.header['HISTORY'] = 'APOGEE Reduction Pipeline Version: {:s}'.format(os.environ['APOGEE_DRP_VER'])
+        leadstr = 'BPM: '
+        hdu.header['HISTORY'] = leadstr+time.asctime()
+        hdu.header['HISTORY'] = leadstr+getpass.getuser()+' on '+socket.gethostname()
+        pyvers = sys.version.split()[0]
+        hdu.header['HISTORY'] = leadstr+'Python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()[0]
+        hdu.header['HISTORY'] = 'APOGEE software git hash:' +str(plan.getgitvers())
+        hdu.header['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: {:s}'.format(os.environ['APOGEE_DRP_VER'])
         hdu.header['HISTORY'] = 'HDU0 : header'
         hdu.header['HISTORY'] = 'HDU1 : flux'
         hdu.header['HISTORY'] = 'HDU2 : flux uncertainty'
@@ -148,10 +144,10 @@ class BPM(object):
         header['CDELT1'] = hdu.header['CDELT1']
         header['CRPIX1'] = hdu.header['CRPIX1']
         header['CTYPE1'] = hdu.header['CTYPE1']
-        header['BUNIT'] = 'Flux (10^-17 erg/s/cm^2/Ang)'
+        header['BUNIT'] = 'Flux (ADU)'
         header['EXTNAME'] = 'FLUX'
         hdulist.append(fits.ImageHDU(self.flux,header=header))
-        header['BUNIT'] = 'Err (10^-17 erg/s/cm^2/Ang)'
+        header['BUNIT'] = 'Err (ADU)'
         header['EXTNAME'] = 'ERROR'
         hdulist.append(fits.ImageHDU(self.err,header=header))
         header['BUNIT'] = 'Pixel bitmask'
