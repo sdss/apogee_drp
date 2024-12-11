@@ -2,6 +2,7 @@ import os
 import numpy as np
 from astropy.io import fits
 from astropy.table import Table
+import subprocess
 from ..apred import sincint,wave as wav
 from ..utils import apload
 
@@ -271,7 +272,15 @@ class Star(object):
         newflux,newerr = out[0][0],out[0][1]
         return newflux,newerr
 
-    def write(self,filename,overwrite=True):
+    @classmethod
+    def exists(cls,filename):
+        """ Does the file exist already? """
+        if os.path.exists(filename) or os.path.exists(filename+'.gz'):
+            return True
+        else:
+            return False
+    
+    def write(self,filename,overwrite=True,compress=False):
         """ Write data to a file """
         hdulist = fits.HDUList()
         hdu = fits.PrimaryHDU()
@@ -331,4 +340,8 @@ class Star(object):
             hdulist.append(fits.ImageHDU())
         hdulist[-1].header['EXTNAME'] = 'RV TABLE'       
         hdulist.writeto(filename,overwrite=overwrite)
-
+        # compress
+        if compress:
+            ret = subprocess.run(['gzip',filename],capture_output=True,shell=False)
+            if ret!=0:
+                raise Exception(ret.stderr.decode())
