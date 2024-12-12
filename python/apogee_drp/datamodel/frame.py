@@ -25,15 +25,36 @@ def getfilename(fname=None,**kwargs):
             filename = load.filename('2D',num=kwargs['num'],chips=True)
         else:
             raise ValueError('apred and telescope must be input')
+        # Loop over the three chips
+        fdir = os.path.dirname(filename)
+        base = os.path.basename(filename)
+        files = 3*[None]
+        for i,ch in enumerate(chips):
+            files[i] = os.path.join(fdir,base.replace('2D-','2D-'+ch+'-'))
     else:
-        filename = fname
-    # Loop over the three chips
-    fdir = os.path.dirname(filename)
-    base = os.path.basename(filename)
-    files = 3*[None]
-    for i,ch in enumerate(chips):
-        files[i] = os.path.join(fdir,base.replace('2D-','2D-'+ch+'-'))
+        files = [fname]
     return files
+
+def combinechips(frames):
+    """ Combine frames for multiple chips."""
+    shape = [len(frames)]+list(frames[0].shape)
+    dtype = frames[0].flux.dtype
+    zr = np.zeros(shape,dtype)
+    fr = Frame(zr,header=frames[0].header,err=zr,
+               mask=zr.astype(frames[0].mask.dtype),filename=frames[0].filename)
+    for i in range(len(frames)):
+        if frames[i].flux is not None:
+            fr.flux[i,:,:] = frames[i].flux
+        if frames[i].err is not None:
+            fr.err[i,:,:] = frames[i].err
+        if frames[i].mask is not None:
+            fr.mask[i,:,:] = frames[i].mask
+    # observatory, chips, nchips, files
+    fr.observatory = frames[0].observatory
+    fr.nchips = len(frames)
+    fr.chips = [f.chips[0] for f in frames]
+    fr.chipfiles = [f.filename for f in frames]
+    return fr
 
 class Frame(APOGEEBase):
     """
@@ -51,8 +72,10 @@ class Frame(APOGEEBase):
         self._mask = mask
         self.chipfiles = filename
         if filename is not None:
-            if isinstance(filename,list):
+            if isinstance(filename,list) and len(filename)>1:
                 self.filename = filename[0].replace('-a-','-')
+            elif isinstance(filename,list) and len(filename)==1:
+                self.filename = filename[0]
             else:
                 self.filename = filename
         else:
@@ -78,7 +101,36 @@ class Frame(APOGEEBase):
                 self.observatory = 'lco'
         else:
             self.observatory = None
-            
+
+    def __len__(self):
+        """ Return len.  Number of chips """
+        return self.nchips
+
+    @property
+    def shape(self):
+        """ Return shape of data """
+        return self.flux.shape
+
+    @property
+    def size(self):
+        """ Return size of data """
+        return self.flux.size
+
+    def __array__(self):
+        """ Return the main data array """
+        return self.flux
+
+    def __iter__(self):
+        self._count = 0
+        return self
+        
+    def __next__(self):
+        if self._count < len(self):
+            self._count += 1            
+            return self[self._count-1]
+        else:
+            raise StopIteration
+    
     @property
     def flux(self):
         """ Return the flux array."""
@@ -135,12 +187,16 @@ class Frame(APOGEEBase):
             s += "Err = "+str(self.err)+"\n"
         return s
 
+    def copy(self):
+        """ Copy this object """
+        return copy.deepcopy(self)
+
     @classmethod
     def exists(cls,fname=None,**kwargs):
         """ Check if the ap2D files exist """
-        chipfiles = getfilename(fname,**kwargs)
-        exts = [os.path.exists(f) for f in chipfiles]
-        if np.sum(exts)==3:
+        files = getfilename(fname,**kwargs)
+        exts = [os.path.exists(f) for f in files]
+        if np.sum(exts)==len(files):
             return True
         else:
             return False
@@ -148,56 +204,51 @@ class Frame(APOGEEBase):
     @classmethod
     def read(cls,fname=None,**kwargs):
         """ Read from file """
-        chipfiles = getfilename(fname,**kwargs)
-        if Frame.exists(fname=None,**kwargs)==False:
-            raise FileNotFoundError(chipfiles[0].replace('-a-','-abc')+' not found')
-
-        #fr = []
-        #fr = [Frame.read(f) for f in chipfiles]
-        #fr1 = Frame()
-        # Load individual files and then combine into one
-        
-        hdu1 = fits.open(chipfiles[0])
-        hdu2 = fits.open(chipfiles[1])
-        hdu3 = fits.open(chipfiles[2])
-        header = hdu1[0].header
-        flux = np.stack((hdu1[1].data,hdu2[1].data,hdu3[1].data))
-        err = np.stack((hdu1[2].data,hdu2[2].data,hdu3[2].data))
-        mask = np.stack((hdu1[3].data,hdu2[3].data,hdu3[3].data))
-        hdu1.close()
-        hdu2.close()
-        hdu3.close()
-        # Initialize the object
-        data = Frame(flux,header=header,err=err,mask=mask,filename=chipfiles)
+        files = getfilename(fname,**kwargs)
+        if Frame.exists(fname,**kwargs)==False:
+            raise FileNotFoundError(files[0].replace('-a-','-[abc]-')+' not found')
+        if len(files)>1:
+            fr = [Frame.read(f) for f in files]
+            data = combinechips(fr)
+        else:
+            hdu = fits.open(files[0])
+            data = Frame(hdu[1].data,header=hdu[0].header,err=hdu[2].data,mask=hdu[3].data,filename=files)
+            hdu.close()
         return data
 
-    def write(self,filename,overwrite=True):
+    def write(self,fname=None,overwrite=True,**kwargs):
         """ Write data to a file """
-        # for f in self:
-        #     f.write(filename)
-        
-        hdulist = fits.HDUList()
-        hdu = fits.PrimaryHDU()
-        hdu.header = self.header
-        hdu.header['HISTORY'] = 'APOGEE Reduction Pipeline Version: {:s}'.format(os.environ['APOGEE_DRP_VER'])
-        hdu.header['HISTORY'] = 'HDU0 : header'
-        hdu.header['HISTORY'] = 'HDU1 : flux'
-        hdu.header['HISTORY'] = 'HDU2 : flux uncertainty'
-        hdu.header['HISTORY'] = 'HDU3 : pixel bitmask'
-        hdulist.append(hdu)
-        header = fits.Header()
-        header['CRVAL1'] = hdu.header['CRVAL1']
-        header['CDELT1'] = hdu.header['CDELT1']
-        header['CRPIX1'] = hdu.header['CRPIX1']
-        header['CTYPE1'] = hdu.header['CTYPE1']
-        header['BUNIT'] = 'Flux (10^-17 erg/s/cm^2/Ang)'
-        header['EXTNAME'] = 'FLUX'
-        hdulist.append(fits.ImageHDU(self.flux,header=header))
-        header['BUNIT'] = 'Err (10^-17 erg/s/cm^2/Ang)'
-        header['EXTNAME'] = 'ERROR'
-        hdulist.append(fits.ImageHDU(self.err,header=header))
-        header['BUNIT'] = 'Pixel bitmask'
-        header['EXTNAME'] = 'MASK'
-        hdulist.append(fits.ImageHDU(self.mask,header=header))
-        hdulist.writeto(filename,overwrite=overwrite)
-
+        outfiles = getfilename(fname,**kwargs)
+        if len(self)==1:
+            hdulist = fits.HDUList()
+            hdu = fits.PrimaryHDU()
+            hdu.header = self.header
+            hdu.header['HISTORY'] = 'APOGEE Reduction Pipeline Version: {:s}'.format(os.environ['APOGEE_DRP_VER'])
+            hdu.header['HISTORY'] = 'HDU0 : header'
+            hdu.header['HISTORY'] = 'HDU1 : flux'
+            hdu.header['HISTORY'] = 'HDU2 : flux uncertainty'
+            hdu.header['HISTORY'] = 'HDU3 : pixel bitmask'
+            hdulist.append(hdu)
+            header = fits.Header()
+            header['CRVAL1'] = hdu.header['CRVAL1']
+            header['CDELT1'] = hdu.header['CDELT1']
+            header['CRPIX1'] = hdu.header['CRPIX1']
+            header['CTYPE1'] = hdu.header['CTYPE1']
+            header['BUNIT'] = 'Flux (10^-17 erg/s/cm^2/Ang)'
+            header['EXTNAME'] = 'FLUX'
+            hdulist.append(fits.ImageHDU(self.flux,header=header))
+            header['BUNIT'] = 'Err (10^-17 erg/s/cm^2/Ang)'
+            header['EXTNAME'] = 'ERROR'
+            hdulist.append(fits.ImageHDU(self.err,header=header))
+            header['BUNIT'] = 'Pixel bitmask'
+            header['EXTNAME'] = 'MASK'
+            hdulist.append(fits.ImageHDU(self.mask,header=header))
+            hdulist.writeto(outfiles[0],overwrite=overwrite)
+        elif len(self)>1:
+            for i,f in enumerate(self):
+                if os.path.exists(outfiles[i]) and overwrite==False:
+                    raise FileExistsError(outfiles[i])
+                f.write(outfiles[i],overwrite=overwrite)
+        else:
+            raise Exception('nchips is zero')
+            
