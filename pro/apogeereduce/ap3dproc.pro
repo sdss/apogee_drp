@@ -1426,7 +1426,6 @@ print,'no_checksum: ', no_checksum
   if nbdreads gt (nreads-2) then begin
     error = 'Not enough good reads'
     if not keyword_set(silent) then print,error
-    stop
     return
   endif
 
