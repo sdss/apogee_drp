@@ -242,14 +242,13 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         for c in fiber.colnames: fiber[c].name = c.lower()
         pdata['fiberdata'] = fiber
         return pdata
-
     
     # Create the output fiber structure
     dtype = np.dtype([('fiberid',int),('ra',np.float64),('dec',np.float64),
                       ('raobs',float),('decobs',float),
                       ('eta',np.float64),('zeta',np.float64),('objtype',str,10),
                       ('holetype',str,10),('object',str,30),('assigned',int),
-                      ('on_target',int),('valid',int),('tmass_style',str,30),
+                      ('on_target',int),('valid',int),('too',bool),('tmass_style',str,30),
                       ('sdss_id',int),('ra_sdss_id',float),('dec_sdss_id',float),
                       ('healpix',int),('target1',int),('target2',int),('target3',int),
                       ('target4',int),('spectrographid',int),('mag',float,5),
@@ -408,7 +407,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 plugdir = datadir+'/'+str(mjd)+'/'
                 root = 'plPlugMapA'
                 plugfile = plugfile.replace('MapM','MapA')
-            
+                
     # Does the plugfile exist? If so, load it
     if os.path.exists(plugdir+'/'+plugfile):
         plugmap = plmap.load(plugdir+'/'+plugfile,fixfiberid=fixfiberid)
@@ -698,6 +697,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 fiber['assigned'][i] = plugmap['fiberdata']['assigned'][m]
                 fiber['on_target'][i] = plugmap['fiberdata']['on_target'][m]
                 fiber['valid'][i] = plugmap['fiberdata']['valid'][m]
+                fiber['too'][i] = plugmap['fiberdata']['too'][m]
                 fiber['sdssv_apogee_target0'][i] = plugmap['fiberdata']['sdssv_apogee_target0'][m]
                 fiber['catalogid'][i] = plugmap['fiberdata']['catalogid'][m]
                 fiber['category'][i] = plugmap['fiberdata']['category'][m]
@@ -733,7 +733,11 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     fiber['hmag'][i] = 99.99
                     fiber['mag'][i] = 99.99
                     continue
-
+                # ToO, Target of Opportunity
+                if fiber['too'][i]:
+                    cmt = 'FiberID '+str(300-i)+' is ToO'
+                    logger.info(cmt)
+                
             # Special for asdaf object plates
             if asdaf is not None:
                 # ASDAF fiber
