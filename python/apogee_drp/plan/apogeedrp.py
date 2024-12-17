@@ -4043,6 +4043,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
 
     # 5) Make plan files
     #-------------------
+    planerror = None
     if 'plan' in steps:
         rootLogger.info('')
         rootLogger.info('--------------------')
