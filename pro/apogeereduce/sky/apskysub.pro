@@ -164,6 +164,7 @@ if nsky eq 0 then begin
   if not keyword_set(silent) then print,error
   return
 endif
+print,'Using ',strtrim(n_elements(skyplugind),2),' sky fibers'
 skyfiberid = plugmap.fiberdata[skyplugind].fiberid
 ;; need to subtract 1 to get IDL base-0 indices
 ;skyindex = skyfiberid-1
