@@ -3896,7 +3896,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     run('apo','v1.1',mjd=[54566,56666])
 
     """
-
+    
     begtime = str(datetime.now())
 
     telescope = observatory+'25m'
@@ -3908,12 +3908,12 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     nmjd = len(mjds)
     mjdstart = np.min(mjds)
     mjdstop = np.max(mjds)
-
+    
     # Reduction steps
     # The default is to do all
     steps = loadsteps(steps)
     nsteps = len(steps)
-
+    
     # Slurm settings
     if alloc == 'sdss-kp':
         shared = False
@@ -3921,17 +3921,15 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     else:
         shared = True
         ppn = 64
-    #ppn = 64
-    #walltime = '336:00:00'
+
     # Only set cpus if you want to use less than 64 cpus
     slurmpars = {'nodes':nodes, 'alloc':alloc, 'qos':qos, 'ppn':ppn, 'cpus':ppn,
                  'shared':shared, 'walltime':walltime, 'notification':False}
     
     # Get software version (git hash)
     gitvers = plan.getgitvers()
-
     load = apload.ApLoad(apred=apred,telescope=telescope)
-
+    
     # Reduction logs directory
     logdir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'
     if os.path.exists(logdir)==False:

@@ -252,7 +252,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         raise
 
     # Now load the Doppler results
-    visits = []
+    visits = []   # index into starvisits table
     ncomponents = 0
     for i,(v,g) in enumerate(zip(dopvisitstr,gaussout)) :
         # Match by filename components in case there was an error reading in doppler
@@ -350,6 +350,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         gdrv, = np.where((starvisits['starflag'][visits] & starmask.getval('RV_REJECT')) == 0)
         ngdrv = len(gdrv)
         if ngdrv>0:
+            # Add boolean flag to starvisits that it was used in the combination
+            #starvisits['goodvisit'][gdrv] = True
             startab['ngoodrvs'] = ngdrv
             try: startab['n_components'] = starvisits['n_components'][gdrv].max()
             except: pass
