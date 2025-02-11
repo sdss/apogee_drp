@@ -697,7 +697,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 fiber['assigned'][i] = plugmap['fiberdata']['assigned'][m]
                 fiber['on_target'][i] = plugmap['fiberdata']['on_target'][m]
                 fiber['valid'][i] = plugmap['fiberdata']['valid'][m]
-                fiber['too'][i] = plugmap['fiberdata']['too'][m]
+                if 'too' in plugmap['fiberdata'].dtype.names:
+                    fiber['too'][i] = plugmap['fiberdata']['too'][m]
                 fiber['sdssv_apogee_target0'][i] = plugmap['fiberdata']['sdssv_apogee_target0'][m]
                 fiber['catalogid'][i] = plugmap['fiberdata']['catalogid'][m]
                 fiber['category'][i] = plugmap['fiberdata']['category'][m]
