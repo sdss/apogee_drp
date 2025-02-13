@@ -2607,7 +2607,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starver = np.max(allv['starver'].astype(int)).astype(str)
         ind, = np.where(allv['starver']==starver)
         allv = allv[ind]
-    
+        
     # Sometimes "field" has leading spaces          
     allv['field'] = np.char.array(allv['field']).strip()
     nfiber = len(allv)
