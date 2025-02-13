@@ -1096,7 +1096,7 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
     #   Get more info by joining with the visit table.
     vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
-             'field', 'programname', 'healpix', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
+             'field', 'programname', 'healpix', 'too', 'ra', 'dec', 'glon', 'glat', 'jmag', 'jerr', 'hmag',
              'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
              'apogee_target4', 'catalogid', 'sdss_id', 'ra_sdss_id', 'dec_sdss_id', 'sdss5_target_pks',
              'sdss5_target_catalogids', 'sdss5_target_carton_pks', 'sdss5_target_cartons', 'sdss5_target_flagshex',
