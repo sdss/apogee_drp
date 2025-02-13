@@ -241,6 +241,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     starvisits.add_column(rv_components)
     rvtab = Column(name='rvtab',dtype=Table,length=len(starvisits))
     starvisits.add_column(rvtab)
+    starvisits['goodvisit'] = False   #  boolean flag to starvisits that it was used in the combination
     
     # Run Doppler with dorv() on the good visits
     try:
@@ -350,6 +351,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         gdrv, = np.where((starvisits['starflag'][visits] & starmask.getval('RV_REJECT')) == 0)
         ngdrv = len(gdrv)
         if ngdrv>0:
+            # Add boolean flag to starvisits that it was used in the combination
+            starvisits['goodvisit'][gdrv] = True
             startab['ngoodrvs'] = ngdrv
             try: startab['n_components'] = starvisits['n_components'][gdrv].max()
             except: pass
