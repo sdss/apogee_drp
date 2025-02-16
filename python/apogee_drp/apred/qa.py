@@ -2384,9 +2384,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 kmag = jvcat['kmag']
                 snr = jvcat['snr']
                 if snr < 0: snr = -1
-                #print(j,fiber,objtype,objid)
                 if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
-                    #print(j,fiber,objtype,objid)
                     gg, = np.where(objid == ustars)
                     if len(gg) > 0:
                         photteff = teff[gg][0]
