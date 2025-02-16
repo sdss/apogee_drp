@@ -668,7 +668,7 @@ FOR i=0L,nplanfiles-1 do begin
 
     visitstr = {apogee_id:'',target_id:'',file:'',uri:'',apred_vers:'',fiberid:0,plate:'0',exptime:0.0,nframes:0L,$
                 mjd:0L,telescope:'',survey:'',field:'',design:'',programname:'',objtype:'',assigned:0,on_target:0,$
-                valid:0,too:'',ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,healpix:0L,$
+                valid:0,too:'F',ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,healpix:0L,$
                 jmag:0.0,jerr:0.0,hmag:0.0,herr:0.0,kmag:0.0,kerr:0.0,src_h:'',$
                 pmra:0.0,pmdec:0.0,pm_src:'',$
                 apogee_target1:0L,apogee_target2:0L,apogee_target3:0L,apogee_target4:0L,$
@@ -768,7 +768,7 @@ FOR i=0L,nplanfiles-1 do begin
   FITS_WRITE,visitstrfile,0,head0
   ; HDU1 - structure
   MWRFITS,allvisitstr,visitstrfile,/silent
-
+  
   ;; Insert the apVisitSum information into the apogee_drp database
   if nobjind gt 0 then begin
     print,'Loading visit data into the database'
