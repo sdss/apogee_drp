@@ -2230,10 +2230,13 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     wherestr = "plate='" + plate + "' and mjd='" + mjd + "' and telescope='" + telescope + "' and apred_vers='" + load.apred + "'"
     vcat = db.query('visit', where=wherestr, fmt='table')
     db.close()
-    stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
+    if fps:
+        stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
+    else:
+        stars, = np.where(vcat['objtype'] != 'SKY')
     ustars,uind = np.unique(vcat['apogee_id'][stars], return_index=True)
     nustars = len(ustars)
-
+    
     # FITS table structure.
     dt = np.dtype([('GMAG',      np.float64),
                    ('BPMAG',     np.float64),
@@ -2370,18 +2373,20 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 starflags = 'None'
             else:
                 if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
-                if jdata['ASSIGNED'] == 0 or jdata['ON_TARGET'] == 0 or jdata['VALID'] == 0: continue
+                if fps and (jdata['ASSIGNED'] == 0 or jdata['ON_TARGET'] == 0 or jdata['VALID'] == 0): continue
                 assigned = 1
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 if len(vcatind) < 1: pdb.set_trace()
                 jvcat = vcat[vcatind][0]
-                if jvcat['assigned'] == 0: continue
+                if fps and jvcat['assigned'] == 0: continue
                 jmag = jvcat['jmag']
                 hmag = jvcat['hmag']
                 kmag = jvcat['kmag']
                 snr = jvcat['snr']
                 if snr < 0: snr = -1
+                #print(j,fiber,objtype,objid)
                 if (objtype != 'SKY') & (objid != '2MNone') & (objid != '2M') & (objid != ''):
+                    #print(j,fiber,objtype,objid)
                     gg, = np.where(objid == ustars)
                     if len(gg) > 0:
                         photteff = teff[gg][0]
@@ -2411,7 +2416,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 visitfile = jvcat['file']
 
                 # Handle case of unassigned or off target fibers 
-                if (jvcat['on_target'] == 0) | (jvcat['assigned'] == 0):
+                if fps and (jvcat['on_target'] == 0) | (jvcat['assigned'] == 0):
                     bgcolor = 'grey'
                     firstcarton = 'OFF TARGET!!!'
                     if jvcat['assigned'] == 0:
@@ -2441,7 +2446,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     #    apStarCheck = np.array(apStarCheck)
                     #    apStarNewest = os.path.basename(apStarCheck[-1])
                     #    apStarRelPath = '../' + starRelPath + apStarNewest
-
+                    
             # Write data to HTML table
             if objtype != 'SKY' and objtype != '':
                 vishtml.write('<TR  BGCOLOR=' + bgcolor + '>\n')
