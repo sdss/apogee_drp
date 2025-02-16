@@ -459,7 +459,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
         ph['tmass_j'].name = 'jmag'
         ph['tmass_h'].name = 'hmag'
         ph['tmass_k'].name = 'kmag'
-
+        
         # Sometimes TMASS_ID in "p" is 2MASS-J23580454-0007415
         for i in range(len(ph)):
             if 'twomass' in ph.dtype.names:
@@ -497,7 +497,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             if len(gdcat)>0:
                 cdata = catalogdb.getdata(catid=ph['catalogid'][gdcat])
                 dt = [('version_id',int),('sdss_id',int),('ra_sdss_id',float),
-                      ('dec_sdss_id',float),('gaia_sourceid',int),('gaia_ra',float),
+                      ('dec_sdss_id',float),
+                      #('jmag',float),('e_jmag',float),('hmag',float),
+                      #('e_hmag',float),('kmag',float),('e_kmag',float),
+                      ('gaia_sourceid',int),('gaia_ra',float),
                       ('gaia_dec',float),('gaia_pmra',float),('gaia_pmra_error',float),
                       ('gaia_pmdec',float),('gaia_pmdec_error',float),('gaia_plx',float),
                       ('gaia_plx_error',float),('gaia_gmag',float),('gaia_gerr',float),
@@ -525,7 +528,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             cdata = catalogdb.getdata(ra=ph['ra'][gdph],dec=ph['dec'][gdph])
             if len(gdph)>0:
                 dt = [('catalogid',int),('version_id',int),('sdss_id',int),('ra_sdss_id',float),
-                      ('dec_sdss_id',float),('gaia_sourceid',int),('gaia_ra',float),
+                      ('dec_sdss_id',float),
+                      #('jmag',float),('e_jmag',float),('hmag',float),
+                      #('e_hmag',float),('kmag',float),('e_kmag',float),
+                      ('gaia_sourceid',int),('gaia_ra',float),
                       ('gaia_dec',float),('gaia_pmra',float),('gaia_pmra_error',float),
                       ('gaia_pmdec',float),('gaia_pmdec_error',float),('gaia_plx',float),
                       ('gaia_plx_error',float),('gaia_gmag',float),('gaia_gerr',float),
@@ -554,10 +560,10 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 # Delete catalogid and version_id in ph, if they exist already
                 if 'catalogid' in ph.colnames: del ph['catalogid']
                 if 'version_id' in ph.colnames: del ph['version_id']
-
+                
                 # Add the new columns to ph
                 ph = hstack((ph,temp))
-
+                
     # Get SDSS-V FPS photometry from catalogdb/targetdb
     if fps:
         logger.info('Querying catalogdb/targetdb')
@@ -731,7 +737,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                     if fiber['valid'][i]==0: badcmt.append('INVALID')
                     cmt += ', '.join(badcmt)
                     logger.info(cmt)
-                # Unassigned, generaly no information for this target
+                # Unassigned, generally no information for this target
                 #   but allow for use of sky fibers for boss-assigned robots
                 if fiber['assigned'][i]==0 and str(fiber['category'][i]).upper().find('SKY')==-1:
                     fiber['hmag'][i] = 99.99
@@ -919,9 +925,12 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                                 objname = 'AP'+objname
                             else:
                                 objname = '2M'+objname
+                            #import pdb; pdb.set_trace()
                             hmag = ph['hmag'][match]
                             fiber['mag'][i] = [ph['jmag'][match],ph['hmag'][match],
                                                ph['kmag'][match],0.,0.]
+                            fiber['jmag'][i] = ph['jmag'][match]
+                            fiber['kmag'][i] = ph['kmag'][match]
                             # Adopt PM un-adjusted  coordinates
                             #fiber['ra'][i] -= ph['pmra'][match]/1000./3600./np.cos(fiber['dec'][i]*np.pi/180.)*(ph['epoch'][match]-2000.)
                             #fiber['dec'][i] -= ph['pmdec'][match]/1000./3600.*(ph['epoch'][match]-2000.)
