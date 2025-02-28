@@ -3767,8 +3767,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         hemS = np.full(nlogsS, 'S').astype(str)
         mjdS = np.empty(nlogsS,int)
         for i in range(nlogsS): mjdS[i] = int(os.path.basename(logsS[i]).split('.')[0])
-        g, = np.where(mjdS > 59808)
-        mdirsS = np.array(mdirsS)[g]
+        #g, = np.where(mjdS > 59808)
+        #mdirsS = np.array(mdirsS)[g]
         logfilesS = np.array(logfilesS)[g]
         logsS = logsS[g]
         hemS = hemS[g]
