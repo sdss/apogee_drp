@@ -410,7 +410,10 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False
         load = apload.ApLoad(apred=apred,telescope=chkmaster['telescope'][i])
         # Final calibration file
         #-----------------------
-        base = load.filename(caltype[i],num=name,chips=True)
+        if caltype[i] == 'Fiber':
+            base = load.filename('ETrace',num=name,chips=True)
+        else:
+            base = load.filename(caltype[i],num=name,chips=True)
         chkmaster['calfile'][i] = base
         # Sparse, only one file, not chip tag
         if caltype[i]=='Sparse':
@@ -418,6 +421,9 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False
         # Littrow, only detector b
         elif caltype[i]=='Littrow':
             chfiles = [base.replace(caltype[i]+'-',caltype[i]+'-b-')]
+        # Fiber
+        elif caltype[i]=='Fiber':
+            chfiles = [base.replace('ETrace-','ETrace-'+ch+'-') for ch in ['a','b','c']]
         else:
             chfiles = [base.replace(caltype[i]+'-',caltype[i]+'-'+ch+'-') for ch in ['a','b','c']]
         chinfo = info.file_status(chfiles)
@@ -425,8 +431,12 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False
             chead = fits.getheader(chfiles[0])
             chkmaster['v_apred'][i] = chead.get('V_APRED')
         # Overall success
-        if load.exists(caltype[i],num=name):
-            chkmaster['success'][i] = True
+        if caltype[i]=='Fiber':
+            if load.exists('ETrace',num=name):
+                chkmaster['success'][i] = True
+        else:
+            if load.exists(caltype[i],num=name):
+                chkmaster['success'][i] = True
 
         if verbose:
             logger.info('')
@@ -1401,7 +1411,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
        Dictionary of slurmpars settings.
     caltypes : list, optional
        List of master calibration types to run.  The default is all 9 of them.
-       ['detector','dark','flat','bpm','sparse','littrow','response','modelpsf','lsf']
+       ['detector','dark','flat','bpm','fiber','sparse','littrow','response','modelpsf','lsf']
     clobber : boolean, optional
        Overwrite any existing files.  Default is False.
     linkvers : str, optional
@@ -1423,7 +1433,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     """
 
     if caltypes is None:
-        caltypes = ['detector','dark','flat','bpm','sparse','littrow','response','modelpsf','multiwave','lsf']
+        caltypes = ['detector','dark','flat','bpm','fiber','sparse',
+                    'littrow','response','modelpsf','multiwave','lsf']
     else:
         caltypes = [c.lower() for c in caltypes]
         
@@ -1628,6 +1639,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     # Dark, sequence of long darks
     # Flat, sequence of internal flats
     # BPM, use dark+flat sequence
+    # Fiber, trace reference positions
     # Sparse, sequence of sparse quartz flats
     # multiwave, set of arclamp exposures
     # LSF, sky flat + multiwave
@@ -1939,6 +1951,73 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logger.info('No master BPM calibration files need to be run')
 
 
+    # Make Fiber in parallel
+    #--------------------------
+    if 'fiber' in caltypes:
+        fiberdict = allcaldict['fiber']
+        logger.info('')
+        logger.info('---------------------------------')
+        logger.info('Making master Fibers in parallel')
+        logger.info('=================================')
+        logger.info('Slurm settings: '+str(slurmpars))
+        if fiberdict is None or len(fiberdict)==0:
+            fiberdict = []
+            logger.info('No master Fiber calibration files to make')
+        dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
+              ('errfile',str,1000),('dir',str,1000)] 
+        tasks = np.zeros(len(fiberdict),dtype=np.dtype(dt))
+        tasks = Table(tasks)
+        docal = np.zeros(len(fiberdict),bool)
+        donames = []
+        logfiles = []
+        for i in range(len(fiberdict)):
+            name = fiberdict['name'][i]
+            if np.sum((mjds >= fiberdict['mjd1'][i]) & (mjds <= fiberdict['mjd2'][i])) > 0:
+                outfile = load.filename('ETrace',num=name,chips=True)
+                logfile1 = os.path.dirname(outfile)+'/mkfiber-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
+                errfile1 = logfile1.replace('.log','.err')
+                if os.path.exists(os.path.dirname(logfile1))==False:
+                    os.makedirs(os.path.dirname(logfile1))
+                cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
+                cmd1 += ' --fiber '+str(name)+' --unlock'
+                if clobber:
+                    cmd1 += ' --clobber'
+                # Check if files exist already
+                docal[i] = True
+                if clobber is not True:
+                    if load.exists('ETrace',num=name):
+                        logger.info(os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[i] = False
+                if docal[i]:
+                    donames.append(name)
+                    logfiles.append(logfile1)                
+                    logger.info('Fiber file %d : %s' % (i+1,name))
+                    logger.info('Command : '+cmd1)
+                    logger.info('Logfile : '+logfile1)
+                    tasks['cmd'][i] = cmd1
+                    tasks['name'][i] = name
+                    tasks['outfile'][i] = logfile1
+                    tasks['errfile'][i] = errfile1
+                    tasks['dir'][i] = os.path.dirname(logfile1)                    
+        if np.sum(docal)>0:
+            gd, = np.where(tasks['cmd'] != '')
+            tasks = tasks[gd]
+            logger.info(str(len(tasks))+' Fiber files to run')        
+            key,jobid = slrm.submit(tasks,label='mkfiber',verbose=True,
+                                    logger=logger,**slurmpars)
+            slrm.queue_wait('mkfiber',key,jobid,sleeptime=120,verbose=True,
+                            logger=logger) # wait for jobs to complete
+            # This should check if the ran okay and puts the status in the database            
+            chkmaster1 = check_mastercals(tasks['name'],'Fiber',logfiles,key,
+                                          apred,telescope,verbose=True,logger=logger)
+            if chkmaster is None:
+                chkmaster = chkmaster1
+            else:
+                chkmaster = np.hstack((chkmaster,chkmaster1))
+        else:
+            logger.info('No master Fiber calibration files need to be run')
+
+            
     # Make Sparse in parallel
     #--------------------------
     if 'sparse' in caltypes:

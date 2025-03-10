@@ -13,7 +13,9 @@
 ;  =flatid     ID8 number of the flat calibration to use.
 ;  =sparseid   ID8 number of the sparse calibration to use.
 ;  =littrowid  ID8 number of the littrow calibration to use.
-;  =fiberid    ID8 number for the ETrace calibration file to use. 
+;  =fiberid    ID8 number for the ETrace calibration file to use.
+;  =yshift     Trace shifts in the y-direction.  Used when making
+;                 FIBER calibration product
 ;  /average    Find the fibers    
 ;  /clobber    Overwrite any existing files.
 ;  /unlock     Remove any existing lock file and start fresh.
@@ -30,7 +32,7 @@
 ;-
 
 pro mkpsf,psfid,bpmid=bpmid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
-          littrowid=littrowid,average=average,clobber=clobber,unlock=unlock
+          littrowid=littrowid,yshift=yshift,average=average,clobber=clobber,unlock=unlock
 
   dirs = getdir(apodir,caldir,spectrodir,vers)
   caldir = dirs.caldir
@@ -65,7 +67,7 @@ pro mkpsf,psfid,bpmid=bpmid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberi
   print,'mkpsf approcess...'
   d = approcess(psfid,bpmid=bpmid,darkid=darkid,flatid=flatid,littrowid=littrowid,/nocr,nfs=1,/doap3dproc,unlock=unlock)
   psffile = apogee_filename('2D',num=psfid[0],chip='c',/dir)+'/'+string(format='(i8.8)',psfid)
-  APMKPSF,psffile,psfdir,sparseid=sparseid,fiberid=fiberid,average=average,clobber=clobber,unlock=unlock
+  APMKPSF,psffile,psfdir,sparseid=sparseid,fiberid=fiberid,yshift=yshift,average=average,clobber=clobber,unlock=unlock
 
   ;;file_delete,lockfile,/allow
   aplock,file,/clear

@@ -123,6 +123,7 @@ endfor
 
 ;; Extract the fiber location information
 name = 0L
+yshift = 0.0
 fiber = where(strpos(line,'fiber') eq 0)
 for i=0,n_elements(fiber)-1 do begin
   if fiber[i] ge 0 then begin
@@ -130,7 +131,8 @@ for i=0,n_elements(fiber)-1 do begin
     reads,fields[1],mjd1
     reads,fields[2],mjd2
     reads,fields[3],name
-    str = {mjd1:mjd1, mjd2:mjd2, name:name }
+    reads,fields[4],yshift
+    str = {mjd1:mjd1, mjd2:mjd2, name:name, yshift:yshift }
     if i eq 0 then fiberstr=str else fiberstr = struct_append(fiberstr,str)
   endif
 endfor
