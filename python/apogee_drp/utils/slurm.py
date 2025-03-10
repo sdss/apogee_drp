@@ -259,7 +259,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     username = getpwuid(getuid())[0]
     slurmdir = SLURMDIR+username+'/slurm/'
     if os.path.exists(slurmdir)==False:
-        os.makedirs(slurmdir)
+        os.makedirs(slurmdir,exist_ok=True)
 
     # Generate unique key
     key = genkey()
@@ -270,7 +270,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
     # job directory
     jobdir = slurmdir+label+'/'+key+'/'
     if os.path.exists(jobdir)==False:
-        os.makedirs(jobdir)
+        os.makedirs(jobdir,exist_ok=True)
 
     # notchpeak can do shared, but kingspeak cannot
     if alloc=='sdss-np' and shared:
@@ -386,7 +386,7 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
                 lines += ['echo "Done"']
                 if os.path.exists(os.path.dirname(tasks['outfile'][tind]))==False:  # make sure output directory exists
                     try:
-                        os.makedirs(os.path.dirname(tasks['outfile'][tind]))
+                        os.makedirs(os.path.dirname(tasks['outfile'][tind]),exist_ok=True)
                     except:
                         logger.info('Problems making directory '+os.path.dirname(tasks['outfile'][tind]))
                 inventory += [str(tasks['task'][tind])+' '+str(node)+' '+str(proc)]

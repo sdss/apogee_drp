@@ -50,7 +50,7 @@ def lock(filename,waittime=10,maxduration=3*3600,lock=False,
     lockfile = filename+'.lock'
     dirname = os.path.dirname(os.path.abspath(filename))
     if os.path.exists(dirname)==False:
-        os.makedirs(dirname)   # make directory if necessary 
+        os.makedirs(dirname,exist_ok=True)   # make directory if necessary 
   
     # Clear or unlock the lock file
     if clear or unlock:
