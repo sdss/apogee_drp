@@ -255,9 +255,15 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         print,' psf file: ',file, ' already made'
         return
       endif
+      i = where(fiberstr.name eq fiber)
+      if i lt 0 then begin
+        print,'No matching calibration line for ', fiber
+        stop
+      endif
+      yshift = fiberstr[i].yshift
       cmjd = getcmjd(fiber,mjd=mjd)
       GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid
-      MKPSF,fiber,darkid=darkid,flatid=flatid,sparseid=sparseid,unlock=unlock
+      MKPSF,fiber,darkid=darkid,flatid=flatid,sparseid=sparseid,yshift=yshift,unlock=unlock
     endif
   endif
 

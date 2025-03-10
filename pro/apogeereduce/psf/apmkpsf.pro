@@ -11,7 +11,9 @@
 ;                concatenated.
 ;  outdir      The directory to write the apTrace files to.
 ;                This should normally be SPECTRO_DIR/cal/trace/
-;  =fiberid    ID8 number for the ETrace calibration file to use. 
+;  =fiberid    ID8 number for the ETrace calibration file to use.
+;  =yshift     Trace pixel shift in y-direction.  Used when making
+;                  FIBER calibration file.
 ;  /no_epsf    Don't create the empirical PSF.
 ;  =peakthresh The threshold to use for finding peaks/fibers.
 ;  /pl         Plot the fits
@@ -32,11 +34,13 @@
 
 pro apmkpsf,flatframe,outdir,no_epsf=no_epsf,pl=pl,clobber=clobber,$
             peakthresh=peakthresh,verbose=verbose,silent=silent,stp=stp,$
-            sparseid=sparseid,fiberid=fiberid,average=average,unlock=unlock
+            sparseid=sparseid,fiberid=fiberid,yshift=yshift,$
+            average=average,unlock=unlock
 
 t0 = systime(1)
 if not keyword_set(sparseid) then sparseid=0 else makecal,sparse=sparseid
-if not keyword_set(fiberid) then fiberid=0 else makecal,fiber=fiberid
+;;if not keyword_set(fiberid) then fiberid=0 else makecal,fiber=fiberid
+;; We make the FIBER calibration file with THIS PROGRAM!
 
 ; Get APOGEE directories
 dirs = getdir(apogee_dir,cal_dir,spectro_dir,apogee_vers)
@@ -337,7 +341,8 @@ FOR i=0,nflatframe-1 do begin
     ; Create Jon's Empirical PSF
     ;---------------------------
     if not keyword_set(no_epsf) then $
-      APMKPSF_EPSF,str.(j),strmid(outdir,0,strlen(outdir)-4),flatid,j,sparseid=sparseid,fiberid=fiberid,/scat,average=average
+       APMKPSF_EPSF,str.(j),strmid(outdir,0,strlen(outdir)-4),flatid,j,sparseid=sparseid,fiberid=fiberid,/scat,$
+                    average=average,yshift=yshift
 
     outfile = apogee_filename('PSF',chip=chiptag[j],num=flatframeid)
     ;;file_delete,lockfile
