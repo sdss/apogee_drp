@@ -1023,7 +1023,7 @@ def mkmodelpsf(name,psfid,sparseid,apred,telescope,nfbin=5,ncbin=200,verbose=Fal
         plt.yscale('log')
         pltdir = os.path.dirname(outfile)+'/plots/'
         if os.path.exists(pltdir)==False:
-            os.makedirs(pltdir)
+            os.makedirs(pltdir,exist_ok=True)
         figfile = pltdir+os.path.basename(outfile).replace('.fits','.png')
         plt.savefig(figfile,bbox_inches='tight')
 

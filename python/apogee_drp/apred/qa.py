@@ -481,7 +481,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
     # Directory where sn*dat and altsn*dat files are stored.
     sntabdir = apodir + apred + '/visit/' + telescope + '/' + field + '/' + plate + '/' + mjd + '/'
-    if os.path.exists(sntabdir) == False: os.makedirs(sntabdir)
+    if os.path.exists(sntabdir) == False: os.makedirs(sntabdir,exist_ok=True)
 
     # Get the fiber association for this plate. Also get some other values
     if ims[0] == 0:
@@ -1017,7 +1017,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     qafiledir = os.path.dirname(qafile)
     print("----> makeObsHTML: Creating "+os.path.basename(qafile))
     if os.path.exists(qafiledir) == False:
-        os.makedirs(qafiledir)
+        os.makedirs(qafiledir,exist_ok=True)
 
     html = open(qafile, 'w')
     tmp = os.path.basename(qafile).replace('.html','')
@@ -1301,7 +1301,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))
     plotsdir = platedir+'/plots/'
     if len(glob.glob(plotsdir)) == 0:
-        os.makedirs(plotsdir)
+        os.makedirs(plotsdir,exist_ok=True)
 
     # Set up some basic plotting parameters, starting by turning off interactive plotting.
     #plt.ioff()
@@ -2195,7 +2195,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
     # Make html directory if it doesn't already exist.
     htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/html/'
-    if os.path.exists(htmldir) == False: os.makedirs(htmldir)
+    if os.path.exists(htmldir) == False: os.makedirs(htmldir,exist_ok=True)
     plotdir = htmldir.replace('html','plots')
 
     # Get the HTML file name... apPlate-plate-mjd
@@ -2662,8 +2662,8 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starDir = os.path.dirname(apStarPath)+'/'
         starHtmlDir = starDir + 'html/'
         starPlotDir = starDir + 'plots/'
-        if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir)
-        if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
+        if os.path.exists(starHtmlDir) == False: os.makedirs(starHtmlDir,exist_ok=True)
+        if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir,exist_ok=True)
         starHTMLpath = starHtmlDir + obj + '.html'
         starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + obj + '_spec+model.png'
         starPlotFilePath = starPlotDir + starPlotFile
@@ -2875,7 +2875,7 @@ def apVisitPlots(load=None, plate=None, mjd=None, telescope=None):
 
     # Make plot and html directories if they don't already exist.
     plotsdir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/plots/'
-    if os.path.exists(plotsdir) == False: os.makedirs(plotsdir)
+    if os.path.exists(plotsdir) == False: os.makedirs(plotsdir,exist_ok=True)
 
     # Loop over the fibers
     for j in range(300):
@@ -3095,7 +3095,7 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
         apStarPath = load.filename('Star', obj=obj)
         starDir = os.path.dirname(apStarPath)+'/'
         starPlotDir = starDir + 'plots/'
-        if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir)
+        if os.path.exists(starPlotDir) == False: os.makedirs(starPlotDir,exist_ok=True)
         starPlotFile = 'apStar-' + apred + '-' + telescope + '-' + obj + '_spec+model.png'
         starPlotFilePath = starPlotDir + starPlotFile
 
@@ -3287,9 +3287,9 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 
     # Make the html folder if it doesn't already exist
     if os.path.exists(outdir) == False:
-        os.makedirs(outdir)
+        os.makedirs(outdir,exist_ok=True)
     if os.path.exists(plotsdir) == False:
-        os.makedirs(plotsdir)
+        os.makedirs(plotsdir,exist_ok=True)
 
     # Get all apR file numbers for the night
     rawfiles = glob.glob(datadir + mjd + '/a*R-*.apz')
@@ -4388,7 +4388,7 @@ def makeCalFits(load=None, ims=None, types=None, mjd=None, instrument=None, clob
         print(outfile)
 
         # Make directory if it doesn't exist
-        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile))
+        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile),exist_ok=True)
 
         n_exposures = len(ims)
 
@@ -4541,7 +4541,7 @@ def makeDarkFits(load=None, ims=None, mjd=None, instrument=None, clobber=None):
         print("--------------------------------------------------------------------")
         print("Running MAKEDARKFITS for MJD "+mjd)
 
-        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile))
+        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile),exist_ok=True)
 
         n_exposures = len(ims)
 
@@ -4627,7 +4627,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
         print("--------------------------------------------------------------------")
         print("Running MAKEEXPFITS for MJD "+mjd)
 
-        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile))
+        if os.path.exists(os.path.dirname(outfile)) == False: os.makedirs(os.path.dirname(outfile),exist_ok=True)
 
         ims = glob.glob(rawdir + prefix+'R-a-*')
         ims.sort()
@@ -4788,7 +4788,7 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
 
     # Make html directory if it doesn't already exist.
     htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/html/'
-    if os.path.exists(htmldir) == False: os.makedirs(htmldir)
+    if os.path.exists(htmldir) == False: os.makedirs(htmldir,exist_ok=True)
 
     #if os.path.exists(htmldir + 'sorttable.js') == False:
     #    print("----> makeVisHTML: getting sorttable.js...")

@@ -168,7 +168,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
 
     localdir = os.environ['APOGEE_LOCALDIR']
     localdir += '/'+load.apred
-    if os.path.exists(localdir)==False: os.makedirs(localdir)
+    if os.path.exists(localdir)==False: os.makedirs(localdir,exist_ok=True)
         
     # outdir must be a string outdir must be a string 
     #if size(outdir,/type) != 7:if size(outdir,/type) != 7: 
@@ -180,7 +180,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         if not silent:
             print('')
             print('creating ',outdir)
-        os.makedirs(outdir)
+        os.makedirs(outdir,exist_ok=True)
      
     # Chips to extract
     if len(chips) > 3 or np.min(chips)<0 or np.max(chips)>2: 
@@ -859,7 +859,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
                 frame = create_struct(frame,'chip'+chiptag[k],chstr) 
         del output  # free up memory
         if os.path.exists(outdir)==False:
-            os.makedirs(outdir)
+            os.makedirs(outdir,exist_ok=True)
         plotfile = outdir+'/plots/pixshift-'+baseframeid
         if skywave:
             #wave.getskywave(args.frameid,args.waveid,vers=args.apred,telescope=args.telescope)            

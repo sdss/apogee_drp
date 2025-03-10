@@ -145,7 +145,7 @@ def darkplot(apred='r14',telescope='apo25m'):
     # Get dark frames
     load = apload.ApLoad(apred=apred,telescope=telescope)
     darkdir = os.path.dirname(load.filename('Dark',chips='a',num=0))
-    try: os.makedirs(darkdir)
+    try: os.makedirs(darkdir,exist_ok=True)
     except: pass
     files = np.sort(glob.glob(darkdir+'/'+prefix+'Dark-a-*.fits'))
     if len(files)==0:
@@ -219,7 +219,7 @@ def flatplot(apred='r14',telescope='apo25m'):
     # get flat frames
     load = apload.ApLoad(apred=apred,telescope=telescope)
     flatdir = os.path.dirname(load.filename('Flat',chips='a',num=0))
-    try: os.makedirs(flatdir)
+    try: os.makedirs(flatdir,exist_ok=True)
     except: pass
     files = np.sort(glob.glob(flatdir+'/'+prefix+'Flat-a-*.fits'))
 
@@ -263,7 +263,7 @@ def flatplot(apred='r14',telescope='apo25m'):
     fig.tight_layout()
     out = '{:s}/plots/{:s}_flathist.png'.format(flatdir,inst)
     if os.path.exists(os.path.dirname(out))==False:
-        os.makedirs(os.path.dirname(out))
+        os.makedirs(os.path.dirname(out),exist_ok=True)
     fig.savefig(out)
     grid=[[os.path.basename(out)]]
     for ichip,chip in enumerate(chips) :

@@ -108,7 +108,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     load = apload.ApLoad(apred=apred,telescope=telescope)
     starfile = load.filename('Star',obj=star)
     stardir = os.path.dirname(starfile)
-    try : os.makedirs(os.path.dirname(stardir))
+    try : os.makedirs(os.path.dirname(stardir),exist_ok=True)
     except FileExistsError: pass
 
     # Initalize star-level summary table
@@ -440,7 +440,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     outbase = os.path.splitext(os.path.basename(outfile))[0]
     outbase += '-'+starver  # add star version
     if os.path.exists(outdir)==False:
-        os.makedirs(outdir)
+        os.makedirs(outdir,exist_ok=True)
     if apstar_vers != 'stars':
         outdir = outdir.replace('/stars/','/'+apstar_vers+'/')
 
@@ -544,7 +544,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
         fp.close()
         # Making plots
         logger.info('Making plots for :'+obj+' '+outdir)
-        try: os.makedirs(outdir+'/plots/')
+        try: os.makedirs(outdir+'/plots/',exist_ok=True)
         except: pass
         dop_plot(outdir+'/plots/',outbase,[sumstr,finalstr,bmodel,specmlist],decomp=gout)
     except KeyboardInterrupt: 
@@ -1066,7 +1066,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         if apstar_vers != 'stars' :
             outfile = outfile.replace('/stars/','/'+apstar_vers+'/')
         outdir = os.path.dirname(outfile)
-        try: os.makedirs(os.path.dirname(outfile))
+        try: os.makedirs(os.path.dirname(outfile),exist_ok=True)
         except: pass
         logger.info('Writing apStar file to '+outfile)
         apstar.write(outfile)

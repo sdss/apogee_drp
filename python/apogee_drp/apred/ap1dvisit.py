@@ -3162,7 +3162,7 @@ def ap1dvisit(planfiles,clobber=False,verbose=False,newwave=None,
                                   plate=plantab['plateid'],chip='a',
                                   field=plantab['field'],dir=True)
         if os.path.exists(plate_dir)==False:
-            os.makedirs(plate_dir)
+            os.makedirs(plate_dir,exist_ok=True)
         sdir = plate_dir.split('/')
         if load.telescope != 'apo1m' and plantab['platetype'] != 'cal':
             if os.path.exists(spectro_dir+'/plates/'+sdir[-2]):
@@ -3185,7 +3185,7 @@ def ap1dvisit(planfiles,clobber=False,verbose=False,newwave=None,
         # Start the plots directory
         plots_dir = plate_dir+'/plots/'
         if os.path.exists(plots_dir)==False:
-            os.makedirs(plots_dir)
+            os.makedirs(plots_dir,exist_ok=True)
         
         visittab = []
         alltellstar = []
@@ -3421,7 +3421,7 @@ def ap1dvisit(planfiles,clobber=False,verbose=False,newwave=None,
         return
     outdir = os.path.dirname(visittabfile)
     if os.path.exists(outdir)==False:
-        os.makedirs(outdir)
+        os.makedirs(outdir,exist_ok=True)
 
     objtype = np.char.array(plugmap['fiberdata']['objtype']).strip()
     if fps:

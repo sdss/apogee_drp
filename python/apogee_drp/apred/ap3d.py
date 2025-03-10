@@ -2603,7 +2603,7 @@ def ap3dproc(files,outfile,apred,detcorr=None,bpmcorr=None,darkcorr=None,
             # Does the output directory exist?
             if os.path.exists(os.path.dirname(ioutfile))==False:
                 print('Creating '+os.path.dirname(ioutfile))
-                os.makedirs(os.path.dirname(ioutfile))
+                os.makedirs(os.path.dirname(ioutfile),exist_ok=True)
             # Test if the output file already exists
             filexists = os.path.exists(ioutfile)
             if verbose:
@@ -3011,7 +3011,7 @@ def ap3d(planfiles,verbose=False,rogue=False,clobber=False,refonly=False,
                 # Does the output directory exist?
                 fitsdir = os.path.join(utils.localdir(),load.apred)
                 if os.path.exists(os.path.dirname(outfile))==False:
-                    os.makedirs(os.path.dirname(outfile))
+                    os.makedirs(os.path.dirname(outfile),exist_ok=True)
                 # Does the file exist already
                 #if os.path.exists(outfile) and clobber==False:
                 #    print(outfile,' exists already and clobber not set')
