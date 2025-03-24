@@ -3769,10 +3769,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         for i in range(nlogsS): mjdS[i] = int(os.path.basename(logsS[i]).split('.')[0])
         #g, = np.where(mjdS > 59808)
         #mdirsS = np.array(mdirsS)[g]
-        logfilesS = np.array(logfilesS)[g]
-        logsS = logsS[g]
-        hemS = hemS[g]
-        mjdS = mjdS[g]
+        logfilesS = np.array(logfilesS)
+        #logfilesS = np.array(logfilesS)[g]
+        #logsS = logsS[g]
+        #hemS = hemS[g]
+        #mjdS = mjdS[g]
         nlogsS = len(logsS)
         print("----> makeMasterQApages: Found "+str(nlogsS)+" APOGEE-S log files.")
 
