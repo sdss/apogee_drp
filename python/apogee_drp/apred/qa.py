@@ -3921,7 +3921,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             # Column 6: Visit QA
             html.write('<TD align="left">')
             if nobj > 0 and nplatesall == 0:
-                html.write('<FONT COLOR="red">Reduction failed!!!</FONT>\n')
+                html.write('No Reduction files\n')
             else:
                 for j in range(nplatesall):
                     field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
@@ -3943,7 +3943,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             # Column 7: Visit spectra plots
             html.write('<TD align="left">')
             if nobj > 0 and nplatesall == 0:
-                html.write('<FONT COLOR="red">Reduction failed!!!</FONT>\n')
+                html.write('No Reduction files\n')
             else:
                 for j in range(nplatesall):
                     field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
@@ -3966,7 +3966,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             #  this is slow because it has to load the PlateSum files from disk
             html.write('<TD align="left">')
             if nobj > 0 and nplatesall == 0:
-                html.write('<FONT COLOR="red">Reduction failed!!!</FONT>\n')
+                html.write('No Reduction files\n')
             else:
                 for j in range(nplatesall):
                     field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
