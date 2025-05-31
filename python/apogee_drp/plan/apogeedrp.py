@@ -257,6 +257,10 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
         if len(expinfo1)==0 and len(dbexpinfo)==0:
             logger.info('MJD={:}  {:3d} exposures'.format(m,0))
             continue
+        # Inconsistency
+        if len(expinfo1)==0 and len(dbexpinfo)>0:
+            logger.warning('Inconsistency between files on disk and in the database for MJD={:}'.format(m))
+            raise Exception
         if len(expinfo1)>0 and verbose:
             logger.info('MJD={:}  {:3d} exposures'.format(m,len(expinfo1)))
         # Crossmatch the two catalogs
@@ -2945,7 +2949,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 # Only FPI exposure number per MJD
                 calfpiind = []
                 logger.info('Daily FPI calibration products')
-                logger.info('------------------------------')                
+                logger.info('------------------------------')
                 for m in mjds:
                     fpiind, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='FPI'))
                     if len(fpiind)==0:
