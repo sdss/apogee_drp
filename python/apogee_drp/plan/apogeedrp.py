@@ -3398,7 +3398,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
     return chkexp,chkvisit
 
 
-def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
+def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None):
     """
     Run RV on all the stars observed from a list of MJDs.
 
@@ -3410,8 +3410,11 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
        List of MJDs to process
     slurmpars : dictionary
        Dictionary of slurmpars settings.
+    limited : boolean, optional
+       Limit the visits to the maximum mjd.  Default is False.
     daily : boolean, optional
        Run for the daily processing.  Only include visits up to and including this night.
+       Deprecated.  Use limited from now on.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
@@ -3438,9 +3441,13 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     mjdstop = np.max(mjds)
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
 
+    if daily is not None:
+        logger.DeprecationWarning('daily is deprecated.  use limited from now on')
+        limited = daily
+        
     # Get the visit information from the database
     logger.info('Getting visit information from the database')
-    if daily:
+    if limited:
         sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and mjd<=%d and telescope='%s'" % (apred,mjdstop,telescope)        
     else:
         sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and telescope='%s'" % (apred,telescope)
@@ -3493,7 +3500,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     logger.info(str(len(vcat))+' stars to run')
     
     # Change MJD to MAXMJD because the apStar file will have MAXMJD in the name
-    if daily==False and len(mjds)>1:
+    if limited==False and len(mjds)>1:
         vcat['mjd'] = vcat['maxmjd']    
 
     # Loop over the stars and figure out the ones that need to be run
@@ -3505,7 +3512,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             # Use the MAXMJD in the table, now called MJD
             mjd = vcat['mjd'][i]
             apstarfile = load.filename('Star',obj=obj)
-            if daily:
+            if limited:
                 # Want all visits up to this day
                 apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
             else:
@@ -3537,7 +3544,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             # Use the MAXMJD in the table, now called MJD
             mjd = vcat['mjd'][torun[i]]
             apstarfile = load.filename('Star',obj=obj)
-            if daily:
+            if limited:
                 # Want all visits up to this day
                 apstarfile = apstarfile.replace('.fits','-'+str(mjdstop)+'.fits')
             else:
@@ -3551,15 +3558,15 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             cmd = 'rv %s %s %s -v' % (obj,apred,telescope)
             if clobber:
                 cmd += ' -c'
-            if daily:
-                cmd += '  --m '+str(mjds[0])
+            if limited:
+                cmd += '  --m '+str(mjd)
             logger.info('rv %d : %s' % (i+1,obj))
             logger.info('Command : '+cmd)
             logger.info('Logfile : '+logfile)
             tasks['cmd'][i] = cmd
             tasks['outfile'][i] = logfile
             tasks['errfile'][i] = errfile
-            tasks['dir'][i] = os.path.dirname(logfile) 
+            tasks['dir'][i] = os.path.dirname(logfile)
         logger.info('Running RV on '+str(ntorun)+' stars')
         key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=logger,**slurmpars1)
         slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
@@ -3924,8 +3931,8 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
         email.send(address,subject,message,files=logfile,send_from='noreply.apogeedrp')    
     
 
-def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
-        fresh=False,linkvers=None,nodes=5,alloc='sdss-np',qos=None,
+def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
+        clobber=False,fresh=False,linkvers=None,nodes=5,alloc='sdss-np',qos=None,
         walltime='336:00:00',debug=False):
     """
     Perform APOGEE Data Release Processing
@@ -3948,6 +3955,8 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     caltypes : list, optional
        Calibration types to run.  This is used to select a subset of the master cals or daily cals
          to run.  Default is to run all of them.
+    rvlimited : boolean, optional
+       Limit the visits for RVs and combination to the input MJD range.  Default is False.
     clobber : boolean, optional
        Overwrite any existing data.  Default is False.
     fresh : boolean, optional
@@ -4148,7 +4157,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('8) Running RV+Visit Combination')
         rootLogger.info('================================')
         rootLogger.info('')
-        chkrv = runrv(load,mjds,**kws)
+        chkrv = runrv(load,mjds,limited=rvlimited,**kws)
 
     # 8) Create full allVisit/allStar files
     #--------------------------------------
