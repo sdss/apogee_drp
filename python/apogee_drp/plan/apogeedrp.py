@@ -1048,7 +1048,7 @@ def create_sumfiles_mjd(apred,telescope,mjd5,logger=None):
     db.close()
 
 
-def create_sumfiles(apred,telescope,mjd5=None,logger=None):
+def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     """ Create allVisit/allStar files and summary of objects for this night."""
 
     if logger is None:
@@ -1073,25 +1073,63 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     #                   "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
     # Using STAR_LATEST seems much faster
     #allstar = db.query('star_latest',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    logger.info('Getting all of the star table information')
     vstar = db.query('star',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     # Deal with multiple STARVER versions per star
     star_index = dln.create_index(vstar['apogee_id'])
     ndups = np.sum(star_index['num']>1)
-    if ndups>0:
+    # --- No max mjd limit imposed ---
+    if maxmjd is None:
+        if ndups>0:
+            allstar = np.zeros(len(star_index['value']),dtype=vstar.dtype)
+            for i,obj in enumerate(star_index['value']):
+                if star_index['num'][i]>1:
+                    ind = star_index['index'][star_index['lo'][i]]
+                    allstar[i] = vstar[ind]
+                else:
+                    ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
+                    starver = vstar['starver'][ind]
+                    si = np.argsort(starver)
+                    useind = ind[si[-1]]   # use last/largest STARVER
+                    allstar[i] = vstar[useind]
+        else:
+            allstar = vstar
+    # --- Impose max mjd value ---
+    else:
+        logger.info('Imposing maximum MJD '+str(maxmjd))
         allstar = np.zeros(len(star_index['value']),dtype=vstar.dtype)
+        useme = np.zeros(len(star_index['value']),bool)
         for i,obj in enumerate(star_index['value']):
+            # Multiple entries
             if star_index['num'][i]>1:
                 ind = star_index['index'][star_index['lo'][i]]
-                allstar[i] = vstar[ind]
+                starver = vstar['starver'][ind].astype(int)
+                if starver <= maxmjd:
+                    allstar[i] = vstar[ind]
+                    useme[i] = True
             else:
                 ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
-                starver = vstar['starver'][ind]
-                si = np.argsort(starver)
-                useind = ind[si[-1]]   # use last/largest STARVER
-                allstar[i] = vstar[useind]
-    else:
-        allstar = vstar
-    
+                starver = vstar['starver'][ind].astype(int)
+                goodver, = np.where(starver <= maxmjd)
+                if len(goodver)>0:
+                    ind = ind[goodver]
+                    starver = starver[goodver]
+                    si = np.argsort(starver)
+                    useind = ind[si[-1]]   # use last/largest STARVER
+                    allstar[i] = vstar[useind]
+                    useme[i] = True
+                else:
+                    useme[i] = False
+                    
+        # Need to remove any stars that didn't have visits below the maxmjd range
+        keepind, = np.where(useme)
+        if len(keepind)==0:
+            logger.info('No stars left')
+            return
+        if len(keepind) < len(allstar):
+            logger.info(str(len(keepind))+' of '+str(len(useme))+' stars left')
+            allstar = allstar[keepind]
+
     allstarfile = load.filename('allStar')#.replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allStar file to '+allstarfile)
     logger.info(str(len(allstar))+' stars')
@@ -1102,7 +1140,8 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
         del allstar['nres']    # temporary kludge, nres is causing write problems
     allstar.write(allstarfile,overwrite=True)
 
-    # allVisit
+    
+    # --- allVisit ---
     # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
     #   Get more info by joining with the visit table.
     vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
@@ -1124,34 +1163,56 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     cols = np.hstack(('v.'+np.char.array(vcols),'rv.'+np.char.array(rvcols)))
     sql = 'select '+','.join(cols)+' from apogee_drp.visit as v LEFT JOIN apogee_drp.rv_visit as rv ON rv.visit_pk=v.pk'
     sql += " where v.apred_vers='"+apred+"' and v.telescope='"+telescope+"'"
-    allvisit = db.query(sql=sql)
-
+    logger.info('Getting all of the visit table information')
+    visit = db.query(sql=sql)
+    
     # Fix bad STARVER values
-    bdstarver, = np.where(np.char.array(allvisit['starver']) == '')
+    bdstarver, = np.where(np.char.array(visit['starver']) == '')
     if len(bdstarver)>0:
-        allvisit['starver'][bdstarver] = allvisit['mjd'][bdstarver]
+        visit['starver'][bdstarver] = visit['mjd'][bdstarver]
+
     # Check for duplicate STARVER for each star
-    idindex = dln.create_index(allvisit['apogee_id'])
-    duplicate = np.zeros(len(allvisit),bool)
-    for i in range(len(idindex['value'])):
-        ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
-        allv = allvisit[ind]
-        if np.min(allv['starver'].astype(int)) != np.max(allv['starver'].astype(int)):
-            # Only keep rows for the maximum STARVER per star
-            maxstarver = np.max(allv['starver'].astype(int))
-            bd1, = np.where(allv['starver'].astype(int) != maxstarver)
-            duplicate[ind[bd1]] = True
-    torem, = np.where(duplicate==True)
-    if len(torem)>0:
-        allvisit = np.delete(allvisit,torem)
+    idindex = dln.create_index(visit['apogee_id'])
+    duplicate = np.zeros(len(visit),bool)
+        
+    # --- No max mjd limit imposed ---
+    if maxmjd is None:
+        if ndups>0:
+            for i in range(len(idindex['value'])):
+                ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
+                allv = visit[ind]
+                if np.min(allv['starver'].astype(int)) != np.max(allv['starver'].astype(int)):
+                    # Only keep rows for the maximum STARVER per star
+                    maxstarver = np.max(allv['starver'].astype(int))
+                    bd1, = np.where(allv['starver'].astype(int) != maxstarver)
+                    duplicate[ind[bd1]] = True
+            torem, = np.where(duplicate==True)
+            if len(torem)>0:
+                visit = np.delete(visit,torem)
+        allvisit = visit
+    
+    # --- Impose max mjd value ---
+    else:
+        logger.info('Imposing maximum MJD '+str(maxmjd))
+        keepind = []
+        for i in range(len(idindex['value'])):
+            ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
+            allv = visit[ind]
+            good, = np.where(allv['mjd'] <= maxmjd)
+            if len(good)>0:
+                keepind.append(ind[good])
+        keepind = np.concatenate(keepind)
+        allvisit = visit[keepind]
+        nustars = len(np.unique(allvisit['apogee_id']))
+        logger.info(str(nustars)+' of '+str(len(np.unique(visit['apogee_id'])))+' stars left')
                 
     # Use visit_latest, this can sometimes take forever
     #cols = ','.join(vcols+rvcols)        
-    #allvisit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    #visit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     # rv_components can sometimes be an object type
-    if allvisit.dtype['rv_components'] == np.object:
-        allvisit = Table(allvisit)
-        allvisit['rv_components'] = np.zeros(len(allvisit),dtype=np.dtype((np.float32,3)))
+    if visit.dtype['rv_components'] == np.object:
+        visit = Table(visit)
+        visit['rv_components'] = np.zeros(len(visit),dtype=np.dtype((np.float32,3)))
     allvisitfile = load.filename('allVisit')#.replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allVisit file to '+allvisitfile)
     logger.info(str(len(allvisit))+' visits')
