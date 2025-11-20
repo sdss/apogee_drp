@@ -65,12 +65,26 @@ new_type = pg.extensions.new_type(oids, "DATE", cast_date)
 register_type(new_type) 
 # Cast None's for bool
 oids_bool = (16,)
+#def cast_bool_none(value, cursor):
+#    if value is None:
+#        return False
+#    return np.bool(value)
+#new_type = pg.extensions.new_type(oids_bool, "BOOL", cast_bool_none)
+#register_type(new_type)
 def cast_bool_none(value, cursor):
     if value is None:
         return False
-    return np.bool(value)
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        s = bytes(value).decode('ascii', 'strict')
+    else:
+        s = str(value)
+    s = s.strip().lower()
+    return s in ('t', 'true', '1')
+#BOOL_NONE = new_type((16,), 'BOOL_NONE', cast_bool_none)
+#register_type(BOOL_NONE, conn)
 new_type = pg.extensions.new_type(oids_bool, "BOOL", cast_bool_none)
 register_type(new_type)
+
 # Cast None's for text/char
 oids_text = (18,25)
 def cast_text_none(value, cursor):
@@ -279,7 +293,7 @@ class DBSession(object):
             cur.close()
             colnames = [h[0] for h in head]
             headdict = dict(head)
-
+            
             # Return fmt="list" format
             if fmt=='list':
                 data = [tuple(colnames)]+data
@@ -319,7 +333,7 @@ class DBSession(object):
             cur.execute(sql)
             data = cur.fetchall()
             ndata = len(data)
-
+            
             if len(data)==0:
                 cur.close()
                 return np.array([])

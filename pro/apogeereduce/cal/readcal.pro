@@ -123,15 +123,24 @@ endfor
 
 ;; Extract the fiber location information
 name = 0L
-yshift = 0.0
+yshift = ''
 fiber = where(strpos(line,'fiber') eq 0)
 for i=0,n_elements(fiber)-1 do begin
+  yshift = ''
   if fiber[i] ge 0 then begin
     fields = strsplit(line(fiber[i]),/extract)
     reads,fields[1],mjd1
     reads,fields[2],mjd2
     reads,fields[3],name
     reads,fields[4],yshift
+    if strmid(yshift,0,1) eq '[' then begin
+      yshift = repstr(yshift,'[','')
+      yshift = repstr(yshift,']','')
+      yshift = float(strsplit(yshift,',',/extract))
+    endif else begin
+      yshift = float(yshift)
+      yshift = [yshift,yshift,yshift] 
+    endelse
     str = {mjd1:mjd1, mjd2:mjd2, name:name, yshift:yshift }
     if i eq 0 then fiberstr=str else fiberstr = struct_append(fiberstr,str)
   endif

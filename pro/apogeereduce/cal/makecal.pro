@@ -221,7 +221,7 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       endif
       ims = getnums(sparsestr[i].frames)
       cmjd = getcmjd(ims[0],mjd=mjd)
-      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid
+      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,bpmid=bpmid,fiberid=fiberid
       MAKECAL,dark=darkid,unlock=unlock
       MAKECAL,flat=flatid,unlock=unlock
       MAKECAL,bpm=bpmid,unlock=unlock
@@ -232,7 +232,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
         stop
       endif
       MKEPSF,ims,darkid=darkid,flatid=flatid,darkims=darkims,dmax=sparsestr[i].dmax,$
-             maxread=maxread,clobber=clobber,/filter,thresh=0.2,scat=2,unlock=unlock
+             maxread=maxread,clobber=clobber,/filter,thresh=0.2,scat=2,unlock=unlock,$
+             fiberid=fiberid
       ;; This creates apSparse and apEPSF files
       ;; Make empty apPSF files to indicate to makecal.pro that this
       ;;  PSF file was already made

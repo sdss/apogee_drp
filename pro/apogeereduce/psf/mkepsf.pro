@@ -1,7 +1,7 @@
 ;======================================================================
 pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=clobber,dmax=dmax,$
            sdmax=sdmax,darkims=darkims,outid=outid,average=average,maxread=maxread,filter=filter,$
-           thresh=thresh,scat=scat,unlock=unlock
+           thresh=thresh,scat=scat,fiberid=fiberid,unlock=unlock
 
   if not keyword_set(dmax) then dmax=7
   if not keyword_set(outid) then outid=ims[0]
@@ -14,7 +14,7 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
 
   ; if another process is alreadying make this file, wait!
   aplock,file,waittime=10,unlock=unlock
- 
+;stop 
   ;; does product already exist?
   info = file_info(file)
   if info.exists eq 0 or info.size eq 0 or keyword_set(clobber) then begin
@@ -78,7 +78,7 @@ pro mkepsf,ims,cmjd=cmjd,darkid=darkid,flatid=flatid,sparseid=sparseid,clobber=c
         red[*,*,ichip] = tmp
       endif
 
-      apmkpsf_epsf,red[*,*,ichip],caldir,outid,ichip,dmax=dmax,sparseid=sparseid,average=average,thresh=thresh,scat=scat
+      apmkpsf_epsf,red[*,*,ichip],caldir,outid,ichip,dmax=dmax,sparseid=sparseid,average=average,thresh=thresh,scat=scat,fiberid=fiberid
     endfor
     sparse = dirs.prefix+string(format='("Sparse-",i8.8)',outid)
     mwrfits,red,file_dirname(file)+'/'+sparse+'.fits',/create

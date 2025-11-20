@@ -3680,7 +3680,7 @@ def runsumfiles(load,mjds,logger=None):
     #for m in mjds:
     #    runapogee.create_sumfiles_mjd(apred,telescope,m,logger=logger)
     # Create allStar/allVisit file
-    create_sumfiles(apred,telescope,logger=logger)
+    create_sumfiles(apred,telescope,maxmjd=np.max(mjds),logger=logger)
 
 
 def rununified(load,mjds,slurmpars,clobber=False,logger=None):
