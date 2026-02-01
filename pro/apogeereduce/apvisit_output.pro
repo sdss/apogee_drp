@@ -446,8 +446,8 @@ For i=0,nfibers-1 do begin
     MKHDR,header,0
 
     ; Add plate/observation information
-    sxaddpar,header,'LOCID',locid,'Location ID of field'
-    sxaddpar,header,'PLATE',plate,'Plate ID'
+    sxaddpar,header,'LOCID',locid,' Location ID of field'
+    sxaddpar,header,'PLATE',plate,' Plate ID'
     if keyword_set(single) then $
       sxaddpar,header,'TELESCOP','apo1m',' Telescope' else $
       sxaddpar,header,'TELESCOP','apo25m',' Telescope'
