@@ -163,7 +163,7 @@ if not keyword_set(single) then begin
       sxaddhist,leadstr+' HDU15 - Counts to flux units conversion factors',header
 
     ; Add plate information
-    sxaddpar,header,'PLATE',plate,' Plate iD'
+    sxaddpar,header,'PLATE',plate,' Plate ID'
     sxaddpar,header,'MJD5',mjd,' MJD of observation'
     sxaddpar,header,'LOCID',locid,' Location ID of field'
     if keyword_set(single) then $
@@ -449,9 +449,9 @@ For i=0,nfibers-1 do begin
     sxaddpar,header,'LOCID',locid,'Location ID of field'
     sxaddpar,header,'PLATE',plate,'Plate ID'
     if keyword_set(single) then $
-      sxaddpar,header,'TELESCOP','apo1m','Telescope' else $
-      sxaddpar,header,'TELESCOP','apo25m','Telescope'
-    sxaddpar,header,'MJD5',mjd,'MJD of observation'
+      sxaddpar,header,'TELESCOP','apo1m',' Telescope' else $
+      sxaddpar,header,'TELESCOP','apo25m',' Telescope'
+    sxaddpar,header,'MJD5',mjd,' MJD of observation'
     sxaddpar,header,'FIBERID',ifiberid,' APOGEE Fiber ID 1-300'
     sxaddpar,header,'DATE-OBS',sxpar(frame.(0).header,'DATE-OBS'),' Observation timestamp'
     ; add JD, HJD ??
@@ -461,7 +461,7 @@ For i=0,nfibers-1 do begin
     ncombine = sxpar(frame.(0).header,'NCOMBINE',count=num_ncombine)
     if num_ncombine eq 0 then ncombine=1
     sxaddpar,header,'NCOMBINE',ncombine,' Number of exposures combined'
-    for j=0,ncombine-1 do sxaddpar,header,'FRAME'+strtrim(j+1,2),sxpar(frame.(0).header,'FRAME'+strtrim(j+1,2)),'Constituent frame'
+    for j=0,ncombine-1 do sxaddpar,header,'FRAME'+strtrim(j+1,2),sxpar(frame.(0).header,'FRAME'+strtrim(j+1,2)),' Constituent frame'
     sxaddpar,header,'NPAIRS',sxpar(frame.(0).header,'NPAIRS'),' Number of dither pairs combined'
 
     ; Add star information
@@ -568,8 +568,8 @@ For i=0,nfibers-1 do begin
 
     ; Description of the extensions
     leadstr = 'AP1DVISIT: '
-    sxaddpar,header,'V_APRED',git_vers,'apogee_drp software version'
-    sxaddpar,header,'APRED',svn_vers,'apogee reduction version'
+    sxaddpar,header,'V_APRED',git_vers,' apogee_drp software version'
+    sxaddpar,header,'APRED',svn_vers,' apogee reduction version'
 
     sxaddhist,leadstr+systime(0),header
     info = GET_LOGIN_INFO()
