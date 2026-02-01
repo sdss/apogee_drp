@@ -37,7 +37,7 @@ if __name__ == '__main__' :
     parser.add_argument('--psf', type=int, help='PSF ID')
     parser.add_argument('--flux', type=int, help='apFlux ID')
     parser.add_argument('--sparse', type=int, help='apSparse ID')
-    parser.add_argument('--fiber', type=int, help='apFiber ID')
+    parser.add_argument('--fiber', type=int, help='Fiber ID')
     parser.add_argument('--littrow', type=int, help='apLittrow ID')
     parser.add_argument('--persist', type=int, help='apPersist ID')
     parser.add_argument('--modelpersist', type=int, help='apModelPersist ID')
@@ -61,8 +61,9 @@ if __name__ == '__main__' :
     argsdict = vars(args)
 
     # Check that we have some inputs 
-    chknames = ['file','det','dark','flat','wave','multiwave','dailywave','lsf','bpm','psf','flux',
-                'sparse','fiber','littrow','persist','modelpersist','response','modelpsf','fpi','telluric','mjd']
+    chknames = ['file','det','dark','flat','wave','multiwave','dailywave','lsf','bpm',
+                'psf','flux','sparse','fiber','littrow','persist','modelpersist','response',
+                'modelpsf','fpi','telluric','mjd']
     inputs = []
     for n in chknames:
         if argsdict[n] is not None:
