@@ -75,6 +75,14 @@ endif
 
 chiptag = ['a','b','c']
 
+;; FPI Fibers
+dum = getcmjd(file_basename(lampframes[0]),mjd=mjd)
+apgundef,fpirows
+if mjd gt 59556 then begin
+  fpirows = [75,225]                                    ;; APO
+  if dirs.telescope eq 'lco25m' then fpirows = [87,218] ;; LCO
+endif
+
 ; Settings
 if n_elements(nsigfit) eq 0 then nsigfit=8  ;8
 if n_elements(verbose) eq 0 then verbose=1  ; verbose by default
@@ -452,7 +460,7 @@ if keyword_set(gauss) then begin
     device,file='aplsf.eps',/encap,/color
     plot,linestr.x,linestr.gpar[2],ps=1,xtit='X',ytit='Gaussian Sigma (pixels)',tit='Removing Bad Lines'
   endif
-  
+
   if keyword_set(gauss) then begin
     if keyword_set(pl) then smcolor
     outfile = lsf_dir+dirs.prefix+'LSF-'+lampframeid1+'.dat'
@@ -584,6 +592,16 @@ for ii=0,n_elements(ifibers)-1 do begin
 
   apgundef,fiberlinestr
 
+  ;; SKIP FPI fibers
+  if n_elements(fpirows) gt 0 then begin
+    dum = where(fpirows eq i,nfpi)
+    if nfpi gt 0 then begin
+      print,'This is an FPI fiber. Skipping.'
+      goto,BOMBFIBER
+    endif
+  endif
+
+  
   ; FITTING METHOD
   ;-----------------
   CASE FITMETHOD OF
@@ -678,7 +696,7 @@ for ii=0,n_elements(ifibers)-1 do begin
       totinner = TOTAL(resid[inner])
       totouter = TOTAL(resid[outer])
       ;if totouter/totinner*100 gt 5 or totouter gt 3*TOTAL(errspec[outer]) then begin
-      if  totouter/totinner*100 gt 5 and totouter gt 5*TOTAL(errspec[outer]) then begin
+      if totouter/totinner*100 gt 5 and totouter gt 5*TOTAL(errspec[outer]) then begin
         gd = where(abs(x-fiberlinestr[j].gaussx) le 2.5*fiberlinestr[j].gpar[2],ngd)
       endif
 
@@ -942,7 +960,7 @@ for ii=0,n_elements(ifibers)-1 do begin
         ind1 = dblind[k]
         dw1 = dwall[round(chiplinestr[ind1].x)]
         chiplinestr[ind1].model_dbl_xsep = chiplinestr[ind1].model_dbl_wsep / dw1
-      end
+      endfor
 
       ; Only keep lines with decent flux
      ; maxflux = fltarr(ngdlines)
@@ -1000,7 +1018,7 @@ for ii=0,n_elements(ifibers)-1 do begin
       specin = spec[useind]
       errspecin = errspec[useind]
 
-      bd=where((maskspec[useind] and badmask()) gt 0,nbd)
+      bd = where((maskspec[useind] and badmask()) gt 0,nbd)
       if float(nbd)/n_elements(useind) gt 0.5 then goto,BOMB2
 
       ; "Downweight" pixel with low S/N
@@ -1017,7 +1035,7 @@ for ii=0,n_elements(ifibers)-1 do begin
       for k=0,ngdlines-1 do begin
         loarr[k] = where(useind eq xloarr[k])
         hiarr[k] = where(useind eq xhiarr[k])
-      end
+      endfor
 
       ; Allow the GH coefficients to vary as polynomials
       ;  this is the ORDER, so 0 means constant
@@ -1209,12 +1227,15 @@ for ii=0,n_elements(ifibers)-1 do begin
       if keyword_set(pl) then begin
         plotfile=outdir+'/plots/'+dirs.prefix+string(format='("LSF-",a,"_",i1,"_",i3.3)',lsfid,j,i) 
         device,file=plotfile+'.eps',/color,/encap
+        device,/inches,xsize=20,ysize=12
         loadct,39
+        !p.font = 0
+        !p.charthick = 3.5
         !p.multi=[0,1,3]
         xr = [0,n_elements(xin)-1]
         yr = [-3000,max([specin,yfit3])*1.2]/1e4
         plot,specin/1.e4,xr=xr,yr=yr,xs=1,ys=1,ytit='Counts / 1e4',tit='Sky Fiber='+strtrim(i,2)+' Chip='+strtrim(j,2)+$
-             ' Chisq='+stringize(fchisq,ndec=3)+' Nlines='+strtrim(ngdlines,2),charsize=1.3
+             ' Chisq='+stringize(fchisq,ndec=3)+' Nlines='+strtrim(ngdlines,2),charsize=3.0
         oplot,fyfit/1.e4,co=250,linestyle=2
         oplot,(specin-fyfit-2000)/1.e4
         for k=0,ngdlines-1 do begin
@@ -1222,9 +1243,9 @@ for ii=0,n_elements(ifibers)-1 do begin
           oplot,[ix,ix],[0.,1e5]
         endfor
         legend_old,['Data','Final Fit: FLUX, CENTER, and LSF params fit'],$
-               textcolor=[200,250],/top,/left,charsize=1.2
+               textcolor=[200,250],/top,/left,charsize=1.6
         xi=indgen(n_elements(xin))
-        plot,xr,xr*0,xr=xr,yr=[-5,5],xs=1,ys=1,tit='fractional residual',linestyle=1,ytit='sigma resid'
+        plot,xr,xr*0,xr=xr,yr=[-5,5],xs=1,ys=1,tit='fractional residual',linestyle=1,ytit='sigma resid',charsize=3.0
         oplot,xr,xr*0,color=150,linestyle=1
         ;iplot=where(fyfit gt 80)
         ;oplot,xi[iplot],(specin[iplot]-fyfit[iplot])/fyfit[iplot]
@@ -1237,7 +1258,7 @@ for ii=0,n_elements(ifibers)-1 do begin
         xr = [0,2048]
         yr=[-500,1000]
         plot,xin,specin,xr=xr,yr=yr,xs=1,ys=1,ytit='Counts',tit='Sky Fiber='+strtrim(i,2)+' Chip='+strtrim(j,2)+$
-             ' Chisq='+stringize(fchisq,ndec=3)+' Nlines='+strtrim(ngdlines,2),charsize=1.3
+             ' Chisq='+stringize(fchisq,ndec=3)+' Nlines='+strtrim(ngdlines,2),charsize=3.0
         oplot,spec,color=150
         oplot,xin,specin
         oplot,xin,fyfit,co=250,linestyle=2
@@ -1320,9 +1341,9 @@ for ii=0,n_elements(ifibers)-1 do begin
       ;oplot,xx,lsf_yfit,co=250
       ;wset,0
 
-      ;stop
+      ;;stop
 
-    End ; chip loop
+    Endfor ; chip loop
 
   END ; all lines in a chip fit together
 
@@ -1420,7 +1441,7 @@ for ii=0,n_elements(ifibers)-1 do begin
       ;if ngd gt 0 then mask[gd] = 1
       xloarr[j] = xlo
       xhiarr[j] = xhi    
-    end
+    endfor
     useind = where(mask eq 1,nuseind)
 
     ; Input values
@@ -1439,7 +1460,7 @@ for ii=0,n_elements(ifibers)-1 do begin
       ;hiarr[j] = loarr[j]+npixarr[j]-1
       loarr[j] = where(useind eq xloarr[j])
       hiarr[j] = where(useind eq xhiarr[j])
-    end
+    endfor
 
     ;stop
 
@@ -1614,6 +1635,8 @@ for ii=0,n_elements(ifibers)-1 do begin
 
   ENDCASE  ; different fitting methods
 
+  BOMBFIBER:
+  
   ;stop
 
 End ; fiber loop
@@ -2324,6 +2347,9 @@ if keyword_set(fibers) then $
 print,'Saving final structure to ',savefile
 save,linestr,fitstr1,fitstr,file=savefile
 
+MWRFITS,linestr,repstr(savefile,'.sav','.fits'),/create
+MWRFITS,fitstr1,repstr(savefile,'.sav','.fits'),/create
+MWRFITS,fitstr,repstr(savefile,'.sav','.fits'),/create
 
 print,'APLSF FINISHED'
 dt = systime(1)-t0_0
