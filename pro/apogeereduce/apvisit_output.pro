@@ -163,12 +163,12 @@ if not keyword_set(single) then begin
       sxaddhist,leadstr+' HDU15 - Counts to flux units conversion factors',header
 
     ; Add plate information
-    sxaddpar,header,'PLATE',plate,'Plate iD'
-    sxaddpar,header,'MJD5',mjd,'MJD of observation'
-    sxaddpar,header,'LOCID',locid,'Location ID of field'
+    sxaddpar,header,'PLATE',plate,' Plate ID'
+    sxaddpar,header,'MJD5',mjd,' MJD of observation'
+    sxaddpar,header,'LOCID',locid,' Location ID of field'
     if keyword_set(single) then $
-      sxaddpar,header,'TELESCOP','apo1m','Telescope' else $
-      sxaddpar,header,'TELESCOP','apo25m','Telescope'
+      sxaddpar,header,'TELESCOP','apo1m',' Telescope' else $
+      sxaddpar,header,'TELESCOP','apo25m',' Telescope'
 
     ; Create filename
     ;   apPlate-[abc]-PLATE4-MJD5.fits 
