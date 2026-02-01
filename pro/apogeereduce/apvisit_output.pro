@@ -163,12 +163,12 @@ if not keyword_set(single) then begin
       sxaddhist,leadstr+' HDU15 - Counts to flux units conversion factors',header
 
     ; Add plate information
-    sxaddpar,header,'PLATE',plate,'Plate iD'
-    sxaddpar,header,'MJD5',mjd,'MJD of observation'
-    sxaddpar,header,'LOCID',locid,'Location ID of field'
+    sxaddpar,header,'PLATE',plate,' Plate iD'
+    sxaddpar,header,'MJD5',mjd,' MJD of observation'
+    sxaddpar,header,'LOCID',locid,' Location ID of field'
     if keyword_set(single) then $
-      sxaddpar,header,'TELESCOP','apo1m','Telescope' else $
-      sxaddpar,header,'TELESCOP','apo25m','Telescope'
+      sxaddpar,header,'TELESCOP','apo1m',' Telescope' else $
+      sxaddpar,header,'TELESCOP','apo25m',' Telescope'
 
     ; Create filename
     ;   apPlate-[abc]-PLATE4-MJD5.fits 
@@ -453,14 +453,14 @@ For i=0,nfibers-1 do begin
       sxaddpar,header,'TELESCOP','apo25m','Telescope'
     sxaddpar,header,'MJD5',mjd,'MJD of observation'
     sxaddpar,header,'FIBERID',ifiberid,' APOGEE Fiber ID 1-300'
-    sxaddpar,header,'DATE-OBS',sxpar(frame.(0).header,'DATE-OBS')
+    sxaddpar,header,'DATE-OBS',sxpar(frame.(0).header,'DATE-OBS'),' Observation timestamp'
     ; add JD, HJD ??
-    sxaddpar,header,'EXPTIME',sxpar(frame.(0).header,'EXPTIME'),'Total visit exptime per dither pos'
+    sxaddpar,header,'EXPTIME',sxpar(frame.(0).header,'EXPTIME'),' Total visit exptime per dither pos'
     sxaddpar,header,'JD-MID',sxpar(frame.(0).header,'JD-MID'),' JD at midpoint of visit'
     sxaddpar,header,'UT-MID',sxpar(frame.(0).header,'UT-MID'),' Date at midpoint of visit'
     ncombine = sxpar(frame.(0).header,'NCOMBINE',count=num_ncombine)
     if num_ncombine eq 0 then ncombine=1
-    sxaddpar,header,'NCOMBINE',ncombine
+    sxaddpar,header,'NCOMBINE',ncombine,' Number of exposures combined'
     for j=0,ncombine-1 do sxaddpar,header,'FRAME'+strtrim(j+1,2),sxpar(frame.(0).header,'FRAME'+strtrim(j+1,2)),'Constituent frame'
     sxaddpar,header,'NPAIRS',sxpar(frame.(0).header,'NPAIRS'),' Number of dither pairs combined'
 
@@ -488,8 +488,8 @@ For i=0,nfibers-1 do begin
     sxaddpar,header,'GPMRA',plugmap.fiberdata[iplugind].gaia_pmra,' Gaia pmra'
     sxaddpar,header,'GPMDEC',plugmap.fiberdata[iplugind].gaia_pmdec,' Gaia pmdec'
     sxaddpar,header,'GGMAG',plugmap.fiberdata[iplugind].gaia_gmag,' Gaia G magnitude'
-    sxaddpar,header,'GBPMAG',plugmap.fiberdata[iplugind].gaia_bpmag,' Gaia Rp magnitude'
-    sxaddpar,header,'GRPMAG',plugmap.fiberdata[iplugind].gaia_rpmag,' Gaia Bp magnitude'
+    sxaddpar,header,'GBPMAG',plugmap.fiberdata[iplugind].gaia_bpmag,' Gaia Bp magnitude'
+    sxaddpar,header,'GRPMAG',plugmap.fiberdata[iplugind].gaia_rpmag,' Gaia Rp magnitude'
     sxaddpar,header,'HPLUS',hplus,' Delta H (neigh-obj) mag of neighboring (+1) fiber'
     sxaddpar,header,'HMINUS',hminus,' Delta H (neigh-obj) mag of neighboring (-1) fiber'
     ;; FPS data
@@ -568,7 +568,7 @@ For i=0,nfibers-1 do begin
 
     ; Description of the extensions
     leadstr = 'AP1DVISIT: '
-    sxaddpar,header,'V_APRED',git_vers,'apogee software version'
+    sxaddpar,header,'V_APRED',git_vers,'apogee_drp software version'
     sxaddpar,header,'APRED',svn_vers,'apogee reduction version'
 
     sxaddhist,leadstr+systime(0),header
