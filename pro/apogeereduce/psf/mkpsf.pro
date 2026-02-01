@@ -14,14 +14,14 @@
 ;  =sparseid   ID8 number of the sparse calibration to use.
 ;  =littrowid  ID8 number of the littrow calibration to use.
 ;  =fiberid    ID8 number for the ETrace calibration file to use.
-;  =yshift     Trace shifts in the y-direction.  Used when making
-;                 FIBER calibration product
+;  =yshift     Trace shifts in the y-direction (scalar or 3-element array).
+;                Used when making FIBER calibration product
 ;  /average    Find the fibers    
 ;  /clobber    Overwrite any existing files.
 ;  /unlock     Remove any existing lock file and start fresh.
 ;
 ; OUTPUTS:
-;  A set of apPSF-[abc]-ID8.fits files in the appropriate location                                                                                       
+;  A set of apPSF-[abc]-ID8.fits files in the appropriate location      
 ;   determined by the SDSS/APOGEE tree directory structure.
 ;
 ; USAGE:
