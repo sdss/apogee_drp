@@ -6,7 +6,7 @@ from glob import glob
 import sys
 
 from dlnpyutils import utils as dln
-from ..utils import spectra,yanny,apload,platedata,plan,email,info,slurm as slrm
+from ..utils import spectra,yanny,apload,platedata,plan,email,info,slurm as slrm,bitmask
 from ..apred import mkcal,cal,qa,monitor
 from ..database import apogeedb
 from . import mkplan,check
@@ -1130,6 +1130,25 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
             logger.info(str(len(keepind))+' of '+str(len(useme))+' stars left')
             allstar = allstar[keepind]
 
+    # Remove bad apogee_id names
+    two = np.array([a[:2] for a in allstar['apogee_id']])
+    bad,=np.where(np.array(two) != '2M')
+    if len(bad)>0:
+        allstar = np.delete(allstar,bad)
+    # Fix STARFLAG for stars where Doppler crashed
+    badrv, = np.where(~np.isfinite(allstar['vrad']))
+    starmask = bitmask.StarBitMask()
+    if len(badrv)>0:
+        # 'RV_FAIL'
+        allstar['starflag'][badrv] |= starmask.getval('RV_FAIL')
+        allstar['andflag'][badrv] |= starmask.getval('RV_FAIL')
+
+    # Remake the STARFLAGS columns?
+    for i in range(len(allstar)):
+        allstar['starflags'][i] = starmask.getname(allstar['starflag'][i])
+        allstar['andflags'][i] = starmask.getname(allstar['andflag'][i])
+    
+    # Written to file at the end
     allstarfile = load.filename('allStar')#.replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allStar file to '+allstarfile)
     logger.info(str(len(allstar))+' stars')
@@ -1165,7 +1184,26 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     sql += " where v.apred_vers='"+apred+"' and v.telescope='"+telescope+"'"
     logger.info('Getting all of the visit table information')
     visit = db.query(sql=sql)
-    
+
+    # Remove bad apogee_id names
+    two = np.array([a[:2] for a in visit['apogee_id']])
+    bad,=np.where(np.array(two) != '2M')
+    if len(bad)>0:
+        visit = np.delete(visit,bad)
+
+    # Fix STARFLAG for stars where Doppler crashed
+    badrv, = np.where(~np.isfinite(allstar['vrad']))
+    vindex = dln.create_index(visit['apogee_id'])
+    _,ind1,ind2 = np.intersect1d(allstar['apogee_id'][badrv],vindex['value'],
+                                 return_indices=True)
+    for i in range(len(ind1)):
+        ind = vindex['index'][vindex['lo'][i]:vindex['hi'][i]+1]
+        visit['starflag'][ind] |= starmask.getval('RV_FAIL')
+
+    # Remake STARFLAGS
+    for i in range(len(visit)):
+        visit['starflags'][i] = starmask.getname(visit['starflag'][i])
+        
     # Fix bad STARVER values
     bdstarver, = np.where(np.char.array(visit['starver']) == '')
     if len(bdstarver)>0:
@@ -1205,7 +1243,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
         allvisit = visit[keepind]
         nustars = len(np.unique(allvisit['apogee_id']))
         logger.info(str(nustars)+' of '+str(len(np.unique(visit['apogee_id'])))+' stars left')
-                
+        
     # Use visit_latest, this can sometimes take forever
     #cols = ','.join(vcols+rvcols)        
     #visit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
@@ -1222,6 +1260,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
 
     db.close()
 
+    
     # Nightly summary files
     if mjd5 is not None:
         create_sumfiles_mjd(apred,telescope,mjd5,logger=logger)
