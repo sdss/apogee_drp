@@ -274,7 +274,10 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
 
     # notchpeak can do shared, but kingspeak cannot
     if alloc=='sdss-np' and shared:
-        partition = 'sdss-shared-np'
+        partition = 'sdss-np'
+    elif alloc=='sdss-np' and shared==False:
+        partition = 'sdss-np'
+        memory = 0   # this will give you the whole node
     else:
         partition = alloc
     if qos=='sdss-fast':
