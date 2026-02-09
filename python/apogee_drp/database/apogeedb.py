@@ -28,13 +28,22 @@ import datetime
 # 700  float4, float
 # 701  float8, double
 
-from psycopg2.extensions import register_adapter, AsIs, register_type
+REAL_MIN_POS = 1.17549435e-38
+
+from psycopg2.extensions import register_adapter, AsIs, register_type, adapt
 def addapt_np_float16(np_float16):
-    return AsIs(np_float16)
+    return adapt(float(np_float16))
+#    return AsIs(np_float16)
 def addapt_np_float32(np_float32):
-    return AsIs(np_float32)
+    v = float(np_float32)
+    if v != 0.0 and abs(v) < REAL_MIN_POS:
+        v = 0.0
+    return adapt(v)
+#    return adapt(float(np_float32))
+#    return AsIs(np_float32)
 def addapt_np_float64(np_float64):
-    return AsIs(np_float64)
+    return adapt(float(np_float64))
+#    return AsIs(np_float64)
 def addapt_np_int8(np_int8):
     return AsIs(np_int8)
 def addapt_np_int16(np_int16):
@@ -502,6 +511,11 @@ class DBSession(object):
         # Replace inf with 'inf'  
         data = [
             tuple(str(i) if isinstance(i, np.floating) and np.isinf(i) else i for i in t)
+            for t in list(data)
+        ]
+        # Clip small numbers
+        data = [
+            tuple('0.0' if isinstance(i, np.floating) and np.abs(i)<REAL_MIN_POS else i for i in t)
             for t in list(data)
         ]
 
