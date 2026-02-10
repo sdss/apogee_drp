@@ -3498,7 +3498,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
     return chkexp,chkvisit
 
 
-def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None):
+def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None,inputlist=None):
     """
     Run RV on all the stars observed from a list of MJDs.
 
@@ -3519,6 +3519,8 @@ def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None
        Overwrite existing files.  Default is False.
     logger : logger, optional
        Logging object.  If not is input, then a default one will be created.
+    inputlist : str, optional
+       File containing list of inputs to process.
 
     Returns
     -------
@@ -3544,6 +3546,13 @@ def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None
     if daily is not None:
         logger.DeprecationWarning('daily is deprecated.  use limited from now on')
         limited = daily
+
+    # Load list of inputs
+    if inputlist is not None:
+        if os.path.exists(inputlist)==False:
+            raise FileNotFoundError(str(inputlist)+' not found')
+        inlist_apogeeids = dln.readlines(inputlist)
+        logger.info(str(len(inlist_apogeeids))+' rows loaded from '+str(inputlist))
         
     # Get the visit information from the database
     logger.info('Getting visit information from the database')
@@ -3578,7 +3587,10 @@ def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None
     visits = allvisit[ind]
     
     # Make table for all the stars we are interested in
-    apogee_id = np.unique(visits['apogee_id'])             # get the IDs of the stars for the input MJDs
+    if inputlist is not None:
+        apogee_id = np.unique(inlist_apogeeids)
+    else:
+        apogee_id = np.unique(visits['apogee_id'])             # get the IDs of the stars for the input MJDs
     star_index = dln.create_index(allvisit['apogee_id'])    # visit index for all stars
     vind1,vind2 = dln.match(apogee_id,star_index['value'])  # match up our star IDs with the visit index
     dtype = [('apogee_id',(str,50)),('mjd',int),('maxmjd',int),('nvisits',int),('apred_vers',(str,50)),('telescope',(str,50))]
@@ -4033,7 +4045,7 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
 
 def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         clobber=False,fresh=False,linkvers=None,nodes=5,alloc='sdss-np',qos=None,
-        walltime='336:00:00',debug=False):
+        walltime='336:00:00',debug=False,inputlist=None):
     """
     Perform APOGEE Data Release Processing
 
@@ -4074,6 +4086,8 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
        Maximum runtime for the slurm jobs.  Default is '336:00:00' or 14 days.
     debug : boolean, optional
        For testing purposes.  Default is False.
+    inputlist : str, optional
+       File containing list of inputs to process.
 
     Returns
     -------
@@ -4257,7 +4271,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         rootLogger.info('8) Running RV+Visit Combination')
         rootLogger.info('================================')
         rootLogger.info('')
-        chkrv = runrv(load,mjds,limited=rvlimited,**kws)
+        chkrv = runrv(load,mjds,limited=rvlimited,inputlist=inputlist,**kws)
 
     # 8) Create full allVisit/allStar files
     #--------------------------------------

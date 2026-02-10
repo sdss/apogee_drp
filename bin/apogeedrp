@@ -27,6 +27,7 @@ if __name__ == "__main__":
     parser.add_argument('--linkvers', type=str, nargs=1, help='Link master calibration files to this reduction version.')
     parser.add_argument('--clobber', action='store_true', help='Overwrite any existing files')
     parser.add_argument('--debug', action='store_true', help='For testing purposes')
+    parser.add_argument('--inputlist', type=str, nargs=1, help='Filename containing list of inputs.')
     args = parser.parse_args()
 
     t0 = time.time()
@@ -65,6 +66,10 @@ if __name__ == "__main__":
         linkvers = args.linkvers[0]
     else:
         linkvers = None
+    if isinstance(args.inputlist,list):
+        inputlist = args.inputlist[0]
+    else:
+        inputlist = None
 
     # Set unix environment variables for kingspeak
     #  we use notchpea by default
@@ -83,4 +88,4 @@ if __name__ == "__main__":
     apogeedrp.run(observatory,apred,mjd=mjd,steps=steps,caltypes=caltypes,
                   rvlimited=args.rvlimited,clobber=args.clobber,alloc=alloc,
                   nodes=nodes,walltime=walltime,fresh=args.fresh,
-                  linkvers=linkvers,debug=args.debug)
+                  linkvers=linkvers,debug=args.debug,inputlist=inputlist)
