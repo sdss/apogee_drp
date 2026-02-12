@@ -343,7 +343,7 @@ def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
     load = apload.ApLoad(apred=apred,telescope=telescope)
     cal_dir = os.path.dirname(os.path.dirname(load.filename('BPM',num=0,chips='a')))+'/'
     if os.path.exists(cal_dir)==False:
-        os.makedirs(cal_dir)
+        os.makedirs(cal_dir,exist_ok=True)
 
     parfile = cal_dir+'dailycal.par'
     with open(parfile,'a') as file:
@@ -540,7 +540,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         planfile = planfile.replace(os.path.splitext(planfile)[-1],'.yaml')     # TEMPORARY KLUDGE!
     outdir = os.path.dirname(planfile)+'/'
     if os.path.exists(outdir)==False:
-        os.makedirs(outdir)
+        os.makedirs(outdir,exist_ok=True)
 
     # Check if it exists already
     if os.path.exists(planfile) and clobber==False:
@@ -684,7 +684,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
                 loc = plug['locationid']
                 spectro_dir = os.environ['APOGEE_REDUX']+'/'+apred+'/'
                 if os.path.exists(spectro_dir+'fields/'+telescope+'/'+str(loc))==False:
-                    os.makedirs(spectro_dir+'fields/'+telescope+'/'+str(loc))
+                    os.makedirs(spectro_dir+'fields/'+telescope+'/'+str(loc),exist_ok=True)
                 if fps==False:
                     field,survey,program = apload.apfield(plate,plug['locationid'])
                     out['survey'] = survey
@@ -867,7 +867,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     # Output file/directory
     outfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+apred+'/'+telescope+'/'+telescope+'_'+str(mjd)+'auto.yaml'
     if os.path.exists(os.path.dirname(outfile))==False:
-        os.makedirs(os.path.dirname(outfile))
+        os.makedirs(os.path.dirname(outfile),exist_ok=True)
     # File already exists and clobber not set
     if os.path.exists(outfile) and clobber==False:
         logger.info(outfile+' already EXISTS and clobber==False')
