@@ -2230,7 +2230,10 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     wherestr = "plate='" + plate + "' and mjd='" + mjd + "' and telescope='" + telescope + "' and apred_vers='" + load.apred + "'"
     vcat = db.query('visit', where=wherestr, fmt='table')
     db.close()
-    stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
+    if fps:
+        stars, = np.where((vcat['assigned'] == 1) & (vcat['objtype'] != 'SKY'))
+    else:
+        stars, = np.where(vcat['objtype'] != 'SKY')
     ustars,uind = np.unique(vcat['apogee_id'][stars], return_index=True)
     nustars = len(ustars)
 
@@ -2370,12 +2373,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 starflags = 'None'
             else:
                 if objid == '2MNone' or objid == '2M' or objid == '' or objid == None or objid == 'None': continue
-                if jdata['ASSIGNED'] == 0 or jdata['ON_TARGET'] == 0 or jdata['VALID'] == 0: continue
+                if fps and (jdata['ASSIGNED'] == 0 or jdata['ON_TARGET'] == 0 or jdata['VALID'] == 0): continue
                 assigned = 1
                 vcatind, = np.where(fiber == vcat['fiberid'])
                 if len(vcatind) < 1: pdb.set_trace()
                 jvcat = vcat[vcatind][0]
-                if jvcat['assigned'] == 0: continue
+                if fps and jvcat['assigned'] == 0: continue
                 jmag = jvcat['jmag']
                 hmag = jvcat['hmag']
                 kmag = jvcat['kmag']
@@ -2411,7 +2414,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                 visitfile = jvcat['file']
 
                 # Handle case of unassigned or off target fibers 
-                if (jvcat['on_target'] == 0) | (jvcat['assigned'] == 0):
+                if fps and (jvcat['on_target'] == 0) | (jvcat['assigned'] == 0):
                     bgcolor = 'grey'
                     firstcarton = 'OFF TARGET!!!'
                     if jvcat['assigned'] == 0:
@@ -3764,12 +3767,13 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         hemS = np.full(nlogsS, 'S').astype(str)
         mjdS = np.empty(nlogsS,int)
         for i in range(nlogsS): mjdS[i] = int(os.path.basename(logsS[i]).split('.')[0])
-        g, = np.where(mjdS > 59808)
-        mdirsS = np.array(mdirsS)[g]
-        logfilesS = np.array(logfilesS)[g]
-        logsS = logsS[g]
-        hemS = hemS[g]
-        mjdS = mjdS[g]
+        #g, = np.where(mjdS > 59808)
+        #mdirsS = np.array(mdirsS)[g]
+        logfilesS = np.array(logfilesS)
+        #logfilesS = np.array(logfilesS)[g]
+        #logsS = logsS[g]
+        #hemS = hemS[g]
+        #mjdS = mjdS[g]
         nlogsS = len(logsS)
         print("----> makeMasterQApages: Found "+str(nlogsS)+" APOGEE-S log files.")
 
