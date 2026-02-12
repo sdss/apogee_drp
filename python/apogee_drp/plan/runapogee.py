@@ -410,7 +410,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     rootLogger.info('--------------------------------')
     rootLogger.info('5) Running RV+Visit Combination')
     rootLogger.info('================================')
-    chkrv = apogeedrp.runrv(load,[mjd5],slurm,daily=True,clobber=clobber,logger=rootLogger)
+    chkrv = apogeedrp.runrv(load,[mjd5],slurm,limited=True,clobber=clobber,logger=rootLogger)
 
 
     # Create daily and full allVisit/allStar files
