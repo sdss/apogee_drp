@@ -216,7 +216,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     # Daily reduction logs directory
     logdir = os.path.join(os.environ['APOGEE_REDUX'],apred,'log',observatory)
     if os.path.exists(logdir)==False:
-        os.makedirs(logdir)
+        os.makedirs(logdir,exist_ok=True)
 
     # What MJD5 are we doing?
     updatemjdfile = False
