@@ -6,7 +6,7 @@ from glob import glob
 import sys
 
 from dlnpyutils import utils as dln
-from ..utils import spectra,yanny,apload,platedata,plan,email,info,slurm as slrm
+from ..utils import spectra,yanny,apload,platedata,plan,email,info,slurm as slrm,bitmask
 from ..apred import mkcal,cal,qa,monitor
 from ..database import apogeedb
 from . import mkplan,check
@@ -1052,7 +1052,7 @@ def create_sumfiles_mjd(apred,telescope,mjd5,logger=None):
     db.close()
 
 
-def create_sumfiles(apred,telescope,mjd5=None,logger=None):
+def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     """ Create allVisit/allStar files and summary of objects for this night."""
 
     if logger is None:
@@ -1077,6 +1077,7 @@ def create_sumfiles(apred,telescope,mjd5=None,logger=None):
     #                   "apred_vers='"+apred+"' and telescope='"+telescope+"' group by apogee_id, apred_vers, telescope)")
     # Using STAR_LATEST seems much faster
     #allstar = db.query('star_latest',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    logger.info('Getting all of the star table information')
     vstar = db.query('star',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     # Deal with multiple STARVER versions per star
     star_index = dln.create_index(vstar['apogee_id'])
@@ -3497,7 +3498,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     logger.info(str(len(vcat))+' stars to run')
     
     # Change MJD to MAXMJD because the apStar file will have MAXMJD in the name
-    if daily==False and len(mjds)>1:
+    if limited==False and len(mjds)>1:
         vcat['mjd'] = vcat['maxmjd']    
 
     # Loop over the stars and figure out the ones that need to be run
@@ -3509,7 +3510,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             # Use the MAXMJD in the table, now called MJD
             mjd = vcat['mjd'][i]
             apstarfile = load.filename('Star',obj=obj)
-            if daily:
+            if limited:
                 # Want all visits up to this day
                 apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
             else:
@@ -3541,7 +3542,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             # Use the MAXMJD in the table, now called MJD
             mjd = vcat['mjd'][torun[i]]
             apstarfile = load.filename('Star',obj=obj)
-            if daily:
+            if limited:
                 # Want all visits up to this day
                 apstarfile = apstarfile.replace('.fits','-'+str(mjdstop)+'.fits')
             else:
@@ -3555,8 +3556,8 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             cmd = 'rv %s %s %s -v' % (obj,apred,telescope)
             if clobber:
                 cmd += ' -c'
-            if daily:
-                cmd += '  --m '+str(mjds[0])
+            if limited:
+                cmd += '  --m '+str(mjd)
             logger.info('rv %d : %s' % (i+1,obj))
             logger.info('Command : '+cmd)
             logger.info('Logfile : '+logfile)
@@ -3616,8 +3617,7 @@ def runsumfiles(load,mjds,logger=None):
     #for m in mjds:
     #    runapogee.create_sumfiles_mjd(apred,telescope,m,logger=logger)
     # Create allStar/allVisit file
-    create_sumfiles(apred,telescope,logger=logger)
-
+    create_sumfiles(apred,telescope,maxmjd=np.max(mjds),logger=logger)
 
 def rununified(load,mjds,slurmpars,clobber=False,logger=None):
     """
@@ -3928,9 +3928,9 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
         email.send(address,subject,message,files=logfile,send_from='noreply.apogeedrp')    
     
 
-def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
-        fresh=False,linkvers=None,nodes=5,alloc='sdss-np',qos=None,
-        walltime='336:00:00',debug=False):
+def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
+        clobber=False,fresh=False,linkvers=None,nodes=5,alloc='sdss-np',qos=None,
+        walltime='336:00:00',debug=False,inputlist=None):
     """
     Perform APOGEE Data Release Processing
 
@@ -3952,6 +3952,8 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
     caltypes : list, optional
        Calibration types to run.  This is used to select a subset of the master cals or daily cals
          to run.  Default is to run all of them.
+    rvlimited : boolean, optional
+       Limit the visits for RVs and combination to the input MJD range.  Default is False.
     clobber : boolean, optional
        Overwrite any existing data.  Default is False.
     fresh : boolean, optional
@@ -3969,6 +3971,8 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
        Maximum runtime for the slurm jobs.  Default is '336:00:00' or 14 days.
     debug : boolean, optional
        For testing purposes.  Default is False.
+    inputlist : str, optional
+       File containing list of inputs to process.
 
     Returns
     -------
@@ -4152,7 +4156,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,clobber=False,
         rootLogger.info('8) Running RV+Visit Combination')
         rootLogger.info('================================')
         rootLogger.info('')
-        chkrv = runrv(load,mjds,**kws)
+        chkrv = runrv(load,mjds,limited=rvlimited,inputlist=inputlist,**kws)
 
     # 8) Create full allVisit/allStar files
     #--------------------------------------
