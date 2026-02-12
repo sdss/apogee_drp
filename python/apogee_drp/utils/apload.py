@@ -15,7 +15,7 @@ from astropy.io import fits
 from astropy.table import Table
 import os
 try :
-    from sdss_access.path import path,Path
+    from sdss_access.path import path
     from sdss_access.sync.http import HttpAccess
 except :
     print('sdss_access or dependencies not available!')
@@ -149,25 +149,34 @@ class ApDataArr(object):
 class ApLoad:
 
     def __init__(self,dr=None,apred='r8',apstar='stars',aspcap='l31c',results='l31c.2',
-                 telescope='apo25m',instrument=None,verbose=False,pathfile=None) :
-        self.apred=apred
-        self.apstar=apstar
-        self.aspcap=aspcap
-        self.results=results
+                 telescope='apo25m',instrument=None,verbose=False,pathfile=None):
+        self.apred = apred
+        self.apstar = apstar
+        self.aspcap = aspcap
+        self.results = results
         self.settelescope(telescope)
-        if instrument is not None : self.instrument=instrument
+        if instrument is not None:
+            self.instrument=instrument
         self.verbose=verbose
-        if dr == 'dr10' : self.dr10()
-        elif dr == 'dr12' : self.dr12()
-        elif dr == 'dr13' : self.dr13()
-        elif dr == 'dr14' : self.dr14()
-        elif dr == 'dr16' : self.dr16()
+        if dr == 'dr10': self.dr10()
+        elif dr == 'dr12': self.dr12()
+        elif dr == 'dr13': self.dr13()
+        elif dr == 'dr14': self.dr14()
+        elif dr == 'dr16': self.dr16()
         # set up 
-        self.sdss_path=path.Path(preserve_envvars=True)
-        self.http_access=HttpAccess(verbose=verbose)
-        self.http_access.remote()
-   
-    def settelescope(self,telescope) :
+        self.sdss_path = path.Path(preserve_envvars=True)
+        self._http_access = None
+        #self.http_access = HttpAccess(verbose=verbose)
+        #self.http_access.remote()
+
+    @property
+    def http_access(self):
+        if self._http_access is None:
+            self._http_access = HttpAccess(verbose=self.verbose)
+            self._http_access.remote()
+        return self._http_access
+        
+    def settelescope(self,telescope):
         self.telescope = telescope
         if 'apo' in telescope:
             self.instrument = 'apogee-n'
@@ -178,21 +187,21 @@ class ApLoad:
             self.observatory = 'lco'
             self.prefix = 'as'
 
-    def setinst(self,instrument) :
-        self.instrument=instrument
+    def setinst(self,instrument):
+        self.instrument = instrument
  
-    def dr10(self) :
+    def dr10(self):
         self.apred='r3'
         self.apstar='s3'
         self.aspcap='v304'
         self.results='v304'
 
-    def dr12(self) :
+    def dr12(self):
         self.apred='r5'
         self.aspcap='l25_6d'
         self.results='v603'
 
-    def dr13(self) :
+    def dr13(self):
         self.apred='r6'
         self.aspcap='l30e'
         self.results='l30e.2'
@@ -1050,7 +1059,7 @@ def apfield(plateid,loc=0,addloc=False,telescope='apo25m',fps=False):
         observatory = {'apo25m':'apo','apo1m':'apo','lco25m':'lco'}[telescope]
         #configgrp = '{:0>4d}XX'.format(int(plateid) // 100)
         #configfile = os.environ['SDSSCORE_DIR']+'/'+observatory+'/summary_files/'+configgrp+'/confSummary-'+str(plateid)+'.par'
-        configfile = Path().full('confSummary', obs=observatory, configid=plateid)
+        configfile = path.Path(preserve_envvars=True).full('confSummary', obs=observatory, configid=plateid)
         planstr = yanny.yanny(configfile)
         field = planstr.get('field_id')
         return field, 'SDSS-V', None
