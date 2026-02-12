@@ -1033,7 +1033,7 @@ def create_sumfiles_mjd(apred,telescope,mjd5,logger=None):
     mjdsumdir = os.path.dirname(allstarmjdfile)+'/'+str(mjd5)
     allstarmjdfile = mjdsumdir+'/'+os.path.basename(allstarmjdfile)
     if os.path.exists(mjdsumdir)==False:
-        os.makedirs(mjdsumdir)
+        os.makedirs(mjdsumdir,exist_ok=True)
     logger.info('Writing Nightly allStarMJD file to '+allstarmjdfile)
     logger.info(str(len(allstarmjd))+' stars for '+str(mjd5))
     Table(allstarmjd).write(allstarmjdfile,overwrite=True)
@@ -1153,7 +1153,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     logger.info('Writing allStar file to '+allstarfile)
     logger.info(str(len(allstar))+' stars')
     if os.path.exists(os.path.dirname(allstarfile))==False:
-        os.makedirs(os.path.dirname(allstarfile))
+        os.makedirs(os.path.dirname(allstarfile),exist_ok=True)
     allstar = Table(allstar)
     if 'nres' in allstar.colnames:
         del allstar['nres']    # temporary kludge, nres is causing write problems
@@ -1255,7 +1255,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     logger.info('Writing allVisit file to '+allvisitfile)
     logger.info(str(len(allvisit))+' visits')
     if os.path.exists(os.path.dirname(allvisitfile))==False:
-        os.makedirs(os.path.dirname(allvisitfile))
+        os.makedirs(os.path.dirname(allvisitfile),exist_ok=True)
     Table(allvisit).write(allvisitfile,overwrite=True)
 
     db.close()
@@ -1337,7 +1337,7 @@ def create_sumfiles_carton(apred,telescope,carton,logger=None):
     logger.info('Writing allStar file to '+allstarfile)
     logger.info(str(len(allstar))+' stars')
     if os.path.exists(os.path.dirname(allstarfile))==False:
-        os.makedirs(os.path.dirname(allstarfile))
+        os.makedirs(os.path.dirname(allstarfile),exist_ok=True)
     allstar = Table(allstar)
     if 'nres' in allstar.colnames:
         del allstar['nres']    # temporary kludge, nres is causing write problems
@@ -1397,7 +1397,7 @@ def create_sumfiles_carton(apred,telescope,carton,logger=None):
     logger.info('Writing allVisit file to '+allvisitfile)
     logger.info(str(len(allvisit))+' visits')
     if os.path.exists(os.path.dirname(allvisitfile))==False:
-        os.makedirs(os.path.dirname(allvisitfile))
+        os.makedirs(os.path.dirname(allvisitfile),exist_ok=True)
     Table(allvisit).write(allvisitfile,overwrite=True)
 
     db.close()
@@ -1435,14 +1435,14 @@ def mkvers(apred,logger=None):
     # Main directory
     if os.path.exists(apogee_redux+apred)==False:
         logger.info('Creating '+apogee_redux+apred)
-        os.makedirs(apogee_redux+apred)
+        os.makedirs(apogee_redux+apred,exist_ok=True)
     else:
         logger.info(apogee_redux+apred+' already exists')
     # First level
     for d in ['cal','exposures','stars','fields','visit','qa','plates','monitor','summary','log']:
         if os.path.exists(apogee_redux+apred+'/'+d)==False:
             logger.info('Creating '+apogee_redux+apred+'/'+d)
-            os.makedirs(apogee_redux+apred+'/'+d)
+            os.makedirs(apogee_redux+apred+'/'+d,exist_ok=True)
         else:
             logger.info(apogee_redux+apred+'/'+d+' already exists')
     # North/south subdirectories
@@ -1450,27 +1450,27 @@ def mkvers(apred,logger=None):
         for obs in ['apogee-n','apogee-s']:
             if os.path.exists(apogee_redux+apred+'/'+d+'/'+obs)==False:
                 logger.info('Creating '+apogee_redux+apred+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs,exist_ok=True)
             else:
                 logger.info(apogee_redux+apred+'/'+d+'/'+obs+' already exists')
     for d in ['visit','stars','fields']:
         for obs in ['apo25m','lco25m']:
             if os.path.exists(apogee_redux+apred+'/'+d+'/'+obs)==False:
                 logger.info('Creating '+apogee_redux+apred+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs,exist_ok=True)
             else:
                 logger.info(apogee_redux+apred+'/'+d+'/'+obs+' already exists')
     for d in ['log']:
         for obs in ['apo','lco']:
             if os.path.exists(apogee_redux+apred+'/'+d+'/'+obs)==False:
                 logger.info('Creating '+apogee_redux+apred+'/'+d+'/'+obs)
-                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs)
+                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs,exist_ok=True)
             else:
                 logger.info(apogee_redux+apred+'/'+d+'/'+obs+' already exists')
             # Make cron directory
             if os.path.exists(apogee_redux+apred+'/'+d+'/'+obs+'/cron')==False:
                 logger.info('Creating '+apogee_redux+apred+'/'+d+'/'+obs+'/cron')
-                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs+'/cron')
+                os.makedirs(apogee_redux+apred+'/'+d+'/'+obs+'/cron',exist_ok=True)
             else:
                 logger.info(apogee_redux+apred+'/'+d+'/'+obs+'/cron already exists')            
     # Cal subdirectories
@@ -1479,7 +1479,7 @@ def mkvers(apred,logger=None):
         for obs in ['apogee-n','apogee-s']:
             if os.path.exists(apogee_redux+apred+'/cal/'+obs+'/'+d)==False:
                 logger.info('Creating '+apogee_redux+apred+'/cal/'+obs+'/'+d)
-                os.makedirs(apogee_redux+apred+'/cal/'+obs+'/'+d)
+                os.makedirs(apogee_redux+apred+'/cal/'+obs+'/'+d,exist_ok=True)
             else:
                 logger.info(apogee_redux+apred+'/cal/'+obs+'/'+d+' already exists')
 
@@ -1494,7 +1494,7 @@ def mkvers(apred,logger=None):
     localdir = os.environ['APOGEE_LOCALDIR']
     localdir += '/'+apred
     if os.path.exists(localdir)==False:
-        os.makedirs(localdir)
+        os.makedirs(localdir,exist_ok=True)
         
 
 def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,logger=None):
@@ -1787,7 +1787,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 logfile1 = os.path.dirname(outfile)+'/mkdet-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
+                    os.makedirs(os.path.dirname(logfile1),exist_ok=True)
                 cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
                 cmd1 += ' --det '+str(name)+' --unlock'
                 if clobber:
@@ -1860,7 +1860,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 logfile1 = os.path.dirname(outfile)+'/mkdark-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
+                    os.makedirs(os.path.dirname(logfile1),exist_ok=True)
                 cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
                 cmd1 += ' --dark '+str(name)+' --unlock'
                 if clobber:
@@ -1935,7 +1935,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 logfile1 = os.path.dirname(outfile)+'/mkflat-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
+                    os.makedirs(os.path.dirname(logfile1),exist_ok=True)
                 cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
                 cmd1 += ' --flat '+str(name)+' --unlock'
                 if clobber:
@@ -2010,7 +2010,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 logfile1 = os.path.dirname(outfile)+'/mkbpm-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
+                    os.makedirs(os.path.dirname(logfile1),exist_ok=True)
                 cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
                 cmd1 += ' --bpm '+str(name)+' --unlock'
                 if clobber:
@@ -2077,7 +2077,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 logfile1 = os.path.dirname(outfile)+'/mkfiber-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
+                    os.makedirs(os.path.dirname(logfile1),exist_ok=True)
                 cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
                 cmd1 += ' --fiber '+str(name)+' --unlock'
                 if clobber:
@@ -2144,7 +2144,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 logfile1 = os.path.dirname(outfile)+'/mksparse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
+                    os.makedirs(os.path.dirname(logfile1),exist_ok=True)
                 cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
                 cmd1 += ' --sparse '+str(name)+' --unlock'
                 if clobber:
@@ -2212,7 +2212,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 logfile1 = os.path.dirname(outfile)+'/mklittrow-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
+                    os.makedirs(os.path.dirname(logfile1),exist_ok=True)
                 cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
                 cmd1 += ' --littrow '+str(name)+' --unlock'
                 if clobber:
@@ -2279,7 +2279,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 logfile1 = os.path.dirname(outfile)+'/mkresponse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
+                    os.makedirs(os.path.dirname(logfile1),exist_ok=True)
                 cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
                 cmd1 += ' --response '+str(name)+' --unlock'
                 if clobber:
@@ -2346,7 +2346,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 logfile1 = os.path.dirname(outfile)+'/mkpsfmodel-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
+                    os.makedirs(os.path.dirname(logfile1),exist_ok=True)
                 cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
                 cmd1 += ' --modelpsf '+str(name)+' --unlock'
                 if clobber:
@@ -2464,7 +2464,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logfile1 = os.path.dirname(outfile)+'/'+load.prefix+'PSF-'+str(name)+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
+                os.makedirs(os.path.dirname(logfile1),exist_ok=True)
             cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
             cmd1 += ' --psf '+str(name)+' --unlock'
             if clobber:
@@ -2527,7 +2527,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logfile1 = os.path.dirname(outfile)+'/'+load.prefix+'Wave-'+str(name)+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
+                os.makedirs(os.path.dirname(logfile1),exist_ok=True)
             cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)            
             # Use a quartzflat for the PSF, the PSF cal file will automatically be created
             expinfo1 = info.expinfo(observatory=load.observatory,mjd5=mjd)
@@ -2599,7 +2599,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logfile1 = os.path.dirname(outfile)+'/mkmultiwave-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
+                os.makedirs(os.path.dirname(logfile1),exist_ok=True)
             cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)
             cmd1 += ' --multiwave '+str(name)+' --unlock'
             if clobber:
@@ -2666,7 +2666,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 logfile1 = os.path.dirname(outfile)+'/mklsf-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
-                    os.makedirs(os.path.dirname(logfile1))
+                    os.makedirs(os.path.dirname(logfile1),exist_ok=True)
                 cmd1 = 'makecal --vers {0} --telescope {1} --full'.format(apred,telescope)
                 cmd1 += ' --lsf '+str(name)+' --unlock'
                 if clobber:
@@ -2788,7 +2788,7 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
             logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
             logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
             if os.path.exists(os.path.dirname(logfile1))==False:
-                os.makedirs(os.path.dirname(logfile1))
+                os.makedirs(os.path.dirname(logfile1),exist_ok=True)
             cmd1 = 'ap3d --num {0} --vers {1} --telescope {2} --unlock'.format(num,apred,telescope)
             if clobber:
                 cmd1 += ' --clobber'
@@ -2926,7 +2926,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
     for m in mjds:
         calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=m))
         if os.path.exists(calplandir)==False:
-            os.makedirs(calplandir)
+            os.makedirs(calplandir,exist_ok=True)
 
     # Loop over calibration types
     calnames = ['psf','flux','arcs','dailywave','fpi','telluric']
@@ -3188,7 +3188,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                         cmd1 += ' --fpi '+str(num1)
                         logfile1 = calplandir+'/'+load.prefix+'FPI-'+str(num1)+'_pbs.'+logtime+'.log'
                         if os.path.exists(os.path.dirname(logfile1))==False:
-                            os.makedirs(os.path.dirname(logfile1))
+                            os.makedirs(os.path.dirname(logfile1),exist_ok=True)
                     elif ctype=='telluric':  # dailywave
                         cmd1 += ' --telluric '+str(num1)
                         logfile1 = calplandir+'/'+load.prefix+'Telluric-'+str(num1)+'_pbs.'+logtime+'.log' 
@@ -3263,7 +3263,7 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
     # Reduction logs directory
     logdir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'
     if os.path.exists(logdir)==False:
-        os.makedirs(logdir)
+        os.makedirs(logdir,exist_ok=True)
 
     # Should we parallelise this?  it can take a while to run for many nights
     
@@ -3457,7 +3457,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
             errfile1 = logfile1.replace('.log','.err')
             outdir = os.path.dirname(logfile1)
             if os.path.exists(outdir)==False:   # make sure the output directory exists
-                os.makedirs(outdir)
+                os.makedirs(outdir,exist_ok=True)
             cmd1 = 'apred {0}'.format(pf)
             if clobber:
                 cmd1 += ' --clobber'
@@ -3663,7 +3663,7 @@ def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None
                 apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
             if os.path.exists(outdir)==False:
-                os.makedirs(outdir)
+                os.makedirs(outdir,exist_ok=True)
             logfile = apstarfile.replace('.fits','_pbs.'+logtime+'.log')
             errfile = logfile.replace('.log','.err')
             # Run with --verbose
@@ -3787,7 +3787,7 @@ def rununified(load,mjds,slurmpars,clobber=False,logger=None):
         logfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'+str(mjd5)+'-unidir.'+logtime+'.log'
         errfile = logfile.replace('.log','.err')
         if os.path.exists(os.path.dirname(logfile))==False:
-            os.makedirs(os.path.dirname(logfile))
+            os.makedirs(os.path.dirname(logfile),exist_ok=True)
         cmd = 'sas_mwm_healpix --spectro apogee --mjd {0} --telescope {1} --drpver {2} -v'.format(mjd5,telescope,apred)
         tasks['cmd'][i] = cmd
         tasks['outfile'][i] = logfile
@@ -4136,7 +4136,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
     # Reduction logs directory
     logdir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/'
     if os.path.exists(logdir)==False:
-        os.makedirs(logdir)
+        os.makedirs(logdir,exist_ok=True)
 
     # Data directory 
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
@@ -4148,7 +4148,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         apogee_redux = os.environ['APOGEE_REDUX']+'/'
         if os.path.exists(apogee_redux+apred):
             shutil.rmtree(apogee_redux+apred)
-        os.makedirs(logdir)        
+        os.makedirs(logdir,exist_ok=True) 
 
     # Set up logging to screen and logfile
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
@@ -4200,7 +4200,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         mkvoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkvers.'+logtime+'.log'
         mkverrfile = mkvoutfile.replace('-mkvers.log','-mkvers.'+logtime+'.err')
         if os.path.exists(os.path.dirname(mkvoutfile))==False:
-            os.makedirs(os.path.dirname(mkvoutfile))        
+            os.makedirs(os.path.dirname(mkvoutfile),exist_ok=True)
         rootLogger.info('Command : '+cmd)
         rootLogger.info('Logfile : '+mkvoutfile)        
         tasks['cmd'][0] = cmd
