@@ -801,6 +801,7 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
         # Distances to neighbors
         ldiff = linestr0['pars'][:,1]-np.hstack((0,linestr0['pars'][0:-1,1]))
         rdiff = np.hstack((linestr0['pars'][1:,1],2048))-linestr0['pars'][:,1]
+        # we don't want fibers with close contaminating neighbors 
         gd, = np.where((ldiff >= 22) & (rdiff >= 22))
         ngd = len(gd)
         # 15
@@ -851,7 +852,9 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
             fluxsparse = 10**fluxsparse
             
             # Replace very low values with point on opposite side
-            bad, = np.where(fluxsparse<1e-5)
+            mededge = np.median(np.concatenate((fluxsparse[:4],fluxsparse[-4:])))
+            bad, = np.where( (fluxsparse < 1e-5) |
+                             (fluxsparse < mededge/3))
             if len(bad)>0:
                 good = len(fluxsparse)-bad-1
                 fluxsparse[bad] = fluxsparse[good]
@@ -870,6 +873,8 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
 
 
             #import matplotlib.pyplot as plt
+            #import matplotlib
+            #matplotlib.use('Qt5Agg')
             #plt.clf()
             #plt.scatter(dysparse,fluxsparse,c='blue',s=100,marker='+')
             #plt.plot(dysparse,fluxsparse,c='blue')
@@ -928,7 +933,7 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
             if 0:
                 import matplotlib.pyplot as plt
                 import matplotlib
-                #matplotlib.use('Agg')
+                matplotlib.use('Agg')
                 plt.figure()
                 plt.scatter(data1[:,0],data1[:,1],s=5)
                 plt.plot(xbin,ybin,c='r',label='binned')
@@ -941,9 +946,10 @@ def makeprofilegrid(psffile,sparsefile,nfbin=5,ncbin=200,verbose=False):
                 plt.ylabel('Profile flux')
                 plt.title('fiber='+str(f)+' column='+str(c))
                 plt.legend()
-                #plt.savefig('gridprofile_fiber'+str(f)+'_column'+str(c)+'.png',bbox_inches='tight')
+                plt.savefig('gridprofile_fiber'+str(f)+'_column'+str(c)+'.png',bbox_inches='tight')
+                plt.close()
                 #plt.show()
-                import pdb; pdb.set_trace()
+                #import pdb; pdb.set_trace()
 
             #if i==4 and j==53:
             #    print('problem profile')
