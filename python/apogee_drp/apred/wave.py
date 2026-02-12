@@ -296,8 +296,27 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     coef0 = {}
     x = np.arange(2048)
     if inst == 'apogee-n' :
+        # Post 2025 instrument servicing, new dither mechanism installed,
+        #  lines shifted by 21.5 pixels to the right (~6.8A)
+        if mjd>60925:
+            coef0['a'] = np.flip([ 16954.2135, -0.212595995, -1.11194045e-05])
+            coef0['b'] = np.flip([ 16434.9602, -0.261225750, -1.03236691e-05])
+            coef0['c'] = np.flip([ 15809.7079, -0.306576063, -9.52410390e-06])
+            pars0 = [ 1.20850165e-10, -1.03228960e-05, -2.82447118e-01,  1.61566129e+04,
+                      -1.43905053e+02,  8.01213589e-33,  1.54448763e+02]
+            #coef0['a'] = np.flip([ 16954.0566, -0.212438210, -1.12082642e-05])
+            #coef0['b'] = np.flip([ 16434.8054, -0.261226456, -1.03481564e-05])
+            #coef0['c'] = np.flip([ 15809.3525, -0.306507553, -9.58355060e-06])
+            #coef0['a'] = np.flip([ 16955.7084, -0.215688125, -9.90968892e-06])
+            #coef0['a'] = np.flip([ 16955.75703, -0.2128979266, -1.117692409e-05])
+            #coef0['b'] = np.flip([ 16434.50508, -0.2613874376, -1.035568130e-05])
+            #coef0['c'] = np.flip([ 15809.99238, -0.3065520823, -9.610030247e-06])
+            #pars0 = [1.21731882e-10,-1.03255143e-05,-2.82490455e-01,1.61565904e+04,
+            #         -1.43743785e+02,9.94999990e-08,1.54573628e+02]
+        
         # Post 2021 instrument servicing, lines shifted by 22.5 pixels to the right (~3.167A to the blue)
-        if mjd>59440:
+        elif mjd>59440:
+            # -6.8A shift
             coef0['a'] = np.flip([ 16949.379512, -0.2131436935, -1.1102160154e-05])
             coef0['b'] = np.flip([ 16428.954947, -0.2617184583, -1.0314603715e-05])
             coef0['c'] = np.flip([ 15802.760549, -0.3069534319, -9.5256464166e-06])
@@ -811,19 +830,20 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     else:
         newpars = allpars
 
-    # Fill in values for "missing" fibers
+    # Fill in values for "missing/bad" fibers
     if ngroup>1:
-        missing, = np.where(newpars[3,:]==0)
-        notmissing, = np.where(newpars[3,:] != 0)    
+        wmed = np.median(newpars,axis=1)
+        wsig = dln.mad(newpars-wmed.reshape(-1,1),axis=1)
+        bad10sig = np.abs(newpars-wmed.reshape(-1,1)) > 10*wsig.reshape(-1,1)
+        # Check wavelength zeropoint and chip gap values
+        badwave = (np.sum(bad10sig[[3,4,6],:],axis=0) > 0)
+        missing, = np.where((newpars[3,:]==0) | badwave)
+        notmissing, = np.where((newpars[3,:] != 0) & (badwave==False))
         if len(missing)>0 and len(notmissing)>100:
-            print('Filling in values for '+str(len(missing))+' missing fibers: '+','.join(np.char.array(rows[missing]).astype(str)))
+            print('Filling in values for '+str(len(missing))+' missing/bad fibers: '+','.join(np.char.array(rows[missing]).astype(str)))
             for m in missing:
-                if m==0:
-                    newpars1 = (newpars[:,m+1]+newpars[:,m+2])*0.5
-                elif m==len(rows)-1:
-                    newpars1 = (newpars[:,m-2]+newpars[:,m-1])*0.5
-                else:
-                    newpars1 = (newpars[:,m-1]+newpars[:,m+1])*0.5
+                ind = notmissing[np.argsort(np.abs(notmissing-m))][:2]
+                newpars1 = (newpars[:,ind[0]]+newpars[:,ind[1]])*0.5
                 newpars[:,m] = newpars1
                 # Calculate wavelength arrays from refined solution
                 if ngroup > 1:
@@ -2347,7 +2367,12 @@ def refine(oldpars,npoly=4,verbose=False):
         for col in range(2048):
             try:
                 # Don't include bad rows! i.e. from missing fibers
-                gd, = np.where( np.isfinite(waves[chip][:,col]-waves[chip][:,1024]) & (waves[chip][:,col] > 0.) )
+                dwaves = waves[chip][:,col]-waves[chip][:,1024]
+                gd1, = np.where( np.isfinite(dwaves) & (waves[chip][:,col] > 0.) )
+                meddw = np.median(dwaves[gd1])
+                sigdw = dln.mad(dwaves[gd1])
+                # outlier rejection
+                gd, = np.where( np.isfinite(dwaves) & (waves[chip][:,col] > 0.)  & (np.abs(dwaves-meddw) < 4*sigdw))
                 pfit = np.polyfit(rows[gd],waves[chip][gd,col]-waves[chip][gd,1024],3)
                 swaves[chip][gd,col] = np.polyval(pfit,rows[gd]) + waves[chip][gd,1024]
             except:
