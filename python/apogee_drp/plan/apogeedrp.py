@@ -1082,21 +1082,77 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     # Deal with multiple STARVER versions per star
     star_index = dln.create_index(vstar['apogee_id'])
     ndups = np.sum(star_index['num']>1)
-    if ndups>0:
+    # --- No max mjd limit imposed ---
+    if maxmjd is None:
+        if ndups>0:
+            allstar = np.zeros(len(star_index['value']),dtype=vstar.dtype)
+            for i,obj in enumerate(star_index['value']):
+                if star_index['num'][i]>1:
+                    ind = star_index['index'][star_index['lo'][i]]
+                    allstar[i] = vstar[ind]
+                else:
+                    ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
+                    starver = vstar['starver'][ind]
+                    si = np.argsort(starver)
+                    useind = ind[si[-1]]   # use last/largest STARVER
+                    allstar[i] = vstar[useind]
+        else:
+            allstar = vstar
+    # --- Impose max mjd value ---
+    else:
+        logger.info('Imposing maximum MJD '+str(maxmjd))
         allstar = np.zeros(len(star_index['value']),dtype=vstar.dtype)
+        useme = np.zeros(len(star_index['value']),bool)
         for i,obj in enumerate(star_index['value']):
+            # Multiple entries
             if star_index['num'][i]>1:
                 ind = star_index['index'][star_index['lo'][i]]
-                allstar[i] = vstar[ind]
+                starver = vstar['starver'][ind].astype(int)
+                if starver <= maxmjd:
+                    allstar[i] = vstar[ind]
+                    useme[i] = True
             else:
                 ind = star_index['index'][star_index['lo'][i]:star_index['hi'][i]+1]
-                starver = vstar['starver'][ind]
-                si = np.argsort(starver)
-                useind = ind[si[-1]]   # use last/largest STARVER
-                allstar[i] = vstar[useind]
-    else:
-        allstar = vstar
+                starver = vstar['starver'][ind].astype(int)
+                goodver, = np.where(starver <= maxmjd)
+                if len(goodver)>0:
+                    ind = ind[goodver]
+                    starver = starver[goodver]
+                    si = np.argsort(starver)
+                    useind = ind[si[-1]]   # use last/largest STARVER
+                    allstar[i] = vstar[useind]
+                    useme[i] = True
+                else:
+                    useme[i] = False
+                    
+        # Need to remove any stars that didn't have visits below the maxmjd range
+        keepind, = np.where(useme)
+        if len(keepind)==0:
+            logger.info('No stars left')
+            return
+        if len(keepind) < len(allstar):
+            logger.info(str(len(keepind))+' of '+str(len(useme))+' stars left')
+            allstar = allstar[keepind]
+
+    # Remove bad apogee_id names
+    two = np.array([a[:2] for a in allstar['apogee_id']])
+    bad,=np.where(np.array(two) != '2M')
+    if len(bad)>0:
+        allstar = np.delete(allstar,bad)
+    # Fix STARFLAG for stars where Doppler crashed
+    badrv, = np.where(~np.isfinite(allstar['vrad']))
+    starmask = bitmask.StarBitMask()
+    if len(badrv)>0:
+        # 'RV_FAIL'
+        allstar['starflag'][badrv] |= starmask.getval('RV_FAIL')
+        allstar['andflag'][badrv] |= starmask.getval('RV_FAIL')
+
+    # Remake the STARFLAGS columns?
+    for i in range(len(allstar)):
+        allstar['starflags'][i] = starmask.getname(allstar['starflag'][i])
+        allstar['andflags'][i] = starmask.getname(allstar['andflag'][i])
     
+    # Written to file at the end
     allstarfile = load.filename('allStar')#.replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allStar file to '+allstarfile)
     logger.info(str(len(allstar))+' stars')
@@ -1107,7 +1163,8 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
         del allstar['nres']    # temporary kludge, nres is causing write problems
     allstar.write(allstarfile,overwrite=True)
 
-    # allVisit
+    
+    # --- allVisit ---
     # Same thing for visit except that we'll get the multiple visit rows returned for each unique star row
     #   Get more info by joining with the visit table.
     vcols = ['apogee_id', 'target_id', 'apred_vers','file', 'uri', 'fiberid', 'plate', 'mjd', 'telescope', 'survey',
@@ -1129,34 +1186,75 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     cols = np.hstack(('v.'+np.char.array(vcols),'rv.'+np.char.array(rvcols)))
     sql = 'select '+','.join(cols)+' from apogee_drp.visit as v LEFT JOIN apogee_drp.rv_visit as rv ON rv.visit_pk=v.pk'
     sql += " where v.apred_vers='"+apred+"' and v.telescope='"+telescope+"'"
-    allvisit = db.query(sql=sql)
+    logger.info('Getting all of the visit table information')
+    visit = db.query(sql=sql)
 
+    # Remove bad apogee_id names
+    two = np.array([a[:2] for a in visit['apogee_id']])
+    bad,=np.where(np.array(two) != '2M')
+    if len(bad)>0:
+        visit = np.delete(visit,bad)
+
+    # Fix STARFLAG for stars where Doppler crashed
+    badrv, = np.where(~np.isfinite(allstar['vrad']))
+    vindex = dln.create_index(visit['apogee_id'])
+    _,ind1,ind2 = np.intersect1d(allstar['apogee_id'][badrv],vindex['value'],
+                                 return_indices=True)
+    for i in range(len(ind1)):
+        ind = vindex['index'][vindex['lo'][i]:vindex['hi'][i]+1]
+        visit['starflag'][ind] |= starmask.getval('RV_FAIL')
+
+    # Remake STARFLAGS
+    for i in range(len(visit)):
+        visit['starflags'][i] = starmask.getname(visit['starflag'][i])
+        
     # Fix bad STARVER values
-    bdstarver, = np.where(np.char.array(allvisit['starver']) == '')
+    bdstarver, = np.where(np.char.array(visit['starver']) == '')
     if len(bdstarver)>0:
-        allvisit['starver'][bdstarver] = allvisit['mjd'][bdstarver]
+        visit['starver'][bdstarver] = visit['mjd'][bdstarver]
+
     # Check for duplicate STARVER for each star
-    idindex = dln.create_index(allvisit['apogee_id'])
-    duplicate = np.zeros(len(allvisit),bool)
-    for i in range(len(idindex['value'])):
-        ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
-        allv = allvisit[ind]
-        if np.min(allv['starver'].astype(int)) != np.max(allv['starver'].astype(int)):
-            # Only keep rows for the maximum STARVER per star
-            maxstarver = np.max(allv['starver'].astype(int))
-            bd1, = np.where(allv['starver'].astype(int) != maxstarver)
-            duplicate[ind[bd1]] = True
-    torem, = np.where(duplicate==True)
-    if len(torem)>0:
-        allvisit = np.delete(allvisit,torem)
-                
+    idindex = dln.create_index(visit['apogee_id'])
+    duplicate = np.zeros(len(visit),bool)
+        
+    # --- No max mjd limit imposed ---
+    if maxmjd is None:
+        if ndups>0:
+            for i in range(len(idindex['value'])):
+                ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
+                allv = visit[ind]
+                if np.min(allv['starver'].astype(int)) != np.max(allv['starver'].astype(int)):
+                    # Only keep rows for the maximum STARVER per star
+                    maxstarver = np.max(allv['starver'].astype(int))
+                    bd1, = np.where(allv['starver'].astype(int) != maxstarver)
+                    duplicate[ind[bd1]] = True
+            torem, = np.where(duplicate==True)
+            if len(torem)>0:
+                visit = np.delete(visit,torem)
+        allvisit = visit
+    
+    # --- Impose max mjd value ---
+    else:
+        logger.info('Imposing maximum MJD '+str(maxmjd))
+        keepind = []
+        for i in range(len(idindex['value'])):
+            ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
+            allv = visit[ind]
+            good, = np.where(allv['mjd'] <= maxmjd)
+            if len(good)>0:
+                keepind.append(ind[good])
+        keepind = np.concatenate(keepind)
+        allvisit = visit[keepind]
+        nustars = len(np.unique(allvisit['apogee_id']))
+        logger.info(str(nustars)+' of '+str(len(np.unique(visit['apogee_id'])))+' stars left')
+        
     # Use visit_latest, this can sometimes take forever
     #cols = ','.join(vcols+rvcols)        
-    #allvisit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    #visit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     # rv_components can sometimes be an object type
-    if allvisit.dtype['rv_components'] == np.object:
-        allvisit = Table(allvisit)
-        allvisit['rv_components'] = np.zeros(len(allvisit),dtype=np.dtype((np.float32,3)))
+    if visit.dtype['rv_components'] == np.object:
+        visit = Table(visit)
+        visit['rv_components'] = np.zeros(len(visit),dtype=np.dtype((np.float32,3)))
     allvisitfile = load.filename('allVisit')#.replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allVisit file to '+allvisitfile)
     logger.info(str(len(allvisit))+' visits')
@@ -1166,6 +1264,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
 
     db.close()
 
+    
     # Nightly summary files
     if mjd5 is not None:
         create_sumfiles_mjd(apred,telescope,mjd5,logger=logger)
@@ -2950,7 +3049,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 # Only FPI exposure number per MJD
                 calfpiind = []
                 logger.info('Daily FPI calibration products')
-                logger.info('------------------------------')
+                logger.info('------------------------------')                
                 for m in mjds:
                     fpiind, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='FPI'))
                     if len(fpiind)==0:
@@ -3403,7 +3502,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
     return chkexp,chkvisit
 
 
-def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
+def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None,inputlist=None):
     """
     Run RV on all the stars observed from a list of MJDs.
 
@@ -3415,12 +3514,17 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
        List of MJDs to process
     slurmpars : dictionary
        Dictionary of slurmpars settings.
+    limited : boolean, optional
+       Limit the visits to the maximum mjd.  Default is False.
     daily : boolean, optional
        Run for the daily processing.  Only include visits up to and including this night.
+       Deprecated.  Use limited from now on.
     clobber : boolean, optional
        Overwrite existing files.  Default is False.
     logger : logger, optional
        Logging object.  If not is input, then a default one will be created.
+    inputlist : str, optional
+       File containing list of inputs to process.
 
     Returns
     -------
@@ -3443,9 +3547,20 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     mjdstop = np.max(mjds)
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
 
+    if daily is not None:
+        logger.DeprecationWarning('daily is deprecated.  use limited from now on')
+        limited = daily
+
+    # Load list of inputs
+    if inputlist is not None:
+        if os.path.exists(inputlist)==False:
+            raise FileNotFoundError(str(inputlist)+' not found')
+        inlist_apogeeids = dln.readlines(inputlist)
+        logger.info(str(len(inlist_apogeeids))+' rows loaded from '+str(inputlist))
+        
     # Get the visit information from the database
     logger.info('Getting visit information from the database')
-    if daily:
+    if limited:
         sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and mjd<=%d and telescope='%s'" % (apred,mjdstop,telescope)        
     else:
         sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and telescope='%s'" % (apred,telescope)
@@ -3476,7 +3591,10 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
     visits = allvisit[ind]
     
     # Make table for all the stars we are interested in
-    apogee_id = np.unique(visits['apogee_id'])             # get the IDs of the stars for the input MJDs
+    if inputlist is not None:
+        apogee_id = np.unique(inlist_apogeeids)
+    else:
+        apogee_id = np.unique(visits['apogee_id'])             # get the IDs of the stars for the input MJDs
     star_index = dln.create_index(allvisit['apogee_id'])    # visit index for all stars
     vind1,vind2 = dln.match(apogee_id,star_index['value'])  # match up our star IDs with the visit index
     dtype = [('apogee_id',(str,50)),('mjd',int),('maxmjd',int),('nvisits',int),('apred_vers',(str,50)),('telescope',(str,50))]
@@ -3564,7 +3682,7 @@ def runrv(load,mjds,slurmpars,daily=False,clobber=False,logger=None):
             tasks['cmd'][i] = cmd
             tasks['outfile'][i] = logfile
             tasks['errfile'][i] = errfile
-            tasks['dir'][i] = os.path.dirname(logfile) 
+            tasks['dir'][i] = os.path.dirname(logfile)
         logger.info('Running RV on '+str(ntorun)+' stars')
         key,jobid = slrm.submit(tasks,label='rv',verbose=True,logger=logger,**slurmpars1)
         slrm.queue_wait('rv',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete  
@@ -3618,6 +3736,7 @@ def runsumfiles(load,mjds,logger=None):
     #    runapogee.create_sumfiles_mjd(apred,telescope,m,logger=logger)
     # Create allStar/allVisit file
     create_sumfiles(apred,telescope,maxmjd=np.max(mjds),logger=logger)
+
 
 def rununified(load,mjds,slurmpars,clobber=False,logger=None):
     """
@@ -4033,7 +4152,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         apogee_redux = os.environ['APOGEE_REDUX']+'/'
         if os.path.exists(apogee_redux+apred):
             shutil.rmtree(apogee_redux+apred)
-        os.makedirs(logdir,exist_ok=True)
+        os.makedirs(logdir,exist_ok=True) 
 
     # Set up logging to screen and logfile
     logFormatter = logging.Formatter("%(asctime)s [%(levelname)-5.5s]  %(message)s")
