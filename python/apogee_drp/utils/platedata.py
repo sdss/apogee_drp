@@ -465,6 +465,9 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             if 'twomass' in ph.dtype.names:
                 if str(ph['twomass'][i]).find('2MASS-J') > -1:
                     ph['twomass'][i] = str(ph['twomass'][i]).replace('2MASS-J','2M')
+            if 'targetids' in ph.dtype.names:
+                if str(ph['targetids'][i]).find('2MASS-J') > -1:
+                    ph['targetids'][i] = str(ph['targetids'][i]).strip().replace('2MASS-J','2M')
                     
         # Fix telluric catalogIDs
         # There is a problem with some of the telluric catalogIDs due to
