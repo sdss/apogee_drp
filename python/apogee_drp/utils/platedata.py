@@ -497,10 +497,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             if len(gdcat)>0:
                 cdata = catalogdb.getdata(catid=ph['catalogid'][gdcat])
                 dt = [('version_id',int),('sdss_id',int),('ra_sdss_id',float),
-                      ('dec_sdss_id',float),
-                      #('jmag',float),('e_jmag',float),('hmag',float),
-                      #('e_hmag',float),('kmag',float),('e_kmag',float),
-                      ('gaia_sourceid',int),('gaia_ra',float),
+                      ('dec_sdss_id',float),('gaia_sourceid',int),('gaia_ra',float),
                       ('gaia_dec',float),('gaia_pmra',float),('gaia_pmra_error',float),
                       ('gaia_pmdec',float),('gaia_pmdec_error',float),('gaia_plx',float),
                       ('gaia_plx_error',float),('gaia_gmag',float),('gaia_gerr',float),
@@ -528,10 +525,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
             cdata = catalogdb.getdata(ra=ph['ra'][gdph],dec=ph['dec'][gdph])
             if len(gdph)>0:
                 dt = [('catalogid',int),('version_id',int),('sdss_id',int),('ra_sdss_id',float),
-                      ('dec_sdss_id',float),
-                      #('jmag',float),('e_jmag',float),('hmag',float),
-                      #('e_hmag',float),('kmag',float),('e_kmag',float),
-                      ('gaia_sourceid',int),('gaia_ra',float),
+                      ('dec_sdss_id',float),('gaia_sourceid',int),('gaia_ra',float),
                       ('gaia_dec',float),('gaia_pmra',float),('gaia_pmra_error',float),
                       ('gaia_pmdec',float),('gaia_pmdec_error',float),('gaia_plx',float),
                       ('gaia_plx_error',float),('gaia_gmag',float),('gaia_gerr',float),
