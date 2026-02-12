@@ -1144,6 +1144,17 @@ def dbingest(startab,starvisits):
 
         db.ingest('rv_visit',np.array(visits))   # Load the visit information into the table  
 
+        # Need to update starflag/starflags in visit table
+        delcols = ['starver','vtype','vrel','vrelerr','vrad','bc','chisq','rv_teff',
+                   'rv_tefferr','rv_logg','rv_loggerr','rv_feh','rv_feherr',
+                   'xcorr_vrel','xcorr_vrelerr','xcorr_vrad','n_components',
+                   'rv_components','rvtab','goodvisit','star_pk']
+        visits = starvisits.copy()
+        for c in delcols:
+            if c in visits.dtype.names:
+                del visits[c]
+        db.ingest('visit',np.array(visits))
+        
     # Close db session
     db.close()
 
