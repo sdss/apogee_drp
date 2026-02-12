@@ -28,13 +28,22 @@ import datetime
 # 700  float4, float
 # 701  float8, double
 
-from psycopg2.extensions import register_adapter, AsIs, register_type
+REAL_MIN_POS = 1.17549435e-38
+
+from psycopg2.extensions import register_adapter, AsIs, register_type, adapt
 def addapt_np_float16(np_float16):
-    return AsIs(np_float16)
+    return adapt(float(np_float16))
+#    return AsIs(np_float16)
 def addapt_np_float32(np_float32):
-    return AsIs(np_float32)
+    v = float(np_float32)
+    if v != 0.0 and abs(v) < REAL_MIN_POS:
+        v = 0.0
+    return adapt(v)
+#    return adapt(float(np_float32))
+#    return AsIs(np_float32)
 def addapt_np_float64(np_float64):
-    return AsIs(np_float64)
+    return adapt(float(np_float64))
+#    return AsIs(np_float64)
 def addapt_np_int8(np_int8):
     return AsIs(np_int8)
 def addapt_np_int16(np_int16):
@@ -65,12 +74,27 @@ new_type = pg.extensions.new_type(oids, "DATE", cast_date)
 register_type(new_type) 
 # Cast None's for bool
 oids_bool = (16,)
+#def cast_bool_none(value, cursor):
+#    if value is None:
+#        return False
+#    return np.bool(value)
+#new_type = pg.extensions.new_type(oids_bool, "BOOL", cast_bool_none)
+#register_type(new_type)
 def cast_bool_none(value, cursor):
     if value is None:
         return False
-    return np.bool(value)
+    if isinstance(value, (bytes, bytearray, memoryview)):
+        s = bytes(value).decode('ascii', 'strict')
+    else:
+        s = str(value)
+    s = s.strip().lower()
+    return s in ('t', 'true', '1')
+#BOOL_NONE = new_type((16,), 'BOOL_NONE', cast_bool_none)
+#register_type(BOOL_NONE, conn)
 new_type = pg.extensions.new_type(oids_bool, "BOOL", cast_bool_none)
 register_type(new_type)
+
+
 # Cast None's for text/char
 oids_text = (18,25)
 def cast_text_none(value, cursor):
@@ -490,7 +514,12 @@ class DBSession(object):
             tuple(str(i) if isinstance(i, np.floating) and np.isinf(i) else i for i in t)
             for t in list(data)
         ]
-
+        # Clip small numbers
+        data = [
+            tuple('0.0' if isinstance(i, np.floating) and np.abs(i)<REAL_MIN_POS else i for i in t)
+            for t in list(data)
+        ]
+        
         # Check for arrays and replace with a list
         hasarrays = False
         for d in data[0]:
