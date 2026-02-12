@@ -257,6 +257,10 @@ def getexpinfo(load,mjds,logger=None,verbose=True):
         if len(expinfo1)==0 and len(dbexpinfo)==0:
             logger.info('MJD={:}  {:3d} exposures'.format(m,0))
             continue
+        # Inconsistency
+        if len(expinfo1)==0 and len(dbexpinfo)>0:
+            logger.warning('Inconsistency between files on disk and in the database for MJD={:}'.format(m))
+            raise Exception
         if len(expinfo1)>0 and verbose:
             logger.info('MJD={:}  {:3d} exposures'.format(m,len(expinfo1)))
         # Crossmatch the two catalogs
