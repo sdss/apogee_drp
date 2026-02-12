@@ -922,6 +922,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                             hmag = ph['hmag'][match]
                             fiber['mag'][i] = [ph['jmag'][match],ph['hmag'][match],
                                                ph['kmag'][match],0.,0.]
+                            fiber['jmag'][i] = ph['jmag'][match]
+                            fiber['kmag'][i] = ph['kmag'][match]
                             # Adopt PM un-adjusted  coordinates
                             #fiber['ra'][i] -= ph['pmra'][match]/1000./3600./np.cos(fiber['dec'][i]*np.pi/180.)*(ph['epoch'][match]-2000.)
                             #fiber['dec'][i] -= ph['pmdec'][match]/1000./3600.*(ph['epoch'][match]-2000.)
