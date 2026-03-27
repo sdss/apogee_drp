@@ -1082,6 +1082,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     # Deal with multiple STARVER versions per star
     star_index = dln.create_index(vstar['apogee_id'])
     ndups = np.sum(star_index['num']>1)
+    
     # --- No max mjd limit imposed ---
     if maxmjd is None:
         if ndups>0:
@@ -1105,7 +1106,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
         useme = np.zeros(len(star_index['value']),bool)
         for i,obj in enumerate(star_index['value']):
             # Multiple entries
-            if star_index['num'][i]>1:
+            if star_index['num'][i]==1:
                 ind = star_index['index'][star_index['lo'][i]]
                 starver = vstar['starver'][ind].astype(int)
                 if starver <= maxmjd:
@@ -1133,7 +1134,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
         if len(keepind) < len(allstar):
             logger.info(str(len(keepind))+' of '+str(len(useme))+' stars left')
             allstar = allstar[keepind]
-
+            
     # Remove bad apogee_id names
     two = np.array([a[:2] for a in allstar['apogee_id']])
     bad,=np.where(np.array(two) != '2M')
@@ -1188,7 +1189,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     sql += " where v.apred_vers='"+apred+"' and v.telescope='"+telescope+"'"
     logger.info('Getting all of the visit table information')
     visit = db.query(sql=sql)
-
+    
     # Remove bad apogee_id names
     two = np.array([a[:2] for a in visit['apogee_id']])
     bad,=np.where(np.array(two) != '2M')
@@ -1240,9 +1241,17 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
         for i in range(len(idindex['value'])):
             ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
             allv = visit[ind]
-            good, = np.where(allv['mjd'] <= maxmjd)
-            if len(good)>0:
-                keepind.append(ind[good])
+            # get the latest starver within the mjd limit
+            starver = allv['starver'].astype(int)
+            goodver, = np.where(starver <= maxmjd)
+            if len(goodver)>0:
+                ind = ind[goodver]
+                nstarver = len(np.unique(visit['starver'][ind]))
+                if nstarver>1:
+                    usestarver = np.sort(visit['starver'][ind])[-1]  # use latest one
+                    ind2, = np.where(visit['starver'][ind]==usestarver)
+                    ind = ind[ind2]
+                keepind.append(ind)
         keepind = np.concatenate(keepind)
         allvisit = visit[keepind]
         nustars = len(np.unique(allvisit['apogee_id']))
