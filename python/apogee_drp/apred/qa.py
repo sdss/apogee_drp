@@ -241,7 +241,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             if makemasterqa is True:
                 q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                       mjdfilebase='mjd.html',fieldfilebase='fields.html',
-                                      domjd=True, dofields=True)
+                                      domjd=True, dofields=False)
 
             # Make the monitor page
             if makemonitor == True:
@@ -289,7 +289,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
                     if makemasterqa is True: 
                         q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, 
                                               mjdfilebase='mjd.html',fieldfilebase='fields.html',
-                                              domjd=True, dofields=True)
+                                              domjd=True, dofields=False)
                     if makemonitor is True:
                         q = monitor.monitor(instrument=instrument, apred=apred)
                     continue
@@ -441,7 +441,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
 
     # Make mjd.html and fields.html
     if makemasterqa == True: 
-        q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=True,
+        q = makeMasterQApages(mjdmin=59146, mjdmax=9999999, apred=apred, domjd=True, dofields=False,
                               mjdfilebase='mjd.html',fieldfilebase='fields.html')
 
     # Make the nightly QA page
@@ -3700,7 +3700,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
 ###################################################################################################
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
 def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None, fieldfilebase=None,
-                      domjd=True, dofields=True):
+                      domjd=True, dofields=False):
     """
     Parameters
     ----------
@@ -3717,7 +3717,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
     domjd : boolean, optional
        Make html pages for each MJD.
     dofields : boolean, optional
-       Make the fields.html page.
+       Make the fields.html page. Default is False.
 
     Returns
     -------
