@@ -2722,7 +2722,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     return chkmaster
     
     
-def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
+def runap3d(load,mjds,slurmpars,clobber=False,logger=None,inputlist=None):
     """
     Run AP3D on all exposures for a list of MJDs.
 
@@ -2738,6 +2738,8 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
        Overwrite existing files.  Default is False.
     logger : logger, optional
        Logging object.  If not is input, then a default one will be created.
+    inputlist : str, optional
+       File containing list of inputs to process.
 
     Returns
     -------
@@ -2759,6 +2761,25 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
     observatory = telescope[0:3]
     logtime = datetime.now().strftime("%Y%m%d%H%M%S")
     
+    # Load list of inputs
+    if inputlist is not None:
+        if os.path.exists(inputlist)==False:
+            raise FileNotFoundError(str(inputlist)+' not found')
+        inlist_nums = dln.readlines(inputlist)
+        logger.info(str(len(inlist_nums))+' rows loaded from '+str(inputlist))
+        # Get MJDs for these nums
+        inlist_mjds = []
+        for num in inlist_nums:
+            try:
+                m = int(load.cmjd(int(num)))
+                inlist_mjds.append(m)
+            except:
+                logger.info('Problem getting MJD for '+str(num))
+        if len(inlist_mjds)==0:
+            logger.info('Problem getting MJDs for input list')
+            return None
+        mjds = np.unique(inlist_mjds)
+
     # Get exposures
     expinfo = getexpinfo(load,mjds,logger=logger)
 
@@ -2767,6 +2788,13 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
         logger.info('No exposures to process with AP3D')
         chk3d = []
 
+    if inputlist is not None:
+        _,ind1,ind2 = np.intersect1d(inlist_nums,expinfo['num'],return_indices=True)
+        if len(ind1)==0:
+            logger.info('No exposures numbers matched')
+            return None
+        expinfo = expinfo[ind2]
+    
     # Loop over exposures and see if the outputs exist already
     do3d = np.zeros(len(expinfo),bool)
     for i,num in enumerate(expinfo['num']):    
@@ -2828,7 +2856,7 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None):
     return chk3d
 
 
-def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
+def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,inputlist=None):
     """
     Run daily calibration frames for a list of MJDs.
 
@@ -2847,6 +2875,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
        Overwrite existing files.  Default is False.
     logger : logger, optional
        Logging object.  If not is input, then a default one will be created.
+    inputlist : str, optional
+       File containing list of inputs to process.
 
     Returns
     -------
@@ -2878,13 +2908,39 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
     caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
     calfile = caldir+load.instrument+'.par' 
     reduxdir = os.environ['APOGEE_REDUX']+'/'+load.apred+'/'
-    
+
+    # Load list of inputs
+    if inputlist is not None:
+        if os.path.exists(inputlist)==False:
+            raise FileNotFoundError(str(inputlist)+' not found')
+        inlist_nums = dln.readlines(inputlist)
+        logger.info(str(len(inlist_nums))+' rows loaded from '+str(inputlist))
+        # Get MJDs for these nums
+        inlist_mjds = []
+        for num in inlist_nums:
+            try:
+                m = int(load.cmjd(int(num)))
+                inlist_mjds.append(m)
+            except:
+                logger.info('Problem getting MJD for '+str(num))
+        if len(inlist_mjds)==0:
+            logger.info('Problem getting MJDs for input list')
+            return None
+        mjds = np.unique(inlist_mjds)
+        
     # Get exposures
     logger.info('Getting exposure information')
     allexpinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
     # Calculate dither groups
     allexpinfo = info.getdithergroups(allexpinfo)
     expinfo = allexpinfo.copy()
+
+    if inputlist is not None:
+        _,ind1,ind2 = np.intersect1d(inlist_nums,expinfo['num'],return_indices=True)
+        if len(ind1)==0:
+            logger.info('No exposures numbers matched')
+            return None
+        expinfo = expinfo[ind2]
     
     # First we need to run domeflats and quartzflats so there are apPSF files
     # Then the arclamps
@@ -3098,8 +3154,9 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
             # --- TELLURIC ---
             elif ctype=='telluric':
                 ncal = len(mjds)
-                calinfo = np.zeros(ncal,dtype=np.dtype([('num',(str,100)),('mjd',int),('exptype',(str,20)),('observatory',(str,3)),
-                                                        ('configid',int),('designid',int),('fieldid',int)]))
+                calinfo = np.zeros(ncal,dtype=np.dtype([('num',(str,100)),('mjd',int),('exptype',(str,20)),
+                                                        ('observatory',(str,3)),('configid',int),
+                                                        ('designid',int),('fieldid',int)]))
                 calinfo['mjd'] = mjds
                 calinfo['exptype'] = 'telluric'
                 calinfo['observatory'] = load.observatory
@@ -3159,7 +3216,15 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                     # WaveFPI files are not getting checked properly!!!!
                     if exists:
                         logger.info(str(j+1)+'  '+os.path.basename(outfile)+' already exists and clobber==False')
+                        docal[j] = False               
+                # Make sure the 2D files exist and the 3D step was run
+                if docal[j]==True:
+                    base2d = load.filename('2D',num=num1,mjd=mjd1,chips=True)
+                    status2d = info.file_status([base2d.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']])
+                    if status2d['okay'][0]==False:
+                        logger.info(str(j+1)+'  '+os.path.basename(base2d)+' not found. Make sure to run 3D step first!')
                         docal[j] = False
+                        
             logger.info(str(np.sum(docal))+' '+ctype.upper()+' to run')
             
             # Step 3) Loop over the calibrations, make the commands and submit to SLURM
@@ -3218,7 +3283,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None):
                 key,jobid = slrm.submit(tasks,label=label,verbose=True,logger=logger,**slurmpars1)
                 slrm.queue_wait(label,key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete   
             else:
-                logger.info('No '+str(calnames[i])+' calibration files need to be run')
+                logger.info('No '+str(calnames[i])+' calibration files need/can to be run')
 
             # Step 4) Checks the status and update the database
             if ntorun>0:
@@ -4129,7 +4194,16 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
     # The default is to do all
     steps = loadsteps(steps)
     nsteps = len(steps)
-    
+
+    # inputlist
+    if inputlist is not None:
+        if len(steps)>1:
+            print('inputlist can only be used with a single step')
+            return None
+        if steps[0] not in ['3d','cal','rv']:
+            print('inputlist only supported for 3d/cal/rv')
+            return None
+            
     # Slurm settings
     if alloc == 'sdss-kp':
         shared = False
@@ -4243,7 +4317,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         rootLogger.info('3) Running AP3D on all exposures')
         rootLogger.info('================================')
         rootLogger.info('')
-        chk3d = runap3d(load,mjds,**kws)
+        chk3d = runap3d(load,mjds,inputlist=inputlist,**kws)
 
     # 4) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
     #----------------------------------------------------------------
@@ -4253,7 +4327,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         rootLogger.info('5) Generating daily calibration products')
         rootLogger.info('========================================')
         rootLogger.info('')
-        chkcal = rundailycals(load,mjds,caltypes=caltypes,**kws)
+        chkcal = rundailycals(load,mjds,caltypes=caltypes,inputlist=inputlist,**kws)
 
     # 5) Make plan files
     #-------------------
