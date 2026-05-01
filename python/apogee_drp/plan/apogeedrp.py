@@ -1210,10 +1210,15 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
         visit['starflags'][i] = starmask.getname(visit['starflag'][i])
         
     # Fix bad STARVER values
-    bdstarver, = np.where(np.char.array(visit['starver']) == '')
-    if len(bdstarver)>0:
-        visit['starver'][bdstarver] = visit['mjd'][bdstarver]
-
+    #bdstarver, = np.where(np.char.array(visit['starver']) == '')
+    #if len(bdstarver)>0:
+    #    visit['starver'][bdstarver] = visit['mjd'][bdstarver]
+    # THIS WAS A MISTAKE
+    
+    # STARVER=='' occurs for visits that don't pass initial QA cuts
+    # Doppler never runs on them.
+    # we should always keep these in the final allVisit file!!! 
+    
     # Check for duplicate STARVER for each star
     idindex = dln.create_index(visit['apogee_id'])
     duplicate = np.zeros(len(visit),bool)
@@ -1224,11 +1229,19 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
             for i in range(len(idindex['value'])):
                 ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
                 allv = visit[ind]
-                if np.min(allv['starver'].astype(int)) != np.max(allv['starver'].astype(int)):
+                # Deal with bad visits that have STARVER==''
+                #   set them to the maximum STARVER of the rest so they get picked up
+                starver = allv['starver']
+                bdv, = np.where(np.char.array(allv['starver']) == '')
+                if len(bdv)>0:
+                    starver[bdv] = -1
+                    starver[bdv] = np.max(starver.astype(int))
+                starver = starver.astype(int)
+                if np.min(starver) != np.max(starver):
                     # Only keep rows for the maximum STARVER per star
-                    maxstarver = np.max(allv['starver'].astype(int))
-                    bd1, = np.where(allv['starver'].astype(int) != maxstarver)
-                    duplicate[ind[bd1]] = True
+                    maxstarver = np.max(starver)
+                    bddup, = np.where(starver != maxstarver)
+                    duplicate[ind[bddup]] = True
             torem, = np.where(duplicate==True)
             if len(torem)>0:
                 visit = np.delete(visit,torem)
@@ -1241,15 +1254,22 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
         for i in range(len(idindex['value'])):
             ind = idindex['index'][idindex['lo'][i]:idindex['hi'][i]+1]
             allv = visit[ind]
+            # Deal with bad visits that have STARVER==''
+            #   set them to -1 and have them picked up
+            starver = allv['starver']
+            bdv, = np.where(np.char.array(allv['starver']) == '')
+            if len(bdv)>0:
+                starver[bdv] = -1
+            starver = starver.astype(int)
             # get the latest starver within the mjd limit
-            starver = allv['starver'].astype(int)
             goodver, = np.where(starver <= maxmjd)
             if len(goodver)>0:
                 ind = ind[goodver]
-                nstarver = len(np.unique(visit['starver'][ind]))
+                starver = starver[goodver]
+                nstarver = len(np.unique(starver))
                 if nstarver>1:
-                    usestarver = np.sort(visit['starver'][ind])[-1]  # use latest one
-                    ind2, = np.where(visit['starver'][ind]==usestarver)
+                    usestarver = np.sort(starver)[-1]  # use latest one
+                    ind2, = np.where((starver==usestarver) | (starver == -1))  # include bad visits too
                     ind = ind[ind2]
                 keepind.append(ind)
         keepind = np.concatenate(keepind)
