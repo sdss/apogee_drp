@@ -222,7 +222,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     nvisits = len(gd)
     del starvisits['created']
     startab['ngoodvisits'] = nvisits   # visits that pass QA cuts
-    # Add STARVER                                                                                                                                             
+    # Add STARVER
     starvisits['starver'] = starver
     # Flag all visits as RV_FAIL to start with, will remove if they worked okay
     starvisits['starflag'] |= starmask.getval('RV_FAIL')
@@ -242,6 +242,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     rvtab = Column(name='rvtab',dtype=Table,length=len(starvisits))
     starvisits.add_column(rvtab)
     starvisits['goodvisit'] = False   #  boolean flag to starvisits that it was used in the combination
+
     
     # Run Doppler with dorv() on the good visits
     try:
@@ -456,10 +457,11 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
             logger.warning('error loading: '+outbase+suffix+'_doppler.pkl')
             #pass
 
-    speclist = []
+    speclist = len(allvisit)*[None]
     pixelmask = bitmask.PixelBitMask()
     badval = pixelmask.badval()|pixelmask.getval('SIG_SKYLINE')|pixelmask.getval('LITTROW_GHOST')
-
+    starmask = bitmask.StarBitMask()
+    
     # Loop over visits
     for i in range(len(allvisit)):
 
@@ -472,6 +474,13 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
                                      fiber=allvisit['fiberid'][i],field=allvisit['field'][i])
         spec = doppler.read(visitfile,badval=badval)
 
+        # Check that we have good pixels to work with
+        if np.sum(~spec.mask)==0:
+            logger.info('Spectrum {:d} has all pixels masked'.format(i+1))
+            spec.snr = 0
+            allvisit['snr'][i] = 0
+            allvisit['starflag'][i] += (allvisit['starflag'][i] | starmask.getval('RV_FAIL'))
+            
         if windows is not None :
             # If we have spectral windows to mask, do so here
             for ichip in range(3):
@@ -481,10 +490,9 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
                     gd.extend(np.where((spec.wave[:,ichip] > window[0]) & (spec.wave[:,ichip] < window[1]))[0])
                 mask[gd] = False
                 spec.mask[:,ichip] |= mask
-
-        if spec is not None:
-            speclist.append(spec)
-            allvisit['bc'][i] = spec.barycorr()
+                
+        speclist[i] = spec
+        allvisit['bc'][i] = spec.barycorr()
             
     if len(speclist)==0:
         raise Exception('No visit spectra loaded')
@@ -526,6 +534,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
         rvrange = [-1000,1000]
     logger.info('RV range = [{:.1f},{:.1f}]'.format(rvrange[0],rvrange[1]))
     logger.info(' ')
+
     
     # Now do the Doppler jointfit to get RVs
     # Dump empty pickle to stand in case of failure (to prevent redo if not clobber)
@@ -564,7 +573,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
         logger.error('Exception raised in dorv for: ', field, obj)
         traceback.print_exc()        
         return
-
+    
     # Return summary RV info, visit RV info, decomp info 
     return sumstr,finalstr,gout
 
