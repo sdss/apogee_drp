@@ -395,7 +395,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
 
     else:
         gdrv = []
-
+        
     # Do the visit combination and write out apStar file
     if len(gdrv)>0:
         apstar = visitcomb(starvisits[visits[gdrv]],starver,load=load,
@@ -983,9 +983,20 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     apstar.header['VRAD'] = (vrad,'S/N weighted mean barycentric RV')
     vscatter = allvisit['vrad'].std(ddof=1)
     if np.isfinite(vscatter)==False: vscatter = 'NaN'
-    if len(allvisit) > 1 : apstar.header['vscatter'] = (vscatter, 'standard deviation of visit RVs')
-    else: apstar.header['VSCATTER'] = (0., 'standard deviation of visit RVs')
-    apstar.header['VERR'] = (0.,'unused')
+    if len(allvisit) > 1:
+        apstar.header['vscatter'] = (vscatter, 'standard deviation of visit RVs')
+        verr = vscatter/np.sqrt(len(allvisit))
+    else:
+        apstar.header['VSCATTER'] = (np.nan, 'standard deviation of visit RVs')
+        verr = allvisit['vrelerr'][0]
+
+    # This was used in DR17
+    #verr = np.sqrt((allvisit['vrelerr']**2*allvisit['snr']**2).sum() / (allvisit['snr']**2).sum())
+    #apstar.header['VERR'] = (verr,'weighted error in VRAD')
+
+    apstar.header['VERR'] = (verr,'standard error in VRAD')
+    apstar.header['VERR_MED'] = (np.median(allvisit['vrelerr']),'median error in visit VRAD')
+    
     rv_teff = allvisit['rv_teff'].max()
     if np.isfinite(rv_teff)==False: rv_teff = 'NaN'
     apstar.header['RV_TEFF'] = (rv_teff,'Effective temperature from RV fit')
@@ -1018,9 +1029,10 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         if np.isfinite(visit_chisq)==False: visit_chisq = 'NaN'
         apstar.header['CHISQ{:d}'.format(i)] = (visit_chisq,' Chi-squared fit of Cannon model, visit {:d}'.format(i))
         visit_vrel = visit['vrel']
+        visit_vrelerr = visit['vrelerr']
         if np.isfinite(visit_vrel)==False: visit_vrel = 'NaN'
         apstar.header['VREL{:d}'.format(i)] = (visit_vrel,' Doppler shift (km/s) of visit {:d}'.format(i))
-        #apstar.header['VERR%d'.format(i)] =
+        apstar.header['VERR{:d}'.format(i)] = (visit_vrelerr,' RV uncertainty of visit {:d}'.format(i))
         visit_vrad = visit['vrad']
         if np.isfinite(visit_vrad)==False: visit_vrad = 'NaN'
         apstar.header['VRAD{:d}'.format(i)] = (visit_vrad,' Barycentric velocity (km/s), visit {:d}'.format(i))
@@ -1055,7 +1067,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             logger.error("Runtime error: {0}".format(err))
         except: 
             logger.error('Exception raised in visitcomb RV fit for: ',apstar.header['FIELD'],apstar.header['OBJID'])
-
+            
     # Write the spectrum to file
     if write:
         outfilenover = load.filename('Star',obj=apstar.header['OBJID'])
