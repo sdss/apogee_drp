@@ -148,3 +148,86 @@ Relevant Visit-level columns:
 
    * - RV_COMPONENTS
      - Number of Gaussian components for each of the 3 detectors
+
+
+Relevant Star-level columns:
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - Column
+     - Description
+
+   * - STARFLAG
+     - Quality flags OR-combined across the visits
+
+   * - ANDFLAG
+     - Quality flags AND-combined across the visits
+
+   * - STARVER
+     - Version of the Doppler processing for this star.  Generally,
+       the MJD of the last visit used with Doppler.
+       
+   * - NVISITS
+     - Number of total visits for this star (no QA cuts)
+
+   * - NGOODVISITS
+     - Number of visits passing the initial QA cuts (no BAD STARFLAG flags and S/N>2)
+
+   * - NGOODRVS
+     - Number of visits passing all QA cuts and used in determining the
+       mean RV and combined spectrum
+       
+   * - VRAD
+     - Barycentric radial velocity (km/s)
+       
+   * - VSCATTER
+     - Barycentric radial velocity (km/s)
+
+   * - VERR
+     - Uncertainty in VRAD (km/s).
+       
+   * - VMEDERR
+     - Median uncertainty of the visit-level RVs (km/s).
+       
+   * - CHISQ
+     - Chi-squared of the best-fit Cannon model
+       
+   * - RV_TEFF
+     - Teff of the best-fit Cannon model (K)
+
+   * - RV_TEFFERR
+     - Uncertainty in RV_TEFF (K)
+       
+   * - RV_LOGG
+     - log(g) of the best-fit Cannon model
+
+   * - RV_LOGGERR
+     - Uncertainty in RV_LOGG
+       
+   * - RV_FEH
+     - Metallicity of the best-fit Cannon model
+
+   * - RV_FEHERR
+     - Uncertainty in RV_FEH
+
+   * - RV_CCPFWHM
+     - FWHM of the cross-correlation peak of the spectrum and best-fit Cannon model (km/s)
+
+   * - RV_AUTOFWHM
+     - FWHM of the cross-correlation peak of the spectrum with itself (km/s)
+
+   * - N_COMPONENTS
+     - Number of components from the Gaussian decomposition
+       of the cross-correlation function.  If N_COMPONENTS=0, then
+       this means that the Gaussian decomposition failed for that
+       visit or star.
+
+   * - MEANFIB
+     - Mean fiberID across the visits
+
+   * - SIGFIB
+     - Standard deviation of the fiberID across the visits.
+       Note that if SIGFIB=0, then RV uncertainty is
+       significantly better than normal.
