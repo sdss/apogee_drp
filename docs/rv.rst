@@ -19,20 +19,30 @@ RV Columns and Flags:
  2) RV check: After Doppler has been run on all of the visits that passed the initial QA cut, then an additional selection is made for visits that do not have RV_REJECT set.  These visits are used to determine the mean RV, RV scatter, and make the combined spectrum.  These are the visits that have GOODVISIT=True set and are counted in NGOODRVS at the STAR level.
 
 Relevant flags in STARFLAG:
--RV_REJECT               Rejected visit because cross-correlation RV differs significantly from least squares RV
-                            50 km/s (rv_teff>=6000); 20 km/s (rv_teff<6000 and rv_logg>3.8); 10 km/s (rv_teff<6000 and rv_logg<=3.8)
--RV_SUSPECT              Suspect visit (but used!) because cross-correlation RV differs slightly from least squares RV (>0 km/s)
--MULTIPLE_SUSPECT        Suspect multiple components from Gaussian decomposition of cross-correlation (n_components>1)
--RV_FAIL                 RV failure. No good visits or RVs for this star.
++------------+-----------------+
+| RV_REJECT |               Rejected visit because cross-correlation RV differs significantly from least squares RV
+                            50 km/s (rv_teff>=6000); 20 km/s (rv_teff<6000 and rv_logg>3.8); 10 km/s (rv_teff<6000 and rv_logg<=3.8) |
++------------+-----------------+
+| RV_SUSPECT |              Suspect visit (but used!) because cross-correlation RV differs slightly from least squares RV (>0 km/s) |
++------------+-----------------+
+| MULTIPLE_SUSPECT |        Suspect multiple components from Gaussian decomposition of cross-correlation (n_components>1) |
++------------+-----------------+
+| RV_FAIL |                 RV failure. No good visits or RVs for this star |
++------------+-----------------+
 
-DR17 also had
--SUSPECT_ROTATION        CCFWHM > 2*AUTOFWHM
--SUSPECT_BROAD_LINES     Cross-correlation peak with template significantly broader than autocorrelation of template: WARN (AUTOFWHM > 300)
+DR17 also had:
++------------+-----------------+
+| SUSPECT_ROTATION |        CCFWHM > 2*AUTOFWHM |
++------------+-----------------+
+| SUSPECT_BROAD_LINES |     Cross-correlation peak with template significantly broader than autocorrelation of template: WARN (AUTOFWHM > 300) |
++------------+-----------------+
 
-Before DR17 we also had (when we used synthetic and combined templates)
--SUSPECT_RV_COMBINATION  RVs from synthetic template differ significantly (~2 km/s) from those from combined template: WARN
--BAD_RV_COMBINATION      RVs from synthetic template differ very significatly (~10 km/s) from those from combined template: BAD
-
+Before DR17 we also had (when we used synthetic and combined templates):
++------------+-----------------+
+| SUSPECT_RV_COMBINATION  RVs from synthetic template differ significantly (~2 km/s) from those from combined template: WARN
++------------+-----------------+
+| BAD_RV_COMBINATION      RVs from synthetic template differ very significatly (~10 km/s) from those from combined template: BAD
++------------+-----------------+
 
 
 
