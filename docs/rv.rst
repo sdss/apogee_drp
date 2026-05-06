@@ -22,6 +22,7 @@ Visit spectra must pass through QA checks to be used in the final spectral combi
 
 
 Relevant flags in STARFLAG:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 30 70
@@ -87,6 +88,7 @@ Before DR17 we also had (when we used synthetic and combined templates):
 
 
 Relevant Visit-level columns:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 30 70
@@ -96,7 +98,7 @@ Relevant Visit-level columns:
      - Description
 
    * - STARFLAG
-     - FLAGS for this visit spectrum
+     - Quality flags for this visit spectrum
        
    * - STARVER
      - Version of the Doppler processing for this star.  Generally,
@@ -105,7 +107,7 @@ Relevant Visit-level columns:
    * - GOODVISIT
      - Boolean flag indicating that the visit passed all the
        QA cuts and was used in determining the mean velocity
-       and used in the combined spectrum
+       and the combined spectrum
        
    * - VREL
      - Doppler shift (km/s)
@@ -135,7 +137,7 @@ Relevant Visit-level columns:
      - Cross-correlation doppler shift (km/s)
 
    * - XCORR_VRELERR
-     - Uncertainty in XCOR_VREL (km/s)
+     - Uncertainty in XCORR_VREL (km/s)
 
    * - XCORR_VRAD
      - Barycentric radial velocity from cross-correlation (km/s)
@@ -143,14 +145,15 @@ Relevant Visit-level columns:
    * - N_COMPONENTS
      - Number of components from the Gaussian decomposition
        of the cross-correlation function.  If N_COMPONENTS=0, then
-       this means that the Gaussian decomposition failed for that
-       visit or star.
+       this means that the Gaussian decomposition failed for the
+       visit
 
    * - RV_COMPONENTS
      - Number of Gaussian components for each of the 3 detectors
 
 
 Relevant Star-level columns:
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. list-table::
    :widths: 30 70
