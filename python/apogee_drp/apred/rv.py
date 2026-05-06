@@ -232,7 +232,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             starvisits[col] = 0
         else:
             starvisits[col] = np.nan
-    for col in ['xcorr_vrel','xcorr_vrelerr','xcorr_vrad','bc']:
+    for col in ['xcorr_vrel','xcorr_vrelerr','xcorr_vrad','bc','rv_ccpfwhm','rv_autofwhm']:
         starvisits[col] = np.nan
 
     # Add columns for RV components
@@ -282,6 +282,12 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         starvisits['xcorr_vrelerr'][vind] = v['xcorr_vrelerr']
         starvisits['xcorr_vrad'][vind] = v['xcorr_vhelio']
         starvisits['bc'][vind] = v['bc']
+        starvisits['rv_ccpfwhm'][vind] = v['ccpfwhm']
+        starvisits['rv_autofwhm'][vind] = v['autofwhm']
+        if starvisits['rv_ccpfwhm'][vind] > 2.0*starvisits['rv_autofwhm'][vind]:
+            starvisits['starflag'][vind] |= starmask.getval('SUSPECT_ROTATION')
+        if starvisits['rv_autofwhm'][vind] > 300:
+            starvisits['starflag'][vind] |= starmask.getval('SUSPECT_BROAD_LINES')
         starvisits['chisq'][vind] = v['chisq']
         starvisits['rv_teff'][vind] = v['teff']
         starvisits['rv_tefferr'][vind] = v['tefferr']
@@ -311,7 +317,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
         elif (np.abs(starvisits['vrad'][vind]-starvisits['xcorr_vrad'][vind]) > 0) :
             starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
-
+            
     # Set STARFLAGS for the visits (successful and failed ones)
     for i in range(len(starvisits)):
         starvisits['starflags'][i] = starmask.getname(starvisits['starflag'][i])
@@ -1068,6 +1074,16 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             out = doppler.rv.jointfit([spec],verbose=False,plot=False,tweak=False,maxvel=[-50,50],logger=logger)
             apstar.cont = out[3][0].flux
             apstar.template = out[2][0].flux
+            apstar.header['RV_CHI2'] = (out[1]['chisq'][0],'chisq from Doppler RV fit')
+            apstar.header['CCFWHM'] = (out[1]['ccpfwhm'][0],'FWHM of RV CCF of star with template (km/s)')
+            apstar.header['AUTOFWHM'] = (out[1]['autofwhm'][0],'FWHM of RV CCF of template with template (km/s)')
+            rvtab = Table(out[1])
+            gdccf = np.where(np.isfinite(rvtab['x_ccf'][0,:]))[0]
+            rvtab['x_ccf'] = rvtab['x_ccf'][:,gdccf]
+            rvtab['ccf'] = rvtab['ccf'][:,gdccf]
+            rvtab['ccferr'] = rvtab['ccferr'][:,gdccf]
+            rvtab['autoccf'] = rvtab['autoccf'][:,gdccf]
+            apstar.comb_rvtab = rvtab
         except ValueError as err:
             logger.error('Exception raised in visitcomb RV for: ', apstar.header['FIELD'],apstar.header['OBJID'])
             logger.error("ValueError: {0}".format(err))
@@ -1115,7 +1131,20 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         for i in range(3) : ax[i].set_xlim(15100,17000)
         ax[0].set_xlabel('Wavelength')
         fig.savefig(outdir+'/plots/'+outbase+'.png')
-
+        plt.close()
+       
+        fig,ax=plots.multi(1,1) 
+        try:
+            ax.plot(rvtab['x_ccf'][0],rvtab['ccf'][0])
+            ax.plot(rvtab['x_ccf'][0],rvtab['ccf'][0]/rvtab['ccf'][0].max())
+            n=len(rvtab['x_ccf'][0])
+            ax.plot(rvtab['x_ccf'][0],rvtab['autoccf'][0])
+            ax.text(0.1,0.9,'ccpfwhm: {:8.2f}   autofwhm: {:8.2f}'.format(rvtab['ccpfwhm'][0],
+                                                                          rvtab['autofwhm'][0]),transform=ax.transAxes)
+        except: pass
+        fig.savefig(outdir+'/plots/'+apstar.header['OBJID']+'_autoccf.png')
+        plt.close()
+        
     # Plot
     if plot: 
         ax[0].plot(norm.apStarWave(),apstar.flux,color='k')
@@ -1168,8 +1197,8 @@ def dbingest(startab,starvisits):
         # Need to update starflag/starflags in visit table
         delcols = ['starver','vtype','vrel','vrelerr','vrad','bc','chisq','rv_teff',
                    'rv_tefferr','rv_logg','rv_loggerr','rv_feh','rv_feherr',
-                   'xcorr_vrel','xcorr_vrelerr','xcorr_vrad','n_components',
-                   'rv_components','rvtab','goodvisit','star_pk']
+                   'xcorr_vrel','xcorr_vrelerr','xcorr_vrad','rv_ccpfwhm','rv_autofwhm',
+                   'n_components','rv_components','rvtab','goodvisit','star_pk']
         visits = starvisits.copy()
         for c in delcols:
             if c in visits.dtype.names:

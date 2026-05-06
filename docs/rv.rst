@@ -163,17 +163,17 @@ Relevant Star-level columns:
      - Description
 
    * - STARFLAG
-     - Quality flags OR-combined across the visits
+     - Quality flags OR-combined across visits
 
    * - ANDFLAG
-     - Quality flags AND-combined across the visits
+     - Quality flags AND-combined across visits
 
    * - STARVER
-     - Version of the Doppler processing for this star.  Generally,
+     - Version of the Doppler processing for this star. Generally,
        the MJD of the last visit used with Doppler.
        
    * - NVISITS
-     - Number of total visits for this star (no QA cuts)
+     - Total number of visits for this star (no QA cuts)
 
    * - NGOODVISITS
      - Number of visits passing the initial QA cuts (no BAD STARFLAG flags and S/N>2)
@@ -186,16 +186,16 @@ Relevant Star-level columns:
      - Barycentric radial velocity (km/s)
        
    * - VSCATTER
-     - Barycentric radial velocity (km/s)
+     - Standard deviation of visit-level VRAD values (km/s)
 
    * - VERR
-     - Uncertainty in VRAD (km/s).
+     - Uncertainty in VRAD. Standard deviation of the mean, VSCATTER/sqrt(NGOODRVS) (km/s).
        
    * - VMEDERR
      - Median uncertainty of the visit-level RVs (km/s).
        
    * - CHISQ
-     - Chi-squared of the best-fit Cannon model
+     - Chi-squared of the best-fit Cannon model to all visits
        
    * - RV_TEFF
      - Teff of the best-fit Cannon model (K)
@@ -219,7 +219,7 @@ Relevant Star-level columns:
      - FWHM of the cross-correlation peak of the spectrum and best-fit Cannon model (km/s)
 
    * - RV_AUTOFWHM
-     - FWHM of the cross-correlation peak of the spectrum with itself (km/s)
+     - FWHM of the cross-correlation peak of best-fit Cannon model with itself (km/s)
 
    * - N_COMPONENTS
      - Number of components from the Gaussian decomposition
