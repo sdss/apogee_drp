@@ -1179,8 +1179,8 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
              'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
              'starflags','dateobs','jd','exptime']
     rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
-              'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'n_components',
-              'rv_components', 'goodvisit']
+              'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'rv_ccpfwhm', 'rv_autofwhm',
+              'n_components', 'rv_components', 'goodvisit']
     
 
     # Straight join query of visit and rv_visit
