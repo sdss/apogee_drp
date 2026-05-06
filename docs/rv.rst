@@ -13,8 +13,10 @@ latest visit MJD (Modified Julian Date).  This is why there are the "visit_lates
 (see `Data Access <access.html>`_).  They have the summary information at the visit and star level using the latest run/version
 of Doppler.  The RV processing is parallelized over each object.
 
-RV Columns and Flags:
- - Visit spectra must pass through QA checks to be used in the final spectral combination:
+RV Columns and Flags
+~~~~~~~~~~~~~~~~~~~~
+
+Visit spectra must pass through QA checks to be used in the final spectral combination:
  1) Initial QA check: STARFLAG should not have any of the BAD flags set (BAD_PIXELS,VERY_BRIGHT_NEIGHBOR,BAD_RV_COMBINATION,RV_FAIL) and must have S/N>2. These are the visits that Doppler is run on and the ones that are counted in NGOODVISITS at the STAR level.
  2) RV check: After Doppler has been run on all of the visits that passed the initial QA cut, then an additional selection is made for visits that do not have RV_REJECT set.  These visits are used to determine the mean RV, RV scatter, and make the combined spectrum.  These are the visits that have GOODVISIT=True set and are counted in NGOODRVS at the STAR level.
 
@@ -82,3 +84,67 @@ Before DR17 we also had (when we used synthetic and combined templates):
    * - BAD_RV_COMBINATION
      - RVs from synthetic template differ very significantly
        (~10 km/s) from those from combined template: BAD
+
+
+Relevant Visit-level columns:
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - Column
+     - Description
+
+   * - STARFLAG
+     - FLAGS for this visit spectrum
+       
+   * - STARVER
+     - Version of the Doppler processing for this star.  Generally,
+       the MJD of the last visit used with Doppler.
+       
+   * - GOODVISIT
+     - Boolean flag indicating that the visit passed all the
+       QA cuts and was used in determining the mean velocity
+       and used in the combined spectrum
+       
+   * - VREL
+     - Doppler shift (km/s)
+       
+   * - VRELERR
+     - Uncertainty in VREL (km/s).
+       
+   * - VRAD
+     - Barycentric radial velocity (km/s)
+       
+   * - BC
+     - Barycentric correction for VREL (km/s)
+       
+   * - CHISQ
+     - Chi-squared of the best-fit Cannon model
+       
+   * - RV_TEFF
+     - Teff of the best-fit Cannon model
+       
+   * - RV_LOGG
+     - log(g) of the best-fit Cannon model
+       
+   * - RV_FEH
+     - Metallicity of the best-fit Cannon model
+       
+   * - XCORR_VREL
+     - Cross-correlation doppler shift (km/s)
+
+   * - XCORR_VRELERR
+     - Uncertainty in XCOR_VREL (km/s)
+
+   * - XCORR_VRAD
+     - Barycentric radial velocity from cross-correlation (km/s)
+       
+   * - N_COMPONENTS
+     - Number of components from the Gaussian decomposition
+       of the cross-correlation function.  If N_COMPONENTS=0, then
+       this means that the Gaussian decomposition failed for that
+       visit or star.
+
+   * - RV_COMPONENTS
+     - Number of Gaussian components for each of the 3 detectors
