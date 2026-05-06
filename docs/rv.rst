@@ -46,3 +46,66 @@ Before DR17 we also had (when we used synthetic and combined templates):
 
 
 
+Relevant flags in STARFLAG:
+
+.. list-table::
+   :widths: 30 70
+   :header-rows: 1
+
+   * - Flag
+     - Description
+
+   * - RV_REJECT
+     - Rejected visit because cross-correlation RV differs
+       significantly from least-squares RV:
+
+       * 50 km/s (rv_teff >= 6000)
+       * 20 km/s (rv_teff < 6000 and rv_logg > 3.8)
+       * 10 km/s (rv_teff < 6000 and rv_logg <= 3.8)
+
+   * - RV_SUSPECT
+     - Suspect visit (but used) because cross-correlation RV
+       differs slightly from least-squares RV (> 0 km/s)
+
+   * - MULTIPLE_SUSPECT
+     - Suspect multiple components from Gaussian decomposition
+       of cross-correlation (n_components > 1)
+
+   * - RV_FAIL
+     - RV failure. No good visits or RVs for this star
+
+
+DR17 also had:
+
+.. list-table::
+   :widths: 35 65
+   :header-rows: 1
+
+   * - Flag
+     - Description
+
+   * - SUSPECT_ROTATION
+     - CCFWHM > 2 * AUTOFWHM
+
+   * - SUSPECT_BROAD_LINES
+     - Cross-correlation peak with template significantly broader
+       than autocorrelation of template:
+       WARN (AUTOFWHM > 300)
+
+
+Before DR17 we also had (when we used synthetic and combined templates):
+
+.. list-table::
+   :widths: 40 60
+   :header-rows: 1
+
+   * - Flag
+     - Description
+
+   * - SUSPECT_RV_COMBINATION
+     - RVs from synthetic template differ significantly
+       (~2 km/s) from those from combined template: WARN
+
+   * - BAD_RV_COMBINATION
+     - RVs from synthetic template differ very significantly
+       (~10 km/s) from those from combined template: BAD
