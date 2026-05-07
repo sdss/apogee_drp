@@ -4022,7 +4022,7 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
         mjdmin = np.minimum(np.min(np.array(mjds).astype(int)),59146)
         qa.makeMasterQApages(mjdmin=mjdmin, mjdmax=9999999, apred=apred,
                              mjdfilebase='mjd.html',fieldfilebase='fields.html',
-                             domjd=True, dofields=True)
+                             domjd=True, dofields=False)
     except:
         traceback.print_exc()
 
