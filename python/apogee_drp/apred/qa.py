@@ -40,6 +40,7 @@ import datetime
 import logging
 import tempfile
 import shutil
+import fnmatch
 
 logging.getLogger('matplotlib.font_manager').disabled = True
 
@@ -3697,10 +3698,31 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     #plt.ion()
     print("----> makeNightQA: Done with MJD " + mjd + "\n")
 
+
+def find_qa_log_htmls(datadir):
+    """ Do a fast search for log.html file s"""
+    logs = []
+    for entry in os.scandir(datadir):
+
+        if not entry.is_dir():
+            continue
+
+        target = entry.name + '.log.html'
+
+        for subentry in os.scandir(entry.path):
+            if subentry.name == target:
+                logs.append(subentry.path)
+                break
+
+    logs = np.array(logs)
+    
+    return logs
+
+
 ###################################################################################################
 '''  MAKEMASTERQAPAGES: makes mjd.html and fields.html '''
 def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None, fieldfilebase=None,
-                      domjd=True, dofields=False):
+                      domjd=True, dofields=False,dotargetsummary=False):
     """
     Parameters
     ----------
@@ -3718,6 +3740,9 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
        Make html pages for each MJD.
     dofields : boolean, optional
        Make the fields.html page. Default is False.
+    dotargetsummary : boolean, optional
+       Get the number of skies, tellurics and science targets.  This takes a long time.
+         Default is now False.
 
     Returns
     -------
@@ -3748,21 +3773,22 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         # Find all .log.html files, get all MJDs with data
         print("----> makeMasterQApages: Finding log files. Please wait.")
 
-        #logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
+        ##logsN = np.array(glob.glob(datadirN+'/*/*.log.html'))
         mdirsN = glob.glob(datadirN+'/*')
         logfilesN = [d+'/'+os.path.basename(d)+'.log.html' for d in mdirsN]
-        logsN = np.array([f for f in logfilesN if os.path.exists(f)])
+        #logsN = np.array([f for f in logfilesN if os.path.exists(f)])
+        logsN = find_qa_log_htmls(datadirN)
         nlogsN = len(logsN)
         hemN = np.full(nlogsN, 'N').astype(str)
         print("----> makeMasterQApages: Found "+str(nlogsN)+" APOGEE-N log files.")
         mjdN = np.empty(nlogsN,int)
         for i in range(nlogsN): mjdN[i] = int(os.path.basename(logsN[i]).split('.')[0])
 
-
-        #logsS = np.array(glob.glob(datadirS+'/*/*.log.html'))
+        ##logsS = np.array(glob.glob(datadirS+'/*/*.log.html'))
         mdirsS = glob.glob(datadirS+'/*')
         logfilesS = [d+'/'+os.path.basename(d)+'.log.html' for d in mdirsS]
-        logsS = np.array([f for f in logfilesS if os.path.exists(f)])
+        #logsS = np.array([f for f in logfilesS if os.path.exists(f)])
+        logsS = find_qa_log_htmls(datadirS)
         nlogsS = len(logsS)
         hemS = np.full(nlogsS, 'S').astype(str)
         mjdS = np.empty(nlogsS,int)
@@ -3789,14 +3815,28 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         hem = hem[order[::-1]]
         mjd = mjd[order[::-1]]
 
-
+        # Make the table to organize information
+        dt = [('mjd',int),('hem',str,1),('telescope',str,10),('logfile',str,300),
+              ('mtid',str,30),('nplates',int),('pindex',int),('nobj',int)]
+        mjdtab = np.zeros(len(mjd),dtype=np.dtype(dt))
+        mjdtab['mjd'] = mjd
+        mjdtab['hem'] = hem
+        mjdtab['logfile'] = logs
+        mjdtab['telescope'] = ['apo25m' if h=='N' else 'lco25m' for h in mjdtab['hem']]
+        mjdtab['mtid'] = np.char.array(mjdtab['mjd']).astype(str)+'-'+np.char.array(mjdtab['telescope'])
+        mjdtab['nplates'] = -1
+        
         # Limit to MJDs within mjdmin-mjdmax range
-        gd = np.where((mjd >= mjdmin) & (mjd <= mjdmax))
-        logs = logs[gd]
-        hem = hem[gd]
-        mjd = mjd[gd]
-        nmjd = len(mjd)
-
+        #gd = np.where((mjd >= mjdmin) & (mjd <= mjdmax))
+        #logs = logs[gd]
+        #hem = hem[gd]
+        #mjd = mjd[gd]
+        #nmjd = len(mjd)
+        gd, = np.where((mjdtab['mjd'] >= mjdmin) & (mjdtab['mjd'] <= mjdmax))
+        mjdtab = mjdtab[gd]
+        nmjd = len(gd)
+        
+        
         # Open the mjd file html
         mjdfile = qadir + mjdfilebase
         print("----> makeMasterQApages: Creating "+mjdfilebase)
@@ -3815,7 +3855,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
         html.write('<H1>APOGEE Observation Summary by MJD ('+apred+')</H1>\n')
         html.write('<P><I>last updated ' + current_date + ', ' + current_time + '</I></P>')
         html.write('<HR>\n')
-        html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
+        #html.write('<p><A HREF=fields.html>Fields view</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-n-monitor.html>APOGEE-N Instrument Monitor</A></p>\n')
         html.write('<p><A HREF=../monitor/apogee-s-monitor.html>APOGEE-S Instrument Monitor</A></p>\n')
         html.write('<p> <b>Summary files:</b> <a href="'+visSumPathN+'">allVisit</a> / <a href="'+starSumPathN+'">allStar</a> (<b>APO</b>), \n')
@@ -3831,19 +3871,50 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
 
         # Get all yaml and apQA files
         print('Getting all yaml and apQA files')
-        allplatePlanFiles = np.char.array(glob.glob(apodir+apred+'/visit/??o25m/*/*/*/a?Plan-*.yaml'))
-        allplateQAFiles = np.char.array(glob.glob(apodir+apred+'/visit/??o25m/*/*/*/html/a?QA-*.html'))
+        db = apogeedb.DBSession()
+        planout = db.query(table='plan',where="apred_vers='"+apred+"' and platetype='normal'")
+        allplatePlanFiles = planout['planfile']
 
+        # Make a visit table
+        vdt = [('telescope',str,6),('hem',str,1),('field',str,50),('plate',str,50),('mjd',int),
+               ('mtid',str,30),('planfile',str,300),('qafile',str,300),('qaexists',bool)]
+        platetab = np.zeros(len(allplatePlanFiles),dtype=np.dtype(vdt))
+        platetab['planfile'] = allplatePlanFiles
+        platetab['qaexists'] = False
+        for i in range(len(platetab)):
+            pfile = platetab['planfile'][i]
+            pdir = os.path.dirname(pfile)
+            pbase = os.path.basename(pfile)
+            tel,field,plate,mjd = pdir.split('/')[-4:]
+            platetab['field'][i] = field
+            platetab['plate'][i] = plate
+            platetab['mjd'][i] = mjd
+            platetab['telescope'][i] = tel
+            platetab['hem'][i] = ('S' if tel=='lco25m' else 'N')
+            platetab['qafile'][i] = pdir+'/html/'+pbase.replace('Plan','QA').replace('.yaml','.html')
+            platetab['mtid'][i] = str(platetab['mjd'][i])+'-'+platetab['telescope'][i]
+            
+        # Plate/Visit Index
+        pindex = dln.create_index(platetab['mtid'])
+            
+        # Add it to the mjdtab table
+        _,ind1,ind2 = np.intersect1d(mjdtab['mtid'],pindex['value'],return_indices=True)
+        mjdtab['nplates'] = 0
+        mjdtab['nplates'][ind1] = pindex['num'][ind2]
+        mjdtab['pindex'] = -1
+        mjdtab['pindex'][ind1] = ind2
+        
         print(nmjd,' nights')
         fivepercent = int(np.round(nmjd/20))
+        t0 = time.time()
         for i in range(nmjd):
             # print % status, in 5% increments
-            if i % fivepercent == 0: print('{:3d}% done'.format((i//fivepercent)*5))
+            if i % fivepercent == 0: print('{:3d}% done, {:.0f} sec'.format((i//fivepercent)*5,time.time()-t0))
             fps = False
-            if mjd[i] > 59556: fps = True
+            if mjdtab['mjd'][i] > 59556: fps = True
             
-            cmjd = str(int(round(mjd[i])))
-            tt = Time(mjd[i], format='mjd')
+            cmjd = str(int(round(mjdtab['mjd'][i])))
+            tt = Time(mjdtab['mjd'][i], format='mjd')
             date = tt.fits[0:10]
             # Establish telescope and instrument and setup apLoad depending on telescope.
             telescope = 'apo25m'
@@ -3852,7 +3923,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             datadir = datadirN
             datadir1 = 'data'
             color = 'FFFFF8A'
-            if hem[i] == 'S': 
+            if mjdtab['hem'][i] == 'S': 
                 telescope = 'lco25m'
                 instrument = 'apogee-s'
                 prefix = 'as'
@@ -3865,7 +3936,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             dateobs = Time(int(cmjd) - 1, format='mjd').fits.split('T')[0]
             if telescope == 'apo25m': reports = glob.glob(reportsDir + dateobs + '*.log')
             if telescope == 'lco25m': reports = glob.glob(reportsDir + dateobs + '*.log.html')
-
+            #reports = ['']
+            
             # Column 1: Date
             html.write('<TR bgcolor=' + color + ' align="center"><TD>' + date + '\n')
 
@@ -3873,7 +3945,8 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             if len(reports) != 0:
                 reports.sort()
                 reportfile = reports[0]
-                reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/mos/' + os.path.basename(reportfile)
+                #reportLink = 'https://data.sdss.org/sas/sdss5/data/staging/' + telescope[0:3] + '/reports/mos/' + os.path.basename(reportfile)
+                reportLink = 'https://data.sdss.org/sas/sdsswork/data/staging/' + telescope[0:3] + '/reports/mos/' + os.path.basename(reportfile)
                 html.write('<TD align="center"><A HREF="' + reportLink + '">' + cmjd + ' obs</A>\n')
                 #https://data.sdss.org/sas/sdss5/data/staging/apo/reports/2020-10-16.12%3A04%3A20.log
             else:
@@ -3883,36 +3956,36 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             logFileDir = '../../' + os.path.basename(datadir) + '/' + cmjd + '/'
             logFilePath = logFileDir + cmjd + '.log.html'
 
-            logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
+            #logFile = 'https://data.sdss.org/sas/sdss5/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
+            logFile = 'https://data.sdss.org/sas/sdsswork/data/apogee/' + telescope[0:3] + '/' + cmjd + '/' + cmjd + '.log.html'
             logFileDir = os.path.dirname(logFile)
 
             # Check to see if there were object exposures
             nobj = 0
-            tmp = open(datadir+'/'+cmjd+'/'+cmjd + '.log.html', 'r')
-            tmp1 = tmp.readlines()
-            nobj = len([s for s in tmp1 if 'OBJECT' in s])
-
+            with open(datadir+'/'+cmjd+'/'+cmjd + '.log.html', 'r') as tmp:
+                tmp1 = tmp.readlines()
+                nobj = len([s for s in tmp1 if 'OBJECT' in s])
+            mjdtab['nobj'][i] = nobj
+                
             html.write('<TD align="center"><A HREF="' + logFile + '">' + cmjd + ' exp</A>\n')
             html.write('<TD align="center"><A HREF="' + logFileDir + '">' + cmjd + ' raw</A>\n')
             
             # Column 5: Night QA
-            ind, = np.where((allplatePlanFiles.find(cmjd)>-1) & (allplatePlanFiles.find(telescope)>-1))
-            if len(ind)>0:
-                platePlanFiles = allplatePlanFiles[ind]
+            if mjdtab['nplates'][i]>0:
+                pi = mjdtab['pindex'][i]
+                pind = pindex['index'][pindex['lo'][pi]:pindex['hi'][pi]+1]
+                ptab = platetab[pind]
+                platePlanFiles = ptab['planfile']
+                plateQAFiles = ptab['qafile']
+                nplatesall = mjdtab['nplates'][i]
+                nplates = mjdtab['nplates'][i]
+                ptab['qaexists'] = [os.path.exists(f) for f in ptab['qafile']]
             else:
+                ptab = []
                 platePlanFiles = []
-            #platePlanPaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/'+prefix+'Plan-*'+cmjd+'.yaml'
-            #platePlanFiles = np.array(glob.glob(platePlanPaths))
-            nplatesall = len(platePlanFiles)
-            
-            ind, = np.where((allplateQAFiles.find(cmjd)>-1) & (allplateQAFiles.find(telescope)>-1))
-            if len(ind)>0:
-                plateQAFiles = allplateQAFiles[ind]
-            else:
                 plateQAFiles = []
-            #plateQApaths = apodir+apred+'/visit/'+telescope+'/*/*/'+cmjd+'/html/'+prefix+'QA-*'+cmjd+'.html'
-            #plateQAfiles = np.array(glob.glob(plateQApaths))
-            nplates = len(plateQAFiles)
+                nplatesall = 0
+                nplates = 0                
             if nplates >= 1:
                 html.write('<TD align="center"><A HREF="../exposures/'+instrument+'/'+cmjd+'/html/'+cmjd+'.html">'+cmjd+' QA</a>\n')
             else:
@@ -3920,15 +3993,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
 
             # Column 6: Visit QA
             html.write('<TD align="left">')
-            if nobj > 0 and nplatesall == 0:
+            if mjdtab['nobj'][i] > 0 and nplatesall == 0:
                 html.write('No Reduction files\n')
             else:
                 for j in range(nplatesall):
-                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
-                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
                     # Check for failed plates
-                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
-                    if os.path.exists(plateQAfile):
+                    field = ptab['field'][j]
+                    plate = ptab['plate'][j]
+                    plateQAfile = ptab['qafile'][j]
+                    if ptab['qaexists'][j]:
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
                             html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial+'">'+plate+': '+field+'</A><BR>\n')
@@ -3942,15 +4015,15 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
 
             # Column 7: Visit spectra plots
             html.write('<TD align="left">')
-            if nobj > 0 and nplatesall == 0:
+            if mjdtab['nobj'][i] > 0 and nplatesall == 0:
                 html.write('No Reduction files\n')
             else:
                 for j in range(nplatesall):
-                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
-                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
                     # Check for failed plates
-                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
-                    if os.path.exists(plateQAfile):
+                    field = ptab['field'][j]
+                    plate = ptab['plate'][j]
+                    plateQAfile = ptab['qafile'][j]
+                    if ptab['qaexists'][j]:
                         plateQApathPartial = plateQAfile.split(apred+'/')[1]
                         if j < nplatesall:
                             html.write('('+str(j+1).rjust(2)+') <A HREF="../'+plateQApathPartial.replace(prefix+'QA',prefix+'Plate')+'">'+plate+': '+field+'</A><BR>\n')
@@ -3969,11 +4042,11 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
                 html.write('No Reduction files\n')
             else:
                 for j in range(nplatesall):
-                    field = platePlanFiles[j].split(telescope+'/')[1].split('/')[0]
-                    plate = platePlanFiles[j].split(telescope+'/')[1].split('/')[1]
                     # Check for failed plates
-                    plateQAfile = apodir+apred+'/visit/'+telescope+'/'+field+'/'+plate+'/'+cmjd+'/html/'+prefix+'QA-'+plate+'-'+cmjd+'.html'
-                    if os.path.exists(plateQAfile):
+                    field = ptab['field'][j]
+                    plate = ptab['plate'][j]
+                    plateQAfile = ptab['qafile'][j]
+                    if ptab['qaexists'][j] and dotargetsummary:
                         note = ''
                         if fps:
                             plsumfile = load.filename('PlateSum', plate=int(plate), mjd=cmjd, fps=fps)
@@ -4032,6 +4105,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
             if meanmoonphase > 0.9: bgcolor = '#FFFFFF'
             mphase = str(int(round(meanmoonphase*100)))+'%'
             html.write('<TD bgcolor="'+bgcolor+'" align="right" style = "color:'+txtcolor+';">'+mphase)
+            
         html.write('</table>\n')
 
         # Summary calibration data
@@ -4049,6 +4123,7 @@ def makeMasterQApages(mjdmin=None, mjdmax=None, apred='daily', mjdfilebase=None,
 
         html.write('</body></html>\n')
         html.close()
+        
         # Now copy to the final file
         shutil.copyfile(tfile,mjdfile)
         # Delete temporary file
