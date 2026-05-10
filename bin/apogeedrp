@@ -28,6 +28,7 @@ if __name__ == "__main__":
     parser.add_argument('--clobber', action='store_true', help='Overwrite any existing files')
     parser.add_argument('--debug', action='store_true', help='For testing purposes')
     parser.add_argument('--inputlist', type=str, nargs=1, help='Filename containing list of inputs.')
+    parser.add_argument('--sparsegrid', type=int, nargs="?", const=0, default=None, help='Run sparse set of MJDs but expand arcs for dailywave')
     args = parser.parse_args()
 
     t0 = time.time()
@@ -70,7 +71,11 @@ if __name__ == "__main__":
         inputlist = args.inputlist[0]
     else:
         inputlist = None
-
+    if isinstance(args.sparsegrid,list):
+        sparsegrid = args.sparsegrid[0]
+    else:
+        sparsegrid = args.sparsegrid
+        
     # Set unix environment variables for kingspeak
     #  we use notchpea by default
     if alloc=='sdss-kp':
@@ -88,4 +93,5 @@ if __name__ == "__main__":
     apogeedrp.run(observatory,apred,mjd=mjd,steps=steps,caltypes=caltypes,
                   rvlimited=args.rvlimited,clobber=args.clobber,alloc=alloc,
                   nodes=nodes,walltime=walltime,fresh=args.fresh,
-                  linkvers=linkvers,debug=args.debug,inputlist=inputlist)
+                  linkvers=linkvers,debug=args.debug,inputlist=inputlist,
+                  sparsegrid=sparsegrid)

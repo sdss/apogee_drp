@@ -235,6 +235,7 @@ nfibers = sz[2]
 exptype = sxpar(frame.(0).header,'EXPTYPE',count=nexptype)
 if nexptype eq 0 then exptype = 'UNKNOWN'
 
+
 ; Get the reference spectrum for each chip
 CASE exptype of
 
@@ -347,7 +348,6 @@ CASE exptype of
   end ; flat, quartz, dome
 
 ENDCASE
-
 
 ; Calculate the relative flux calibration
 ;----------------------------------------

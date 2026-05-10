@@ -788,7 +788,7 @@ FOR f=0,nfiles-1 do begin
       fitsfile = dir+'/'+strmid(base,0,len-4)+'.fits'
       fitsdir=0
     endelse
-  
+
     ; Need to decompress
     if file_test(fitsfile) eq 0 then begin
 
