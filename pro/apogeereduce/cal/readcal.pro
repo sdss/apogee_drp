@@ -89,7 +89,8 @@ for i=0,n_elements(flats)-1 do begin
 endfor
 
 ;; Extract the sparsepack PSF information
-sparse = where(strpos(line,'sparse') eq 0)
+;;  add space at the end to distinguish it from "sparsegrid"
+sparse = where(strpos(line,'sparse ') eq 0)
 for i=0,n_elements(sparse)-1 do begin
   if sparse[i] ge 0 then begin
     fields = strsplit(line(sparse[i]),/extract)

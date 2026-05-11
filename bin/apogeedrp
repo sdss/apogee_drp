@@ -28,7 +28,7 @@ if __name__ == "__main__":
     parser.add_argument('--clobber', action='store_true', help='Overwrite any existing files')
     parser.add_argument('--debug', action='store_true', help='For testing purposes')
     parser.add_argument('--inputlist', type=str, nargs=1, help='Filename containing list of inputs.')
-    parser.add_argument('--sparsegrid', type=int, nargs="?", const=0, default=None, help='Run sparse set of MJDs but expand arcs for dailywave')
+    parser.add_argument('--sparsegrid', type=str, nargs="?", const="0", default=None, help='Run sparse set of MJDs but expand arcs for dailywave')
     args = parser.parse_args()
 
     t0 = time.time()

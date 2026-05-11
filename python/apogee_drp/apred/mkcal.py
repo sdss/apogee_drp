@@ -85,6 +85,10 @@ def readcal(calfile):
     caldict = OrderedDict()
     dtdict = OrderedDict()
 
+    # -- Sparsegrid MJD list ---
+    # 1  59715 60233  59715,60111,60233
+    dtdict['sparsegrid'] = np.dtype([('id',str,30),('mjd1',int),('mjd2',int),('mjds',np.str,1000)])
+    
     # -- Darks --
     #  mjd1, mjd2, name, frames
     #  dark       55600 56860 12910009 12910009-12910037
@@ -222,11 +226,11 @@ def getcal(calfile,mjd,verbose=True):
 
     # Read in the master calibration index
     allcaldict = readcal(calfile)
-
+    
     # Loop over the calibration types and get the ones we need
     caldict = OrderedDict()
     for caltype in allcaldict.keys():
-       if allcaldict[caltype] is not None:
+       if allcaldict[caltype] is not None and caltype != 'sparsegrid':
           val = parsecaldict(allcaldict[caltype],mjd,verbose=verbose)
           if (caltype=='fixfiber') or (caltype=='badfiber'):
              val = getnums(val)  # expand list
