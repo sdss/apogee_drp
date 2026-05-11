@@ -8,8 +8,7 @@
 ;
 ; INPUTS:
 ;  psfid       ID8 number of the exposure to use.
-;  =bpmid      ID8 number of the bpm calibration to use.
-;  =darkid     ID8 number of the dark calibration to use.
+;  =darkid     ID8 number of the dark/bpm calibration to use.
 ;  =flatid     ID8 number of the flat calibration to use.
 ;  =sparseid   ID8 number of the sparse calibration to use.
 ;  =littrowid  ID8 number of the littrow calibration to use.
@@ -31,7 +30,7 @@
 ;  Added doc strings, updates to use data model  D. Nidever, Sep 2020
 ;-
 
-pro mkpsf,psfid,bpmid=bpmid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
+pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
           littrowid=littrowid,yshift=yshift,average=average,clobber=clobber,unlock=unlock
 
   dirs = getdir(apodir,caldir,spectrodir,vers)
@@ -65,7 +64,7 @@ pro mkpsf,psfid,bpmid=bpmid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberi
   
   cmjd = getcmjd(psfid)
   print,'mkpsf approcess...'
-  d = approcess(psfid,bpmid=bpmid,darkid=darkid,flatid=flatid,littrowid=littrowid,/nocr,nfs=1,/doap3dproc,unlock=unlock)
+  d = approcess(psfid,darkid=darkid,flatid=flatid,littrowid=littrowid,/nocr,nfs=1,/doap3dproc,unlock=unlock)
   psffile = apogee_filename('2D',num=psfid[0],chip='c',/dir)+'/'+string(format='(i8.8)',psfid)
   APMKPSF,psffile,psfdir,sparseid=sparseid,fiberid=fiberid,yshift=yshift,average=average,clobber=clobber,unlock=unlock
 
