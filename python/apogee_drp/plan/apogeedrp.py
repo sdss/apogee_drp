@@ -1604,11 +1604,20 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 os.chdir(destdir)
                 # PSFModel
                 if d=='modelpsf':
-                    psfmfiles = glob(srcdir+'/'+prefix+'PSFModel-*.fits')
+                    psfmfiles = glob(srcdir+'/'+prefix+'PSFModel-?-*-*.fits')
                     if len(psfmfiles)>0:
-                        subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSFModel-*.fits .'],shell=True)
+                        subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSFModel-?-*-*.fits .'],shell=True)
                     else:
                         logger.info('No PSFModel files')
+                    # Need to link apEPSF, apPSF and apETrace files as well for PSFModel
+                    #   otherwise the daily cal PSF stage will try to remake them
+                    pnum = np.unique([os.path.basename(f).split('-')[3][:8] for f in psfmfiles])
+                    for num in pnum:
+                        res = subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+num+'.fits .'],shell=True)
+                        res = subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSF-?-'+num+'.fits .'],shell=True)
+                        trcdir = apogee_redux+linkvers+'/cal/'+obs+'/trace'
+                        dtrcdir = apogee_redux+apred+'/cal/'+obs+'/trace'
+                        res = subprocess.run(['ln -s '+trcdir+'/'+prefix+'ETrace-?-'+num+'.fits '+dtrcdir],shell=True)
                 # Sparse
                 elif d=='sparse':
                     sparsefiles = glob(srcdir+'/'+prefix+'Sparse*.fits')
@@ -1623,9 +1632,9 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                         snum = [os.path.basename(s)[9:-5] for s in sfiles]
                         for num in snum:
                             subprocess.run(['ln -s '+srcdir+'/'+prefix+'EPSF-?-'+num+'.fits .'],shell=True)
-                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSF-?-'+num+'.fits .'],shell=True)                            
+                            subprocess.run(['ln -s '+srcdir+'/'+prefix+'PSF-?-'+num+'.fits .'],shell=True)
                             trcdir = apogee_redux+linkvers+'/cal/'+obs+'/trace'
-                            dtrcdir = apogee_redux+apred+'/cal/'+obs+'/trace'                            
+                            dtrcdir = apogee_redux+apred+'/cal/'+obs+'/trace'
                             subprocess.run(['ln -s '+trcdir+'/'+prefix+'ETrace-?-'+num+'.fits '+dtrcdir],shell=True)
                 # Darks and Flats
                 elif d=='dark' or d=='flat':
@@ -2742,7 +2751,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     return chkmaster
     
     
-def runap3d(load,mjds,slurmpars,clobber=False,logger=None,inputlist=None):
+def runap3d(load,mjds,slurmpars,clobber=False,logger=None,inputlist=None,sparsegrid=None):
     """
     Run AP3D on all exposures for a list of MJDs.
 
@@ -2760,6 +2769,9 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None,inputlist=None):
        Logging object.  If not is input, then a default one will be created.
     inputlist : str, optional
        File containing list of inputs to process.
+    sparsegrid : str, optional
+       Running sparse grid of MJDs.  Expand processing of daily cals (psf, flux, arcs)
+        +/-3 days for dailywave.
 
     Returns
     -------
@@ -2800,19 +2812,46 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None,inputlist=None):
             return None
         mjds = np.unique(inlist_mjds)
 
-    # Get exposures
-    expinfo = getexpinfo(load,mjds,logger=logger)
+    # Sparsegrid input
+    if sparsegrid is not None:
+        logger.info('sparsegrid. expanding MJDs +/-3 days for psf/flux/arcs')
+        sparsegridmjds = []
+        for m in mjds:
+            sparsegridmjds.append(np.arange(7)-3+m)
+        sparsegridmjds = np.sort(np.unique(np.concatenate(sparsegridmjds)))
+        logger.info(str(len(sparsegridmjds))+' MJDs in expanded sparsegrid list')
+        allexpinfosparsegrid = getexpinfo(load,sparsegridmjds,logger=logger,verbose=False)
+        allexpinfosparsegrid = info.getdithergroups(allexpinfosparsegrid)   # calculate dither groups
+        # For the expanded MJDS, only keep dome/quartz/arcs/fpi exposures
+        tokeep = []
+        exptypetokeep = ['QUARTZFLAT','DOMEFLAT','ARCLAMP','FPI']
+        for i in range(len(allexpinfosparsegrid)):
+            if allexpinfosparsegrid['mjd'][i] in mjds:
+                tokeep.append(i)
+            elif allexpinfosparsegrid['exptype'][i] in exptypetokeep:
+                tokeep.append(i)
+        if len(tokeep)==0:
+            logger.info('No exposures left to process')
+            return []
+        allexpinfosparsegrid = allexpinfosparsegrid[tokeep]                
+        expinfo = allexpinfosparsegrid.copy()
 
+    # Regular mode
+    else:
+        # Get exposures
+        expinfo = getexpinfo(load,mjds,logger=logger)
+    
     # Process the files
     if len(expinfo)==0:
         logger.info('No exposures to process with AP3D')
-        chk3d = []
+        return []
 
+    # Select exposures in the input list
     if inputlist is not None:
         _,ind1,ind2 = np.intersect1d(inlist_nums,expinfo['num'],return_indices=True)
         if len(ind1)==0:
-            logger.info('No exposures numbers matched')
-            return None
+            logger.info('No exposures number matched to inlist')
+            return []
         expinfo = expinfo[ind2]
     
     # Loop over exposures and see if the outputs exist already
@@ -2876,7 +2915,8 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None,inputlist=None):
     return chk3d
 
 
-def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,inputlist=None):
+def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,
+                 inputlist=None,sparsegrid=None):
     """
     Run daily calibration frames for a list of MJDs.
 
@@ -2897,6 +2937,9 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,inp
        Logging object.  If not is input, then a default one will be created.
     inputlist : str, optional
        File containing list of inputs to process.
+    sparsegrid : str, optional
+       Running sparse grid of MJDs. Process daily cals (psf, flux and arcs) for
+         +/-3 days for dailywave.
 
     Returns
     -------
@@ -2947,21 +2990,49 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,inp
             logger.info('Problem getting MJDs for input list')
             return None
         mjds = np.unique(inlist_mjds)
-        
-    # Get exposures
-    logger.info('Getting exposure information')
-    allexpinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
-    # Calculate dither groups
-    allexpinfo = info.getdithergroups(allexpinfo)
-    expinfo = allexpinfo.copy()
 
+    # Sparsegrid input
+    if sparsegrid is not None:
+        logger.info('sparsegrid. expanding MJDs +/-3 days for psf/flux/arcs')
+        sparsegridmjds = []
+        for m in mjds:
+            sparsegridmjds.append(np.arange(7)-3+m)
+        sparsegridmjds = np.sort(np.unique(np.concatenate(sparsegridmjds)))
+        logger.info(str(len(sparsegridmjds))+' MJDs in expanded sparsegrid list')
+        logger.info('Getting exposure information')
+        allexpinfosparsegrid = getexpinfo(load,sparsegridmjds,logger=logger,verbose=False)
+        allexpinfosparsegrid = info.getdithergroups(allexpinfosparsegrid)   # calculate dither groups
+        # For the expanded MJDS, only keep dome/quartz/arcs/fpi exposures
+        tokeep = []
+        exptypetokeep = ['QUARTZFLAT','DOMEFLAT','ARCLAMP','FPI']
+        for i in range(len(allexpinfosparsegrid)):
+            if allexpinfosparsegrid['mjd'][i] in mjds:
+                tokeep.append(i)
+            elif allexpinfosparsegrid['exptype'][i] in exptypetokeep:
+                tokeep.append(i)
+        if len(tokeep)==0:
+            logger.info('No exposures left to process')
+            return []
+        allexpinfosparsegrid = allexpinfosparsegrid[tokeep]                
+        expinfo = allexpinfosparsegrid.copy()
+        
+    # Regular mode
+    else:
+        # Get exposures
+        logger.info('Getting exposure information')
+        allexpinfo = getexpinfo(load,mjds,logger=logger,verbose=False)
+        # Calculate dither groups
+        allexpinfo = info.getdithergroups(allexpinfo)
+        expinfo = allexpinfo.copy()
+
+    # Only keep exposures from input list
     if inputlist is not None:
         _,ind1,ind2 = np.intersect1d(inlist_nums,expinfo['num'],return_indices=True)
         if len(ind1)==0:
-            logger.info('No exposures numbers matched')
+            logger.info('No exposure numbers matched from inputlist')
             return None
         expinfo = expinfo[ind2]
-    
+        
     # First we need to run domeflats and quartzflats so there are apPSF files
     # Then the arclamps
     # apFlux files?
@@ -3045,14 +3116,18 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,inp
                 # Quartzflats only for FPS
                 ind = np.array([],int)
                 logger.info('Daily PSF Calibration Products')
-                logger.info('------------------------------')                
-                for m in mjds:
+                logger.info('------------------------------')
+                psfmjds = mjds
+                if sparsegrid is not None:
+                    logger.info('using expanded sparsegrid MJDs')
+                    psfmjds = sparsegridmjds
+                for m in psfmjds:
                     # plates, can use domeflats or quartzflats
                     if m < 59556:
                         ind1, = np.where((expinfo['mjd']==m) & ((expinfo['exptype']=='DOMEFLAT') |
                                                                (expinfo['exptype']=='QUARTZFLAT')))
                     # FPS, use quartzflats because 2 FPI fibers missing in domeflats
-                    else:            
+                    else:
                         ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='QUARTZFLAT'))
                     if len(ind1)==0:
                         logger.info(str(m)+' No PSF calibration products')
@@ -3068,8 +3143,12 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,inp
                 #  if no dome flat was taken, then use quartz flat
                 ind = np.array([],int)
                 logger.info('Daily Flux Calibration Products')
-                logger.info('-------------------------------')                
-                for m in mjds:
+                logger.info('-------------------------------')
+                fluxmjds = mjds
+                if sparsegrid is not None:
+                    logger.info('using expanded sparsegrid MJDs')
+                    fluxmjds = sparsegridmjds
+                for m in fluxmjds:
                     # ALWAYS need to use domeflats so we get the fiber-to-fiber throughput
                     #    corrections right
                     ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='DOMEFLAT'))
@@ -3086,7 +3165,11 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,inp
                 ind = np.array([],int)                
                 logger.info('Daily Arclamp Calibration Products')
                 logger.info('----------------------------------')
-                for m in mjds:
+                arcsmjds = mjds
+                if sparsegrid is not None:
+                    logger.info('using expanded sparsegrid MJDs')
+                    arcsmjds = sparsegridmjds
+                for m in arcsmjds:
                     ind1, = np.where((expinfo['mjd']==m) & (expinfo['exptype']=='ARCLAMP'))
                     if len(ind1)==0:
                         logger.info(str(m)+' No arclamp exposures')
@@ -3902,7 +3985,7 @@ def rununified(load,mjds,slurmpars,clobber=False,logger=None):
     #  sas_mwm_healpix --spectro apogee --mjd 59219 --telescope apo25m --drpver daily -v
 
 
-def runqa(load,mjds,slurmpars,clobber=False,logger=None):
+def runqa(load,mjds,slurmpars,clobber=False,logger=None,nomonitor=False):
     """
     Run QA on a list of MJDs.
 
@@ -3916,6 +3999,8 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
        Overwrite existing files.  Default is False.
     logger : logger, optional
        Logging object.  If not is input, then a default one will be created.
+    nomonitor : boolean, optional
+       Do not run the monitor code.  Default is to run it.
 
     Returns
     -------
@@ -4045,7 +4130,8 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None):
 
     # Run monitor page
     #  always runs on all MJDs
-    monitor.monitor(instrument=instrument, apred=apred)
+    if nomonitor==False:
+        monitor.monitor(instrument=instrument, apred=apred)
 
     
 def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=None, 
@@ -4143,7 +4229,7 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
 
 def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         clobber=False,fresh=False,linkvers=None,nodes=5,alloc='sdss-np',qos=None,
-        walltime='336:00:00',debug=False,inputlist=None):
+        walltime='336:00:00',debug=False,inputlist=None,sparsegrid=None):
     """
     Perform APOGEE Data Release Processing
 
@@ -4186,6 +4272,10 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
        For testing purposes.  Default is False.
     inputlist : str, optional
        File containing list of inputs to process.
+    sparsegrid : istr, optional
+       Run sparse grid of MJDs.  Expand processing of arcs +/-3 days for dailywave.
+         If sparsegrid=0, then the MJDs must be input.  If sparsegrid>0, then it
+         will grab the MJDs from the master calibration library file (i.e. apogee-n.par).
 
     Returns
     -------
@@ -4203,6 +4293,32 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
     telescope = observatory+'25m'
     instrument = {'apo':'apogee-n','lco':'apogee-s'}[observatory]
 
+    # Sparsegrid
+    if sparsegrid is not None:
+        if sparsegrid=="0" or sparsegrid=="":
+            # No MJDs input
+            if mjd is None:
+                print('sparsegrid with no parameter. MJDs must be input')
+                return None
+        else:
+            # MJDs input
+            if mjd is not None:
+                print('sparsegrid='+str(sparsegrid)+' input and MJDs. Will get MJDs from master calibration library file')
+                return None
+            # Get MJDs from master calibration library file
+            caldir = os.environ['APOGEE_DRP_DIR']+'/data/cal/'
+            calfile = caldir+instrument+'.par'
+            allcaldict = mkcal.readcal(calfile)
+            sparsegriddict = allcaldict.get('sparsegrid')
+            if sparsegriddict is None:
+                print('No sparsegrid information found in '+calfile)
+                return None
+            spgridind, = np.where(sparsegriddict['id']==sparsegrid)
+            if len(spgridind)==0:
+                print('No sparsegrid='+str(sparsegrid)+' found in '+calfile)
+                return None
+            mjd = sparsegriddict['mjds'][spgridind[0]]
+    
     # MJDs to process
     mjds = loadmjd(mjd)
     mjds = np.sort(np.array(mjds).astype(int))
@@ -4214,7 +4330,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
     # The default is to do all
     steps = loadsteps(steps)
     nsteps = len(steps)
-
+    
     # inputlist
     if inputlist is not None:
         if len(steps)>1:
@@ -4337,7 +4453,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         rootLogger.info('3) Running AP3D on all exposures')
         rootLogger.info('================================')
         rootLogger.info('')
-        chk3d = runap3d(load,mjds,inputlist=inputlist,**kws)
+        chk3d = runap3d(load,mjds,inputlist=inputlist,sparsegrid=sparsegrid,**kws)
 
     # 4) Make all daily cals (domeflats, quartzflats, arclamps, FPI)
     #----------------------------------------------------------------
@@ -4347,7 +4463,8 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         rootLogger.info('5) Generating daily calibration products')
         rootLogger.info('========================================')
         rootLogger.info('')
-        chkcal = rundailycals(load,mjds,caltypes=caltypes,inputlist=inputlist,**kws)
+        chkcal = rundailycals(load,mjds,caltypes=caltypes,inputlist=inputlist,
+                              sparsegrid=sparsegrid,**kws)
 
     # 5) Make plan files
     #-------------------
