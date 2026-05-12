@@ -3013,7 +3013,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,
         if len(tokeep)==0:
             logger.info('No exposures left to process')
             return []
-        allexpinfosparsegrid = allexpinfosparsegrid[tokeep]                
+        allexpinfosparsegrid = allexpinfosparsegrid[tokeep]
+        allexpinfo = allexpinfosparsegrid.copy()
         expinfo = allexpinfosparsegrid.copy()
         
     # Regular mode
@@ -3320,8 +3321,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,
                     if exists:
                         logger.info(str(j+1)+'  '+os.path.basename(outfile)+' already exists and clobber==False')
                         docal[j] = False               
-                # Make sure the 2D files exist and the 3D step was run
-                if docal[j]==True:
+                # Make sure the 2D files exist and the 3D step was run (not dailywave)
+                if docal[j]==True and ctype!='dailywave':
                     base2d = load.filename('2D',num=num1,mjd=mjd1,chips=True)
                     status2d = info.file_status([base2d.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']])
                     if status2d['okay'][0]==False:

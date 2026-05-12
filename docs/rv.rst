@@ -2,16 +2,26 @@
 Radial Velocities
 *****************
 
-The APOGEE radial velocities (RVs) are determined with `Doppler <https://doppler.readthedocs.io/en/latest/>`_ software.
+The APOGEE radial velocities (RVs) are determined with `Doppler <https://doppler.readthedocs.io/en/latest/>`_ software
+(the SDSS-V version is here `<https://github.com/sdss/doppler>`_)
 
 Radial velocities (RV) are determined on a star-by-star basis using Doppler which fits a Cannon model to the data,
-determining Teff, logg, [Fe/H] and radial velocity in the process.  It actually fits all of the visit spectra simultaneously, using
-a single set of stellar parameters, but a separate radial velocity for each spectrum.  The model spectrum is convolved with the
-correct LSF (line spread profile) for each visit spectrum.  Each time a star is observed, all of the existing visit spectra for
-that star are refit with Doppler.  This means that there will be multiple versions of RVs for each visit spectrum based on the
-latest visit MJD (Modified Julian Date).  This is why there are the "visit_latest" and "star_latest" tables in the APOGEE database
-(see `Data Access <access.html>`_).  They have the summary information at the visit and star level using the latest run/version
-of Doppler.  The RV processing is parallelized over each object.
+determining Teff, logg, [Fe/H] and radial velocity in the process.  It fits all of the visit spectra simultaneously, using
+a single set of stellar parameters for the star, but a separate radial velocity for each spectrum.  The model spectrum is
+convolved with the correct LSF (line spread profile) for each visit spectrum.
+
+These are the steps taken by ``rv.py``:
+ 1) Each visit spectrum is fit individually by Doppler.
+ 2) Mean stellar parameters are calculated over the visits.
+ 3) All of the visit spectra are fit simultaneously with a single set of stellar parameters and a separate RV for each spectrum.
+ 4) Each visit spectrum is cross-correlated with the best-fit Cannon model spectrum (these are the ``xcorr_`` values).
+ 5) After extra quality cuts, the spectra and RVs are used to create the apStar combined spectrum.
+
+Each time a star is observed, all of the existing visit spectra for that star are refit with Doppler. This means that there
+are multiple versions of RVs for each visit spectrum based on the latest visit MJD (Modified Julian Date) and sets the "STARVER"
+value.
+
+The RV processing is parallelized over each object and log file is created in the ``stars/`` directory in the HEALPix subdirectory for that star.
 
 RV Columns and Flags
 ~~~~~~~~~~~~~~~~~~~~
@@ -51,7 +61,7 @@ Relevant RV flags in STARFLAG:
      - RV failure. No good visits or RVs for this star
 
 
-DR17 also had:
+DR17 also had (and will be restarted in 1.6):
 
 .. list-table::
    :widths: 30 70
