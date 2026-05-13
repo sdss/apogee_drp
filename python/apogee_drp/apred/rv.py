@@ -96,7 +96,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
 
     # Reset all the RV flags
     starmask = bitmask.StarBitMask()
-    for c in ['RV_SUSPECT','RV_FAIL','RV_REJECT','MULTIPLE_SUSPECT','SUSPECT_BROAD_LINES','SUSPECT_ROTATION']:
+    for c in ['RV_SUSPECT','RV_FAIL','RV_REJECT','MULTIPLE_SUSPECT','SUSPECT_BROAD_LINES']:
         allvisits['starflag'] &= ~starmask.getval(c)
     
     # Get the star version number
