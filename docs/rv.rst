@@ -14,8 +14,9 @@ These are the steps taken by ``rv.py``:
  1) Each visit spectrum is fit individually by Doppler.
  2) Mean stellar parameters are calculated over the visits.
  3) All of the visit spectra are fit simultaneously with a single set of stellar parameters and a separate RV for each spectrum.
- 4) Each visit spectrum is cross-correlated with the best-fit Cannon model spectrum (these are the ``xcorr_`` values).
- 5) After extra quality cuts, the spectra and RVs are used to create the apStar combined spectrum.
+ 4) Each visit spectrum is cross-correlated with the best-fit Cannon model spectrum and visit RV (these are the ``xcorr_`` values). The peak pixel of the CCF is used to determine the ``xcorr`` RV (not interpolated).
+ 5) Each visit CCF is Gaussian Decomposed and the number of components saved in N_COMPONENTS.
+ 6) After extra quality cuts, the spectra and RVs are used to create the apStar combined spectrum.
 
 Each time a star is observed, all of the existing visit spectra for that star are refit with Doppler. This means that there
 are multiple versions of RVs for each visit spectrum based on the latest visit MJD (Modified Julian Date) and sets the "STARVER"
