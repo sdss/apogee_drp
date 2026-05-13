@@ -1002,7 +1002,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         apstar.header['vscatter'] = (vscatter, 'standard deviation of visit RVs')
         verr = vscatter/np.sqrt(len(allvisit))
     else:
-        apstar.header['VSCATTER'] = (np.nan, 'standard deviation of visit RVs')
+        apstar.header['VSCATTER'] = ('NaN', 'standard deviation of visit RVs')
         verr = allvisit['vrelerr'][0]
 
     # This was used in DR17
