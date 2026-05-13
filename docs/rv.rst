@@ -233,9 +233,10 @@ Relevant Star-level columns:
 
    * - N_COMPONENTS
      - Number of components from the Gaussian decomposition
-       of the cross-correlation function.  If N_COMPONENTS=0, then
-       this means that the Gaussian decomposition failed for that
-       visit or star.
+       of the cross-correlation function. This the maximum N_COMPONENTS
+       of the visits for this star.
+       If N_COMPONENTS=0, then the Gaussian decomposition failed for all
+       visits for this star.
 
    * - MEANFIB
      - Mean fiberID across the visits

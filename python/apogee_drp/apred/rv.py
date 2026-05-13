@@ -321,7 +321,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             bd_diff = 50
         if (np.abs(starvisits['vrad'][vind]-starvisits['xcorr_vrad'][vind]) > bd_diff) :
             starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
-        elif (np.abs(starvisits['vrad'][vind]-starvisits['xcorr_vrad'][vind]) > 0) :
+        elif (np.isclose(starvisits['vrad'][vind],starvisits['xcorr_vrad'][vind])==False) :
             starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
         logger.info('{:3d} {:s} {:3d} {:.3f} {:s}'.format(i+1,name,starvisits['n_components'][vind],
                                                           starvisits['vrad'][vind]-starvisits['xcorr_vrad'][vind],
