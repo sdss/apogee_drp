@@ -1281,9 +1281,9 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     #cols = ','.join(vcols+rvcols)        
     #visit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     # rv_components can sometimes be an object type
-    if visit.dtype['rv_components'] == np.object:
-        visit = Table(visit)
-        visit['rv_components'] = np.zeros(len(visit),dtype=np.dtype((np.float32,3)))
+    if allvisit.dtype['rv_components'] == np.object:
+        allvisit = Table(allvisit)
+        allvisit['rv_components'] = np.zeros(len(allvisit),dtype=np.dtype((np.float32,3)))
     allvisitfile = load.filename('allVisit')#.replace('.fits','-'+telescope+'.fits')
     logger.info('Writing allVisit file to '+allvisitfile)
     logger.info(str(len(allvisit))+' visits')
