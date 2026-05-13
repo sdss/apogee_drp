@@ -94,6 +94,11 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Change datatype of STARFLAG to 64-bit
     allvisits['starflag'] = allvisits['starflag'].astype(np.uint64)
 
+    # Reset all the RV flags
+    starmask = bitmask.StarBitMask()
+    for c in ['RV_SUSPECT','RV_FAIL','RV_REJECT','MULTIPLE_SUSPECT','SUSPECT_BROAD_LINES','SUSPECT_ROTATION']:
+        allvisits['starflag'] &= ~starmask.getval(c)
+    
     # Get the star version number
     #  this is the largest MJD5 in the FULL list of visits
     if mjd is None:
@@ -194,7 +199,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     else: sigfib = 0.
     startab['meanfib'] = meanfib
     startab['sigfib'] = sigfib
-    starmask = bitmask.StarBitMask()
     
     # Select good visit spectra
     gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
@@ -252,10 +256,14 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     except:
         logger.info('Doppler failed for {:s}'.format(star))
         raise
-
+    
     # Now load the Doppler results
     visits = []
     ncomponents = 0
+    logger.info('Doppler results and QA')
+    logger.info('---------------------------------------------------------------------------')
+    logger.info('NUM        NAME                N_COMPONENTS    VRAD-XCORR_VRAD     STARFLAG')
+    logger.info('---------------------------------------------------------------------------')
     for i,(v,g) in enumerate(zip(dopvisitstr,gaussout)) :
         # Match by filename components in case there was an error reading in doppler
         name = os.path.basename(v['filename'])
@@ -317,7 +325,11 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
         elif (np.abs(starvisits['vrad'][vind]-starvisits['xcorr_vrad'][vind]) > 0) :
             starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
-            
+        logger.info('{:3d} {:s} {:3d} {:.3f} {:s}'.format(i+1,name,starvisits['n_components'][vind],
+                                                          starvisits['vrad'][vind]-starvisits['xcorr_vrad'][vind],
+                                                          starmask.getname(starvisits['starflag'][vind])))
+    logger.info('---------------------------------------------------------------------------')
+
     # Set STARFLAGS for the visits (successful and failed ones)
     for i in range(len(starvisits)):
         starvisits['starflags'][i] = starmask.getname(starvisits['starflag'][i])
@@ -582,7 +594,6 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
     
     # Return summary RV info, visit RV info, decomp info 
     return sumstr,finalstr,gout
-
 
 
 def gaussian(amp, fwhm, mean):
