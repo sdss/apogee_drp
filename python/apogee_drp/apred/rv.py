@@ -292,8 +292,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         starvisits['bc'][vind] = v['bc']
         starvisits['rv_ccpfwhm'][vind] = v['ccpfwhm']
         starvisits['rv_autofwhm'][vind] = v['autofwhm']
-        if starvisits['rv_ccpfwhm'][vind] > 2.0*starvisits['rv_autofwhm'][vind]:
-            starvisits['starflag'][vind] |= starmask.getval('SUSPECT_ROTATION')
         if starvisits['rv_autofwhm'][vind] > 300:
             starvisits['starflag'][vind] |= starmask.getval('SUSPECT_BROAD_LINES')
         starvisits['chisq'][vind] = v['chisq']
