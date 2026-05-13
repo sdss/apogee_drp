@@ -61,7 +61,7 @@ Relevant RV flags in STARFLAG:
      - RV failure. No good visits or RVs for this star
 
 
-DR17 also had (and will be restarted in 1.6):
+DR17 also had:
 
 .. list-table::
    :widths: 30 70
@@ -76,7 +76,7 @@ DR17 also had (and will be restarted in 1.6):
    * - SUSPECT_BROAD_LINES
      - Cross-correlation peak with template significantly broader
        than autocorrelation of template:
-       WARN (AUTOFWHM > 300)
+       WARN (AUTOFWHM > 300) (will be restarted in 1.6)
 
 
 Before DR17 we also had (when we used synthetic and combined templates):
