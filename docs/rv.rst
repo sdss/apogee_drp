@@ -15,7 +15,7 @@ These are the steps taken by ``rv.py``:
  2) Mean stellar parameters are calculated over the visits.
  3) All of the visit spectra are fit simultaneously with a single set of stellar parameters and a separate RV for each spectrum.
  4) Each visit spectrum is cross-correlated with the best-fit Cannon model spectrum and visit RV (these are the ``xcorr_`` values). The peak pixel of the CCF is used to determine the ``xcorr`` RV (not interpolated).
- 5) Each visit CCF is Gaussian Decomposed and the number of components saved in N_COMPONENTS.
+ 5) Each visit CCF is Gaussian Decomposed and the number of components saved in N_COMPONENTS. If N_COMPONENTS=0, that means gausspy did not detect a peak or it crashed. 
  6) After extra quality cuts, the spectra and RVs are used to create the apStar combined spectrum.
 
 Each time a star is observed, all of the existing visit spectra for that star are refit with Doppler. This means that there
@@ -156,8 +156,8 @@ Relevant Visit-level columns:
    * - N_COMPONENTS
      - Number of components from the Gaussian decomposition
        of the cross-correlation function.  If N_COMPONENTS=0, then
-       this means that the Gaussian decomposition failed for the
-       visit
+       this means that the Gaussian decomposition did not detect a peak
+       or it failed for the visit
 
    * - RV_COMPONENTS
      - Number of Gaussian components for each of the 3 detectors
