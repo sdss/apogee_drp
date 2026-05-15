@@ -363,24 +363,26 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['sigfib'] = sigfib
 
     # Average Doppler values for this star
+    gdvisits = []
     if len(visits)>0:
         visits = np.array(visits)
         gdrv, = np.where((starvisits['starflag'][visits] & starmask.getval('RV_REJECT')) == 0)
         ngdrv = len(gdrv)
         if ngdrv>0:
+            gdvisits = visits[gdrv]
             # Add boolean flag to starvisits that it was used in the combination
-            starvisits['goodvisit'][gdrv] = True
+            starvisits['goodvisit'][gdvisits] = True
             startab['ngoodrvs'] = ngdrv
-            try: startab['n_components'] = starvisits['n_components'][gdrv].max()
+            try: startab['n_components'] = starvisits['n_components'][gdvisits].max()
             except: pass
-            startab['vrad'] = (starvisits['vrad'][gdrv]*starvisits['snr'][gdrv]).sum() / starvisits['snr'][gdrv].sum()
+            startab['vrad'] = (starvisits['vrad'][gdvisits]*starvisits['snr'][gdvisits]).sum() / starvisits['snr'][gdvisits].sum()
             if ngdrv>1:
-                startab['vscatter'] = starvisits['vrad'][gdrv].std(ddof=1)
+                startab['vscatter'] = starvisits['vrad'][gdvisits].std(ddof=1)
                 startab['verr'] = startab['vscatter'][0]/np.sqrt(ngdrv)
                 startab['vmederr'] = np.median(starvisits['vrelerr'])
             else:
                 startab['vscatter'] = 0.0
-                startab['verr'] = starvisits['vrelerr'][gdrv][0]
+                startab['verr'] = starvisits['vrelerr'][gdvisits][0]
                 startab['vmederr'] = starvisits['vrelerr'][0]
             startab['chisq'] = dopsumstr['chisq']
             startab['rv_teff'] = dopsumstr['teff']
@@ -391,10 +393,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             startab['rv_feherr'] = dopsumstr['feherr']
             # Update meanfib/sigfig only using visits with good RVs
             if ngdrv > 1:
-                meanfib = (starvisits['fiberid'][gdrv]*starvisits['snr'][gdrv]).sum()/starvisits['snr'][gdrv].sum()
-                sigfib = starvisits['fiberid'][gdrv].std(ddof=1)
+                meanfib = (starvisits['fiberid'][gdvisits]*starvisits['snr'][gdvisits]).sum()/starvisits['snr'][gdvisits].sum()
+                sigfib = starvisits['fiberid'][gdvisits].std(ddof=1)
             else:
-                meanfib = starvisits['fiberid'][gdrv][0]
+                meanfib = starvisits['fiberid'][gdvisits][0]
                 sigfib = 0.0
             startab['meanfib'] = meanfib
             startab['sigfib'] = sigfib
@@ -409,13 +411,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             startab['file'] = os.path.basename(outfile)
             mwm_root = os.environ['MWM_ROOT']
             startab['uri'] = outfile[len(mwm_root)+1:]
-
-    else:
-        gdrv = []
         
     # Do the visit combination and write out apStar file
-    if len(gdrv)>0:
-        apstar = visitcomb(starvisits[visits[gdrv]],starver,load=load,
+    if len(gdvisits)>0:
+        apstar = visitcomb(starvisits[gdvisits],starver,load=load,
                            apstar_vers=apstar_vers,apred=apred,nres=nres,logger=logger)
         startab['snr'] = apstar.header['SNR']
     else:
