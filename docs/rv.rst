@@ -28,7 +28,7 @@ RV Columns and Flags
 ~~~~~~~~~~~~~~~~~~~~
 
 Visit spectra must pass through QA checks to be used in the final spectral combination:
- 1) Initial QA check: STARFLAG should not have any of the BAD flags set (BAD_PIXELS,VERY_BRIGHT_NEIGHBOR,BAD_RV_COMBINATION,RV_FAIL) and must have S/N>2. These are the visits that Doppler is run on and the ones that are counted in NGOODVISITS at the STAR level.
+ 1) Initial QA check: STARFLAG should not have any of the BAD flags set (BAD_PIXELS,VERY_BRIGHT_NEIGHBOR,BAD_RV_COMBINATION,RV_FAIL) and must have S/N>3. These are the visits that Doppler is run on and the ones that are counted in NGOODVISITS at the STAR level.
  2) RV check: After Doppler has been run on all of the visits that passed the initial QA cut, then an additional selection is made for visits that do not have RV_REJECT set.  These visits are used to determine the mean RV, RV scatter, and make the combined spectrum.  These are the visits that have GOODVISIT=True set and are counted in NGOODRVS at the STAR level.
 
 
