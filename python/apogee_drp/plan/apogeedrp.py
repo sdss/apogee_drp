@@ -3180,7 +3180,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,
                 ncal = len(ind)
                 if len(ind)>0:
                     calinfo = expinfo[ind]
-            # ---  DAILY WAVE ---
+            # ---  DAILYWAVE ---
             elif ctype=='dailywave':
                 ncal = len(mjds)
                 calinfo = np.zeros(ncal,dtype=np.dtype([('num',int),('mjd',int),('exptype',(str,20)),('observatory',(str,3)),
@@ -3322,7 +3322,7 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,
                         logger.info(str(j+1)+'  '+os.path.basename(outfile)+' already exists and clobber==False')
                         docal[j] = False               
                 # Make sure the 2D files exist and the 3D step was run (not dailywave)
-                if docal[j]==True and ctype!='dailywave':
+                if docal[j]==True and ctype!='dailywave' and ctype!='telluric':
                     base2d = load.filename('2D',num=num1,mjd=mjd1,chips=True)
                     status2d = info.file_status([base2d.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']])
                     if status2d['okay'][0]==False:
