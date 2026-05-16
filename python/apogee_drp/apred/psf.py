@@ -478,6 +478,7 @@ class PSF(object):
         hdu[0].header['LOG'] = self._log
         hdu[0].header['COMMENT'] = 'Data (log)'
         hdu[0].header['V_APRED'] = (plan.getgitvers(), 'APOGEE software version')
+        hdu[0].header['EXTNAME'] = 'DATA'
         hdu.append(fits.ImageHDU(self._labels))
         hdu[1].header['COMMENT'] = 'Labels'
         hdu[1].header['EXTNAME'] = 'LABELS'
@@ -1989,7 +1990,7 @@ def extractwing(frame,modelpsffile,epsffile,tracefile,trace2dfile):
     for i in np.arange(1,len(hdu)):
         fibers.append(hdu[i].data['FIBER'][0])
     hdu.close()
-
+    
     # Step 1) Measure the offset
     #  returns 2D linear of the offset
     #  c0 + c1*x + c2*x*y + c3*y
