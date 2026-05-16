@@ -166,6 +166,11 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
     # Get number of tasks
     ntasks = dln.readlines(jobdir+label+'.ntasks')
     ntasks = int(ntasks[0])
+
+    # Default state
+    state = np.zeros(1,dtype=np.dtype([('JobID',str,30),('JobName',str,30),('Partition',str,30),
+                                       ('Account',str,30),('AllocCPUS',int),('State',str,30),
+                                       ('ExitCode',str,20),('Nodelist',str,30),('done',bool)]))
     
     # While loop
     done = False
@@ -174,33 +179,29 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
         time.sleep(sleeptime)
         # Check that state
         noderunning,taskrunning,percent = status(label,key,jobid)
+        # Check how many tasks have completed
+        tstatus = taskstatus(label,key)
+        ncomplete = len(tstatus)
+        nleft = ntasks-ncomplete
         if noderunning is not None:
             # Check if the slurm job is still running
             state = slurmstatus(label,jobid)
             node = len(state)
             ndone = np.sum(state['done'])
             noderunning = node-ndone
-            # Get number of tasks
-            ntasks = dln.readlines(jobdir+label+'.ntasks')
-            ntasks = int(ntasks[0])
-            # Check how many tasks have completed
-            tstatus = taskstatus(label,key)
-            ncomplete = len(tstatus)
             taskrunning = ntasks-ncomplete
             percent = 100*ncomplete/ntasks
             if verbose:
                 logger.info('percent complete = %2d   %d / %d tasks' % (percent,ntasks-taskrunning,ntasks))
         else:
-            # It claims to not be running, but let's check anyway
-            tstatus = taskstatus(label,key)
-            ncomplete = len(tstatus)
+            # It claims to not be running
             percent = 100*ncomplete/ntasks
             if verbose:
                 logger.info('NOT Running  percent complete = %2d   %d / %d tasks' % (percent,ncomplete,ntasks))                
                 
         # Are we done
         #  if the slurm job was canceled then we need to stop even if some tasks are not done yet
-        if noderunning==0 or taskrunning==0:
+        if noderunning==0 or taskrunning==0 or nleft==0:
             done = True
 
     # Check Slurm exit status for failure
