@@ -215,9 +215,19 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         andflag |= starmask.getval('RV_FAIL')
         startab['starflag'] = starflag
         startab['andflag'] = andflag
+        allvisits['starflag'] |= starmask.getval('RV_FAIL')  # flag rv_fail   
         # Load star summary information into database
-        dbingest(startab,None)
+        dbingest(startab,allvisits)
         return
+    # Write rows for bad visits in rv_visit table
+    if len(gd)<len(allvisits):
+        bd = np.delete(np.arange(len(allvisits)),gd)
+        badvisits = allvisits[bd]
+        badvisits['starflag'] |= starmask.getval('RV_FAIL')  # flag rv_fail
+        badvisits['starver'] = starver
+        logger.info('Updating RV_VISIT table for '+str(len(bd))+' bad visits')
+        dbingest(None,badvisits)
+        
     logger.info('%d visit(s) passed QA cuts' % len(gd))
     
     # Initialize STARVISITS which will hold all visit-level information
@@ -1169,14 +1179,15 @@ def dbingest(startab,starvisits):
     db = apogeedb.DBSession()
     
     # Load star table
-    db.ingest('star',startab)   # load summary information into "star" table
+    if startab is not None:
+        db.ingest('star',startab)   # load summary information into "star" table
     
 
     # Load visit RV information into "rv_visit" table
     #  get star_pk from "star" table
     if starvisits is not None:
-        starout = db.query('star',where="apogee_id='"+startab['apogee_id'][0]+"' and apred_vers='"+startab['apred_vers'][0]+"' "+\
-                           "and telescope='"+startab['telescope'][0]+"' and starver='"+startab['starver'][0]+"'")
+        starout = db.query('star',where="apogee_id='"+starvisits['apogee_id'][0]+"' and apred_vers='"+starvisits['apred_vers'][0]+"' "+\
+                           "and telescope='"+starvisits['telescope'][0]+"' and starver='"+starvisits['starver'][0]+"'")
         starvisits['star_pk'] = starout['pk'][0]
         # Remove some unnecessary columns (duplicates what's in visit table)
         delcols = ['target_id','objtype','survey', 'field', 'design', 'sdss_id', 'programname',
@@ -1202,16 +1213,17 @@ def dbingest(startab,starvisits):
 
         db.ingest('rv_visit',np.array(visits))   # Load the visit information into the table  
 
-        # Need to update starflag/starflags in visit table
-        delcols = ['starver','vtype','vrel','vrelerr','vrad','bc','chisq','rv_teff',
-                   'rv_tefferr','rv_logg','rv_loggerr','rv_feh','rv_feherr',
-                   'xcorr_vrel','xcorr_vrelerr','xcorr_vrad','rv_ccpfwhm','rv_autofwhm',
-                   'n_components','rv_components','rvtab','goodvisit','star_pk']
-        visits = starvisits.copy()
-        for c in delcols:
-            if c in visits.dtype.names:
-                del visits[c]
-        db.ingest('visit',np.array(visits))
+        # NO, the visit table should not be changed/immutable
+        ## Need to update starflag/starflags in visit table
+        #delcols = ['starver','vtype','vrel','vrelerr','vrad','bc','chisq','rv_teff',
+        #           'rv_tefferr','rv_logg','rv_loggerr','rv_feh','rv_feherr',
+        #           'xcorr_vrel','xcorr_vrelerr','xcorr_vrad','rv_ccpfwhm','rv_autofwhm',
+        #           'n_components','rv_components','rvtab','goodvisit','star_pk']
+        #visits = starvisits.copy()
+        #for c in delcols:
+        #    if c in visits.dtype.names:
+        #        del visits[c]
+        #db.ingest('visit',np.array(visits))
         
     # Close db session
     db.close()
