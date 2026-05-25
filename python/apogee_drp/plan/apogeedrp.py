@@ -4,6 +4,7 @@ import os
 import shutil
 from glob import glob
 import sys
+from numpy.lib import recfunctions as rfn
 
 from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email,info,slurm as slrm,bitmask
@@ -1178,7 +1179,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
              'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
              'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr',
              'dateobs','jd','exptime']
-    rvcols = ['starver', 'starflag', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
+    rvcols = ['starver', 'starflag', 'starflags', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'rv_ccpfwhm', 'rv_autofwhm',
               'n_components', 'rv_components', 'goodvisit']
     
@@ -1189,6 +1190,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     sql += " where v.apred_vers='"+apred+"' and v.telescope='"+telescope+"'"
     logger.info('Getting all of the visit table information')
     visit = db.query(sql=sql)
+    db.close()
     
     # Remove bad apogee_id names
     two = np.array([a[:2] for a in visit['apogee_id']])
@@ -1205,10 +1207,20 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
         ind = vindex['index'][vindex['lo'][i]:vindex['hi'][i]+1]
         visit['starflag'][ind] |= starmask.getval('RV_FAIL')
 
-    # Remake STARFLAGS
-    visit['starflags'] = 100*' '
-    for i in range(len(visit)):
-        visit['starflags'][i] = starmask.getname(visit['starflag'][i])
+    # Remake STARFLAGS from the rv_visit STARFLAG
+    gd, = np.where(visit['starflag'] >= 0)
+    starflags = len(visit)*['']
+    for i in range(len(gd)):
+        #visit['starflags'][gd[i]] = starmask.getname(visit['starflag'][gd[i]])
+        starflags[gd[i]] = starmask.getname(visit['starflag'][gd[i]])
+    starflags = np.array(starflags)
+    # need to change length of STARFLAGS in visit array
+    if starflags.dtype.itemsize > visit['starflags'].dtype.itemsize:
+        visit = Table(visit,copy=False)
+        visit['starflags'] = starflags
+        visit = visit.as_array()
+    else:
+        visit['starflags'] = starflags
         
     # Fix bad STARVER values
     #bdstarver, = np.where(np.char.array(visit['starver']) == '')
@@ -1288,8 +1300,6 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     if os.path.exists(os.path.dirname(allvisitfile))==False:
         os.makedirs(os.path.dirname(allvisitfile),exist_ok=True)
     Table(allvisit).write(allvisitfile,overwrite=True)
-
-    db.close()
 
     
     # Nightly summary files
