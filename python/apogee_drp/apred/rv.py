@@ -93,10 +93,14 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     allvisits = Table(allvisits)
     # Change datatype of STARFLAG to 64-bit
     allvisits['starflag'] = allvisits['starflag'].astype(np.uint64)
-
+    # Add goodvisit column, default to bad
+    allvisits['goodvisit'] = False
+    
     # Reset all the RV flags
     starmask = bitmask.StarBitMask()
-    for c in ['RV_SUSPECT','RV_FAIL','RV_REJECT','MULTIPLE_SUSPECT','SUSPECT_BROAD_LINES']:
+    rvflags = ['SUSPECT_RV_COMBINATION','SUSPECT_BROAD_LINES','BAD_RV_COMBINATION','RV_REJECT','RV_SUSPECT',
+               'MULTIPLE_SUSPECT','RV_FAIL','SUSPECT_ROTATION']
+    for c in rvflags:
         allvisits['starflag'] &= ~starmask.getval(c)
     
     # Get the star version number
@@ -214,7 +218,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         andflag |= starmask.getval('RV_FAIL')
         startab['starflag'] = starflag
         startab['andflag'] = andflag
-        allvisits['starflag'] |= starmask.getval('RV_FAIL')  # flag rv_fail   
+        allvisits['starflag'] |= starmask.getval('RV_FAIL')  # flag rv_fail
+        for i in range(len(allvisits)):
+            allvisits['starflags'][i] = starmask.getname(allvisits['starflag'][i])
+        allvisits['goodvisit'] = False
         # Load star summary information into database
         dbingest(startab,allvisits)
         return
@@ -224,6 +231,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         badvisits = allvisits[bd]
         badvisits['starflag'] |= starmask.getval('RV_FAIL')  # flag rv_fail
         badvisits['starver'] = starver
+        for i in range(len(badvisits)):
+            badvisits['starflags'][i] = starmask.getname(badvisits['starflag'][i])
+        badvisits['goodvisit'] = False
         logger.info('Updating RV_VISIT table for '+str(len(bd))+' bad visits')
         dbingest(None,badvisits)
         
@@ -866,7 +876,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         if len(bd) > 0: stack.err[i,bd] *= np.sqrt(100)
 
         # downweight spectrum if MTPFLUX_LT_50 bit set
-        if visit['STARFLAG'] & starmask.getval('MTPFLUX_LT_50'):
+        if visit['starflag'] & starmask.getval('MTPFLUX_LT_50'):
             stack.err[i,:] *= 3.
         
         if plot:
@@ -1205,7 +1215,7 @@ def dbingest(startab,starvisits):
                    'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag',
                    'gaia_gerr', 'gaia_bpmag', 'gaia_bperr', 'gaia_rpmag', 'gaia_rperr',
                    'sdssv_apogee_target0', 'firstcarton',
-                   'targflags', 'starflags', 'created', 'rvtab','too']
+                   'targflags', 'created', 'rvtab','too','relflux','mtpflux']
         visits = starvisits.copy()  # make a local copy
         for c in delcols:
             if c in visits.dtype.names:
