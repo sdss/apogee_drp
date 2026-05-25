@@ -16,11 +16,14 @@ radial velocity determination, and combined spectra.
 - combined stellar spectra (``apStar`` files),
 - summary catalogs (``allVisit``, ``allStar``, etc.).
 
-The bitmask accumulates information as the data progress through the
-pipeline. Some bits originate during visit reduction, while others are
-added during RV analysis or spectral combination.
+Because ``STARFLAG`` accumulates information from multiple processing
+steps, a single value may contain bits that were set at different stages
+of the pipeline. For example, some bits describe issues detected in an
+individual visit spectrum, while others describe problems identified
+during radial-velocity fitting or during construction of the combined
+spectrum.
 
-At the combined-spectrum level, the ``STARFLAG`` typically represents
+At the combined-spectrum level, the ``STARFLAG`` represents
 the bitwise OR of all visit-level ``STARFLAG`` values plus any additional
 flags generated during combination and RV processing.
 
@@ -44,6 +47,28 @@ For example:
 
 checks whether the ``LOW_SNR`` bit is set.
 
+A ``STARFLAG`` value of zero indicates that none of the documented
+``STARFLAG`` bits are set. It does not necessarily guarantee that the
+spectrum is suitable for every science use case.
+
+
+Visit and Combined STARFLAG Values
+----------------------------------
+
+At the visit level, ``STARFLAG`` describes the quality of an individual
+visit spectrum and may include flags set during visit reduction and
+radial-velocity analysis.
+
+At the combined-spectrum level, ``STARFLAG`` summarizes the quality of
+the combined spectrum. This value generally includes the bitwise OR of
+the relevant visit-level ``STARFLAG`` values, together with any additional
+bits set during radial-velocity analysis or spectral combination.
+
+In this way, ``STARFLAG`` should be interpreted as an accumulated quality
+summary. Users interested in the detailed origin of a flag should compare
+the visit-level and combined-level values.
+
+
 STARFLAG Bit Definitions
 ------------------------
 
@@ -56,147 +81,124 @@ STARFLAG Bit Definitions
      - Description
    * - 0
      - ``BAD_PIXELS``
-     - Spectrum contains a large fraction of bad pixels
+     - Spectrum contains a large fraction of bad pixels (>20%): BAD
    * - 1
      - ``COMMISSIONING``
-     - Commissioning or non-standard data
+     - Commissioning data (MJD<55761), non-standard configuration, poor LSF: WARN
    * - 2
      - ``BRIGHT_NEIGHBOR``
-     - Nearby bright neighbor may contaminate spectrum
+     - Star has neighbor more than 10 times brighter: WARN
    * - 3
      - ``VERY_BRIGHT_NEIGHBOR``
-     - Very bright nearby source likely contaminates spectrum
+     - Star has neighbor more than 100 times brighter: BAD
    * - 4
      - ``LOW_SNR``
-     - Spectrum has low signal-to-noise
+     - Spectrum has low signal-to-noise (S/N<5)
    * - 5
-     - ``FAILED_REDUCTION``
-     - Visit reduction failed
+     - ``UNUSED``
+     - Bit no longer used
    * - 6
-     - ``BAD_SKY_SUBTRACTION``
-     - Significant sky subtraction problems
+     - ``UNUSED``
+     - Bit no longer used
    * - 7
-     - ``BAD_TELLURIC``
-     - Telluric correction failure or poor correction
+     - ``UNUSED``
+     - Bit no longer used
    * - 8
-     - ``SUSPECT_FLUX``
-     - Flux calibration or throughput issue
+     - ``UNUSED``
+     - Bit no longer used
    * - 9
      - ``PERSIST_HIGH``
-     - Significant high persistence contamination
+     - Spectrum has significant number (>20%) of pixels in high persistence region: WARN
    * - 10
      - ``PERSIST_MED``
-     - Significant medium persistence contamination
+     - Spectrum has significant number (>20%) of pixels in medium persistence region: WARN
    * - 11
      - ``PERSIST_LOW``
-     - Significant low persistence contamination
+     - Spectrum has significant number (>20%) of pixels in low persistence region: WARN'
    * - 12
      - ``PERSIST_JUMP_POS``
-     - Positive persistence jump detected
+     - Spectrum show obvious positive jump in blue chip: WARN
    * - 13
      - ``PERSIST_JUMP_NEG``
-     - Negative persistence jump detected
+     - Spectrum show obvious negative jump in blue chip: WARN
    * - 14
-     - ``BAD_RADIAL_VELOCITY``
-     - RV solution failed or unreliable
+     - ``UNUSED``
+     - Bit no longer used
    * - 15
-     - ``RV_REJECT``
-     - Visit rejected during RV processing
+     - ``UNUSED``
+     - Bit no longer used
    * - 16
      - ``SUSPECT_RV_COMBINATION``
-     - RVs from different methods disagree
+     - RVs from synthetic template differ significantly (~2 km/s) from those from combined template: WARN
    * - 17
      - ``SUSPECT_BROAD_LINES``
-     - Broad lines or rotational broadening suspected
+     - Cross-correlation peak with template significantly broader than autocorrelation of template: WARN
    * - 18
-     - ``MULTIPLE_SUSPECT``
-     - Possible multiple stellar components
+     - ``BAD_RV_COMBINATION``
+     - RVs from synthetic template differ very significatly (~10 km/s) from those from combined template: BAD
    * - 19
-     - ``RV_VARIABLE``
-     - Significant RV variability detected
+     - ``RV_REJECT``
+     - Rejected visit because cross-correlation RV differs significantly from least squares RV
    * - 20
-     - ``VISIT_MISMATCH``
-     - Visit spectra inconsistent with combined spectrum
+     - ``RV_SUSPECT``
+     - Suspect visit (but used!) because cross-correlation RV differs slightly from least squares RV
    * - 21
-     - ``COMBINATION_REJECT``
-     - Visit rejected during spectral combination
+     - ``MULTIPLE_SUSPECT``
+     - Suspect multiple components from Gaussian decomposition of cross-correlation
    * - 22
      - ``RV_FAIL``
      - RV determination failed
    * - 23
      - ``SUSPECT_ROTATION``
-     - Rotational broadening suspected from CCF width
+     - Suspect rotation: cross-correlation peak with template significantly broader than autocorretion of template
    * - 24
      - ``MTPFLUX_LT_75``
      - Fiber throughput below 75 percent in MTP block
    * - 25
      - ``MTPFLUX_LT_50``
      - Fiber throughput below 50 percent in MTP block
-   * - 26
-     - ``BAD_COMBINED_SPECTRUM``
-     - Combined spectrum quality failure
-   * - 27
-     - ``INSUFFICIENT_VISITS``
-     - Too few good visits available
-   * - 28
-     - ``BAD_WAVELENGTH_CAL``
-     - Wavelength calibration problem
-   * - 29
-     - ``BAD_CONTINUUM``
-     - Continuum normalization failure
+
+Deprecated or Unused Bits
+-------------------------
+
+Some ``STARFLAG`` bits may be retained for backwards compatibility even
+if they are no longer set by the current pipeline. These bits should not
+be reused for a different purpose without careful consideration, since
+older data products may still contain the historical meaning of the bit.
+
+For bits that were used in previous reductions but are no longer active,
+the recommended documentation style is:
+
+.. code-block:: rst
+
+   * - 17
+     - ``OLD_FLAG_NAME``
+     - Deprecated; no longer set by the current pipeline.
+
+For bits that have never been assigned, the recommended documentation
+style is:
+
+.. code-block:: rst
+
    * - 30
-     - ``RESERVED_30``
-     - Reserved for future use
-   * - 31
-     - ``RESERVED_31``
-     - Reserved for future use
+     - ``RESERVED``
+     - Reserved for future use.
 
-Visit-Level vs Combined-Level Flags
------------------------------------
-
-Some ``STARFLAG`` bits are naturally associated with individual visit
-spectra:
-
-- persistence,
-- low S/N,
-- sky subtraction issues,
-- telluric correction problems,
-- detector artifacts.
-
-Other bits are generated during later processing stages:
-
-- RV determination,
-- visit rejection,
-- spectral combination,
-- variability assessment.
-
-When new visits are added and the RV pipeline is rerun, RV-related bits
-for both the visits and the combined spectrum may change. Therefore,
-the combined ``STARFLAG`` should generally be considered the authoritative
-summary of the current pipeline quality assessment.
-
-Relationship to RVFLAG
-----------------------
-
-Additional RV-specific diagnostics are stored in the ``RVFLAG`` bitmask,
-which provides more detailed information about radial velocity fitting
-and rejection states.
-
-In general:
-
-- ``STARFLAG`` contains high-level user-facing quality information,
-- ``RVFLAG`` contains detailed internal RV diagnostics.
 
 Recommended Usage
 -----------------
 
-For most science applications, users should exclude spectra with severe
-quality failures such as:
+The appropriate use of ``STARFLAG`` depends on the science case. Some
+bits indicate severe problems that usually warrant excluding a spectrum,
+while others are warnings that may or may not matter for a particular
+analysis.
 
-- ``VERY_BRIGHT_NEIGHBOR``
-- ``BAD_RADIAL_VELOCITY``
-- ``RV_FAIL``
-- ``BAD_COMBINED_SPECTRUM``
+For conservative analyses, users may wish to exclude spectra with serious
+quality problems such as failed reductions, unreliable radial velocities,
+severe contamination, or bad combined spectra. For less restrictive
+analyses, warning-level bits such as low-level persistence or possible
+throughput issues may be acceptable.
 
-Depending on the science goals, warning-level conditions such as
-persistence or moderate RV variability may still be acceptable.
+Users should inspect the individual bits rather than applying a single
+``STARFLAG == 0`` requirement unless a very clean sample is required.
+
