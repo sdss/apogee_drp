@@ -3,7 +3,7 @@ pro getstarflags,flag,badflag,descrip
 flag=['BAD_PIXELS','COMMISSIONING','BRIGHT_NEIGHBOR','VERY_BRIGHT_NEIGHBOR','LOW_SNR','','','',$
       '','PERSIST_HIGH','PERSIST_MED','PERSIST_LOW','PERSIST_JUMP_POS','PERSIST_JUMP_NEG','','',$
       'SUSPECT_RV_COMBINATION','SUSPECT_BROAD_LINES','BAD_RV_COMBINATION','','','','','',$
-      '','','','','','','','']
+      'MTPFLUX_LT_75','MTPFLUX_LT_50','','','','','','']
 badflag=[1,0,0,1,0,0,0,0,$   ;0-7
          0,0,0,0,0,0,0,0,$   ;8-15
          0,0,1,0,0,0,0,0,$   ;16-23
@@ -34,8 +34,8 @@ descrip=[$
  '',$
  '',$
  '',$
- '',$
- '',$
+ 'Spectrum falls on fiber in MTP block with relative flux < 0.75',$
+ 'Spectrum falls on fiber in MTP block with relative flux < 0.5',$
  '',$
  '',$
  '',$

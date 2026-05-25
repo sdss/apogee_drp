@@ -865,6 +865,10 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         bd, = np.where((stack.bitmask[i,:] & pixelmask.getval('SIG_SKYLINE')) > 0)
         if len(bd) > 0: stack.err[i,bd] *= np.sqrt(100)
 
+        # downweight spectrum if MTPFLUX_LT_50 bit set
+        if visit['STARFLAG'] & starmask.getval('MTPFLUX_LT_50'):
+            stack.err[i,:] *= 3.
+        
         if plot:
             ax[0].plot(norm.apStarWave(),stack.flux[i,:])
             ax[1].plot(norm.apStarWave(),stack.flux[i,:]/stack.err[i,:])

@@ -114,8 +114,8 @@ class StarBitMask(BitMask):
 
     name=(['BAD_PIXELS','COMMISSIONING','BRIGHT_NEIGHBOR','VERY_BRIGHT_NEIGHBOR','LOW_SNR','','','',
           '','PERSIST_HIGH','PERSIST_MED','PERSIST_LOW','PERSIST_JUMP_POS','PERSIST_JUMP_NEG','','',
-          'SUSPECT_RV_COMBINATION','SUSPECT_BROAD_LINES','BAD_RV_COMBINATION','RV_REJECT','RV_SUSPECT','MULTIPLE_SUSPECT','RV_FAIL','',
-          '','','','','','','',''])
+          'SUSPECT_RV_COMBINATION','SUSPECT_BROAD_LINES','BAD_RV_COMBINATION','RV_REJECT','RV_SUSPECT','MULTIPLE_SUSPECT','RV_FAIL','SUSPECT_ROTATION',
+          'MTPFLUX_LT_75','MTPFLUX_LT_50','','','','','','RESERVED'])
     level=([1,0,0,1,0,0,0,0,
              0,0,0,0,0,0,0,0,
              0,0,1,0,0,0,1,0,
@@ -145,9 +145,9 @@ class StarBitMask(BitMask):
      'Suspect visit (but used!) because cross-correlation RV differs slightly from least squares RV',
      'Suspect multiple components from Gaussian decomposition of cross-correlation',
      'RV failure',
-     '',
-     '',
-     '',
+     'Suspect rotation: cross-correlation peak with template significantly broader than autocorretion of template',
+     'Spectrum falls on fiber in MTP block with relative flux < 0.75',
+     'Spectrum falls on fiber in MTP block with relative flux < 0.5',
      '',
      '',
      '',

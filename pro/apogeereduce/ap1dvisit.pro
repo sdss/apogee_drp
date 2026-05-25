@@ -136,6 +136,10 @@ FOR i=0L,nplanfiles-1 do begin
     if planstr.platetype eq 'single' then obj=where(plugmap.fiberdata.objtype ne 'SKY' and plugmap.fiberdata.spectrographid eq 2) else $
     obj=where(plugmap.fiberdata.objtype ne 'SKY' and plugmap.fiberdata.spectrographid eq 2 and plugmap.fiberdata.mag[1] gt 7.5)
 
+    if planstr.fluxid ne 0 then begin
+      fluxfile = apogee_filename('Flux',chip='b',num=planstr.fluxid)
+      relflux=mrdfits(fluxfile,2)
+    endif else relflux=fltarr(300)+1
   endif
 
   ; Check if the calibration files exist
@@ -586,7 +590,7 @@ FOR i=0L,nplanfiles-1 do begin
   if tag_exist(planstr,'mjdfrac') then if planstr.mjdfrac eq 1 then $
     mjdfrac=sxpar(finalframe.(0).header,'JD-MID')-2400000.5 
   APVISIT_OUTPUT,finalframe,plugmap,shiftstr,pairstr,$
-    /silent,single=single,mjdfrac=mjdfrac,survey=survey
+    /silent,single=single,mjdfrac=mjdfrac,survey=survey,relflux=relflux
   writelog,logfile,' output '+file_basename(planfile)+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
 
   ;---------------
@@ -669,6 +673,7 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr = {apogee_id:'',target_id:'',file:'',uri:'',apred_vers:'',fiberid:0,plate:'0',exptime:0.0,nframes:0L,$
                 mjd:0L,telescope:'',survey:'',field:'',design:'',programname:'',objtype:'',assigned:0,on_target:0,$
                 valid:0,too:'F',ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,healpix:0L,$
+                relflux:0.,mtpflux:0.,$
                 jmag:0.0,jerr:0.0,hmag:0.0,herr:0.0,kmag:0.0,kerr:0.0,src_h:'',$
                 pmra:0.0,pmdec:0.0,pm_src:'',$
                 apogee_target1:0L,apogee_target2:0L,apogee_target3:0L,apogee_target4:0L,$
@@ -734,6 +739,8 @@ FOR i=0L,nplanfiles-1 do begin
     if tag_exist(str,'JDMID') then visitstr.jd=str.jdmid else visitstr.jd=str.jd
     if tag_exist(str,'JDMID') then aprvjd=str.jdmid else aprvjd=str.jd
     visitstr.snr = str.snr
+    visitstr.relflux = str.relflux
+    visitstr.mtpflux = str.mtpflux
     visitstr.starflag = str.starflag
     visitstr.starflags = starflag(str.starflag)
     MWRFITS,visitstr,visitfile,/silent

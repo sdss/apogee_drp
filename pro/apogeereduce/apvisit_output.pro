@@ -1,4 +1,5 @@
-pro apvisit_output,frame,plugmap,shiftstr,pairstr,silent=silent,stp=stp,single=single,mjdfrac=mjdfrac,survey=survey
+pro apvisit_output,frame,plugmap,shiftstr,pairstr,silent=silent,stp=stp,single=single,$
+                   mjdfrac=mjdfrac,survey=survey,relflux=relflux
 
 ;+
 ;
@@ -17,6 +18,7 @@ pro apvisit_output,frame,plugmap,shiftstr,pairstr,silent=silent,stp=stp,single=s
 ;  /single       Single star.  Skip making apPlate files.
 ;  =mjdfrac      Floating point MJD with fractional part of the day.
 ;  =survey       Survey name to add to headers.
+;  =relflux      Relative flux from domeflat.
 ;  /silent       Don't print anything to the screen.
 ;  /stp          Stop at the end of the program.
 ;
@@ -359,6 +361,12 @@ endif   ;; not single
 ;##############################################################
 ;  OUTPUT THE INDIVIDUAL VISIT SPECTRA
 ;##############################################################
+if n_elements(relflux) gt 0 then begin
+  mtpflux = relflux
+  for i=0,9 do mtpflux[i*30:i*30+29] = median(relflux[i*30:i*30+29])
+  relflux = relflux/max(relflux)
+  mtpflux = mtpflux/max(mtpflux)
+endif
 
 ; Fiber Loop
 For i=0,nfibers-1 do begin
@@ -506,6 +514,12 @@ For i=0,nfibers-1 do begin
       sxaddpar,header,'CATEGORY',plugmap.fiberdata[iplugind].category,' SDSS-V target category'
     endif
 
+    ; add keywords for relative fluxes from dome flat if given
+    if n_elements(relflux) gt 0 then begin
+      sxaddpar,header,'RELFLUX',relflux[ifiber],' Relative flux of fiber in flat to max'
+      sxaddpar,header,'MTPFLUX',mtpflux[ifiber],' Relative flux of MTP in flat to max'
+    endif
+    
     ; Start a FLAG for this object
     flag = 0L
     ; is this low S/N?
@@ -518,6 +532,12 @@ For i=0,nfibers-1 do begin
     if hplus lt -5 or hminus lt -5 then flag=flag or starflagval('VERY_BRIGHT_NEIGHBOR') else $
     if hplus lt -2.5 or hminus lt -2.5 then flag=flag or starflagval('BRIGHT_NEIGHBOR')
 
+    ; MTP low throughput?
+    if n_elements(relflux) gt 0 then begin
+      if mtpflux[ifiber] lt 0.75 then flag=flag or starflagval('MTPFLUX_LT_75')
+      if mtpflux[ifiber] lt 0.5 then flag=flag or starflagval('MTPFLUX_LT_50')
+    endif
+    
     ; Get the pixel mask
     mask = intarr(npix,3)
     flux = fltarr(npix,3)
