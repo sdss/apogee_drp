@@ -1176,9 +1176,9 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
              'brightneicount', 'brightneiflag', 'brightneifluxfrac',
              'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
              'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
-             'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
-             'starflags','dateobs','jd','exptime']
-    rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
+             'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr',
+             'dateobs','jd','exptime']
+    rvcols = ['starver', 'starflag', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'rv_ccpfwhm', 'rv_autofwhm',
               'n_components', 'rv_components', 'goodvisit']
     
@@ -1206,6 +1206,7 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
         visit['starflag'][ind] |= starmask.getval('RV_FAIL')
 
     # Remake STARFLAGS
+    visit['starflags'] = 100*' '
     for i in range(len(visit)):
         visit['starflags'][i] = starmask.getname(visit['starflag'][i])
         
@@ -1277,9 +1278,6 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
         nustars = len(np.unique(allvisit['apogee_id']))
         logger.info(str(nustars)+' of '+str(len(np.unique(visit['apogee_id'])))+' stars left')
         
-    # Use visit_latest, this can sometimes take forever
-    #cols = ','.join(vcols+rvcols)        
-    #visit = db.query('visit_latest',cols=cols,where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     # rv_components can sometimes be an object type
     if allvisit.dtype['rv_components'] == np.object:
         allvisit = Table(allvisit)
