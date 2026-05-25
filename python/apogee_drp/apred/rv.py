@@ -108,7 +108,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         starver = str(mjd)
     logger.info('Version='+starver)
 
-
     # Output directory
     load = apload.ApLoad(apred=apred,telescope=telescope)
     starfile = load.filename('Star',obj=star)
@@ -1202,7 +1201,7 @@ def dbingest(startab,starvisits):
                    'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag',
                    'gaia_gerr', 'gaia_bpmag', 'gaia_bperr', 'gaia_rpmag', 'gaia_rperr',
                    'sdssv_apogee_target0', 'firstcarton',
-                   'targflags', 'starflag', 'starflags', 'created', 'rvtab','too']
+                   'targflags', 'starflags', 'created', 'rvtab','too']
         visits = starvisits.copy()  # make a local copy
         for c in delcols:
             if c in visits.dtype.names:

@@ -19,7 +19,7 @@ Introduction
 - `Radial Velocities <rv.html>`_
 - `Fabry-Perot Interferometer <fpi.html>`_
 - `Flux Calibration <fluxcal.html>`_
-- `Quality Flags<flags.html>`_
+- `Quality Flags <flags.html>`_
 - `Quality Assurance <qa.html>`_
 - `Data Access <access.html>`_
 
