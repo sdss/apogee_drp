@@ -206,12 +206,24 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     else: sigfib = 0.
     startab['meanfib'] = meanfib
     startab['sigfib'] = sigfib
-
-    import pdb; pdb.set_trace()
     
     # Select good visit spectra
     gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
                    (allvisits['snr'] > snmin) )
+    # Print out information on bad/excluded visits
+    if len(gd)<len(allvisits):
+        bd = np.delete(np.arange(len(allvisits)),gd)
+        logger.info('BAD/excluded visits ('+str(len(bd))+')')
+        logger.info(90*'-')
+        logger.info('NUM                   NAME                        SNR     STARFLAG      STARFLAGS')
+        logger.info(90*'-')
+        for i in range(len(bd)):
+            name = os.path.basename(allvisits['file'][bd[i]])
+            starflag = allvisits['starflag'][bd[i]]
+            logger.info('{:3d} {:s} {:6.2f} {:8d} {:s}'.format(i+1,name,allvisits['snr'][bd[i]],
+                                                               starflag,starmask.getname(starflag)))
+        logger.info(90*'-')
+                        
     # No good visits, but still write to star table
     if len(gd)==0:
         logger.info('No visits passed QA cuts')
