@@ -83,6 +83,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     else:
         allvisits = db.query('visit',cols='*',where="apogee_id='"+star+"' and telescope='"+telescope+"' and apred_vers='"+apred+"' and mjd<="+str(mjd))
     db.close()
+    # No visits
+    if len(allvisits)==0:
+        logger.info('No visit files found')
+        return    
     # Sometimes "field" has leading spaces
     allvisits['field'] = np.char.array(allvisits['field']).strip()
     nallvisits = len(allvisits)
@@ -202,6 +206,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     else: sigfib = 0.
     startab['meanfib'] = meanfib
     startab['sigfib'] = sigfib
+
+    import pdb; pdb.set_trace()
     
     # Select good visit spectra
     gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
@@ -219,6 +225,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         startab['starflag'] = starflag
         startab['andflag'] = andflag
         allvisits['starflag'] |= starmask.getval('RV_FAIL')  # flag rv_fail
+        allvisits['starver'] = starver
         for i in range(len(allvisits)):
             allvisits['starflags'][i] = starmask.getname(allvisits['starflag'][i])
         allvisits['goodvisit'] = False
@@ -1194,7 +1201,6 @@ def dbingest(startab,starvisits):
     # Load star table
     if startab is not None:
         db.ingest('star',startab)   # load summary information into "star" table
-    
 
     # Load visit RV information into "rv_visit" table
     #  get star_pk from "star" table
