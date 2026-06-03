@@ -95,8 +95,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         return
     logger.info('%d visit file(s) found' % nallvisits)
     allvisits = Table(allvisits)
-    # Change datatype of STARFLAG to 64-bit
-    allvisits['starflag'] = allvisits['starflag'].astype(np.uint64)
+    # Change datatype of VISITFLAG to 64-bit
+    allvisits['visitflag'] = allvisits['visitflag'].astype(np.uint64)
     # Add goodvisit column, default to bad
     allvisits['goodvisit'] = False
     
@@ -105,7 +105,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     rvflags = ['SUSPECT_RV_COMBINATION','SUSPECT_BROAD_LINES','BAD_RV_COMBINATION','RV_REJECT','RV_SUSPECT',
                'MULTIPLE_SUSPECT','RV_FAIL','SUSPECT_ROTATION']
     for c in rvflags:
-        allvisits['starflag'] &= ~starmask.getval(c)
+        allvisits['visitflag'] &= ~starmask.getval(c)
     
     # Get the star version number
     #  this is the largest MJD5 in the FULL list of visits
@@ -208,20 +208,20 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     startab['sigfib'] = sigfib
     
     # Select good visit spectra
-    gd, = np.where(((allvisits['starflag'] & starmask.badval()) == 0) &
+    gd, = np.where(((allvisits['visitflag'] & starmask.badval()) == 0) &
                    (allvisits['snr'] > snmin) )
     # Print out information on bad/excluded visits
     if len(gd)<len(allvisits):
         bd = np.delete(np.arange(len(allvisits)),gd)
         logger.info('BAD/excluded visits ('+str(len(bd))+')')
         logger.info(90*'-')
-        logger.info('NUM                   NAME                        SNR     STARFLAG      STARFLAGS')
+        logger.info('NUM                   NAME                        SNR     VISITFLAG      VISITFLAGS')
         logger.info(90*'-')
         for i in range(len(bd)):
             name = os.path.basename(allvisits['file'][bd[i]])
-            starflag = allvisits['starflag'][bd[i]]
+            visitflag = allvisits['visitflag'][bd[i]]
             logger.info('{:3d} {:s} {:6.2f} {:8d} {:s}'.format(i+1,name,allvisits['snr'][bd[i]],
-                                                               starflag,starmask.getname(starflag)))
+                                                               visitflag,starmask.getname(visitflag)))
         logger.info(90*'-')
                         
     # No good visits, but still write to star table
@@ -230,16 +230,16 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         # Add starflag and andflag
         starflag,andflag = np.uint64(0),np.uint64(0)
         for v in allvisits:
-            starflag |= v['starflag'] # bitwise OR
-            andflag &= v['starflag']  # bitwise AND
+            starflag |= v['visitflag'] # bitwise OR
+            andflag &= v['visitflag']  # bitwise AND
         starflag |= starmask.getval('RV_FAIL')
         andflag |= starmask.getval('RV_FAIL')
         startab['starflag'] = starflag
         startab['andflag'] = andflag
-        allvisits['starflag'] |= starmask.getval('RV_FAIL')  # flag rv_fail
+        allvisits['visitflag'] |= starmask.getval('RV_FAIL')  # flag rv_fail
         allvisits['starver'] = starver
         for i in range(len(allvisits)):
-            allvisits['starflags'][i] = starmask.getname(allvisits['starflag'][i])
+            allvisits['visitflags'][i] = starmask.getname(allvisits['visitflag'][i])
         allvisits['goodvisit'] = False
         # Load star summary information into database
         dbingest(startab,allvisits)
@@ -248,10 +248,10 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     if len(gd)<len(allvisits):
         bd = np.delete(np.arange(len(allvisits)),gd)
         badvisits = allvisits[bd]
-        badvisits['starflag'] |= starmask.getval('RV_FAIL')  # flag rv_fail
+        badvisits['visitflag'] |= starmask.getval('RV_FAIL')  # flag rv_fail
         badvisits['starver'] = starver
         for i in range(len(badvisits)):
-            badvisits['starflags'][i] = starmask.getname(badvisits['starflag'][i])
+            badvisits['visitflags'][i] = starmask.getname(badvisits['visitflag'][i])
         badvisits['goodvisit'] = False
         logger.info('Updating RV_VISIT table for '+str(len(bd))+' bad visits')
         dbingest(None,badvisits)
@@ -267,7 +267,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     # Add STARVER
     starvisits['starver'] = starver
     # Flag all visits as RV_FAIL to start with, will remove if they worked okay
-    starvisits['starflag'] |= starmask.getval('RV_FAIL')
+    starvisits['visitflag'] |= starmask.getval('RV_FAIL')
     # Initialize visit RV tags
     for col in ['vtype','vrel','vrelerr','vrad','bc','chisq','rv_teff','rv_tefferr','rv_logg','rv_loggerr','rv_feh','rv_feherr']:
         if col == 'vtype':
@@ -299,9 +299,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     visits = []
     ncomponents = 0
     logger.info('Doppler results and QA')
-    logger.info('---------------------------------------------------------------------------')
-    logger.info('NUM        NAME                N_COMPONENTS    VRAD-XCORR_VRAD     STARFLAG')
-    logger.info('---------------------------------------------------------------------------')
+    logger.info('----------------------------------------------------------------------------')
+    logger.info('NUM        NAME                N_COMPONENTS    VRAD-XCORR_VRAD     VISITFLAG')
+    logger.info('----------------------------------------------------------------------------')
     for i,(v,g) in enumerate(zip(dopvisitstr,gaussout)) :
         # Match by filename components in case there was an error reading in doppler
         name = os.path.basename(v['filename'])
@@ -319,7 +319,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
             continue
         visits.append(vind)
         # Remove RV_FAIL that we added above
-        starvisits['starflag'][vind] &= ~starmask.getval('RV_FAIL')
+        starvisits['visitflag'][vind] &= ~starmask.getval('RV_FAIL')
         # Add Doppler outputs
         starvisits['vrel'][vind] = v['vrel']
         starvisits['vrelerr'][vind] = v['vrelerr']
@@ -331,7 +331,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         starvisits['rv_ccpfwhm'][vind] = v['ccpfwhm']
         starvisits['rv_autofwhm'][vind] = v['autofwhm']
         if starvisits['rv_autofwhm'][vind] > 300:
-            starvisits['starflag'][vind] |= starmask.getval('SUSPECT_BROAD_LINES')
+            starvisits['visitflag'][vind] |= starmask.getval('SUSPECT_BROAD_LINES')
         starvisits['chisq'][vind] = v['chisq']
         starvisits['rv_teff'][vind] = v['teff']
         starvisits['rv_tefferr'][vind] = v['tefferr']
@@ -344,7 +344,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         else:
             starvisits['n_components'][vind] = g['N_components']
         if starvisits['n_components'][vind] > 1 :
-            starvisits['starflag'][vind] |= starmask.getval('MULTIPLE_SUSPECT')
+            starvisits['visitflag'][vind] |= starmask.getval('MULTIPLE_SUSPECT')
             n = len(g['best_fit_parameters'])//3
             gd, = np.where(np.array(g['best_fit_parameters'])[0:n] > 0)
             rv_comp = np.array(g['best_fit_parameters'])[2*n+gd]
@@ -358,17 +358,17 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         else:
             bd_diff = 50
         if (np.abs(starvisits['vrad'][vind]-starvisits['xcorr_vrad'][vind]) > bd_diff) :
-            starvisits['starflag'][vind] |= starmask.getval('RV_REJECT')
+            starvisits['visitflag'][vind] |= starmask.getval('RV_REJECT')
         elif (np.isclose(starvisits['vrad'][vind],starvisits['xcorr_vrad'][vind])==False) :
-            starvisits['starflag'][vind] |= starmask.getval('RV_SUSPECT')
+            starvisits['visitflag'][vind] |= starmask.getval('RV_SUSPECT')
         logger.info('{:3d} {:s} {:3d} {:.3f} {:s}'.format(i+1,name,starvisits['n_components'][vind],
                                                           starvisits['vrad'][vind]-starvisits['xcorr_vrad'][vind],
-                                                          starmask.getname(starvisits['starflag'][vind])))
+                                                          starmask.getname(starvisits['visitflag'][vind])))
     logger.info('---------------------------------------------------------------------------')
 
-    # Set STARFLAGS for the visits (successful and failed ones)
+    # Set VISITFLAGS for the visits (successful and failed ones)
     for i in range(len(starvisits)):
-        starvisits['starflags'][i] = starmask.getname(starvisits['starflag'][i])
+        starvisits['visitflags'][i] = starmask.getname(starvisits['visitflag'][i])
 
 
     # Compute final star-level values
@@ -404,7 +404,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     gdvisits = []
     if len(visits)>0:
         visits = np.array(visits)
-        gdrv, = np.where((starvisits['starflag'][visits] & starmask.getval('RV_REJECT')) == 0)
+        gdrv, = np.where((starvisits['visitflag'][visits] & starmask.getval('RV_REJECT')) == 0)
         ngdrv = len(gdrv)
         if ngdrv>0:
             gdvisits = visits[gdrv]
@@ -532,7 +532,7 @@ def dorv(allvisit,starver,obj=None,telescope=None,apred=None,clobber=False,verbo
             logger.info('Spectrum {:d} has all pixels masked'.format(i+1))
             spec.snr = 0
             allvisit['snr'][i] = 0
-            allvisit['starflag'][i] += (allvisit['starflag'][i] | starmask.getval('RV_FAIL'))
+            allvisit['visitflag'][i] += (allvisit['visitflag'][i] | starmask.getval('RV_FAIL'))
             
         if windows is not None :
             # If we have spectral windows to mask, do so here
@@ -895,7 +895,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         if len(bd) > 0: stack.err[i,bd] *= np.sqrt(100)
 
         # downweight spectrum if MTPFLUX_LT_50 bit set
-        if visit['starflag'] & starmask.getval('MTPFLUX_LT_50'):
+        if visit['visitflag'] & starmask.getval('MTPFLUX_LT_50'):
             stack.err[i,:] *= 3.
         
         if plot:
@@ -905,7 +905,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             pdb.set_trace()
 
         # Accumulate for header of combined frame. Turn off visit specific RV flags first
-        visitflag = visit['starflag'] & ~starmask.getval('RV_REJECT') & ~starmask.getval('RV_SUSPECT')
+        visitflag = visit['visitflag'] & ~starmask.getval('RV_REJECT') & ~starmask.getval('RV_SUSPECT')
         starflag |= visitflag
         andflag &= visitflag
         if visit['survey'] == 'apogee' :
@@ -1102,7 +1102,7 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
         if np.isfinite(visit_vrad)==False: visit_vrad = 'NaN'
         apstar.header['VRAD{:d}'.format(i)] = (visit_vrad,' Barycentric velocity (km/s), visit {:d}'.format(i))
         apstar.header['SNRVIS{:d}'.format(i)] = (visit['snr'],' Signal/Noise ratio, visit {:d}'.format(i))
-        apstar.header['FLAG{:d}'.format(i)] = (visit['starflag'],' STARFLAG for visit {:d}'.format(i))
+        apstar.header['FLAG{:d}'.format(i)] = (visit['visitflag'],' VISITFLAG for visit {:d}'.format(i))
         apstar.header.insert('SFILE{:d}'.format(i),('COMMENT','VISIT {:d} INFORMATION'.format(i)))
 
     # Fix any NaNs in the header, astropy doesn't allow them
@@ -1245,7 +1245,7 @@ def dbingest(startab,starvisits):
         db.ingest('rv_visit',np.array(visits))   # Load the visit information into the table  
 
         # NO, the visit table should not be changed/immutable
-        ## Need to update starflag/starflags in visit table
+        ## Need to update visitflag/visitflags in visit table
         #delcols = ['starver','vtype','vrel','vrelerr','vrad','bc','chisq','rv_teff',
         #           'rv_tefferr','rv_logg','rv_loggerr','rv_feh','rv_feherr',
         #           'xcorr_vrel','xcorr_vrelerr','xcorr_vrad','rv_ccpfwhm','rv_autofwhm',

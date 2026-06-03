@@ -1021,8 +1021,8 @@ def create_sumfiles_mjd(apred,telescope,mjd5,logger=None):
              'sdss5_target_catalogids', 'sdss5_target_carton_pks', 'sdss5_target_cartons', 'sdss5_target_flagshex',
              'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
              'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
-             'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
-             'starflags','dateobs','jd','exptime']
+             'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'visitflag', 
+             'visitflags','dateobs','jd','exptime']
     rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'n_components', 'rv_components']
 
@@ -1179,9 +1179,9 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
              'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
              'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr',
              'dateobs','jd','exptime']
-    rvcols = ['starver', 'starflag', 'starflags', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
-              'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'rv_ccpfwhm', 'rv_autofwhm',
-              'n_components', 'rv_components', 'goodvisit']
+    rvcols = ['starver', 'visitflag', 'visitflags', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq',
+              'rv_teff', 'rv_feh','rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'rv_ccpfwhm',
+              'rv_autofwhm','n_components', 'rv_components', 'goodvisit']
     
 
     # Straight join query of visit and rv_visit
@@ -1198,29 +1198,29 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     if len(bad)>0:
         visit = np.delete(visit,bad)
 
-    # Fix STARFLAG for stars where Doppler crashed
+    # Fix VISITFLAG for stars where Doppler crashed
     badrv, = np.where(~np.isfinite(allstar['vrad']))
     vindex = dln.create_index(visit['apogee_id'])
     _,ind1,ind2 = np.intersect1d(allstar['apogee_id'][badrv],vindex['value'],
                                  return_indices=True)
     for i in range(len(ind1)):
         ind = vindex['index'][vindex['lo'][i]:vindex['hi'][i]+1]
-        visit['starflag'][ind] |= starmask.getval('RV_FAIL')
+        visit['visitflag'][ind] |= starmask.getval('RV_FAIL')
 
-    # Remake STARFLAGS from the rv_visit STARFLAG
-    gd, = np.where(visit['starflag'] >= 0)
-    starflags = len(visit)*['']
+    # Remake VISITFLAGS from the rv_visit VISITFLAG
+    gd, = np.where(visit['visitflag'] >= 0)
+    visitflags = len(visit)*['']
     for i in range(len(gd)):
-        #visit['starflags'][gd[i]] = starmask.getname(visit['starflag'][gd[i]])
-        starflags[gd[i]] = starmask.getname(visit['starflag'][gd[i]])
-    starflags = np.array(starflags)
-    # need to change length of STARFLAGS in visit array
-    if starflags.dtype.itemsize > visit['starflags'].dtype.itemsize:
+        #visit['visitflags'][gd[i]] = starmask.getname(visit['visitflag'][gd[i]])
+        visitflags[gd[i]] = starmask.getname(visit['visitflag'][gd[i]])
+    visitflags = np.array(visitflags)
+    # need to change length of VISITFLAGS in visit array
+    if visitflags.dtype.itemsize > visit['visitflags'].dtype.itemsize:
         visit = Table(visit,copy=False)
-        visit['starflags'] = starflags
+        visit['visitflags'] = visitflags
         visit = visit.as_array()
     else:
-        visit['starflags'] = starflags
+        visit['visitflags'] = visitflags
         
     # Fix bad STARVER values
     #bdstarver, = np.where(np.char.array(visit['starver']) == '')
@@ -1395,8 +1395,8 @@ def create_sumfiles_carton(apred,telescope,carton,logger=None):
              'herr', 'kmag', 'kerr', 'src_h', 'pmra', 'pmdec', 'pm_src', 'apogee_target1', 'apogee_target2', 'apogee_target3',
              'apogee_target4', 'catalogid', 'sdss_id', 'gaia_release', 'gaia_plx', 'gaia_plx_error', 'gaia_pmra', 'gaia_pmra_error',
              'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag', 'gaia_gerr', 'gaia_bpmag', 'gaia_bperr',
-             'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'starflag', 
-             'starflags','dateobs','jd','exptime']
+             'gaia_rpmag', 'gaia_rperr', 'sdssv_apogee_target0', 'firstcarton', 'targflags', 'snr', 'visitflag', 
+             'visitflags','dateobs','jd','exptime']
     rvcols = ['starver', 'bc', 'vtype', 'vrel', 'vrelerr', 'vrad', 'chisq', 'rv_teff', 'rv_feh',
               'rv_logg', 'xcorr_vrel', 'xcorr_vrelerr', 'xcorr_vrad', 'n_components', 'rv_components']
     
