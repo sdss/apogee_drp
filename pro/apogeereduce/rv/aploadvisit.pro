@@ -123,7 +123,7 @@ add_tag,str,'SFD_EBV',sxpar(str.head,'SFD_EBV'),str
 add_tag,str,'RELFLUX',sxpar(str.head,'RELFLUX'),str
 add_tag,str,'MTPFLUX',sxpar(str.head,'MTPFLUX'),str
 add_tag,str,'SNR',sxpar(str.head,'SNR'),str
-add_tag,str,'STARFLAG',sxpar(str.head,'STARFLAG'),str
+add_tag,str,'VISITFLAG',sxpar(str.head,'VISITFLG'),str
 
 ;stop
 

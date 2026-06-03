@@ -292,7 +292,7 @@ for i=0,n_elements(ims)-1 do begin
         vfile=apogee_filename('Visit',plate=cplate,mjd=cmjd,fiber=fiber[j].fiberid,reduction=reduction_id)
         if file_test(vfile) then begin
           h=headfits(vfile)
-          if size(h,/type) eq 7 then printf,objhtml,'<BR>'+starflag(sxpar(h,'STARFLAG'))
+          if size(h,/type) eq 7 then printf,objhtml,'<BR>'+starflag(sxpar(h,'VISITFLG'))
         endif
       endif
     ;endif
