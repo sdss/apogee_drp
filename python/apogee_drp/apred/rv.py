@@ -299,9 +299,9 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     visits = []
     ncomponents = 0
     logger.info('Doppler results and QA')
-    logger.info('----------------------------------------------------------------------------')
-    logger.info('NUM        NAME                N_COMPONENTS    VRAD-XCORR_VRAD     VISITFLAG')
-    logger.info('----------------------------------------------------------------------------')
+    logger.info('-----------------------------------------------------------------------------')
+    logger.info('NUM        NAME                N_COMPONENTS    VRAD-XCORR_VRAD     VISITFLAGS')
+    logger.info('-----------------------------------------------------------------------------')
     for i,(v,g) in enumerate(zip(dopvisitstr,gaussout)) :
         # Match by filename components in case there was an error reading in doppler
         name = os.path.basename(v['filename'])
@@ -385,8 +385,8 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     starflag = startab['starflag']
     andflag = startab['andflag']
     for v in starvisits:
-        starflag |= v['starflag']
-        andflag &= v['starflag']
+        starflag |= v['visitflag']
+        andflag &= v['visitflag']
     startab['starflags'] = starmask.getname(startab['starflag'])
     startab['andflags'] = starmask.getname(startab['andflag'])
 
