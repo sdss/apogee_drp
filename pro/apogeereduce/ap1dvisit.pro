@@ -685,7 +685,7 @@ FOR i=0L,nplanfiles-1 do begin
                 gaia_pmdec:0.0, gaia_pmdec_error:0.0, gaia_gmag:0.0, gaia_gerr:0.0,$
                 gaia_bpmag:0.0, gaia_bperr:0.0, gaia_rpmag:0.0, gaia_rperr:0.0, sdssv_apogee_target0:0LL,$
                 firstcarton:'',cadence:'',program:'',category:'',$
-                targflags:'',snr: 0.0, starflag:0L,starflags: '',dateobs:'',jd:0.0d0}
+                targflags:'',snr: 0.0, visitflag:0L,visitflags: '',dateobs:'',jd:0.0d0}
 
     visitstr.apogee_id = obj[istar]
     visitstr.target_id = objdata[istar].object
@@ -741,8 +741,8 @@ FOR i=0L,nplanfiles-1 do begin
     visitstr.snr = str.snr
     visitstr.relflux = str.relflux
     visitstr.mtpflux = str.mtpflux
-    visitstr.starflag = str.starflag
-    visitstr.starflags = starflag(str.starflag)
+    visitstr.visitflag = str.visitflag
+    visitstr.visitflags = starflag(str.visitflag)
     MWRFITS,visitstr,visitfile,/silent
     PUSH,allvisitstr,visitstr
   endfor  ;; object loop

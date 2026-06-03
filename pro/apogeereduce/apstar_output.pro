@@ -194,10 +194,10 @@ endelse
 
 ; STARFLAGS determine OR and AND flags, and add new bits
 starflag=0L
-andflag=visitstr[0].starflag
+andflag=visitstr[0].visitflag
 for i=0,nvisits-1 do begin
-  starflag=starflag or visitstr[i].starflag
-  andflag=andflag and visitstr[i].starflag
+  starflag=starflag or visitstr[i].visitflag
+  andflag=andflag and visitstr[i].visitflag
 endfor
 if ((synthscatter gt max([2.,2*verr_med])) OR (synthscatter LT 0)) then starflag = starflag or starflagval('SUSPECT_RV_COMBINATION') ;Recommend  star_warn set in aspcapflag if this is set
 if ((synthscatter gt max([10.,10*verr_med])) OR (synthscatter LT 0)) then starflag = starflag or starflagval('BAD_RV_COMBINATION') ;Recomemnd star_bad set  in aspcapflag if this is set
@@ -223,8 +223,8 @@ sxaddpar,header,'SVERR_ME',synthverr_med,' median error of SYNTHVHELIO velocity 
 sxaddpar,header,'SVSCAT',synthvscatter,' STDEV of SYNTHVHELIO (km/s)'
 sxaddpar,header,'SYNTHSCA',synthscatter,' STDEV of OBSVHELIO-SYNTHVHELIO (km/s)'
 sxaddpar,header,'SNR',median(starstr.spec[*,0]/starstr.err[*,0]),' final median Signal/Noise ratio'
-sxaddpar,header,'STARFLAG',starflag,' bitwise OR of individual visit starflags'
-sxaddpar,header,'ANDFLAG',andflag,' bitwise AND of individual visit starflags'
+sxaddpar,header,'STARFLAG',starflag,' bitwise OR of individual visit visitflags'
+sxaddpar,header,'ANDFLAG',andflag,' bitwise AND of individual visit visitflags'
 ; mean fiber
 if ngdv gt 0 then meanfib=TOTAL(visitstr[gdv].fiberid*visitstr[gdv].snr)/TOTAL(visitstr[gdv].snr) else meanfib=999999
 if nvisits gt 1 and ngdv gt 1 then sigfib = stddev(visitstr[gdv].fiberid) else sigfib = 0.
@@ -269,7 +269,7 @@ for i=0,nvisits-1 do begin
   sxaddpar,header,'RVALPH'+num,visitstr[i].rv_alpha,' alpha abundance from visit mini-grid xcorr'
   sxaddpar,header,'RVCARB'+num,visitstr[i].rv_carb,' carbon abundance from visit mini-grid xcorr'
   sxaddpar,header,'SNRVIS'+num,visitstr[i].snr,' Signal/Noise ratio, visit '+num
-  sxaddpar,header,'FLAG'+num,visitstr[i].starflag,' STARFLAG for visit '+num
+  sxaddpar,header,'FLAG'+num,visitstr[i].visitflag,' VISITFLAG for visit '+num
 end
 
 ; Pixel limits of each chip

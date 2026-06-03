@@ -509,9 +509,9 @@ avgcont = TOTAL(vstackstr.cont,1,/nan)/(TOTAL(finite(vstackstr.cont),1)>1)
 npersist=0
 igd=0
 for i=0,nvisits-1 do begin
-  if ( (visitstr[i].starflag and starflagval('PERSIST_HIGH')) gt 0 or $
-       (visitstr[i].starflag and starflagval('PERSIST_MED')) gt 0 or $
-       (visitstr[i].starflag and starflagval('PERSIST_LOW')) gt 0 ) then begin
+  if ( (visitstr[i].visitflag and starflagval('PERSIST_HIGH')) gt 0 or $
+       (visitstr[i].visitflag and starflagval('PERSIST_MED')) gt 0 or $
+       (visitstr[i].visitflag and starflagval('PERSIST_LOW')) gt 0 ) then begin
      npersist+=1 
   endif else begin
      if igd eq 0 then gd=i else gd=[gd,i]

@@ -575,7 +575,7 @@ For i=0,nfibers-1 do begin
     if float(nbad)/n_elements(mask) gt 0.2 then flag = flag OR starflagval('BAD_PIXELS')
 
     ; Add to header
-    sxaddpar,header,'STARFLAG',flag,' Star data quality flag'
+    sxaddpar,header,'VISITFLG',flag,' Visit data quality flag'
 
     ; Add flux correction factor
     if tag_exist(frame,'FLUXCORR') then begin
