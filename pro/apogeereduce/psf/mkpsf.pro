@@ -35,7 +35,7 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
 
   dirs = getdir(apodir,caldir,spectrodir,vers)
   caldir = dirs.caldir
-
+  
   psfdir = apogee_filename('PSF',num=psfid[0],chip='c',/dir)
   file = apogee_filename('PSF',num=psfid[0],chip='c',/base)
   ;; If another process is alreadying make this file, wait!

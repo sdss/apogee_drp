@@ -250,12 +250,39 @@ if keyword_set(sparseid) then begin
 endif
 
 ;; Assign observed PSF to separate fibers
-;; Flux from each pixel will be split between the two neighboring traces
-;; With sparseid, use sparse pack image to determine the weights
-;; If no sparse id, use gaussian with sigma=2 to set weights
+;; Flux from each pixel will be split between the two neighboring traces.
+;; With sparseid, use sparse pack image to determine the weights.
+;; If no sparse id, use gaussian with sigma=2 to set weights.
+;;
+;; IMPORTANT MEMORY NOTE:
+;; The old version allocated
+;;
+;;    bpsf = fltarr(2048,2048,ntrace)
+;;
+;; which is ~4.7 GiB for ntrace=300.  That cube is mostly empty because each
+;; fiber only occupies a narrow band around its trace.  The code below keeps
+;; the same pixel-splitting logic, but stores each fiber in a compact vertical
+;; strip using pointer arrays.
 sig2 = 2*2^2
 if not keyword_set(dmax) then dmax = 7
-bpsf = fltarr(2048,2048,ntrace)
+
+;; Pre-compute the vertical range needed for each trace.  These ranges are
+;; intentionally a little conservative: trace +/- dmax over all columns.
+loarr = intarr(ntrace)
+hiarr = intarr(ntrace)
+imgptr = ptrarr(ntrace)
+for k=0,ntrace-1 do begin
+  goodcen = where(finite(trace[*,k]),ngoodcen)
+  if ngoodcen gt 0 then begin
+    loarr[k] = floor(min(trace[goodcen,k])-dmax) > 0
+    hiarr[k] = ceil(max(trace[goodcen,k])+dmax) < 2047
+  endif else begin
+    loarr[k] = 0
+    hiarr[k] = 0
+  endelse
+  imgptr[k] = ptr_new(fltarr(2048,hiarr[k]-loarr[k]+1))
+endfor
+
 ;; Column loop
 for i=0,2047 do begin
   if not keyword_set(silent) then $
@@ -263,75 +290,95 @@ for i=0,2047 do begin
 
   k2 = 0
   tmp = fltarr(2048,ntrace)
+
+  ;; Check once per column whether this column has any finite PSF values.
+  gd = where(finite(psf[i,*]),ngd)
+
   ;; Row loop
-  for j=4,2043 do begin
-   ;; If whole row is masked, skip it
-   gd = where(finite(psf[i,*]),ngd)
-   if ngd gt 0 then begin
-     ;; Find the two traces on either side of this pixel
-     while trace[i,k2] lt j and k2 lt ntrace-1 do k2+=1
-     k1 = k2-1 lt 0 ? 0 : k2-1
-     ;; Find the distance from the surrounding traces
-     ;; If this is the first trace, only use one
-     if k1 ne k2 then d1 = j-trace[i,k1] else d1=dmax+1
-     d2 = j-trace[i,k2]
-     ;; Determine the weight to be given to each of the neighboring traces
-     w1=0 & w2=0
-     if abs(d1) lt dmax or abs(d2) lt dmax then begin
-      if keyword_set(sparseid) then begin
-       ;; Find the nearest sparse trace
-       d = abs(spsf.cent[i]-j)
-       dmin = min(d,is)
-       sd1 = spsf[is].cent[i]+d1-spsf[is].lo
-       sd2 = spsf[is].cent[i]+d2-spsf[is].lo
-       a = spsf[is].img
-       sz = size(*a)
-       if abs(d1) lt dmax and nint(sd1) ge 0 and fix(sd1)+1 lt sz[2] then begin
-         wlo = (*a)[i,fix(sd1)]
-         whi = (*a)[i,fix(sd1)+1]
-         w1 = wlo+(sd1-fix(sd1))*(whi-wlo)
-       endif
-       if abs(d2) lt dmax and nint(sd2) ge 0 and fix(sd2)+1 lt sz[2] then begin
-         wlo = (*a)[i,fix(sd2)]
-         whi = (*a)[i,fix(sd2)+1]
-         w2 = wlo+(sd2-fix(sd2))*(whi-wlo)
-       endif
-      endif else begin
-       if (abs(d1) lt dmax) then w1=exp(-d1^2/sig2)
-       if (abs(d2) lt dmax) then w2=exp(-d2^2/sig2)
-      endelse
-     endif
-     wtot = w1+w2
-     ;; Add this pixel into the empirical PSFs for the neighboring traces with
-     ;;    appropriate weights
-     if wtot gt 0 then begin
-       tmp[j,k1] = psf[i,j]*w1/wtot
-       tmp[j,k2] = psf[i,j]*w2/wtot
-     endif
-   endif
-  endfor
+  if ngd gt 0 then begin
+    for j=4,2043 do begin
+      ;; Find the two traces on either side of this pixel.
+      while trace[i,k2] lt j and k2 lt ntrace-1 do k2+=1
+      k1 = k2-1 lt 0 ? 0 : k2-1
+
+      ;; Find the distance from the surrounding traces.
+      ;; If this is the first trace, only use one.
+      if k1 ne k2 then d1 = j-trace[i,k1] else d1=dmax+1
+      d2 = j-trace[i,k2]
+
+      ;; Determine the weight to be given to each neighboring trace.
+      w1=0 & w2=0
+      if abs(d1) lt dmax or abs(d2) lt dmax then begin
+        if keyword_set(sparseid) then begin
+          ;; Find the nearest sparse trace.
+          d = abs(spsf.cent[i]-j)
+          dmin = min(d,is)
+          sd1 = spsf[is].cent[i]+d1-spsf[is].lo
+          sd2 = spsf[is].cent[i]+d2-spsf[is].lo
+          a = spsf[is].img
+          sz = size(*a)
+          if abs(d1) lt dmax and nint(sd1) ge 0 and fix(sd1)+1 lt sz[2] then begin
+            wlo = (*a)[i,fix(sd1)]
+            whi = (*a)[i,fix(sd1)+1]
+            w1 = wlo+(sd1-fix(sd1))*(whi-wlo)
+          endif
+          if abs(d2) lt dmax and nint(sd2) ge 0 and fix(sd2)+1 lt sz[2] then begin
+            wlo = (*a)[i,fix(sd2)]
+            whi = (*a)[i,fix(sd2)+1]
+            w2 = wlo+(sd2-fix(sd2))*(whi-wlo)
+          endif
+        endif else begin
+          if (abs(d1) lt dmax) then w1=exp(-d1^2/sig2)
+          if (abs(d2) lt dmax) then w2=exp(-d2^2/sig2)
+        endelse
+      endif
+
+      wtot = w1+w2
+
+      ;; Add this pixel into the empirical PSFs for the neighboring traces with
+      ;; appropriate weights.  This preserves the original overlap treatment.
+      if wtot gt 0 then begin
+        tmp[j,k1] = psf[i,j]*w1/wtot
+        tmp[j,k2] = psf[i,j]*w2/wtot
+      endif
+    endfor
+  endif
+
+  ;; Normalize each trace contribution in this column, as before, but store it
+  ;; in the compact strip rather than in bpsf[2048,2048,ntrace].
   norm = TOTAL(tmp,1)
   for k=0,ntrace-1 do begin
     bp = where(tmp[*,k] gt 0,nbp)
-    if nbp gt 0 then bpsf[i,bp,k] = tmp[bp,k]/norm[k]
+    if nbp gt 0 and norm[k] gt 0 then begin
+      yy = bp - loarr[k]
+      good = where(yy ge 0 and yy le (hiarr[k]-loarr[k]),ngood)
+      if ngood gt 0 then begin
+        p = imgptr[k]
+        (*p)[i,yy[good]] = tmp[bp[good],k]/norm[k]
+      endif
+    endif
   endfor
 
 endfor
+
 file = apogee_filename('EPSF',chip=chip[ichip],num=im)
 sxdelpar,head,'NAXIS1'
 sxdelpar,head,'NAXIS2'
 MWRFITS,0,file,head,/create
 
-;; Put the PSFs in the output structure
+;; Put the PSFs in the output structure.  Trim each compact strip down to the
+;; actually non-zero rows before writing, preserving the original LO/HI meaning.
 for k=0,ntrace-1 do begin
-  m = TOTAL(bpsf[*,*,k],1,/nan)
-  ind = where(finite(m) and m ne 0)
-  i1 = MIN(ind)
-  i2 = MAX(ind)
-  if i1 ge 0 then begin
-    outpsf = {fiber: fiber[k], cent: trace[*,k], lo: i1, hi: i2, img: bpsf[*,i1:i2,k]}
+  p = imgptr[k]
+  m = TOTAL(*p,1,/nan)
+  ind = where(finite(m) and m ne 0,nind)
+  if nind gt 0 then begin
+    i1 = MIN(ind)
+    i2 = MAX(ind)
+    outpsf = {fiber: fiber[k], cent: trace[*,k], lo: loarr[k]+i1, hi: loarr[k]+i2, img: (*p)[*,i1:i2]}
     MWRFITS,outpsf,file,/silent
   endif else print,'not halted, but bad PSF at: ',k
+  ptr_free,p
 endfor
 
 end
