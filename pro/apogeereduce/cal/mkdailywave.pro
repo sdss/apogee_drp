@@ -94,7 +94,7 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
   mjds = long(arcinfo[ui].mjd)
   nmjds = n_elements(mjds)
   si = sort(abs(mjds-mjd))
-  keep = si[0:(nmjds-1)<7]
+  keep = si[0:(nmjds-1)<6]
   mjds = mjds[keep]
   mjds = mjds[sort(mjds)]
   ;; Only keep the arclamps for these nights
