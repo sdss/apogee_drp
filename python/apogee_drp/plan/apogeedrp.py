@@ -4140,8 +4140,10 @@ def runqa(load,mjds,slurmpars,clobber=False,logger=None,nomonitor=False):
     # Run monitor page
     #  always runs on all MJDs
     if nomonitor==False:
-        monitor.monitor(instrument=instrument, apred=apred)
-
+        try:
+            monitor.monitor(instrument=instrument, apred=apred)
+        except:
+            traceback.print_exc()
     
 def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=None, 
                   planfiles=None,chkexp=None,chkvisit=None,chkrv=None,logfile=None,slurmpars=None,
