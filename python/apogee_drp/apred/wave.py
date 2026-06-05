@@ -169,11 +169,11 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
     # Get nights in range MJD+/-7 days
     mjdlist = os.listdir(datadir)
     mjds = [m for m in mjdlist if m.isdigit() and int(m) >= (int(mjd)-10) and int(m)<=(int(mjd)+10)]
-    # Trim it down to 8 days
+    # Trim it down to 7 days
     mjds = np.array(mjds).astype(int)
     diff = np.abs(mjds-mjd)
     si = np.argsort(diff)
-    mjds = mjds[si[0:8]]
+    mjds = mjds[si[0:7]]
     mjds = list(mjds[np.argsort(mjds)])
     print('Using MJDs ('+str(len(mjds))+'): '+','.join(np.char.array(mjds).astype(str)))
     expinfo = None
