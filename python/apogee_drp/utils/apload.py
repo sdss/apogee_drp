@@ -824,9 +824,9 @@ class ApLoad:
 
     def allfile(self,root,
                 location=None,obj=None,reduction=None,plate=None,mjd=None,num=None,fiber=None,chips=False,field=None,
-                healpix=None,configid=None,fps=None,download=True,fz=False) :
+                healpix=None,configid=None,fps=None,download=False,fz=False) :
         '''
-        Uses sdss_access to create filenames and download files if necessary
+        Uses sdss_access to create filenames
         '''
 
         if self.verbose: 
