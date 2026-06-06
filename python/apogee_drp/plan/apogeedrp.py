@@ -1044,9 +1044,9 @@ def create_sumfiles_mjd(apred,telescope,mjd5,logger=None):
     Table(allstarmjd).write(allstarmjdfile,overwrite=True)
 
     # rv_components can sometimes be an object type
-    if allvisit.dtype['rv_components'] == np.object:
-        allvisit = Table(allvisit)
-        allvisit['rv_components'] = np.zeros(len(allvisit),dtype=np.dtype((np.float32,3)))    
+    if allvisitmjd.dtype['rv_components'] == np.object:
+        allvisitmjd = Table(allvisitmjd)
+        allvisitmjd['rv_components'] = np.zeros(len(allvisitmjd),dtype=np.dtype((np.float32,3)))    
     allvisitfile = load.filename('allVisit').replace('.fits','-'+telescope+'.fits')
     allvisitmjdfile = allvisitfile.replace('allVisit','allVisitMJD').replace('.fits','-'+str(mjd5)+'.fits')
     allvisitmjdfile = mjdsumdir+'/'+os.path.basename(allvisitmjdfile)
