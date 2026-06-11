@@ -1052,12 +1052,12 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     # Checking that we have good targets for this visit
     targs = platefile['a'][11].data
     if fps:
-        gdtargs, = np.where((targs['HMAG'] > 5) & (targs['HMAG'] < 15) & (np.isnan(targs['HMAG']) == False) &
+        gdtargs, = np.where((targs['HMAG'] > 5) & (targs['HMAG'] < 17) & (np.isnan(targs['HMAG']) == False) &
                             (targs['TMASS_STYLE'] != '') & (targs['SPECTROGRAPHID']==2) &
                             (targs['ASSIGNED']) & (targs['ON_TARGET']) & (targs['VALID']) &
                             (targs['OBJTYPE'] != 'none') & (targs['OBJTYPE'] != ''))
     else:
-        gdtargs, = np.where((targs['HMAG'] > 5) & (targs['HMAG'] < 15) & (np.isnan(targs['HMAG']) == False) &
+        gdtargs, = np.where((targs['HMAG'] > 5) & (targs['HMAG'] < 17) & (np.isnan(targs['HMAG']) == False) &
                             (targs['TMASS_STYLE'] != '') & (targs['SPECTROGRAPHID']==2) &
                             (targs['OBJTYPE'] != 'none') & (targs['OBJTYPE'] != ''))
     ntargs = len(gdtargs)
@@ -1377,11 +1377,11 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
             ymin = -5;                       ymax = maxSNR + ((maxSNR - ymin) * 0.05)
 
             if fps:
-                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 17) & (np.isnan(Vsum['HMAG']) == False) & 
                                    (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
                                    (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
             else:
-                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+                notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 17) & (np.isnan(Vsum['HMAG']) == False) & 
                                    (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
 
             if len(notsky) > 10:
@@ -1541,11 +1541,11 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
         ax2.set_xlabel(r'Zeta (deg.)')
 
         if fps:
-            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 17) & (np.isnan(Vsum['HMAG']) == False) & 
                                (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
                                (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
         else:
-            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+            notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 17) & (np.isnan(Vsum['HMAG']) == False) & 
                                (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
 
         if len(notsky) > 10:
@@ -1764,7 +1764,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
 
             try:
                 if fps: 
-                    gd, = np.where((platesum2['HMAG'] > 5) & (platesum2['HMAG'] < 15) & (np.isnan(platesum2['HMAG']) == False) & 
+                    gd, = np.where((platesum2['HMAG'] > 5) & (platesum2['HMAG'] < 17) & (np.isnan(platesum2['HMAG']) == False) & 
                                    (platesum2['ASSIGNED']) & (platesum2['ON_TARGET']) & (platesum2['VALID']) & 
                                    (platesum2['OBJTYPE'] == fiblabs[itype]))
                     if itype == 0:
@@ -2298,11 +2298,11 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     Vsum = load.apVisitSum(int(plate), mjd)
     Vsum = Vsum[1].data
     if fps:
-        notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+        notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 17) & (np.isnan(Vsum['HMAG']) == False) & 
                            (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['ASSIGNED']) & 
                            (Vsum['ON_TARGET']) & (Vsum['VALID']) & (Vsum['OBJTYPE'] != 'none'))
     else:
-        notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 15) & (np.isnan(Vsum['HMAG']) == False) & 
+        notsky, = np.where((Vsum['HMAG'] > 5) & (Vsum['HMAG'] < 17) & (np.isnan(Vsum['HMAG']) == False) & 
                            (np.isnan(Vsum['SNR']) == False) & (Vsum['SNR'] > 0) & (Vsum['OBJTYPE'] != 'none'))
     if len(notsky) > 10:
         # First pass at fitting line to S/N as function of Hmag
