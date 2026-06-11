@@ -2410,7 +2410,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
                     objid = 'None'
                     assigned = 0
 
-                starflags = jvcat['starflags'].replace(',','<BR>')
+                starflags = jvcat['visitflags'].replace(',','<BR>')
                 firstcarton = jvcat['firstcarton']
                 visitfile = jvcat['file']
 
