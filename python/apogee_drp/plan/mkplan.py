@@ -863,7 +863,8 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
                'lco25m':os.environ['APOGEE_DATA_S']}[telescope]
     observatory = telescope[0:3]
     chips = ['a','b','c']
-
+    caltypes = ['DARK','ARCLAMP','DOMEFLAT','QUARTZFLAT','FPI','INTERNALFLAT']
+    
     # Output file/directory
     outfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+apred+'/'+telescope+'/'+telescope+'_'+str(mjd)+'auto.yaml'
     if os.path.exists(os.path.dirname(outfile))==False:
@@ -1078,7 +1079,9 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         # Sky frame
         #   identify sky frames as object frames with 10<nread<13
         #elif (expinfo['exptype'][i]=='OBJECT') and (expinfo['nread'][i]<13 and expinfo['nread'][i]>10) and (qachk['okay'][i]==True):
-        elif ((expinfo['exptype'][i]=='SKYFLAT') or (expinfo['designid'][i]=='-999')) and (qachk['okay'][i]==True):
+        #elif ((expinfo['exptype'][i]=='SKYFLAT') or (expinfo['designid'][i]=='-999')) and (qachk['okay'][i]==True):
+        elif (((expinfo['exptype'][i]=='SKYFLAT') or (expinfo['designid'][i]=='-999')) and
+              (qachk['okay'][i]==True) and (expinfo['exptype'][i] not in caltypes)):
             sky.append(int(expinfo['num'][i]))
         # Object exposure, used to be >15
         elif (expinfo['exptype'][i]=='OBJECT') and (expinfo['nread'][i]>13) and (qachk['okay'][i]==True):
