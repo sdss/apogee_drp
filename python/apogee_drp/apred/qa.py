@@ -2598,6 +2598,8 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     if objid is None:
         if mjd is not None:
             sql += " and v.mjd="+str(mjd)+" and rv.starver='"+str(mjd)+"'"
+        if plate is not None:
+            sql += " and v.plate='"+str(plate)+"'"
     else:
         makeplot = True
         sql += " and v.apogee_id='"+objid+"'"
@@ -2606,6 +2608,10 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
     allv = db.query(sql=sql)
     db.close()
 
+    if len(allv) < 1: 
+        print("----> makeStarHTML: no entries found")
+        return
+    
     # Only keep the starver that we want
     if mjd is None:
         starver = np.max(allv['starver'].astype(int)).astype(str)
