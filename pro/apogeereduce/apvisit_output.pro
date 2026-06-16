@@ -75,7 +75,7 @@ mjd = plugmap.mjd
 platemjd5 = strtrim(plate,2)+'-'+strtrim(mjd,2)
 locid = plugmap.locationid
 field = strtrim(plugmap.field,2)
-telescope = dirs.telescope
+telescope = strtrim(dirs.telescope,2)
 
 ;; FPS
 if plugmap.mjd ge 59556 then fps=1 else fps=0
@@ -475,7 +475,7 @@ For i=0,nfibers-1 do begin
 
     ; Add star information
     sxaddpar,header,'OBJID',strtrim(tmass_name,2),' Object ID'
-    sxaddpar,header,'OBJTYPE',fiberobjtype,' Object type'
+    sxaddpar,header,'OBJTYPE',strtrim(fiberobjtype,2),' Object type'
     sxaddpar,header,'RA',fiber_ra,' targeting right ascension, deg, J2000'
     sxaddpar,header,'DEC',fiber_dec,' targeting declination, deg, J2000'
     sxaddpar,header,'JMAG',plugmap.fiberdata[iplugind].jmag,' 2MASS J magnitude'
@@ -483,7 +483,7 @@ For i=0,nfibers-1 do begin
     sxaddpar,header,'KMAG',plugmap.fiberdata[iplugind].kmag,' 2MASS Ks magnitude'
     snr=median(frame.(1).flux[*,ifiber]/frame.(1).err[*,ifiber])
     sxaddpar,header,'SNR',snr,' median S/N, middle chip'
-    if keyword_set(survey) then sxaddpar,header,'SURVEY',survey,' Survey definition (for targeting flags)'
+    if keyword_set(survey) then sxaddpar,header,'SURVEY',strtrim(survey,2),' Survey definition (for targeting flags)'
     sxaddpar,header,'TARG1',targ1,' First APOGEE targeting flag (bitwise, see docs)'
     sxaddpar,header,'TARG2',targ2,' Second APOGEE targeting flag (bitwise, see docs)'
     sxaddpar,header,'TARG3',targ3,' Third APOGEE targeting flag (bitwise, see docs)'
