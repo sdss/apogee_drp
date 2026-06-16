@@ -75,6 +75,7 @@ mjd = plugmap.mjd
 platemjd5 = strtrim(plate,2)+'-'+strtrim(mjd,2)
 locid = plugmap.locationid
 field = strtrim(plugmap.field,2)
+telescope = dirs.telescope
 
 ;; FPS
 if plugmap.mjd ge 59556 then fps=1 else fps=0
@@ -170,7 +171,7 @@ if not keyword_set(single) then begin
     sxaddpar,header,'LOCID',locid,' Location ID of field'
     if keyword_set(single) then $
       sxaddpar,header,'TELESCOP','apo1m',' Telescope' else $
-      sxaddpar,header,'TELESCOP','apo25m',' Telescope'
+      sxaddpar,header,'TELESCOP',telescope,' Telescope'
 
     ; Create filename
     ;   apPlate-[abc]-PLATE4-MJD5.fits 
@@ -458,7 +459,7 @@ For i=0,nfibers-1 do begin
     sxaddpar,header,'PLATE',plate,' Plate ID'
     if keyword_set(single) then $
       sxaddpar,header,'TELESCOP','apo1m',' Telescope' else $
-      sxaddpar,header,'TELESCOP','apo25m',' Telescope'
+      sxaddpar,header,'TELESCOP',telescope,' Telescope'
     sxaddpar,header,'MJD5',mjd,' MJD of observation'
     sxaddpar,header,'FIBERID',ifiberid,' APOGEE Fiber ID 1-300'
     sxaddpar,header,'DATE-OBS',sxpar(frame.(0).header,'DATE-OBS'),' Observation timestamp'
