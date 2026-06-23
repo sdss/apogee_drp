@@ -1208,10 +1208,11 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     vindex = dln.create_index(visit['apogee_id'])
     _,ind1,ind2 = np.intersect1d(allstar['apogee_id'][badrv],vindex['value'],
                                  return_indices=True)
-    for i in range(len(ind1)):
-        ind = vindex['index'][vindex['lo'][i]:vindex['hi'][i]+1]
+    for i in range(len(ind2)):
+        ind = vindex['index'][vindex['lo'][ind2[i]]:vindex['hi'][ind2[i]]+1]
         visit['visitflag'][ind] |= starmask.getval('RV_FAIL')
-
+    # I'm not sure this is even needed anymore
+        
     # Remake VISITFLAGS from the rv_visit VISITFLAG
     gd, = np.where(visit['visitflag'] >= 0)
     visitflags = len(visit)*['']
