@@ -274,6 +274,7 @@ for istar=0,nskyind-1 do begin
  endif
 endfor
 ; Add flux correction factors to structure
+APADDPAR,outframe,'FLUXNORM',mednorm,'median flux normalization factor'
 outframe = create_struct(outframe,'FLUXCORR',fluxcorr)
 return
 

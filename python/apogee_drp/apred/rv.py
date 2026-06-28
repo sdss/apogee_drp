@@ -284,7 +284,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     rvtab = Column(name='rvtab',dtype=Table,length=len(starvisits))
     starvisits.add_column(rvtab)
     starvisits['goodvisit'] = False   #  boolean flag to starvisits that it was used in the combination
-
     
     # Run Doppler with dorv() on the good visits
     try:
@@ -457,7 +456,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         startab['snr'] = apstar.header['SNR']
     else:
         logger.info('No good visits for '+star)
-        
+    
     # Load information into the database
     dbingest(startab,starvisits)
         

@@ -557,7 +557,7 @@ FOR i=0L,nplanfiles-1 do begin
     print, ntellerror,' frames had APTELLURIC errors'
     if keyword_set(halt) then stop,'halt: ', ntellerror,' frames had APTELLURIC errors'
   endif
-
+  
   ;----------------------------------
   ; STEP 5:  Dither Combining
   ;----------------------------------
@@ -570,7 +570,7 @@ FOR i=0L,nplanfiles-1 do begin
     stop
     goto, BOMB
   endif
-
+  
   ;----------------------------------
   ; STEP 6:  Flux Calibration
   ;----------------------------------
@@ -580,7 +580,7 @@ FOR i=0L,nplanfiles-1 do begin
     zero = median([hmag+2.5*alog10(median(combframe.(1).flux[*,fiberloc],dim=1))])
   endif else zero=0.
   AP1DFLUXING,combframe,plugmap,finalframe
-
+  
   ;----------------------------------------------------
   ; Output apPlate frames and individual visit spectra, and load apVisit headers with individual star info
   ;----------------------------------------------------
