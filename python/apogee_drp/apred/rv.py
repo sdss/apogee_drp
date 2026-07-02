@@ -714,6 +714,11 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
     sumstr,finalstr,bmodel,specmlist = dopout
 
     matplotlib.use('Agg')
+
+    # Character size
+    font = {'size': 14}
+    matplotlib.rc('font', **font)
+    
     n = len(bmodel)
     # Plot final spectra and final models
     # full spectrum
@@ -776,7 +781,8 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
                 ax[i].plot(x,gaussian(*pars)(x))
                 if pars[0] > 0 : color='k'
                 else : color='r'
-                ax[i].text(0.1,0.8-j*0.1,'{:8.1f}{:8.1f}{:8.1f}'.format(*pars),transform=ax[i].transAxes,color=color)
+                ax[i].text(0.01,0.8-j*0.1,'{:8.1f}{:8.1f}{:8.1f}'.format(*pars),
+                           transform=ax[i].transAxes,color=color,ha='left')
     fig.savefig(outdir+'/'+obj+'_ccf.png')
     plt.close()
 
