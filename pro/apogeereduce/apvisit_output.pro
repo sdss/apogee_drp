@@ -481,7 +481,11 @@ For i=0,nfibers-1 do begin
     sxaddpar,header,'JMAG',plugmap.fiberdata[iplugind].jmag,' 2MASS J magnitude'
     sxaddpar,header,'HMAG',plugmap.fiberdata[iplugind].hmag,' 2MASS H magnitude'
     sxaddpar,header,'KMAG',plugmap.fiberdata[iplugind].kmag,' 2MASS Ks magnitude'
-    snr=median(frame.(1).flux[*,ifiber]/frame.(1).err[*,ifiber])
+    gdpix = where(frame.(1).flux[*,ifiber] > 0 and frame.(1).err[*,ifiber] > 0 and $
+                  (frame.(1).mask[*,ifiber] and badmask()) eq 0,ngdpix)
+    if ngdpix gt 0 then begin
+       snr=median(frame.(1).flux[gdpix,ifiber]/frame.(1).err[gdpix,ifiber])
+    endif else snr=0.0
     sxaddpar,header,'SNR',snr,' median S/N, middle chip'
     if keyword_set(survey) then sxaddpar,header,'SURVEY',strtrim(survey,2),' Survey definition (for targeting flags)'
     sxaddpar,header,'TARG1',targ1,' First APOGEE targeting flag (bitwise, see docs)'

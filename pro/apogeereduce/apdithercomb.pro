@@ -320,6 +320,14 @@ FOR p=0,npairs-1 do begin
         scale2 = POLY(y,scalecoef2)
       endelse
 
+      ;; Scales need to be positive
+      sclneg1 = where(scale1 lt 0,nsclneg1)
+      sclneg2 = where(scale2 lt 0,nsclneg2)
+      if nsclneg1 gt 0 or nsclneg2 gt 0 then begin
+        scale1 = scale1*0+1
+        scale2 = scale2*0+1
+      endif
+        
       ;; Need to normalize them if they are object spectra
       ;; Don't do this for sky spectra, since they may have real variations
       ;;   of course, this means you can't really dither-combine the sky spectra, either...
@@ -473,7 +481,7 @@ FOR p=0,npairs-1 do begin
       ;; Put results in output structure
       combframe.(ichip).flux[*,jfiber] = combspec
       combframe.(ichip).err[*,jfiber] = comberr
-
+      
       ;; Get the contribution of masked pixels to the output. Do this separately
       ;;   for each bit to keep track of the flags
       combframe.(ichip).mask[*,jfiber]=0
@@ -671,6 +679,8 @@ FOR p=0,npairs-1 do begin
 
     endif
 
+
+    
     BOMB:
 
   Endfor ; fiber loop
@@ -1056,11 +1066,15 @@ For jfiber=0,nfibers-1 do begin
             scale = POLY(y2,scalecoef)
           endif else scale = dblarr(npix2)+1.0
         endelse
+        ;; scales must be positive
+        negerr = where(scale lt 0,nnegerr)
+        if nnegerr gt 0 then scale=dblarr(npix2)+1.0
+        
         ;if status eq 0 then stop
       endif else begin
         scale = dblarr(npix2)+1.0
       endelse
-
+      
       data[k].flux = data[k].flux/scale      ; normalize spectrum
       data[k].err = data[k].err/scale        ; normalize error
       data[k].scale = scale
@@ -1069,7 +1083,7 @@ For jfiber=0,nfibers-1 do begin
     scales = data.scale
     ;scales = reform(data[*,*,ncol])
     sumscales = TOTAL(scales,2)
-
+    
     ;; Now combine the spectra and errors
     ;;-------------------------------------
     dataspec = reform(data.flux)
@@ -1176,7 +1190,7 @@ For jfiber=0,nfibers-1 do begin
     combskyerr = TOTAL(data.skyerr,2)         ; sum sky error
     combtel = TOTAL(data.telluric,2)/npairs   ; average telluric
     combtelerr = TOTAL(data.telluricerr,2)    ; sum telluric error
-
+    
     ;; Now stuff it in the output structure
     ;;-------------------------------------
     outframe.(ichip).flux[*,jfiber] = combspec

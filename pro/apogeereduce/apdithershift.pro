@@ -335,6 +335,7 @@ if keyword_set(xcorr) then begin
     if keyword_set(pfile) then begin
       device,/close
       ps2gif,pfile+'.eps',/delete,/eps,chmod='664'o
+      set_plot,'X'
     endif
 
   endif
