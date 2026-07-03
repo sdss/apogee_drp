@@ -15,7 +15,8 @@ Introduction
 - `Overview <overview.html>`_
 - `Log Files <logs.html>`_
 - `Data <data.html>`_
-- `Calibration Files <cal.html>`_    
+- `Calibration Files <cal.html>`_
+- `Calibration Observations <cals.html>`_    
 - `Radial Velocities <rv.html>`_
 - `Fabry-Perot Interferometer <fpi.html>`_
 - `Flux Calibration <fluxcal.html>`_

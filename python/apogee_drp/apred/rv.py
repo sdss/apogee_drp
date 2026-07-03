@@ -284,7 +284,6 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     rvtab = Column(name='rvtab',dtype=Table,length=len(starvisits))
     starvisits.add_column(rvtab)
     starvisits['goodvisit'] = False   #  boolean flag to starvisits that it was used in the combination
-
     
     # Run Doppler with dorv() on the good visits
     try:
@@ -457,7 +456,7 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         startab['snr'] = apstar.header['SNR']
     else:
         logger.info('No good visits for '+star)
-        
+    
     # Load information into the database
     dbingest(startab,starvisits)
         
@@ -715,6 +714,11 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
     sumstr,finalstr,bmodel,specmlist = dopout
 
     matplotlib.use('Agg')
+
+    # Character size
+    font = {'size': 14}
+    matplotlib.rc('font', **font)
+    
     n = len(bmodel)
     # Plot final spectra and final models
     # full spectrum
@@ -777,7 +781,8 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
                 ax[i].plot(x,gaussian(*pars)(x))
                 if pars[0] > 0 : color='k'
                 else : color='r'
-                ax[i].text(0.1,0.8-j*0.1,'{:8.1f}{:8.1f}{:8.1f}'.format(*pars),transform=ax[i].transAxes,color=color)
+                ax[i].text(0.01,0.8-j*0.1,'{:8.1f}{:8.1f}{:8.1f}'.format(*pars),
+                           transform=ax[i].transAxes,color=color,ha='left')
     fig.savefig(outdir+'/'+obj+'_ccf.png')
     plt.close()
 
@@ -1233,7 +1238,7 @@ def dbingest(startab,starvisits):
                    'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag',
                    'gaia_gerr', 'gaia_bpmag', 'gaia_bperr', 'gaia_rpmag', 'gaia_rperr',
                    'sdssv_apogee_target0', 'firstcarton',
-                   'targflags', 'created', 'rvtab','too','relflux','mtpflux']
+                   'targflags', 'created', 'rvtab','too','delta_ra','delta_dec','relflux','mtpflux']
         visits = starvisits.copy()  # make a local copy
         for c in delcols:
             if c in visits.dtype.names:
