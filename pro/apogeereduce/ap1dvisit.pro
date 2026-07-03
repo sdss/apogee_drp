@@ -672,7 +672,7 @@ FOR i=0L,nplanfiles-1 do begin
 
     visitstr = {apogee_id:'',target_id:'',file:'',uri:'',apred_vers:'',fiberid:0,plate:'0',exptime:0.0,nframes:0L,$
                 mjd:0L,telescope:'',survey:'',field:'',design:'',programname:'',objtype:'',assigned:0,on_target:0,$
-                valid:0,too:'F',ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,healpix:0L,$
+                valid:0,too:'F',delta_ra:0.0d0,delta_dec:0.0d0,ra:0.0d0,dec:0.0d0,glon:0.0d0,glat:0.0d0,healpix:0L,$
                 relflux:0.,mtpflux:0.,$
                 jmag:0.0,jerr:0.0,hmag:0.0,herr:0.0,kmag:0.0,kerr:0.0,src_h:'',$
                 pmra:0.0,pmdec:0.0,pm_src:'',$

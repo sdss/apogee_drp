@@ -248,7 +248,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                       ('raobs',float),('decobs',float),
                       ('eta',np.float64),('zeta',np.float64),('objtype',str,10),
                       ('holetype',str,10),('object',str,30),('assigned',int),
-                      ('on_target',int),('valid',int),('too',bool),('tmass_style',str,30),
+                      ('on_target',int),('valid',int),('delta_ra',float),('delta_dec',float),
+                      ('too',bool),('tmass_style',str,30),
                       ('sdss_id',int),('ra_sdss_id',float),('dec_sdss_id',float),
                       ('healpix',int),('target1',int),('target2',int),('target3',int),
                       ('target4',int),('spectrographid',int),('mag',float,5),
@@ -705,6 +706,8 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 fiber['sdssv_apogee_target0'][i] = plugmap['fiberdata']['sdssv_apogee_target0'][m]
                 fiber['catalogid'][i] = plugmap['fiberdata']['catalogid'][m]
                 fiber['category'][i] = plugmap['fiberdata']['category'][m]
+                fiber['delta_ra'][i] = plugmap['fiberdata']['delta_ra'][m]
+                fiber['delta_dec'][i] = plugmap['fiberdata']['delta_dec'][m]
             else:
                 fiber['target1'][i] = plugmap['fiberdata']['primTarget'][m]
                 fiber['target2'][i] = plugmap['fiberdata']['secTarget'][m]
@@ -741,7 +744,7 @@ def getdata(plate,mjd,apred,telescope,plugid=None,asdaf=None,mapa=False,obj1m=No
                 if fiber['too'][i]:
                     cmt = 'FiberID '+str(300-i)+' is ToO'
                     logger.info(cmt)
-                
+                    
             # Special for asdaf object plates
             if asdaf is not None:
                 # ASDAF fiber

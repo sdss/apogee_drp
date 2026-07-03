@@ -1238,7 +1238,7 @@ def dbingest(startab,starvisits):
                    'gaia_pmdec', 'gaia_pmdec_error', 'gaia_gmag',
                    'gaia_gerr', 'gaia_bpmag', 'gaia_bperr', 'gaia_rpmag', 'gaia_rperr',
                    'sdssv_apogee_target0', 'firstcarton',
-                   'targflags', 'created', 'rvtab','too','relflux','mtpflux']
+                   'targflags', 'created', 'rvtab','too','delta_ra','delta_dec','relflux','mtpflux']
         visits = starvisits.copy()  # make a local copy
         for c in delcols:
             if c in visits.dtype.names:
