@@ -274,6 +274,36 @@ FOR i=0L,nplanfiles-1 do begin
         endif
       endfor
 
+      ;; Add AZ/ALT/AIRMASS for LCO
+      if planstr.telescope eq 'lco25m' then begin
+        ;; RADEG   =           313.074522 / RA of telescope pointing(deg)                  
+        ;; DECDEG  =           -73.692033 / Dec of telescope pointing (deg)                
+        ;; RA      =             193.8988 / RA axis pos. (approx, deg)                     
+        ;; DEC     =              40.9489 / DEC axis pos. (approx, deg)                    
+        ;; HA      =            39.979167 / HA axis pos. (approx, deg)  
+        cenra = sxpar(frame0.(1).header,'radeg')
+        cendec = sxpar(frame0.(1).header,'decdeg')
+        dateobs = sxpar(frame0.(1).header,'date-obs')
+        observatory,'lco',obs
+        ;; Convert DATE-OBS to Julian Date
+        jd = date2jd(dateobs)
+        ;; Local sidereal time in degrees
+        ;; CT2LST wants longitude in degrees east of greenwich
+        ct2lst,lst_hours,-obs.longitude,0.0,jd
+        ;;lst_hours = ct2lst(obs.longitude/15.0d, 0.0d, jd)
+        lst_deg = lst_hours * 15.0d
+        ;; Hour angle in degrees
+        ha = lst_deg - cenra
+        ha = (ha + 360.0d) mod 360.0d
+        if ha gt 180.0d then ha -= 360.0d
+        ;; Convert HA/Dec to Alt/Az
+        hadec2altaz, ha, cendec, obs.latitude, alt, az
+        apaddpar,frame0,'alt',alt
+        apaddpar,frame0,'az',az,' deg E of N'
+        airmass = 1./cos((90-alt)*!pi/180.)
+        apaddpar,frame0,'airmass',airmass
+     endif
+
       ; Add Wavelength and LSF information to the frame structure
       ;---------------------------------------------------------
       ; Loop through the chips
