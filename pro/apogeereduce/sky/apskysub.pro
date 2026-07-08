@@ -95,8 +95,9 @@ For i=0,2 do begin
       chstr = CREATE_STRUCT(chstr,'SKY',fltarr(npix,nfibers))
       chstr = CREATE_STRUCT(chstr,'SKYERR',fltarr(npix,nfibers))
     end
-  end
-
+  endfor
+  chstr = CREATE_STRUCT(chstr,'skyscale',0.0)
+  
   ; Add to the final OUTFRAME
   if i eq 0 then begin
     outframe = CREATE_STRUCT('chip'+chiptag[i],chstr)
@@ -192,8 +193,8 @@ For i=0,2 do begin
     endif else begin
       chstr = CREATE_STRUCT(chstr,tags[j],arr)
     endelse
-  end
-
+  endfor
+  
   ; Add to the final OUTFRAME
   if i eq 0 then begin
     skyframe = CREATE_STRUCT('chip'+chiptag[i],chstr)
@@ -201,7 +202,8 @@ For i=0,2 do begin
     skyframe = CREATE_STRUCT(skyframe,'chip'+chiptag[i],chstr)
   endelse
 
-end
+endfor
+
 
 ; Remove the continuum from the spectra
 ;print,'Removing continuum from the sky spectra'
@@ -464,6 +466,7 @@ CASE suboption of
             if nrefpix eq 0 then goto,BOMB1
   
             scal = MEDIAN(fiberlines[refpix]/skyfiber4_lines[refpix])
+
             ;scal = 1.0
             ;print,scal
             ; corrected following line Holtz 110922
@@ -472,6 +475,7 @@ CASE suboption of
             fskyfibererr = scal*skyfibererr4         ; this is probably not quite right!!!
 
           endif else begin
+            scal = 1.0
             fskyfiber = skyfiber4
             fskyfibererr = skyfibererr4         ; this is probably not quite right!!!
           endelse
@@ -525,14 +529,20 @@ CASE suboption of
         if nrefpix eq 0 then refpix = where(skylines gt 5*skysig,nrefpix)
         if nrefpix eq 0 then refpix = where(skylines gt 2*skysig,nrefpix)
         if nrefpix eq 0 then goto,BOMB2
-        scalpix=fiberlines[refpix]/skylines[refpix]
-        gd=where(scalpix gt 0.5 and scalpix lt 1.5,ngd)
+        scalpix = fiberlines[refpix]/skylines[refpix]
+        gd = where(scalpix gt 0.5 and scalpix lt 1.5,ngd)
         if ngd gt 0 then scal = MEDIAN(scalpix[gd]) else scal=MEDIAN(scalpix)
-
-        skyspec = skycont + scal*skylines
+        
+        ;; if the scaling is due to throughput issues, then we need to
+        ;; scale the entire sky spectrum (not just lines)
+        skyspec0 = skyspec
+        skyerr0 = skyerr
+        skyspec = scal * skyspec
+        skyerr = scal * skyerr
+        ;;skyspec = skycont + scal*skylines
         fibersub = fiber - skyspec
         fibererr = sqrt(fibererr^2 + skyerr^2)
-
+        
 ;jj=where(plugmap.fiberdata[telstarplugind].fiberid eq 300-i,nj)
 ;if j eq 2 and nj gt 0 then begin
 ;print,'scale: ', scal
@@ -573,7 +583,8 @@ CASE suboption of
         outframe.(j).err[*,i] = fibererr
         outframe.(j).sky[*,i] = skyspec
         outframe.(j).skyerr[*,i] = skyerr
-
+        outframe.(j).skyscale = scal
+        
         bd = where(totwt le 0,nbd)
         if nbd gt 0 then begin
           outframe.(j).flux[bd,i] = 0.
@@ -1223,7 +1234,68 @@ End
 
 ENDCASE
 
-;stop
+;; Calculate residuals of the sky fibers as a metric of
+;; how well the subtraction worked
+if n_elements(skyplugind) gt 0 then begin
+  mask = outframe.(1).mask[*,skyplugind]
+  skymodel = outframe.(1).sky[*,skyplugind]
+  resid = outframe.(1).flux[*,skyplugind]
+  med = medfilt2d(resid,51,dim=1,/edge_copy) 
+  zresid = resid / outframe.(1).err[*,skyplugind]
+  zmed = medfilt2d(zresid,51,dim=1,/edge_copy)
+  ;; Measure a variety of RMS values
+  ;; full spectrum rms
+  ;; rms of only skyline regions
+  ;; continuum removed
+  ;; with masking
+  indmask = where((mask and badmask()) eq 0)
+  resid_masked = (reform(resid,n_elements(resid)))[indmask]
+  fullrms_masked = sqrt(mean(resid_masked^2,/nan))
+  medresid_fibers = median(abs(resid),dim=1)  ;; median abs(resid)
+  medresid = median(medresid_fibers)
+  ;; lines
+  lineindmask = where((mask and badmask()) eq 0 and skymodel gt 1000)
+  residline_nocont_masked = (reform(resid-med,n_elements(resid)))[lineindmask]
+  zresidline_nocont_masked = (reform(zresid-zmed,n_elements(zresid)))[lineindmask]
+  linerms_nocont_masked = sqrt(mean(residline_nocont_masked^2,/nan))
+  linezrms_nocont_masked = sqrt(mean(zresidline_nocont_masked^2,/nan))
+  
+  ;; Line RMS (-cont, masked) → measures line subtraction quality.
+  ;; Line Z RMS (-cont, masked) → measures line subtraction quality.
+  ;; Full-spectrum RMS (no continuum subtraction, masked) → measures overall sky subtraction quality.
+  ;; median of abs(resid)
+
+  print,'Sky subtraction metrics:'
+  
+  ;; Median sky continuum
+  medskymodel = median(skymodel)
+  print,'Median sky continuum = ',stringize(medskymodel,ndec=2,/nocomma),' ADU'
+  print,'Nskies = ',strtrim(n_elements(skyplugind),2)
+
+  print,'Median abs(resid) = ',stringize(medresid,ndec=2,/nocomma),' ADU'
+  print,'Lines RMS = ',stringize(linerms_nocont_masked,ndec=2,/nocomma),' ADU'
+  print,'Lines Z RMS = ',stringize(linezrms_nocont_masked,ndec=3,/nocomma)
+  print,'Full spectrum RMS = ',stringize(fullrms_masked,ndec=2,/nocomma),' ADU'
+
+  apaddpar,outframe,'nskies',n_elements(skyplugind),' Number of sky fibers' 
+  apaddpar,outframe,'skymed',medskymodel,' Median sky continuum (ADU)'
+  apaddpar,outframe,'smedabs',medresid,' Sky median abs resid (ADU)'
+  apaddpar,outframe,'slnrms',linerms_nocont_masked,' Sky resid line RMS (ADU)'
+  apaddpar,outframe,'slnzrms',linezrms_nocont_masked,' Sky resid line Z RMS'
+  apaddpar,outframe,'sfulrms',fullrms_masked,' Sky resid full RMS (ADU)'
+  
+endif else begin
+  print,'No sky fibers. Cannot estimate sky subtraction metrics'
+  ;; put in NaNs values
+  apaddpar,outframe,'nskies',0,' Number of sky fibers' 
+  apaddpar,outframe,'skymed','NaN',' Median sky continuum (ADU)'
+  apaddpar,outframe,'smedabs','NaN',' Sky median abs resid (ADU)'
+  apaddpar,outframe,'slnrms','NaN',' Sky resid line RMS (ADU)'
+  apaddpar,outframe,'slnzrms','NaN',' Sky resid line Z RMS'
+  apaddpar,outframe,'sfulrms','NaN',' Sky resid full RMS (ADU)'
+endelse
+
+;;stop
 
 if keyword_set(stp) then stop
 
