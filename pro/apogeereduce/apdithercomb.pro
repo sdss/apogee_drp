@@ -137,8 +137,6 @@ ncol = sz[3]
 ;  return
 ;endif
 
-
-
 ; THINGS TO ADD:
 ; -NEED TO SINC INTERPOLATE THE DITHER PAIRS ONTO THE SAME FINAL PIXEL
 ;   ARRAY
@@ -159,7 +157,6 @@ ncol = sz[3]
 
 ; The first spectrum of the first pair has the largest shift to the
 ; left.  Use this as the reference frame.
-
 
 ;---------------------------------------------
 ; PART II - SINC INTERLACE THE DITHER PAIRS
@@ -533,18 +530,25 @@ FOR p=0,npairs-1 do begin
           ;  values are shifted
           ;combframe.(ichip).data[0:nbadpix-1,jfiber,*] = !values.f_nan
           ;combframe.(ichip).mask[0:nbadpix-1,jfiber] = !values.f_nan
-          combframe.(ichip).mask[0:nbadpix-1,jfiber] = maskval('BADPIX')
+          combframe.(ichip).mask[0:nbadpix-1,jfiber] OR= maskval('BADPIX')
 
         ; pixels at the end are bad
         endif else begin
           ; just set the flag value to NAN
           ;combframe.(ichip).data[npix*2-nbadpix:npix*2-1,jfiber,*] = !values.f_nan
           ;combframe.(ichip).mask[npix*2-nbadpix:npix*2-1,jfiber] = !values.f_nan
-          combframe.(ichip).mask[npix*2-nbadpix:npix*2-1,jfiber] = maskval('BADPIX')
+          combframe.(ichip).mask[npix*2-nbadpix:npix*2-1,jfiber] OR= maskval('BADPIX')
         endelse
 
       endif
 
+      ;; Flag very negative pixels
+      ;;  flux < -5*err
+      negpix = where(combframe.(ichip).flux[*,jfiber] lt -5*combframe.(ichip).err[*,jfiber],nnegpix)
+      if nnegpix gt 0 then $
+        combframe.(ichip).mask[negpix,jfiber] OR= maskval('VERY_NEGATIVE')
+
+      
       ;; Make the combined wavelength array
       ;;-------------------------------------
       ;;  Just use the wavelength coefficients of Frame 1
@@ -845,7 +849,7 @@ FOR p=0,npairs-1 do begin
   ncuts = ceil(strlen(line)/float(maxlen))
   for l=0,ncuts-1 do apaddpar,combframe,leadstr+strmid(line,l*maxlen,maxlen),/history
 
-
+  
   ; Add to structure of all dither combined frames
   ;------------------------------------------------
   if p eq 0 then allcombframes=combframe else allcombframes=[allcombframes,combframe]
@@ -888,10 +892,11 @@ For i=0,2 do begin
     endif
   endfor ; tag loop
 
-  ; Reset to start with blank header
-  mkhdr,header,0
-  chstr.header=header
-
+  ;; Reset to start with blank header
+  ;mkhdr,header,0
+  ;chstr.header=header
+  ;; Let's keep the full header information from the first dither-combined frame
+  
   ;; Add to the final OUTFRAME
   if i eq 0 then begin
     outframe = CREATE_STRUCT('chip'+chiptag[i],chstr)
@@ -950,17 +955,21 @@ totexptime = 0.0
 for i=0,npairs-1 do totexptime+=sxpar(allcombframes[i].(0).header,'EXPTIME')
 apaddpar,outframe,'EXPTIME',totexptime,' Total visit exposure time per dither pos'
 
-;; Only one pair
+;; ONLY ONE PAIR
+;;  fill in the information from the first dither-combined frame and return
 combtags = tag_names(allcombframes[0].(0))
 outtags = tag_names(outframe.(0))
 if npairs eq 1 then begin
   ;; Loop through the tags
   for i=0,n_elements(outtags)-1 do begin
+    if outtags[i] eq 'HEADER' then continue  
     ind = where(combtags eq outtags[i],nind)
     for k=0,2 do outframe.(k).(i) = combframe.(k).(ind)
   endfor
   return
 endif
+
+
 
 ;; Add UT-MID, JD-MID and EXPTIME to the header
 ;;---------------------------------------------
@@ -1021,7 +1030,7 @@ For jfiber=0,nfibers-1 do begin
   wpix0 = allcombframes.(0).wcoef[jfiber,0]
   wpix0 = wpix0-wpix0[0]   ; relative to the first one
   wpix0_offset = MEAN(wpix0)
-
+stop
   ;; Loop through the chips
   ;;-----------------------
   For ichip=0,2 do begin
@@ -1190,7 +1199,7 @@ For jfiber=0,nfibers-1 do begin
     combskyerr = TOTAL(data.skyerr,2)         ; sum sky error
     combtel = TOTAL(data.telluric,2)/npairs   ; average telluric
     combtelerr = TOTAL(data.telluricerr,2)    ; sum telluric error
-    
+
     ;; Now stuff it in the output structure
     ;;-------------------------------------
     outframe.(ichip).flux[*,jfiber] = combspec
@@ -1244,7 +1253,7 @@ For jfiber=0,nfibers-1 do begin
 
 Endfor ; fiber loop
 
-;stop
+stop
 
 if keyword_set(stp) then stop
 
