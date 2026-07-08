@@ -56,6 +56,7 @@ print,''
 print,'RUNNING AP1DVISIT'
 print,''
 print,strtrim(nplanfiles,2),' PLAN files'
+print,'Start: ',systime()
 
 chiptag = ['a','b','c']
 
@@ -819,6 +820,7 @@ ENDFOR   ; plan files
 
 print,'AP1DVISIT finished'
 writelog,logfile,'AP1DVISIT '+file_basename(planfile)+string(format='(f8.2)',systime(1)-t1)+string(format='(f8.2)',systime(1)-t0)
+print,'End: ',systime()
 dt = systime(1)-t0
 print,'dt = ',strtrim(string(dt,format='(F10.1)'),2),' sec'
 
