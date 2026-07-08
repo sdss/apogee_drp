@@ -535,11 +535,13 @@ CASE suboption of
         
         ;; if the scaling is due to throughput issues, then we need to
         ;; scale the entire sky spectrum (not just lines)
-        skyspec0 = skyspec
-        skyerr0 = skyerr
-        skyspec = scal * skyspec
-        skyerr = scal * skyerr
-        ;;skyspec = skycont + scal*skylines
+        ;;skyspec0 = skyspec
+        ;;skyerr0 = skyerr
+        ;;skyspec = scal * skyspec
+        ;;skyerr = scal * skyerr
+
+        ;; scale skylines only
+        skyspec = skycont + scal*skylines
         fibersub = fiber - skyspec
         fibererr = sqrt(fibererr^2 + skyerr^2)
         
