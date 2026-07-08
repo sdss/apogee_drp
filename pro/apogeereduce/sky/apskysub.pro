@@ -599,27 +599,25 @@ CASE suboption of
         ; find and set bit for locations where (smoothed) sky line is significant contributor
         ;  to spectrum
         if not issky(ptarg,starg) then begin
-          highsky=skylinemask(outframe.(j).flux[*,i],outframe.(j).sky[*,i],nhigh,width=5,thresh=2)
+          skythresh = 1.5  ;; 7/8/26 DLN changed from 2.0 and added minthresh
+          exptime = sxpar(outframe.(j).header,'exptime')
+          if exptime eq 0 then exptime = 373
+          minthresh = 100*(exptime/373)
+          highsky=skylinemask(outframe.(j).flux[*,i],outframe.(j).sky[*,i],nhigh,$
+                              width=5,thresh=skythresh,minthresh=minthresh)
           if nhigh gt 0 then outframe.(j).mask[highsky,i] = $
             outframe.(j).mask[highsky,i] or maskval('SIG_SKYLINE')
         endif
-        ;stop
 
         BOMB2:
       Endfor ; chip loop
-
-      ;stop
 
     endif ; not dedicated FPI fibers
 
     BOMB0:
 
-    ;stop
-
   Endfor  ; fiber loop
 End  ; nearest sky fibers
-
-
 
 
 ;##############################################################
