@@ -20,6 +20,7 @@ import subprocess
 import pdb
 import traceback
 import datetime
+import time
 from apogee_drp.plan import mkplan
 from apogee_drp.apred import ap2d
 from apogee_drp.utils import apload
