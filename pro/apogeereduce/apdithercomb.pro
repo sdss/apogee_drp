@@ -1030,7 +1030,7 @@ For jfiber=0,nfibers-1 do begin
   wpix0 = allcombframes.(0).wcoef[jfiber,0]
   wpix0 = wpix0-wpix0[0]   ; relative to the first one
   wpix0_offset = MEAN(wpix0)
-stop
+
   ;; Loop through the chips
   ;;-----------------------
   For ichip=0,2 do begin
