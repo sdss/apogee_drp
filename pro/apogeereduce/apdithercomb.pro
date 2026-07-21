@@ -1253,7 +1253,7 @@ For jfiber=0,nfibers-1 do begin
 
 Endfor ; fiber loop
 
-stop
+;;stop
 
 if keyword_set(stp) then stop
 
