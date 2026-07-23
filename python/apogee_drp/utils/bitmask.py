@@ -276,17 +276,17 @@ class PixelBitMask(BitMask) :
     BitMask class for APOGEE pixel bitmask (APOGEE_PIXMASK)
     '''
     name=(['BADPIX','CRPIX','SATPIX','UNFIXABLE','BADDARK','BADFLAT','BADERR','NOSKY',
-          'LITTROW_GHOST','PERSIST_HIGH','PERSIST_MED','PERSIST_LOW','SIG_SKYLINE','SIG_TELLURIC','NOT_ENOUGH_PSF','',
+          'LITTROW_GHOST','PERSIST_HIGH','PERSIST_MED','PERSIST_LOW','SIG_SKYLINE','SIG_TELLURIC','NOT_ENOUGH_PSF','VERY_NEGATIVE',
           'FERRE_MASK','','','','','','','',
           '','','','','','','',''])
 
     level=([1,1,1,1,1,1,1,1,
-            0,0,0,0,0,0,1,0,
+            0,0,0,0,0,0,1,1,
             0,0,0,0,0,0,0,0,
             0,0,0,0,0,0,0,0])
 
     maskcontrib=([0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
-                 0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.0,
+                 0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,
                  0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.0,
                  0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.0])
 
@@ -306,7 +306,7 @@ class PixelBitMask(BitMask) :
      'Pixel falls near sky line that has significant flux compared with object',
      'Pixel falls near telluric line that has significant absorption',
      'Less than 50 percent PSF in good pixels',
-     '',
+     'Very negative flux, flux < -5*err',
      'Pixel masked by FERRE mask < 0.001',
      '',
      '',
