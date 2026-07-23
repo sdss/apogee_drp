@@ -1085,6 +1085,9 @@ def create_sumfiles(apred,telescope,mjd5=None,maxmjd=None,logger=None):
     #allstar = db.query('star_latest',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
     logger.info('Getting all of the star table information')
     vstar = db.query('star',cols='*',where="apred_vers='"+apred+"' and telescope='"+telescope+"'")
+    if len(vstar)==0:
+        logger.info('No star rows')
+        return
     # Deal with multiple STARVER versions per star
     star_index = dln.create_index(vstar['apogee_id'])
     ndups = np.sum(star_index['num']>1)

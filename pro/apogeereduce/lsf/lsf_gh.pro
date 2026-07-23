@@ -184,6 +184,7 @@ if npar gt (3+Horder+1+nGHcoefs) then begin
 
 end ; wing parameters
 
+;stop
 
 if keyword_set(nowings) then undefine,wparam
 

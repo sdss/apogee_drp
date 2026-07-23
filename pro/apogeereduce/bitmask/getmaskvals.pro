@@ -1,13 +1,13 @@
 pro getmaskvals,flag,badflag,maskcontrib,descrip
 
 flag=['BADPIX','CRPIX','SATPIX','UNFIXABLE','BADDARK','BADFLAT','BADERR','NOSKY',$
-      'LITTROW_GHOST','PERSIST_HIGH','PERSIST_MED','PERSIST_LOW','SIG_SKYLINE','SIG_TELLURIC','NOT_ENOUGH_PSF','']
+      'LITTROW_GHOST','PERSIST_HIGH','PERSIST_MED','PERSIST_LOW','SIG_SKYLINE','SIG_TELLURIC','NOT_ENOUGH_PSF','VERY_NEGATIVE']
 
 badflag=[1,1,1,1,1,1,1,1,$
-         0,0,0,0,0,0,1,0]
+         0,0,0,0,0,0,1,1]
 
 maskcontrib=[0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1,$
-             0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.0]
+             0.1,0.1,0.1,0.1,0.1,0.1,0.1,0.1]
 
 descrip=[$
  'Pixel marked as BAD in bad pixel mask or from strong persistence jump',$
@@ -25,6 +25,6 @@ descrip=[$
  'Pixel falls near sky line that has significant flux compared with object',$
  'Pixel falls near telluric line that has significant absorption',$
  'Less than 50 percent PSF in good pixels',$
- ''$
+ 'Very negative flux, flux < -5*err'$
 ]
 end

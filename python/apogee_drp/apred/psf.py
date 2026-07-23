@@ -364,23 +364,27 @@ class PSF(object):
         xind2 = xind
         yind1 = yind-1
         yind2 = yind
-        if self.kind=='grid':
-            wtdx = (self._xgrid[xind2,yind1]-self._xgrid[xind1,yind1])
-            wtdy = (self._ygrid[xind1,yind2]-self._ygrid[xind1,yind1])
+        # bilinear interpolation
+        if self.kind == 'grid':
+            x1 = self._xgrid[xind1,yind1]
+            x2 = self._xgrid[xind2,yind1]
+            y1 = self._ygrid[xind1,yind1]
+            y2 = self._ygrid[xind1,yind2]
         else:
-            wtdx = (self._xgrid[xind2]-self._xgrid[xind1])
-            wtdy = (self._ygrid[yind2]-self._ygrid[yind1])                
-        profile = np.zeros(self.npix,float)
-        totwt = 0.0
-        for xind in [xind1,xind2]:
-            for yind in [yind1,yind2]:
-                if self.kind=='grid':
-                    wt = np.abs(labels[0]-self._xgrid[xind,yind])*np.abs(labels[1]-self._ygrid[xind,yind])/(wtdx*wtdy)
-                else:
-                    wt = np.abs(labels[0]-self._xgrid[xind])*np.abs(labels[1]-self._ygrid[yind])/(wtdx*wtdy)
-                totwt += wt
-                profile += wt*self._grid[xind,yind]
-        profile /= totwt
+            x1 = self._xgrid[xind1]
+            x2 = self._xgrid[xind2]
+            y1 = self._ygrid[yind1]
+            y2 = self._ygrid[yind2]
+
+        tx = (labels[0]-x1)/(x2-x1)
+        ty = (labels[1]-y1)/(y2-y1)
+        
+        profile = (
+            (1-tx)*(1-ty)*self._grid[xind1,yind1,:] +
+            (1-tx)*ty    *self._grid[xind1,yind2,:] +
+            tx    *(1-ty)*self._grid[xind2,yind1,:] +
+            tx    *ty    *self._grid[xind2,yind2,:]
+        )
         
         return profile
 
@@ -1918,7 +1922,7 @@ def fullepsfgrid(psf,traceim,fibers,offcoef,verbose=True):
             m1 /= np.sum(m1)
             img[:,j] = m1
                 
-        data = {'fiber':fibers[i], 'lo':ylo, 'hi':yhi, 'img':img, 'ycen':ycen}
+        data = {'fiber':fibers[i], 'lo':ylo, 'hi':yhi, 'img':img, 'ycen':ycen}        
         epsf.append(data)
         
     return epsf

@@ -2570,7 +2570,8 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
 
 ###################################################################################################
 ''' makeStarHTML: make the visit and star level html '''
-def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=None, plate=None, mjd=None, survey=None, allv1=None): 
+def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=None, plate=None,
+                 mjd=None, survey=None, allv1=None): 
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
     prefix = 'ap'
@@ -2591,7 +2592,7 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
 
     # Get the visit files for this star and telescope from the database
     db = apogeedb.DBSession()
-    cols = 'v.apogee_id,v.plate,v.field,v.mjd,v.glon,v.glat,v.gaia_pmra,v.gaia_pmdec,v.gaia_gmag'
+    cols = 'v.apogee_id,v.sdss_id,v.plate,v.field,v.mjd,v.glon,v.glat,v.gaia_pmra,v.gaia_pmdec,v.gaia_gmag'
     cols += ',v.ra,v.dec,v.jmag,v.hmag,v.kmag,v.jd,v.fiberid,v.snr,rv.vrad,rv.rv_teff,rv.rv_logg,rv.rv_feh,rv.starver'
     sql = "select "+cols+" from apogee_drp.rv_visit as rv join apogee_drp.visit as v on rv.visit_pk=v.pk "
     sql += "where rv.apred_vers='"+apred+"' and rv.telescope='"+telescope+"'"    
@@ -2656,7 +2657,8 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         else: 
             obj = objid
             fiber = 1
-
+        sdss_id = jdata['sdss_id']
+            
         if obj == '2MNone' or obj == '2M' or obj == '' or obj == None or obj == 'None': continue
 
         if objid is None:
@@ -2738,7 +2740,9 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
         starHTML.write('<HTML>\n')
         starHTML.write('<HEAD><script src="../../../../../../sorttable.js"></script><title>' +obj+ '</title></head>\n')
         starHTML.write('<BODY>\n')
-        starHTML.write('<H1>' + obj + ', ' + str(nvis) + ' visits ('+load.apred+')</H1> <HR>\n')
+        starHTML.write('<H1>' + obj + ', ' + str(nvis) + ' visits ('+load.apred+')</H1>\n')
+        starHTML.write('<H2>sdss_id='+str(sdss_id)+'</H2>\n')
+        starHTML.write('<HR>\n')
         if apStarRelPath is not None:
             starHTML.write('<P>' + simbadlink + '<BR><A HREF=' + apStarRelPath + '>apStar File</A>\n')
         else:
@@ -2829,8 +2833,8 @@ def makeStarHTML(objid=None, apred=None, telescope=None, makeplot=False, load=No
             starHTML.write('<A HREF=' + ccfplot + ' target="_blank"><IMG SRC=' + ccfplot + ' WIDTH=600></A>\n')
             starHTML.write('<HR>\n')
             starHTML.write('<H3>Doppler Visit+Model Plots:</H3>')
-            starHTML.write('<A HREF=' + spec1plot + ' target="_blank"><IMG SRC=' + spec1plot + ' WIDTH=600></A>\n')
-            starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=600></A>\n')
+            starHTML.write('<A HREF=' + spec1plot + ' target="_blank"><IMG SRC=' + spec1plot + ' WIDTH=700></A>\n')
+            starHTML.write('<A HREF=' + spec2plot + ' target="_blank"><IMG SRC=' + spec2plot + ' WIDTH=800></A>\n')
         starHTML.write('<BR><BR><BR><BR>\n')
         starHTML.close()
 

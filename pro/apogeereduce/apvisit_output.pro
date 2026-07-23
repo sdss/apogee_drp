@@ -574,11 +574,11 @@ For i=0,nfibers-1 do begin
     ; Any unaccounted for NaNs? make sure BADPIX is set!
     junk = where(finite(flux) eq 0,nbad)
     if nbad gt 0 then mask[junk] = mask[junk] or maskval('BADPIX')
-
+    
     ; Does star have a significant number of bad pixels?
     junk = where(mask and badmask(),nbad)
     if float(nbad)/n_elements(mask) gt 0.2 then flag = flag OR starflagval('BAD_PIXELS')
-
+    
     ; Add to header
     sxaddpar,header,'VISITFLG',flag,' Visit data quality flag'
 

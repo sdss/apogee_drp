@@ -12,7 +12,7 @@ import pickle
 import yaml
 import traceback
 from astropy.io import fits
-from ..utils import apload, applot, bitmask, spectra, norm, yanny, plan
+from ..utils import apload, applot, bitmask, spectra, norm, yanny, plan, lsf
 from ..utils.apspec import ApSpec
 from ..database import apogeedb
 from holtztools import plots, html, match, struct
@@ -722,36 +722,55 @@ def dop_plot(outdir,obj,dopout,decomp=None) :
     n = len(bmodel)
     # Plot final spectra and final models
     # full spectrum
-    fig,ax = plots.multi(1,n,hspace=0.001,figsize=(8,2+n))
+    fig,ax = plots.multi(1,n,hspace=0.001,figsize=(12,4+n))
     ax = np.atleast_1d(ax)
-    # continuum
-    figc,axc = plots.multi(1,n,hspace=0.001,figsize=(8,2+n))
-    axc = np.atleast_1d(axc)
     # windows
     windows = [[15700,15780],[15850,16000],[16700,16930]]
-    fig2,ax2 = plots.multi(len(windows),n,hspace=0.001,wspace=0.001,figsize=(12,2+n))
-    ax2 = np.atleast_2d(ax2)
+    fig2,ax2 = plots.multi(len(windows),n,hspace=0.001,wspace=0.1,figsize=(14,4+n))
+    ax2 = np.atleast_2d(ax2)    
+    # continuum
+    figc,axc = plots.multi(1,n,hspace=0.001,figsize=(12,4+n))
+    axc = np.atleast_1d(axc)
 
     # Loop over visits
-    for i,(mod,spec) in enumerate(zip(bmodel,specmlist)) :
-        ax[i].plot(spec.wave,spec.flux,color='k')
+    for i,(mod,spec) in enumerate(zip(bmodel,specmlist)):
+        # spec
+        ax[i].plot(spec.wave,spec.flux,color='k',linewidth=0.5)
         for iorder in range(3) :
             gd, = np.where(~spec.mask[:,iorder])
-            ax[i].plot(spec.wave[gd,iorder],spec.flux[gd,iorder],color='g')
-        ax[i].plot(mod.wave,mod.flux,color='r')
-        ax[i].text(0.1,0.1,'{:s}'.format(str(spec.head['PLATE'])+'-'+str(spec.head['MJD5'])),transform=ax[i].transAxes)
-        for iwind,wind in enumerate(windows) :
+            ax[i].plot(spec.wave[gd,iorder],spec.flux[gd,iorder],color='g',linewidth=0.5)
+        ax[i].plot(mod.wave,mod.flux,color='r',linewidth=0.5,alpha=0.5)
+        ax[i].text(0.02,0.05,'{:s}'.format(str(spec.head['PLATE'])+'-'+str(spec.head['MJD5'])),
+                   transform=ax[i].transAxes)
+        ax[i].set_ylabel('Flux')
+        # spec2
+        for iwind,wind in enumerate(windows):
             ax2[i,iwind].plot(spec.wave,spec.flux,color='k')
             for iorder in range(3) :
                 gd, = np.where(~spec.mask[:,iorder])
                 ax2[i,iwind].plot(spec.wave[gd,iorder],spec.flux[gd,iorder],color='g')
-            ax2[i,iwind].plot(mod.wave,mod.flux,color='r')
+            ax2[i,iwind].plot(mod.wave,mod.flux,color='r',linewidth=0.5)
             ax2[i,iwind].set_xlim(wind[0],wind[1])
             ax2[i,iwind].set_ylim(0.5,1.3)
-            if iwind == 0 : ax2[i,iwind].text(0.1,0.1,'{:s}'.format(str(spec.head['PLATE'])+'-'+str(spec.head['MJD5'])),transform=ax2[i,0].transAxes)
-        axc[i].plot(spec.wave,spec.flux*spec.cont,color='k')
-        axc[i].plot(spec.wave,spec.cont,color='g')
-        axc[i].text(0.1,0.1,'{:d}'.format(spec.head['MJD5']),transform=axc[i].transAxes)
+            ax2[i,iwind].tick_params(axis='x', labelsize=10)
+            if iwind == 0:
+                ax2[i,iwind].text(0.02,0.05,'{:s}'.format(str(spec.head['PLATE'])+'-'+str(spec.head['MJD5'])),
+                                  transform=ax2[i,0].transAxes)
+                ax2[i,iwind].set_ylabel('Flux')
+            if iwind>0:
+                ax2[i,iwind].tick_params(left=False,labelleft=False)
+        # cont
+        axc[i].plot(spec.wave,spec.flux*spec.cont,color='k',linewidth=0.5)
+        axc[i].plot(spec.wave,spec.cont,color='r',linewidth=2)
+        axc[i].text(0.98,0.05,'{:d}'.format(spec.head['MJD5']),transform=axc[i].transAxes,
+                    fontsize=12,ha='right')
+        axc[i].set_ylabel('Flux')
+    ax[i].set_xlabel('Wavelength (A)')
+    ax2[i,1].set_xlabel('Wavelength (A)')
+    axc[i].set_xlabel('Wavelength (A)')
+    ax[0].set_title(obj)
+    ax2[0,1].set_title(obj)
+    axc[0].set_title(obj)
     fig.savefig(outdir+'/'+obj+'_spec.png')
     plt.close()
     fig2.savefig(outdir+'/'+obj+'_spec2.png')
@@ -1118,6 +1137,14 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
                 if np.isnan(val)==True:
                     apstar.header[k] = 'NaN'   # change to string
 
+
+    # Combined star LSF
+    #apvisitfiles = [load.filename('Visit',plate=v['plate'],mjd=v['mjd'],fiber=v['fiberid'],field=v['field']) for v in allvisit] 
+    #out = lsf.lsfvisitcomb(apvisitfiles)
+    #comblsf,coefs,coeferr,finalpars,lsfmodel = out
+    ## it works but takes a long time to converge!!!
+    #import pdb; pdb.set_trace()
+    
     # Do a RV fit just to get a template and normalized spectrum, for plotting
     if dorvfit:
         try:

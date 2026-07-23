@@ -392,7 +392,7 @@ if keyword_set(gauss) then begin
     APPEAKFIT,combframe.chipc,linestr3
   endelse
   ;restore,'aplsf_linestr.dat'
-  print,'UNCOMMENT THESE LINES!!!'
+  ;print,'UNCOMMENT THESE LINES!!!'
   ADD_TAG,linestr1,'CHIP',1,linestr1
   ADD_TAG,linestr2,'CHIP',2,linestr2
   ADD_TAG,linestr3,'CHIP',3,linestr3
@@ -810,7 +810,6 @@ for ii=0,n_elements(ifibers)-1 do begin
       endif
 
       ;if ngd lt 15 then stop
-      stop
 
       BOMB:
 
@@ -1341,7 +1340,7 @@ for ii=0,n_elements(ifibers)-1 do begin
       ;oplot,xx,lsf_yfit,co=250
       ;wset,0
 
-      ;;stop
+      stop
 
     Endfor ; chip loop
 

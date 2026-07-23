@@ -719,7 +719,7 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             #print('Saving EPSF file to '+outepsffile)
             #psf.saveepsf(outepsffile,epsf)
             # add chi-squared to header, mask bad pixels?
-
+            
         # Add chi-squared to header
         if extract_type==4 or extract_type==5:
             goodmask = ((chstr['mask'] & PIXBADVAL) == 0)   # mask bad pixels

@@ -1,9 +1,10 @@
-function skylinemask,flux,sky,nhigh,plot=plot,width=width,thresh=thresh
+function skylinemask,flux,sky,nhigh,plot=plot,width=width,thresh=thresh,minthresh=minthresh
 
 ; procedure to identify pixels around significant sky lines 
 
 if not keyword_set(width) then width=5
 if not keyword_set(thresh) then thresh=0.5
+if n_elements(minthresh) eq 0 then minthresh=10
 
 ; subtract median sky, and smooth
 sm=smooth(sky-median(sky),width)
@@ -16,7 +17,7 @@ endif
 
 ; identify all pixels with sky flux more than thresh times the median filtered star flux
 medflux=zap(reform(flux,n_elements(flux),1),[50,1])
-bd=where(sm gt thresh*medflux,nhigh,complement=gd)
+bd=where(sm gt (thresh*medflux > minthresh),nhigh,complement=gd)
 if keyword_set(plot) then begin
   sm[gd]=0
   sm[bd]=1
