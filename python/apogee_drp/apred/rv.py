@@ -12,7 +12,7 @@ import pickle
 import yaml
 import traceback
 from astropy.io import fits
-from ..utils import apload, applot, bitmask, spectra, norm, yanny, plan
+from ..utils import apload, applot, bitmask, spectra, norm, yanny, plan, lsf
 from ..utils.apspec import ApSpec
 from ..database import apogeedb
 from holtztools import plots, html, match, struct
@@ -1137,6 +1137,14 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
                 if np.isnan(val)==True:
                     apstar.header[k] = 'NaN'   # change to string
 
+
+    # Combined star LSF
+    #apvisitfiles = [load.filename('Visit',plate=v['plate'],mjd=v['mjd'],fiber=v['fiberid'],field=v['field']) for v in allvisit] 
+    #out = lsf.lsfvisitcomb(apvisitfiles)
+    #comblsf,coefs,coeferr,finalpars,lsfmodel = out
+    ## it works but takes a long time to converge!!!
+    #import pdb; pdb.set_trace()
+    
     # Do a RV fit just to get a template and normalized spectrum, for plotting
     if dorvfit:
         try:
