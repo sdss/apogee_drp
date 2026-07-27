@@ -54,9 +54,9 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
 
     """
 
-    images = np.atleast_id(waveid)
+    images = np.atleast_1d(waveid)
     if name is None:
-        name = str(image[0])
+        name = str(images[0])
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
     wavedir = os.path.dirname(load.filename('Wave',num=name, chips=True))
@@ -66,6 +66,7 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
     # check all three chips and .dat file
     chips = ['a', 'b', 'c']
     chipfiles = [wavefile.replace('Wave-','Wave-'+c) for c in chips]
+    allfiles = chipfiles
     if all(np.array([os.path.exists(fil) for fil in allfiles])) and clobber==False:
         print('Wavecal file:',wavefile,'already exists')
         return
@@ -128,8 +129,7 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
     if clobber:
         cmd += ['--clobber']
     cmd += ['--inst', load.instrument, '--verbose']
-    cmd += [str(waveid)]
-    subprocess.run(cmd)
+    cmd += [str(value) for value in images]
     res = subprocess.run(cmd,capture_output=True,shell=False)
     stdout = res.stdout.decode()
     stderr = res.stderr.decode()
@@ -142,7 +142,6 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
     
     # Check if the calibration file was successfully created
     if all(np.array([os.path.exists(fil) for fil in allfiles])):
-        open(wavefile.replace('.fits','.dat', 'a').close()
+        open(wavefile.replace('.fits', '.dat'), 'a').close()
 
     lock.lock(wavefile, clear=True)
-

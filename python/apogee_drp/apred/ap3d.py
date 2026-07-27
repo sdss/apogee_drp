@@ -4,10 +4,10 @@ This is a Python translation of the core algorithms in ``ap3dproc.pro`` and
 ``aprefcorr.pro``.  Arrays use the normal NumPy/FITS ordering
 ``(nread, ny, nx)``.  The returned 2-D arrays use ``(ny, nx)``.
 
-The high-level IDL ``ap3d.pro`` routine also creates calibrations, interprets
-APOGEE plan files, constructs filenames, and manages pipeline locks.  Those
-survey-infrastructure tasks deliberately remain outside this numerical module.
-Use :func:`process_file` once those filenames have been resolved.
+The :func:`ap3d` plan-level wrapper interprets APOGEE plan files, constructs
+survey filenames, optionally requests calibration creation, and dispatches
+each exposure/chip to :func:`process_file`. Pipeline locking remains the
+responsibility of the surrounding batch system.
 
 The implementation keeps the original algorithmic choices:
 
@@ -28,9 +28,16 @@ separate calibration subsystem.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from datetime import datetime, timezone
+import getpass
+import os
 from pathlib import Path
+import platform
+import socket
+import subprocess
 import tempfile
-from typing import Any, Iterable, Mapping
+from time import perf_counter
+from typing import Any, Callable, Iterable, Mapping, Sequence
 
 import numpy as np
 from astropy.io import fits
@@ -41,9 +48,11 @@ from dlnpyutils import utils as dln
 from scipy.ndimage import median_filter
 
 __all__ = [
+    "AP3D_VERSION",
     "PIXMASK",
     "CosmicRay",
     "ProcessResult",
+    "PlanProcessRecord",
     "reference_correct",
     "detect_and_fix_cosmic_rays",
     "fowler_sampling",
@@ -54,9 +63,11 @@ __all__ = [
     "read_calibrations",
     "write_ap2d",
     "process_file",
+    "ap3d",
 ]
 
 
+AP3D_VERSION = "v16"
 PIXMASK = PixelBitMask()
 
 
@@ -67,6 +78,61 @@ def _bit(name: str) -> int:
 
 
 BAD_VARIANCE = np.float32(99_999_999.0)
+NONFINITE_ERROR = np.float32(1.0e10)
+
+
+def _log(message: str, started: float | None = None) -> None:
+    """Print a UTC timestamped message with optional elapsed wall time."""
+
+    timestamp = datetime.now(timezone.utc).isoformat(
+        timespec="seconds"
+    ).replace("+00:00", "Z")
+    elapsed = (
+        f" [{perf_counter() - started:.2f} s]" if started is not None else ""
+    )
+    print(f"{timestamp}{elapsed} {message}", flush=True)
+
+
+def _software_version() -> str:
+    """Return the APOGEE DRP Git commit or the best available version tag."""
+
+    for variable in ("APOGEE_DRP_VER", "APOGEE_DRP_VERSION"):
+        value = os.environ.get(variable)
+        if value:
+            return value
+    module_path = Path(__file__).resolve()
+    for parent in module_path.parents:
+        if (parent / ".git").exists():
+            try:
+                completed = subprocess.run(
+                    ["git", "-C", str(parent), "rev-parse", "HEAD"],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                    timeout=5,
+                )
+            except (OSError, subprocess.SubprocessError):
+                break
+            commit = completed.stdout.strip()
+            if commit:
+                return commit
+    try:
+        from importlib.metadata import version
+
+        return version("sdss-apogee-drp")
+    except Exception:
+        return "unknown"
+
+
+def _reduction_version() -> str:
+    """Return the configured APOGEE reduction name."""
+
+    return (
+        os.environ.get("APOGEE_REDUX")
+        or os.environ.get("APRED")
+        or "unknown"
+    )
 
 
 @dataclass
@@ -111,24 +177,155 @@ class ProcessResult:
     global_variability: float = -1.0
 
 
-def _rolling_nanmedian(a: np.ndarray, width: int) -> np.ndarray:
-    """Median-filter the last axis, ignoring NaNs and copying edge behavior."""
+@dataclass(frozen=True)
+class PlanProcessRecord:
+    """Outcome for one chip of one exposure processed by :func:`ap3d`.
 
+    Keeping only filenames and status prevents the plan-level wrapper from
+    retaining several full 2048-by-2048 result arrays in memory.
+    """
+
+    planfile: str
+    exposure: int
+    flavor: str
+    chip: str
+    input: str
+    output: str
+    status: str
+    elapsed_seconds: float
+    error: str | None = None
+
+
+def _idl_median(
+    a: np.ndarray,
+    axis: int | None = None,
+    *,
+    even: bool = False,
+) -> np.ndarray:
+    """Compute an IDL-compatible median while ignoring NaNs.
+
+    IDL returns the upper of the two middle values for an even number of
+    samples unless the ``/EVEN`` keyword is supplied. NumPy instead averages
+    the middle pair. This distinction matters for the 512-column reference
+    output used by AP3D.
+
+    Parameters
+    ----------
+    a
+        Input values. NaNs are ignored, matching IDL ``MEDIAN`` behavior.
+    axis
+        Axis along which to compute the median. ``None`` flattens the input.
+    even
+        Reproduce IDL's ``/EVEN`` keyword by averaging the middle pair.
+
+    Returns
+    -------
+    numpy.ndarray
+        Median values with the selected axis removed.
+    """
+
+    values = np.asarray(a)
+    if even:
+        return np.nanmedian(values, axis=axis)
+    if axis is None:
+        values = values.ravel()
+        axis = 0
+    axis = np.core.numeric.normalize_axis_index(axis, values.ndim)
+    ordered = np.sort(values, axis=axis)
+    finite_count = np.sum(~np.isnan(ordered), axis=axis)
+    upper_index = finite_count // 2
+    safe_index = np.minimum(
+        upper_index, max(ordered.shape[axis] - 1, 0)
+    )
+    result = np.take_along_axis(
+        ordered,
+        np.expand_dims(safe_index, axis=axis),
+        axis=axis,
+    ).squeeze(axis=axis)
+    if np.ndim(result) == 0:
+        return np.asarray(np.nan if finite_count == 0 else result)
+    return np.where(finite_count == 0, np.nan, result)
+
+
+def _idl_median_filter_1d(
+    a: np.ndarray,
+    width: int,
+    *,
+    edge_copy: bool,
+) -> np.ndarray:
+    """Apply the one-dimensional IDL median-filter placement convention.
+
+    Filtering is along the final axis.  With ``edge_copy=True``, this matches
+    ``MEDFILT1D(..., /EDGE_COPY)`` and ``MEDFILT2D(..., DIM=2,
+    /EDGE_COPY)``.  Otherwise, incompletely supported edge values retain
+    their unfiltered input values, as in IDL ``MEDIAN(array, width)``.
+    """
+
+    values = np.asarray(a)
     width = max(1, int(width))
     if width == 1:
-        return a.copy()
-    left = width // 2
-    right = width - left - 1
-    padded = np.pad(a, [(0, 0)] * (a.ndim - 1) + [(left, right)], mode="edge")
-    # Avoid np.lib.stride_tricks.sliding_window_view, which is unavailable in
-    # the NumPy version used by some APOGEE DRP environments.  The read axis is
-    # short, so looping over its positions adds negligible overhead.
-    result = np.empty_like(a, dtype=np.result_type(a.dtype, np.float32))
-    for index in range(a.shape[-1]):
-        result[..., index] = np.nanmedian(
-            padded[..., index : index + width], axis=-1
+        return values.copy()
+    nvalue = values.shape[-1]
+    if width > nvalue:
+        raise ValueError("width must not exceed the length of the final axis")
+    if width == nvalue:
+        median = np.nanmedian(values, axis=-1, keepdims=True)
+        if edge_copy:
+            return np.broadcast_to(median, values.shape).copy()
+        return values.astype(
+            np.result_type(values.dtype, np.float32), copy=True
         )
+
+    left = width // 2
+    right = width - left
+    result = values.astype(
+        np.result_type(values.dtype, np.float32), copy=True
+    )
+    for index in range(left, nvalue - right):
+        result[..., index] = np.nanmedian(
+            values[..., index - left : index - left + width],
+            axis=-1,
+        )
+
+    if edge_copy:
+        result[..., :left] = result[..., left : left + 1]
+        result[..., nvalue - right :] = result[
+            ..., nvalue - right - 1 : nvalue - right
+        ]
     return result
+
+
+def _rolling_nanmedian(a: np.ndarray, width: int) -> np.ndarray:
+    """Median-filter the last axis using IDL ``MEDFILT2D`` edge behavior.
+
+    This reproduces ``MEDFILT2D(array, width, DIM=2, /EDGE_COPY, /EVEN)``
+    from the APOGEE IDL pipeline.  Only positions containing a complete
+    ``width``-element window are filtered.  The first ``width // 2`` output
+    values are set to the first complete-window median.  The final
+    ``width - width // 2`` values are set to the last complete-window
+    median.  Consequently, an odd-width filter has one more copied value at
+    the end than at the beginning.
+
+    NumPy's median convention for an even number of finite samples—averaging
+    the two middle values—matches IDL's ``/EVEN`` keyword.  NaNs are ignored
+    here because saturated or otherwise rejected read differences are
+    represented by NaNs in the Python implementation.
+
+    Parameters
+    ----------
+    a
+        Input array.  Filtering is performed along its final axis.
+    width
+        Number of samples in each complete median window.  It must not exceed
+        the length of the final axis.
+
+    Returns
+    -------
+    numpy.ndarray
+        Median-filtered array with the same shape as ``a``.
+    """
+
+    return _idl_median_filter_1d(a, width, edge_copy=True)
 
 
 def _expand_quadrants(values: np.ndarray, shape: tuple[int, int]) -> np.ndarray:
@@ -155,12 +352,32 @@ def _reference_subtract_image(image: np.ndarray, ref: np.ndarray) -> None:
     image[:, 1536:2048] -= ref[:, ::-1]
 
 
-def _median_filter_2d(a: np.ndarray, size: int) -> np.ndarray:
-    """Apply the closest SciPy equivalent of the IDL 2-D median filter."""
+def _reference_subtract_image_long(
+    image: np.ndarray, ref: np.ndarray
+) -> None:
+    """IDL ``APREFCORR_SUB`` with assignment back into a LONG image."""
 
-    # IDL MEDIAN(ref, n) sets perimeter behavior differently; nearest is the
-    # closest useful scipy equivalent and avoids manufacturing edge zeros.
-    return median_filter(a, size=(size, size), mode="nearest")
+    image[:, 0:512] = (image[:, 0:512] - ref).astype(np.int32)
+    image[:, 512:1024] = (
+        image[:, 512:1024] - ref[:, ::-1]
+    ).astype(np.int32)
+    image[:, 1024:1536] = (image[:, 1024:1536] - ref).astype(np.int32)
+    image[:, 1536:2048] = (
+        image[:, 1536:2048] - ref[:, ::-1]
+    ).astype(np.int32)
+
+
+def _median_filter_2d(a: np.ndarray, size: int) -> np.ndarray:
+    """Apply IDL's 2-D median filter, including its zero perimeter."""
+
+    result = median_filter(a, size=(size, size), mode="nearest")
+    edge = size // 2
+    if edge:
+        result[:edge, :] = 0
+        result[-edge:, :] = 0
+        result[:, :edge] = 0
+        result[:, -edge:] = 0
+    return result
 
 
 def reference_correct(
@@ -219,7 +436,7 @@ def reference_correct(
             good_read &= high < 65_530
         if debug:
             snr = mean / std if std > 0 else np.inf
-            print(
+            _log(
                 f"  reference read {i + 1:3d}: SLICE={iread:3d}, "
                 f"mean={mean:10.3f}, std={std:9.3f}, "
                 f"mean/std={snr:8.2f}, max={high:9.1f}, "
@@ -233,26 +450,30 @@ def reference_correct(
             read_mask[i] = True
     if verbose:
         rejected = np.flatnonzero(read_mask) + 1
-        print(
+        _log(
             "Reference-pattern reads rejected: "
             + (", ".join(map(str, rejected)) if rejected.size else "none")
         )
     np.divide(mean_ref, nref, out=mean_ref, where=nref > 0)
 
-    out = np.empty((nread, 2048, 2048), dtype=np.float32)
+    # APREFCORR explicitly uses LONARR output.  Its science working image is
+    # also LONG, so every in-place floating correction is converted back to
+    # int32.  Preserving those conversions is required for IDL-level numerical
+    # agreement in the collapsed image.
+    out = np.empty((nread, 2048, 2048), dtype=np.int32)
     refout = (
-        np.empty((nread, 2048, 512), dtype=np.float32)
+        np.empty((nread, 2048, 512), dtype=np.int32)
         if keep_reference
         else None
     )
-    cds_ref = data[1, :, :2048].astype(np.float64) if cds and nread > 1 else 0.0
-    yfrac = np.arange(2048, dtype=np.float64) / 2048.0
-    xfrac = np.arange(2048, dtype=np.float64) / 2048.0
+    cds_ref = data[1, :, :2048].astype(np.int32) if cds and nread > 1 else 0
+    yfrac = np.arange(2048, dtype=np.float32) / np.float32(2048.0)
+    xfrac = np.arange(2048, dtype=np.float32) / np.float32(2048.0)
     last_good = nread - 1
     nsat0 = 0
 
     for i in range(nread):
-        red = data[i, :, :2048].astype(np.float64)
+        red = data[i, :, :2048].astype(np.int32)
         saturated = red > saturation
         nsat = int(saturated.sum())
         if i == 0:
@@ -264,14 +485,16 @@ def reference_correct(
         red[saturated] = 65_535
 
         if read_mask[i]:
-            out[i] = np.nan
+            # This placeholder is overwritten by rejected-read interpolation
+            # in process_array.  IDL assigns NaN to a LONG array here.
+            out[i] = 0
             if refout is not None:
-                refout[i] = np.nan
+                refout[i] = 0
             continue
 
         if cds:
-            red -= cds_ref
-        ref = data[i, :, 2048:2560].astype(np.float64)
+            red = (red - cds_ref).astype(np.int32)
+        ref = data[i, :, 2048:2560].astype(np.float32)
         if indiv == 1:
             correction = ref
         elif indiv > 1:
@@ -281,33 +504,46 @@ def reference_correct(
         else:
             correction = None
         if correction is not None:
-            _reference_subtract_image(red, correction)
-            ref -= correction
+            _reference_subtract_image_long(red, correction)
+            ref = (ref - correction).astype(np.int32)
 
         if vertical:
             for q in range(4):
                 sl = slice(q * 512, (q + 1) * 512)
-                rlo = np.nanmean(red[2:4, sl])
-                rhi = np.nanmean(red[2045:2047, sl])
-                red[:, sl] -= (
-                    rlo * (1.0 - yfrac[:, None]) + rhi * yfrac[:, None]
-                )
+                rlo = np.float32(np.nanmean(red[2:4, sl]))
+                rhi = np.float32(np.nanmean(red[2045:2047, sl]))
+                red[:, sl] = (
+                    red[:, sl] - rlo * (np.float32(1.0) - yfrac[:, None])
+                ).astype(np.int32)
+                red[:, sl] = (
+                    red[:, sl] - rhi * yfrac[:, None]
+                ).astype(np.int32)
 
         if horizontal:
-            clo = np.nanmean(red[:, 1:4], axis=1)
-            chi = np.nanmean(red[:, 2044:2047], axis=1)
-            slo = median_filter(clo, size=7, mode="nearest")
-            shi = median_filter(chi, size=7, mode="nearest")
+            clo = np.nanmean(red[:, 1:4], axis=1).astype(np.float32)
+            chi = np.nanmean(red[:, 2044:2047], axis=1).astype(np.float32)
+            slo = _idl_median_filter_1d(
+                clo[None, :], 7, edge_copy=True
+            )[0]
+            shi = _idl_median_filter_1d(
+                chi[None, :], 7, edge_copy=True
+            )[0]
             if noflip:
-                red -= (
-                    slo[:, None] * (1.0 - xfrac[None, :])
-                    + shi[:, None] * xfrac[None, :]
-                )
+                red = (
+                    red
+                    - (
+                        slo[:, None]
+                        * (np.float32(1.0) - xfrac[None, :])
+                        + shi[:, None] * xfrac[None, :]
+                    )
+                ).astype(np.int32)
             else:
-                bias = np.minimum(slo, shi)[:, None] * np.ones((1, 2048))
+                bias = np.minimum(slo, shi)[:, None] * np.ones(
+                    (1, 2048), dtype=np.float32
+                )
                 bias[:, 512:1024] = bias[:, 512:1024][:, ::-1]
                 bias[:, 1536:2048] = bias[:, 1536:2048][:, ::-1]
-                red -= bias
+                red = (red - bias).astype(np.int32)
 
         if q3fix:
             offset = 0.5 * (
@@ -316,8 +552,12 @@ def reference_correct(
                 + np.median(red[:, 1536:1637], axis=1)
                 - np.median(red[:, 1435:1536], axis=1)
             )
-            offset = median_filter(offset, size=7, mode="nearest")
-            red[:, 1024:1536] += offset[:, None]
+            offset = _idl_median_filter_1d(
+                offset[None, :], 7, edge_copy=True
+            )[0]
+            red[:, 1024:1536] = (
+                red[:, 1024:1536] + offset[:, None]
+            ).astype(np.int32)
 
         red[saturated] = 65_535
         out[i] = red
@@ -374,11 +614,11 @@ def _detect_bad_reads(
     rejected = series - local > 10.0 * sigma
     if debug:
         source = "reference-output RMS" if ref_rms is not None else "reference-pixel RMS"
-        print(f"Initial bad-read diagnostic ({source}; sigma={sigma:.3f}):")
+        _log(f"Initial bad-read diagnostic ({source}; sigma={sigma:.3f}):")
         for i, (value, baseline, bad) in enumerate(
             zip(series, local, rejected)
         ):
-            print(
+            _log(
                 f"  read {i + 1:3d}: RMS={value:10.3f}, "
                 f"local={baseline:10.3f}, delta={value - baseline:9.3f}, "
                 f"{'REJECTED' if bad else 'accepted'}"
@@ -406,35 +646,116 @@ def _interpolate_bad_reads(cube: np.ndarray, bad: np.ndarray) -> np.ndarray:
             lo, hi = below[-2:]
         else:
             lo, hi = below[-1], above[0]
-        result[index] = result[lo] + (index - lo) * (
+        interpolated = result[lo] + (index - lo) * (
             result[hi] - result[lo]
         ) / (hi - lo)
+        # AP3DPROC stores ROUND(im0) back into its LONG cube.
+        result[index] = np.rint(interpolated)
     return result
 
 
-def _apply_linearity(cube: np.ndarray, coefficients: np.ndarray) -> np.ndarray:
-    """Convert observed to corrected counts using detector polynomials."""
+def _apply_linearity(
+    cube: np.ndarray,
+    coefficients: np.ndarray,
+    *,
+    mode: str = "idl",
+) -> np.ndarray:
+    """Apply the APOGEE detector linearity response correction.
 
-    c = np.asarray(coefficients)
-    result = cube.astype(np.float32, copy=True)
-    if c.shape == (*cube.shape[1:], 3):
-        return c[..., 0] + c[..., 1] * result + c[..., 2] * result**2
+    Parameters
+    ----------
+    cube
+        Observed ramp with shape ``(nread, ny, nx)``.
+    coefficients
+        Polynomial coefficients ordered from constant to highest power.
+        Supported shapes are ``(ny, nx, ncoef)``, ``(4, ncoef)``, and
+        ``(ncoef, 4)``.  The latter two forms provide one polynomial per
+        512-column detector output.
+    mode
+        ``"idl"`` reproduces ``aplincorr.pro`` exactly, including its
+        first-read-only indexing bug. ``"all"`` applies the intended
+        correction to every read. ``"none"`` returns an unchanged copy.
+
+    Returns
+    -------
+    numpy.ndarray
+        A floating-point copy of the ramp.  Corrected samples are divided by
+        the response polynomial, as in the IDL routine.
+
+    Notes
+    -----
+    For read indices two and above, the polynomial argument is
+    ``(read[j] - read[1]) * (j + 1) / (j - 1)``.  Reads zero and one use the
+    read-two argument.  This unusual convention is intentionally retained for
+    compatibility with the operational IDL implementation.
+    """
+
+    selected_mode = str(mode).lower()
+    allowed_modes = {"idl", "all", "none"}
+    if selected_mode not in allowed_modes:
+        raise ValueError(
+            "linearity mode must be 'idl', 'all', or 'none'; "
+            f"received {mode!r}"
+        )
+
+    result = np.asarray(cube, dtype=np.float32).copy()
+    if selected_mode == "none":
+        return result
+    if result.ndim != 3:
+        raise ValueError("cube must have shape (nread, ny, nx)")
+
+    c = np.asarray(coefficients, dtype=np.float32)
+    per_pixel = c.ndim == 3 and c.shape[:2] == result.shape[1:]
     if c.ndim == 2 and c.shape[0] != 4 and c.shape[1] == 4:
         c = c.T
-    if c.ndim == 2 and c.shape[0] == 4:
-        for q in range(4):
-            sl = slice(q * 512, (q + 1) * 512)
-            x = result[:, :, sl]
-            # The operational IDL APLINCORR may contain more than 3 terms.
-            poly = np.zeros_like(x)
-            for coefficient in c[q, ::-1]:
-                poly = poly * x + coefficient
-            result[:, :, sl] = poly
-        return result
-    raise ValueError(
-        "Linearity coefficients must be (ny,nx,ncoef), (4,ncoef), "
-        f"or (ncoef,4); received {c.shape}"
-    )
+    per_output = c.ndim == 2 and c.shape[0] == 4
+    if not per_pixel and not per_output:
+        raise ValueError(
+            "Linearity coefficients must be (ny,nx,ncoef), (4,ncoef), "
+            f"or (ncoef,4); received {c.shape}"
+        )
+    if per_output and result.shape[2] != 2048:
+        raise ValueError(
+            "Four-output linearity coefficients require 2048 detector columns"
+        )
+    if result.shape[0] < 3:
+        raise ValueError(
+            "APOGEE linearity correction requires at least three reads"
+        )
+
+    count_level = result.copy()
+    for read_index in range(2, result.shape[0]):
+        count_level[read_index] = (
+            (result[read_index] - result[1])
+            * (read_index + 1.0)
+            / (read_index - 1.0)
+        )
+    count_level[~np.isfinite(count_level)] = 0.0
+    count_level[0] = count_level[2]
+    count_level[1] = count_level[2]
+
+    factor = np.zeros_like(result)
+    if per_pixel:
+        for coefficient in np.moveaxis(c, -1, 0)[::-1]:
+            factor = factor * count_level + coefficient[None, :, :]
+    else:
+        for output_index in range(4):
+            columns = slice(output_index * 512, (output_index + 1) * 512)
+            output_factor = np.zeros_like(result[:, :, columns])
+            for coefficient in c[output_index, ::-1]:
+                output_factor = (
+                    output_factor * count_level[:, :, columns] + coefficient
+                )
+            factor[:, :, columns] = output_factor
+
+    with np.errstate(divide="ignore", invalid="ignore"):
+        if selected_mode == "all":
+            result /= factor
+        else:
+            # This reproduces IDL's slice_out[0:2047] assignment: with IDL's
+            # one-dimensional indexing of a 2-D slice, only read zero changes.
+            result[0] /= factor[0]
+    return result
 
 
 def detect_and_fix_cosmic_rays(
@@ -567,7 +888,7 @@ def up_the_ramp_sampling(
     *,
     science_nx: int = 2048,
 ) -> tuple[np.ndarray, np.ndarray]:
-    """Collapse a corrected ramp with an unweighted linear fit.
+    """Collapse a corrected ramp with the IDL sequential linear fit.
 
     A slope is fitted against the original read indices and multiplied by one
     less than the number of good reads to produce integrated counts.  The
@@ -606,30 +927,51 @@ def up_the_ramp_sampling(
     if science_nx < 1 or science_nx > data.shape[2]:
         raise ValueError("science_nx must select columns present in cube")
 
-    time = reads.astype(np.float32)
-    samples = data[reads]
-    centered_time = time - time.mean()
-    denominator = np.sum(centered_time**2)
-    if denominator <= 0:
-        raise ValueError("Good reads do not span more than one read index")
-    slope = np.sum(
-        centered_time[:, None, None] * samples, axis=0
-    ) / denominator
-    image = slope * (reads.size - 1)
+    # These accumulator types and their update order intentionally follow
+    # ap3dproc.pro. Algebraically equivalent centered/vectorized fits do not
+    # reproduce IDL's FLTARR rounding at the bit level.
+    shape = data.shape[1:]
+    sumts = np.zeros(shape, dtype=np.float32)
+    sums = np.zeros(shape, dtype=np.float32)
+    count = np.zeros(shape, dtype=np.int16)
+    sumt = np.zeros(shape, dtype=np.float32)
+    sumt2 = np.zeros(shape, dtype=np.float32)
+    for read in reads:
+        sample = np.asarray(data[read], dtype=np.float32)
+        good = np.isfinite(sample)
+        tread = np.float32(read)
+        sumts[good] += tread * sample[good]
+        sums[good] += sample[good]
+        count[good] += 1
+        sumt[good] += tread
+        sumt2[good] += np.float32(read * read)
 
-    n_good = float(reads.size)
-    n_total = float(data.shape[0])
+    count_float = count.astype(np.float32)
+    numerator = count_float * sumts - sumt * sums
+    denominator = count_float * sumt2 - sumt**2
+    if not np.any(denominator > 0):
+        raise ValueError("Good reads do not span more than one read index")
+    with np.errstate(divide="ignore", invalid="ignore"):
+        slope = numerator / denominator
+    image = slope * np.float32(reads.size - 1)
+
+    n_good = np.float32(reads.size)
+    n_total = np.float32(data.shape[0])
     gain_image = np.asarray(gain, dtype=np.float32)
     noise_image = np.asarray(readnoise, dtype=np.float32)
-    signal = np.maximum(image[:, :science_nx], 0)
+    signal = image[:, :science_nx]
     sample_noise = np.sqrt(
-        12.0
-        * (n_good - 1.0)
-        / (n_total * (n_good + 1.0))
+        np.float32(12.0)
+        * (n_good - np.float32(1.0))
+        / (n_total * (n_good + np.float32(1.0)))
         * noise_image**2
-        + 6.0
-        * (n_good**2 + 1.0)
-        / (5.0 * n_good * (n_good + 1.0))
+        + np.float32(6.0)
+        * (n_good**2 + np.float32(1.0))
+        / (
+            np.float32(5.0)
+            * n_good
+            * (n_good + np.float32(1.0))
+        )
         * signal
         * gain_image
     ) / gain_image
@@ -643,6 +985,7 @@ def process_array(
     gain: np.ndarray | float | None = None,
     readnoise: np.ndarray | float | None = None,
     linearity: np.ndarray | None = None,
+    linearity_mode: str = "idl",
     bpm: np.ndarray | None = None,
     dark: np.ndarray | None = None,
     flat: np.ndarray | None = None,
@@ -668,9 +1011,19 @@ def process_array(
 
     Arrays use ``(nread, ny, nx)`` ordering. Most callers should use
     :func:`process_cube` with a decompressed FITS file or :func:`process_file`
-    with a FITS or APZ file.
+    with a FITS or APZ file. ``linearity_mode="idl"`` reproduces the legacy
+    IDL first-read-only behavior; use ``"all"`` for the intended correction
+    of every read or ``"none"`` to disable it.
+
+    The reduction includes bad-read handling, reference correction, detector
+    calibrations, cosmic-ray and saturation treatment, ramp sampling,
+    persistence subtraction, and flat-fielding. With ``verbose=True``, major
+    stages are timestamped. The returned FITS header records the UTC processing
+    start in ``AP3DTIME`` and elapsed seconds in ``AP3DSEC``.
     """
 
+    processing_started = perf_counter()
+    processing_timestamp = datetime.now(timezone.utc)
     raw = np.asarray(raw_cube)
     if raw.ndim != 3 or raw.shape[1] != 2048 or raw.shape[2] not in (2048, 2560):
         raise ValueError("raw_cube must have shape (nread, 2048, 2048|2560)")
@@ -679,7 +1032,7 @@ def process_array(
         raise ValueError("At least two reads are required")
     hdr = fits.Header() if header is None else header.copy()
     if verbose:
-        print(
+        _log(
             f"Processing ramp: shape={raw.shape}, "
             f"chip={hdr.get('CHIP', 'unknown')}, nread={nread}"
         )
@@ -687,13 +1040,13 @@ def process_array(
     pre_bad = _detect_bad_reads(raw, debug=debug)
     if verbose:
         rejected = np.flatnonzero(pre_bad) + 1
-        print(
+        _log(
             "Initial reference RMS reads rejected: "
             + (", ".join(map(str, rejected)) if rejected.size else "none")
         )
     if raw.shape[2] == 2560:
         if verbose:
-            print("Applying reference-output and reference-pixel correction")
+            _log("Applying reference-output and reference-pixel correction")
         cube, mask, ref_bad, _ = reference_correct(
             raw,
             hdr,
@@ -710,7 +1063,7 @@ def process_array(
         bad_reads = pre_bad
     if verbose:
         rejected = np.flatnonzero(bad_reads) + 1
-        print(
+        _log(
             "Combined reads rejected: "
             + (", ".join(map(str, rejected)) if rejected.size else "none")
         )
@@ -727,7 +1080,7 @@ def process_array(
     cube = _interpolate_bad_reads(cube, bad_reads)
     good_reads = np.flatnonzero(~bad_reads)
     if verbose and bad_reads.any():
-        print(f"Interpolated {bad_reads.sum()} rejected read(s)")
+        _log(f"Interpolated {bad_reads.sum()} rejected read(s)")
 
     science_nx = 2048
     if bpm is not None:
@@ -746,14 +1099,26 @@ def process_array(
         mask[(p & 2) != 0] |= _bit("PERSIST_MED")
         mask[(p & 4) != 0] |= _bit("PERSIST_LOW")
 
-    if linearity is not None:
+    linearity_mode = str(linearity_mode).lower()
+    if linearity_mode not in {"idl", "all", "none"}:
+        raise ValueError("linearity_mode must be 'idl', 'all', or 'none'")
+    if linearity is not None and linearity_mode != "none":
         if verbose:
-            print("Applying detector linearity correction")
-        science = _apply_linearity(cube[:, :, :science_nx], linearity)
+            _log(
+                "Applying detector linearity correction "
+                f"(mode={linearity_mode})"
+            )
+        science = _apply_linearity(
+            cube[:, :, :science_nx],
+            linearity,
+            mode=linearity_mode,
+        )
         cube[:, :, :science_nx] = science
+    elif linearity is not None and verbose:
+        _log("Skipping detector linearity correction (mode=none)")
     if dark is not None:
         if verbose:
-            print("Subtracting dark ramp")
+            _log("Subtracting dark ramp")
         dark_cube = np.asarray(dark, dtype=np.float32)
         if dark_cube.shape[0] < nread or dark_cube.shape[1:] != (2048, 2048):
             raise ValueError("dark must have shape (>=nread, 2048, 2048)")
@@ -768,11 +1133,11 @@ def process_array(
     median_dcounts = np.zeros((ny, nx), dtype=np.float32)
     cosmic_rays: list[CosmicRay] = []
     if verbose:
-        print("Scanning detector rows for saturation and cosmic rays")
+        _log("Scanning detector rows for saturation and cosmic rays")
 
     for y in range(ny):
         if verbose and (y == 0 or (y + 1) % 256 == 0 or y == ny - 1):
-            print(f"  row {y + 1:4d}/{ny}")
+            _log(f"  row {y + 1:4d}/{ny}")
         ramp = cube[:, y, :].T.astype(np.float32)
         saturated = ramp > saturation_level
         sat_pixels = np.flatnonzero(saturated.any(axis=1))
@@ -823,7 +1188,9 @@ def process_array(
         fixed = np.empty_like(ramp)
         fixed[:, 0] = first
         fixed[:, 1:] = first[:, None] + np.cumsum(dcounts, axis=1)
-        cube[:, y, :] = fixed.T
+        # AP3DPROC stores ROUND(slice_fixed) back into its LONG cube before
+        # fitting the ramp. This affects every pixel, not only CR/saturation.
+        cube[:, y, :] = np.rint(fixed.T)
         median_dcounts[y] = np.nanmedian(dcounts, axis=1)
 
     # The IDL neighbor iteration contains a likely diagonal-only condition
@@ -857,10 +1224,10 @@ def process_array(
             nfowler=nfowler,
         )
         if verbose:
-            print(f"Collapsing ramp with Fowler sampling (Nfowler={nf})")
+            _log(f"Collapsing ramp with Fowler sampling (Nfowler={nf})")
     else:
         if verbose:
-            print(
+            _log(
                 f"Collapsing ramp with up-the-ramp sampling "
                 f"({good_reads.size} good reads)"
             )
@@ -874,7 +1241,14 @@ def process_array(
 
     if use_reference and image.shape[1] == 2560:
         ref = image[:, 2048:].copy()
-        ref -= median_filter(np.median(ref, axis=1), size=7, mode="nearest")[:, None]
+        # IDL uses MEDIAN(ref, DIM=1) without /EVEN. Because the reference
+        # output has 512 columns, it selects the upper middle value rather
+        # than averaging the central pair as np.median would.
+        ref_profile = _idl_median(ref, axis=1).astype(np.float32)
+        smooth_profile = _idl_median_filter_1d(
+            ref_profile[None, :], 7, edge_copy=False
+        )[0]
+        ref -= smooth_profile[:, None]
         science = image[:, :2048].copy()
         _reference_subtract_image(science, ref)
         image = science
@@ -886,7 +1260,7 @@ def process_array(
     )
     if pmodel is not None:
         if verbose:
-            print("Subtracting supplied persistence model")
+            _log("Subtracting supplied persistence model")
         if pmodel.shape != image.shape:
             raise ValueError("persistence_model must match the 2-D science image")
         image -= pmodel
@@ -912,7 +1286,7 @@ def process_array(
 
     if flat is not None:
         if verbose:
-            print("Applying flat-field correction")
+            _log("Applying flat-field correction")
         flat_image = np.asarray(flat, dtype=np.float32)
         if flat_image.shape != image.shape:
             raise ValueError("flat must match the 2-D science image")
@@ -938,7 +1312,11 @@ def process_array(
         hdr,
         nread=nread,
         gain=float(np.median(gain_image)),
-        readnoise=float(np.median(sample_noise)),
+        # AP3DPROC uses MEDIAN([sample_noise]) without /EVEN. The helper also
+        # ignores the minority of non-finite per-pixel noise estimates.
+        readnoise=float(
+            _idl_median(sample_noise[np.isfinite(sample_noise)])
+        ),
         up_the_ramp=up_the_ramp,
         nfowler=None if up_the_ramp else nf,
         global_variability=global_variability,
@@ -948,10 +1326,26 @@ def process_array(
         nsat = int(np.count_nonzero(mask & _bit("SATPIX")))
         nunfix = int(np.count_nonzero(mask & _bit("UNFIXABLE")))
         nbad = int(np.count_nonzero(mask & _bit("BADPIX")))
-        print(
+        _log(
             f"Reduction summary: bad={nbad}, CR={len(cosmic_rays)}, "
             f"saturated={nsat}, unfixable={nunfix}, "
             f"global variability={global_variability:.4f}"
+        )
+    processing_seconds = perf_counter() - processing_started
+    hdr["AP3DTIME"] = (
+        processing_timestamp.isoformat(timespec="seconds").replace(
+            "+00:00", "Z"
+        ),
+        "UTC start of Python AP3D processing",
+    )
+    hdr["AP3DSEC"] = (
+        processing_seconds,
+        "Python AP3D array processing time (seconds)",
+    )
+    if verbose:
+        _log(
+            f"Completed array processing in {processing_seconds:.2f} s",
+            processing_started,
         )
     return ProcessResult(
         flux=image.astype(np.float32),
@@ -980,6 +1374,7 @@ def _update_header(
 ) -> None:
     """Record sampling, noise, timing, and output-unit metadata in-place."""
 
+    header["AP3DVER"] = (AP3D_VERSION, "Python AP3D implementation version")
     header["GAIN"] = (gain, "Median gain in electron/ADU")
     header["RDNOISE"] = (readnoise, "Median sampled read noise")
     header.add_history("AP3D Python 3-D to 2-D processing")
@@ -988,7 +1383,9 @@ def _update_header(
         if up_the_ramp
         else f"Fowler sampling, Nfowler={nfowler}"
     )
-    header.add_history(f"Global fractional variability = {global_variability:.3f}")
+    header.add_history(
+        f"AP3D: Global fractional variability = {global_variability:.3f}"
+    )
     if header.get("NFRAMES") != nread:
         header["EXPTIME"] = nread * 10.647
     if "DATE-OBS" in header and "EXPTIME" in header:
@@ -1053,9 +1450,11 @@ def process_cube(
 
     APZ decompression intentionally belongs to :func:`process_file`, the
     orchestration layer. Calibration arrays and reduction settings are passed
-    through ``options`` to :func:`process_array`.
+    through ``options`` to :func:`process_array`. With ``verbose=True``, ramp
+    loading and total elapsed time are reported with UTC timestamps.
     """
 
+    started = perf_counter()
     filename = Path(filename)
     if filename.suffix.lower() == ".apz":
         raise ValueError(
@@ -1063,19 +1462,25 @@ def process_cube(
             "use process_file() for APZ inputs"
         )
     if verbose:
-        print(f"Reading decompressed ramp: {filename}")
+        _log(f"Reading decompressed ramp: {filename}", started)
     cube, header = read_ramp(
         filename, max_read=max_read, verbose=verbose
     )
     if verbose:
-        print(f"Loaded ramp with shape {cube.shape} and dtype {cube.dtype}")
-    return process_array(
+        _log(
+            f"Loaded ramp with shape {cube.shape} and dtype {cube.dtype}",
+            started,
+        )
+    result = process_array(
         cube,
         header,
         verbose=verbose,
         debug=debug,
         **options,
     )
+    if verbose:
+        _log("Finished decompressed-ramp processing", started)
+    return result
 
 
 def read_calibrations(
@@ -1153,6 +1558,96 @@ def read_calibrations(
     return result
 
 
+def _add_provenance_header(
+    result: ProcessResult,
+    *,
+    output: str | Path,
+    detector: str | Path | None,
+    bpm: str | Path | None,
+    dark: str | Path | None,
+    flat: str | Path | None,
+    littrow: str | Path | None,
+    persistence_mask: str | Path | None,
+    up_the_ramp: bool,
+    nfowler: int,
+    fix_cosmic_rays: bool,
+    fix_saturation: bool,
+) -> None:
+    """Add IDL-compatible software, calibration, and processing provenance."""
+
+    header = result.header
+    reduction_version = _reduction_version()
+    header["V_APRED"] = (_software_version(), "apogee software version")
+    header["APRED"] = (reduction_version, "apogee reduction version")
+    header["LONGSTRN"] = (
+        "OGIP 1.0",
+        "The OGIP long string convention may be used.",
+    )
+
+    calibrations = (
+        ("BPMFILE", bpm, "bpm file", "BAD PIXEL MASK"),
+        ("DETFILE", detector, "det file", "DETECTOR"),
+        ("DARKFILE", dark, "dark file", "Dark Current Correction"),
+        ("FLATFILE", flat, "flat file", "Flat Field Correction"),
+        ("LITTROW", littrow, "littrow file", "Littrow ghost mask"),
+        (
+            "PERSIST",
+            persistence_mask,
+            "persist mask file",
+            "Persistence mask",
+        ),
+    )
+    for keyword, filename, comment, label in calibrations:
+        if filename is not None:
+            value = str(filename)
+            header[keyword] = (value, comment)
+            header.add_history(f'AP3D: {label} file="{value}"')
+
+    unit = "electrons" if header.get("BUNIT") == "electron" else "ADU"
+    header.add_history(
+        "AP3D: "
+        + datetime.now().astimezone().strftime("%a %b %d %H:%M:%S %Y")
+    )
+    header.add_history(f"AP3D: {getpass.getuser()} on {socket.gethostname()}")
+    header.add_history(
+        f"AP3D: Python {platform.python_version()} "
+        f"{platform.system().lower()} {platform.machine()}"
+    )
+    header.add_history(
+        f"AP3D: APOGEE Reduction Pipeline Version: {reduction_version}"
+    )
+    header.add_history(f"AP3D: Output File: {output}")
+    header.add_history(f"AP3D: HDU1 - image ({unit})")
+    header.add_history(f"AP3D: HDU2 - error ({unit})")
+    header.add_history("AP3D: HDU3 - flag mask")
+    header.add_history("AP3D:        1 - bad pixels")
+    header.add_history("AP3D:        2 - cosmic ray")
+    header.add_history("AP3D:        4 - saturated")
+    header.add_history("AP3D:        8 - unfixable")
+    if result.persistence_model is not None:
+        header.add_history("AP3D: HDU4 - persistence correction (ADU)")
+
+    nbad = int(np.count_nonzero(result.mask & _bit("BADPIX")))
+    ncr = int(np.count_nonzero(result.mask & _bit("CRPIX")))
+    nsat = int(np.count_nonzero(result.mask & _bit("SATPIX")))
+    nunfixable = int(np.count_nonzero(result.mask & _bit("UNFIXABLE")))
+    nfixed_saturation = nsat - nunfixable if fix_saturation else 0
+    header.add_history(f"AP3D: {nbad} pixels are bad")
+    header.add_history(f"AP3D: {ncr} pixels have cosmic rays")
+    if fix_cosmic_rays:
+        header.add_history("AP3D: Cosmic Rays FIXED")
+    header.add_history(f"AP3D: {nsat} pixels are saturated")
+    if fix_saturation:
+        header.add_history(
+            f"AP3D: {nfixed_saturation} saturated pixels FIXED"
+        )
+    header.add_history(f"AP3D: {nunfixable} pixels are unfixable")
+    if up_the_ramp:
+        header.add_history("AP3D: UP-THE-RAMP Sampling")
+    else:
+        header.add_history(f"AP3D: Fowler Sampling, Nfowler={nfowler}")
+
+
 def write_ap2d(
     filename: str | Path,
     result: ProcessResult,
@@ -1160,10 +1655,28 @@ def write_ap2d(
     overwrite: bool = False,
     integer_output: bool = False,
 ) -> None:
-    """Write an APOGEE-style ap2D product."""
+    """Write an APOGEE-style ap2D product.
 
-    flux = np.nan_to_num(result.flux)
-    error = np.nan_to_num(result.error, nan=np.sqrt(BAD_VARIANCE))
+    Nonfinite flux values are written as zero to match the operational IDL
+    product convention. Their validity remains encoded in the pixel mask.
+    Nonfinite uncertainties are written as ``1e10`` to reproduce the IDL
+    ``errout`` convention. This differs from an ordinary flagged pixel, whose
+    finite variance is ``BAD_VARIANCE`` and whose error is therefore about
+    ``1e4``.
+    """
+
+    flux = np.nan_to_num(
+        result.flux,
+        nan=0.0,
+        posinf=0.0,
+        neginf=0.0,
+    )
+    error = np.nan_to_num(
+        result.error,
+        nan=NONFINITE_ERROR,
+        posinf=NONFINITE_ERROR,
+        neginf=NONFINITE_ERROR,
+    )
     if integer_output:
         flux = np.rint(flux).astype(np.int32)
         error = np.rint(error).astype(np.int32)
@@ -1177,6 +1690,11 @@ def write_ap2d(
     hdus[1].header["BUNIT"] = (unit, "Flux unit")
     hdus[2].header["BUNIT"] = (unit, "Uncertainty unit")
     hdus[3].header["BUNIT"] = ("bitwise", "Pixel flag mask")
+    hdus[3].header.add_history("Explanation of BITWISE flag mask")
+    hdus[3].header.add_history(" 1 - bad pixels")
+    hdus[3].header.add_history(" 2 - cosmic ray")
+    hdus[3].header.add_history(" 4 - saturated")
+    hdus[3].header.add_history(" 8 - unfixable")
     if result.persistence_model is not None:
         hdus.append(
             fits.ImageHDU(result.persistence_model, name="PERSIST CORRECTION")
@@ -1201,11 +1719,23 @@ def process_file(
     debug: bool = False,
     **options: Any,
 ) -> ProcessResult:
-    """Orchestrate APZ decoding, calibration loading, reduction, and writing."""
+    """Reduce a raw APOGEE ramp and write an ``ap2D`` FITS product.
 
+    This orchestration entry point loads calibrations, decompresses APZ input
+    with :mod:`apogee_drp.utils.apzip`, reduces the resulting 3-D FITS ramp,
+    writes the multi-extension product, and removes the temporary FITS file.
+    Extra reduction settings, including ``linearity_mode``, are forwarded to
+    :func:`process_array` through ``options``.
+
+    With ``verbose=True``, messages contain UTC timestamps and cumulative
+    elapsed times. The final time includes calibration I/O, APZ decompression,
+    numerical processing, and output writing.
+    """
+
+    started = perf_counter()
     input_file = Path(filename)
     if verbose:
-        print(f"Input raw ramp: {input_file}")
+        _log(f"Input raw ramp: {input_file}", started)
         for label, value in (
             ("detector", detector),
             ("BPM", bpm),
@@ -1215,7 +1745,7 @@ def process_file(
             ("persistence mask", persistence_mask),
         ):
             if value is not None:
-                print(f"Using {label}: {value}")
+                _log(f"Using {label}: {value}", started)
     calibrations = read_calibrations(
         detector=detector,
         bpm=bpm,
@@ -1228,12 +1758,14 @@ def process_file(
         shapes = ", ".join(
             f"{name}={np.shape(value)}" for name, value in calibrations.items()
         )
-        print(f"Calibration shapes: {shapes}")
+        _log(f"Calibration shapes: {shapes}", started)
 
     temporary_directory = None
     try:
         cube_file = input_file
         if input_file.suffix.lower() == ".apz":
+            if verbose:
+                _log("Starting APZ decompression", started)
             temporary_directory = tempfile.TemporaryDirectory(prefix="ap3d-")
             apzip.unzip(
                 str(input_file),
@@ -1250,6 +1782,8 @@ def process_file(
                     "APZ decompression did not create expected file "
                     f"{cube_file}"
                 )
+            if verbose:
+                _log("Finished APZ decompression", started)
 
         result = process_cube(
             cube_file,
@@ -1263,9 +1797,408 @@ def process_file(
         if temporary_directory is not None:
             temporary_directory.cleanup()
 
+    _add_provenance_header(
+        result,
+        output=output,
+        detector=detector,
+        bpm=bpm,
+        dark=dark,
+        flat=flat,
+        littrow=littrow,
+        persistence_mask=persistence_mask,
+        up_the_ramp=bool(options.get("up_the_ramp", False)),
+        nfowler=int(options.get("nfowler", 10)),
+        fix_cosmic_rays=bool(options.get("fix_cosmic_rays", True)),
+        fix_saturation=bool(options.get("fix_saturation", True)),
+    )
     if verbose:
-        print(f"Writing ap2D product: {output}")
+        _log(f"Writing ap2D product: {output}", started)
     write_ap2d(output, result, overwrite=overwrite)
     if verbose:
-        print("Finished")
+        _log("Finished complete AP3D processing", started)
     return result
+
+
+def _plan_scalar(value: Any, default: Any = None) -> Any:
+    """Return a scalar plan value, decoding NumPy byte strings when needed."""
+
+    if value is None:
+        return default
+    array = np.asarray(value)
+    if array.size == 0:
+        return default
+    scalar = array.reshape(-1)[0]
+    if isinstance(scalar, bytes):
+        scalar = scalar.decode().strip()
+    return scalar
+
+
+def _record_value(record: Any, name: str, default: Any = None) -> Any:
+    """Read a field from either a mapping or a NumPy structured record."""
+
+    if isinstance(record, Mapping):
+        return record.get(name, default)
+    names = getattr(getattr(record, "dtype", None), "names", None)
+    if names and name in names:
+        return record[name]
+    return getattr(record, name, default)
+
+
+def _calibration_id(plan_data: Mapping[str, Any], name: str) -> Any | None:
+    """Normalize a plan calibration ID, returning ``None`` when disabled."""
+
+    value = _plan_scalar(plan_data.get(name))
+    if value is None:
+        return None
+    if isinstance(value, str):
+        value = value.strip()
+        if value.lower() in ("", "none", "null", "0"):
+            return None
+    try:
+        if int(value) == 0:
+            return None
+    except (TypeError, ValueError):
+        pass
+    return value
+
+
+def _plan_bool(value: Any, default: bool = False) -> bool:
+    """Interpret plan booleans stored as numbers, strings, or NumPy scalars."""
+
+    scalar = _plan_scalar(value, default)
+    if isinstance(scalar, str):
+        normalized = scalar.strip().lower()
+        if normalized in ("", "0", "false", "f", "no", "n", "off", "none"):
+            return False
+        if normalized in ("1", "true", "t", "yes", "y", "on"):
+            return True
+    return bool(scalar)
+
+
+def _chip_filename(base: str | Path, root: str, chip: str) -> str:
+    """Insert an APOGEE chip tag into a filename returned by ``ApLoad``."""
+
+    path = Path(base)
+    marker = f"{root}-"
+    if marker not in path.name:
+        raise ValueError(
+            f"Cannot insert chip {chip!r}: {path.name!r} lacks {marker!r}"
+        )
+    return str(path.with_name(path.name.replace(marker, f"{root}-{chip}-", 1)))
+
+
+def _flavor_options(flavor: str, *, single_plate: bool = False) -> dict[str, Any]:
+    """Return the legacy ``ap3d.pro`` processing choices for an exposure."""
+
+    flavor = str(flavor).strip().lower()
+    common = {
+        "fix_saturation": True,
+        "fix_three_read_saturation": False,
+        "iterative_cosmic_rays": False,
+    }
+    if flavor == "psf":
+        return dict(common, **{
+            "detect_cosmic_rays": False,
+            "fix_cosmic_rays": False,
+            "up_the_ramp": False,
+            "nfowler": 1,
+        })
+    if flavor in ("lamp", "wave"):
+        return dict(common, **{
+            "detect_cosmic_rays": True,
+            "fix_cosmic_rays": True,
+            "up_the_ramp": False,
+            "nfowler": 1,
+        })
+    if flavor == "object":
+        return dict(common, **{
+            "detect_cosmic_rays": not single_plate,
+            "fix_cosmic_rays": True,
+            "up_the_ramp": True,
+            "nfowler": 0,
+        })
+    if flavor == "flux":
+        return dict(common, **{
+            "detect_cosmic_rays": False,
+            "fix_cosmic_rays": False,
+            "up_the_ramp": False,
+            "nfowler": 1,
+        })
+    if flavor == "dark":
+        raise ValueError("Dark ramps must be processed by the dark-calibration code")
+    raise ValueError(f"Unsupported AP3D exposure flavor {flavor!r}")
+
+
+def ap3d(
+    planfiles: str | Path | Sequence[str | Path],
+    *,
+    verbose: bool = False,
+    debug: bool = False,
+    clobber: bool = False,
+    calclobber: bool = False,
+    unlock: bool = False,
+    make_calibrations: bool = False,
+    continue_on_error: bool = False,
+    plan_loader: Callable[..., Mapping[str, Any]] | None = None,
+    load_factory: Callable[..., Any] | None = None,
+    calibration_builder: Callable[..., Any] | None = None,
+    **process_options: Any,
+) -> list[PlanProcessRecord]:
+    """Process all exposures and detector chips in APOGEE plan files.
+
+    This is the Python orchestration counterpart of the IDL ``ap3d.pro``.
+    It loads each plan, constructs APOGEE filenames with
+    :class:`~apogee_drp.utils.apload.ApLoad`, selects the legacy reduction
+    options for each exposure flavor, applies chip-specific calibrations, and
+    calls :func:`process_file`.
+
+    Calibration creation is optional because it belongs to the separate
+    ``makecal`` subsystem. Set ``make_calibrations=True`` to invoke it before
+    processing. The injectable loader/factory/builder arguments support unit
+    tests and alternate orchestration environments.
+
+    Parameters
+    ----------
+    planfiles
+        One plan filename or a sequence of ``.par``/``.yaml`` plan files.
+    clobber
+        Replace existing ap2D products.
+    calclobber
+        Allow the calibration builder to replace existing calibrations.
+    unlock
+        Forward the unlock request to calibration creation.
+    make_calibrations
+        Build required detector, BPM, dark, flat, Littrow, and persistence
+        products before reducing exposures.
+    continue_on_error
+        Record failed chips and continue. By default, the first failure is
+        raised immediately.
+    process_options
+        Explicit numerical options forwarded to :func:`process_file`; these
+        override the flavor defaults and plan settings.
+
+    Returns
+    -------
+    records
+        One lightweight :class:`PlanProcessRecord` per processed, skipped, or
+        failed chip.
+    """
+
+    if isinstance(planfiles, (str, Path)):
+        plan_paths = [Path(planfiles)]
+    else:
+        plan_paths = [Path(item) for item in planfiles]
+    if not plan_paths:
+        raise ValueError("At least one plan file is required")
+
+    if plan_loader is None or load_factory is None:
+        from apogee_drp.utils import apload as _apload
+        from apogee_drp.utils import plan as _plan
+
+        if plan_loader is None:
+            plan_loader = _plan.load
+        if load_factory is None:
+            load_factory = _apload.ApLoad
+    if make_calibrations and calibration_builder is None:
+        from apogee_drp.apred.cal.makecal import makecal
+
+        calibration_builder = makecal
+
+    records: list[PlanProcessRecord] = []
+    overall_started = perf_counter()
+    if verbose:
+        _log(f"Running AP3D wrapper for {len(plan_paths)} plan file(s)")
+
+    for plan_index, plan_path in enumerate(plan_paths):
+        plan_started = perf_counter()
+        if verbose:
+            _log(
+                f"Plan {plan_index + 1}/{len(plan_paths)}: {plan_path}",
+                overall_started,
+            )
+        plan_data = plan_loader(str(plan_path), np=True, verbose=verbose)
+        if plan_data is None:
+            raise RuntimeError(f"Plan loader returned no data for {plan_path}")
+        apred = str(_plan_scalar(plan_data.get("apred_vers"), "daily"))
+        telescope = str(_plan_scalar(plan_data.get("telescope"), "apo25m"))
+        load = load_factory(apred=apred, telescope=telescope)
+        exposures = plan_data.get("APEXP")
+        if exposures is None or len(exposures) == 0:
+            if verbose:
+                _log(f"No exposures in {plan_path}", plan_started)
+            continue
+
+        cal_ids = {
+            "detector": _calibration_id(plan_data, "detid"),
+            "bpm": _calibration_id(plan_data, "bpmid"),
+            "dark": _calibration_id(plan_data, "darkid"),
+            "flat": _calibration_id(plan_data, "flatid"),
+            "littrow": _calibration_id(plan_data, "littrowid"),
+            "persistence_mask": _calibration_id(plan_data, "persistid"),
+        }
+        if make_calibrations:
+            cal_types = {
+                "detector": "det",
+                "bpm": "bpm",
+                "dark": "dark",
+                "flat": "flat",
+                "littrow": "littrow",
+                "persistence_mask": "persist",
+            }
+            for name, cal_id in cal_ids.items():
+                if cal_id is not None:
+                    calibration_builder(
+                        cal_id,
+                        cal_types[name],
+                        load=load,
+                        clobber=calclobber,
+                        unlock=unlock,
+                        verbose=verbose,
+                    )
+
+        cal_roots = {
+            "detector": "Detector",
+            "bpm": "BPM",
+            "dark": "Dark",
+            "flat": "Flat",
+            "littrow": "Littrow",
+            "persistence_mask": "Persist",
+        }
+        cal_bases = {
+            name: (
+                None
+                if cal_id is None
+                else load.filename(root, num=cal_id, chips=True)
+            )
+            for (name, cal_id), root in zip(cal_ids.items(), cal_roots.values())
+        }
+
+        plan_plate_type = str(
+            _plan_scalar(plan_data.get("platetype"), "")
+        ).strip().lower()
+        mjd = int(_plan_scalar(plan_data.get("mjd"), 0))
+        plan_reference = _plan_bool(plan_data.get("usereference"), True)
+        plan_max_read = _plan_scalar(plan_data.get("maxread"))
+        plan_q3fix = _plan_bool(plan_data.get("q3fix"), False)
+
+        for exposure_index, exposure in enumerate(exposures):
+            exposure_started = perf_counter()
+            number = int(_plan_scalar(_record_value(exposure, "name")))
+            flavor = str(
+                _plan_scalar(_record_value(exposure, "flavor"), "")
+            ).strip().lower()
+            settings = _flavor_options(
+                flavor, single_plate=plan_plate_type == "single"
+            )
+            settings.update(
+                {
+                    "linearity_mode": "idl",
+                    "use_reference": plan_reference,
+                }
+            )
+            if plan_max_read is not None:
+                settings["max_read"] = int(plan_max_read)
+            settings.update(process_options)
+
+            raw_base = load.filename("R", num=number, mjd=mjd, chips=True)
+            output_base = load.filename("2D", num=number, mjd=mjd, chips=True)
+            if verbose:
+                _log(
+                    f"Exposure {exposure_index + 1}/{len(exposures)}: "
+                    f"{number:08d} ({flavor})",
+                    plan_started,
+                )
+
+            for chip in ("a", "b", "c"):
+                raw_file = _chip_filename(raw_base, "R", chip)
+                output_file = _chip_filename(output_base, "2D", chip)
+                chip_started = perf_counter()
+                if Path(output_file).exists() and not clobber:
+                    records.append(
+                        PlanProcessRecord(
+                            str(plan_path), number, flavor, chip,
+                            raw_file, output_file, "skipped",
+                            perf_counter() - chip_started,
+                        )
+                    )
+                    if verbose:
+                        _log(f"Skipping existing {output_file}", exposure_started)
+                    continue
+
+                calibration_files = {}
+                for name, base in cal_bases.items():
+                    if base is None or (name == "littrow" and chip != "b"):
+                        calibration_files[name] = None
+                    else:
+                        calibration_files[name] = _chip_filename(
+                            base, cal_roots[name], chip
+                        )
+                missing = [
+                    path
+                    for path in calibration_files.values()
+                    if path is not None and not Path(path).exists()
+                ]
+                if not Path(raw_file).exists():
+                    missing.insert(0, raw_file)
+                if missing:
+                    error = "Required input file(s) missing: " + ", ".join(missing)
+                    if not continue_on_error:
+                        raise FileNotFoundError(error)
+                    records.append(
+                        PlanProcessRecord(
+                            str(plan_path), number, flavor, chip,
+                            raw_file, output_file, "failed",
+                            perf_counter() - chip_started, error,
+                        )
+                    )
+                    continue
+
+                Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+                chip_settings = settings.copy()
+                chip_settings["q3fix"] = bool(
+                    chip == "c"
+                    and (plan_q3fix or 56_930 < mjd < 57_600)
+                )
+                max_read = chip_settings.pop("max_read", None)
+                try:
+                    process_file(
+                        raw_file,
+                        output_file,
+                        overwrite=clobber,
+                        max_read=max_read,
+                        verbose=verbose,
+                        debug=debug,
+                        **calibration_files,
+                        **chip_settings,
+                    )
+                except Exception as exc:
+                    if not continue_on_error:
+                        raise
+                    records.append(
+                        PlanProcessRecord(
+                            str(plan_path), number, flavor, chip,
+                            raw_file, output_file, "failed",
+                            perf_counter() - chip_started, str(exc),
+                        )
+                    )
+                else:
+                    records.append(
+                        PlanProcessRecord(
+                            str(plan_path), number, flavor, chip,
+                            raw_file, output_file, "processed",
+                            perf_counter() - chip_started,
+                        )
+                    )
+        if verbose:
+            _log(f"Finished plan {plan_path}", plan_started)
+
+    if verbose:
+        nprocessed = sum(item.status == "processed" for item in records)
+        nskipped = sum(item.status == "skipped" for item in records)
+        nfailed = sum(item.status == "failed" for item in records)
+        _log(
+            f"AP3D wrapper finished: processed={nprocessed}, "
+            f"skipped={nskipped}, failed={nfailed}",
+            overall_started,
+        )
+    return records

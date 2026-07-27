@@ -1,8 +1,18 @@
 import os
+import getpass
+import platform
+import socket
+import time
 import numpy as np
+from astropy.io import fits
+from apogee_drp.utils import apload
+from apogee_drp.utils import lock
 
-def mkpersist(persistid, dark, flat, cmjd=None, darkid=None, flatid=None,
-              sparseid=None, fiberid=None, clobber=False, thresh=0.1, unlock=False):
+def mkpersist(persistid, dark, flat, apred='daily', telescope='apo25m',
+              cmjd=None, darkid=None, flatid=None, sparseid=None,
+              fiberid=None, psfid=None, clobber=False, thresh=0.1,
+              unlock=False, process_func=None, read_func=None,
+              badmask_func=None, smooth_func=None):
     """
     Procedure to make an APOGEE persistence calibration file from
     a dark and flat exposure.
@@ -57,7 +67,12 @@ def mkpersist(persistid, dark, flat, cmjd=None, darkid=None, flatid=None,
     # Does product already exist?
     # check all three chip files
     chips = ['a', 'b', 'c']
-    allfiles = [os.path.join(perdir, load.prefix+'Persist-{:s}-{:08d}.fits'.format(c,persistid) for c in chips]
+    allfiles = [
+        os.path.join(
+            perdir, load.prefix + 'Persist-{:s}-{:08d}.fits'.format(c, persistid)
+        )
+        for c in chips
+    ]
 
     if np.sum([os.path.exists(fil) for fil in allfiles]) == 3 and clobber==False:
         print('persist file:',perfile, 'already made')
@@ -70,23 +85,27 @@ def mkpersist(persistid, dark, flat, cmjd=None, darkid=None, flatid=None,
     # Open .lock file
     lock.lock(perfile, lock=True)
 
+    if process_func is None or read_func is None:
+        raise ValueError("process_func and read_func are required")
+    process_kw = dict(darkid=darkid, flatid=flatid, psfid=psfid, nfs=1,
+                      doap3dproc=True, unlock=unlock)
     if cmjd is not None:
-        d = approcess([dark, flat], cmjd=cmjd, darkid=darkid, flatid=flatid, psfid=psfid, nfs=1,
-                      doap3dproc=True, unlock=unlock)
-    else:
-        d = approcess([dark, flat], darkid=darkid, flatid=flatid, psfid=psfid, nfs=1,
-                      doap3dproc=True, unlock=unlock)
-
-    d = apread('2D', num=dark)
-    f = apread('2D', num=flat)
+        process_kw["cmjd"] = cmjd
+    process_func([dark, flat], **process_kw)
+    d = read_func('2D', num=dark)
+    f = read_func('2D', num=flat)
+    if badmask_func is None or smooth_func is None:
+        raise ValueError("badmask_func and smooth_func are required")
 
     # Write out an integer mask
     for ichip in range(3):
         persist = np.zeros((2048, 2048), dtype=int)
         r = d[ichip]['flux'] / f[ichip]['flux']
-        bad = np.where((d[ichip]['mask'] & badmask()) | (f[ichip]['mask'] & badmask()))
+        badbits = badmask_func()
+        bad = np.where((d[ichip]['mask'] & badbits) |
+                       (f[ichip]['mask'] & badbits))
         r[bad] = 0.0
-        rz = zap(r, [10, 10])
+        rz = smooth_func(r, [10, 10])
         print(np.median(rz))
         bad, = np.where(rz > thresh / 4.0)
         persist[bad] = 4
@@ -95,23 +114,22 @@ def mkpersist(persistid, dark, flat, cmjd=None, darkid=None, flatid=None,
         bad, = np.where(rz > thresh)
         persist[bad] = 1
 
-	leadstr = 'MKPERSIST: '
+        leadstr = 'MKPERSIST: '
         head = fits.Header()
-	head['HISTORY'] = leadstr+time.asctime()
-	import socket
-	head['HISTORY'] = leadstr+getpass.getuser()+' on '+socket.gethostname()
-        import platform
-        head['HISTORY'] = leadstr+'Python '+pyvers+' '+platform.system()+' '+platform.release()+' '+platform.architecture()\
-[0]
+        head['HISTORY'] = leadstr + time.asctime()
+        head['HISTORY'] = leadstr + getpass.getuser() + ' on ' + socket.gethostname()
+        head['HISTORY'] = (leadstr + 'Python ' + platform.python_version() + ' ' +
+                           platform.system() + ' ' + platform.release() + ' ' +
+                           platform.architecture()[0])
         # add reduction pipeline version to the header         
         head['HISTORY'] = leadstr+' APOGEE Reduction Pipeline Version: '+load.apred
         outfile = load.filename('Persist', num=persistid, chips=True)
         outfile = outfile.replace('Persist-','Persist-{:s}'.format(chips[ichip]))
         hdulist = fits.HDUList()
         hdulist.append(fits.PrimaryHDU(header=head))
-	hdulist.append(fits.ImageHDU(persist))
+        hdulist.append(fits.ImageHDU(persist))
         hdulist[1].header['EXTNAME'] = 'PERSIST'
-	hdulist.append(fits.ImageHDU(rz))
+        hdulist.append(fits.ImageHDU(rz))
         hdulist[2].header['EXTNAME'] = 'PERSIST_RATE'
         hdulist.writeto(outfile,overwrite=True)
 

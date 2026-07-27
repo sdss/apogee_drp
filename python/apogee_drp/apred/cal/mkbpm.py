@@ -1,6 +1,6 @@
 import os
 import numpy as np
-from .utils import lock,apload
+from apogee_drp.utils import apload, lock
 
 def mkbpm(bpmid, apred='daily', telescope='apo25m', darkid=None, flatid=None, badrow=None,
           clobber=False, unlock=False):
