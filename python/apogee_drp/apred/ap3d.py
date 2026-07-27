@@ -67,7 +67,7 @@ __all__ = [
 ]
 
 
-AP3D_VERSION = "v16"
+AP3D_VERSION = "v17"
 PIXMASK = PixelBitMask()
 
 
@@ -1004,6 +1004,8 @@ def process_array(
     use_reference: bool = True,
     q3fix: bool = False,
     return_cube: bool = False,
+    diagnostic_file: str | Path | None = None,
+    diagnostic_overwrite: bool = False,
     verbose: bool = False,
     debug: bool = False,
 ) -> ProcessResult:
@@ -1019,7 +1021,10 @@ def process_array(
     calibrations, cosmic-ray and saturation treatment, ramp sampling,
     persistence subtraction, and flat-fielding. With ``verbose=True``, major
     stages are timestamped. The returned FITS header records the UTC processing
-    start in ``AP3DTIME`` and elapsed seconds in ``AP3DSEC``.
+    start in ``AP3DTIME`` and elapsed seconds in ``AP3DSEC``. When
+    ``diagnostic_file`` is supplied, selected full-frame intermediate arrays
+    surrounding the final reference subtraction are written to a separate
+    FITS file for numerical comparisons with matching IDL checkpoints.
     """
 
     processing_started = perf_counter()
@@ -1239,6 +1244,10 @@ def process_array(
             science_nx=science_nx,
         )
 
+    diagnostic_arrays: list[tuple[str, np.ndarray]] = []
+    if diagnostic_file is not None:
+        diagnostic_arrays.append(("COLLAPSED", image.copy()))
+
     if use_reference and image.shape[1] == 2560:
         ref = image[:, 2048:].copy()
         # IDL uses MEDIAN(ref, DIM=1) without /EVEN. Because the reference
@@ -1248,9 +1257,26 @@ def process_array(
         smooth_profile = _idl_median_filter_1d(
             ref_profile[None, :], 7, edge_copy=False
         )[0]
+        if diagnostic_file is not None:
+            diagnostic_arrays.extend(
+                [
+                    ("REF_RAW", ref.copy()),
+                    ("REF_PROFILE", ref_profile.copy()),
+                    ("REF_SMOOTH", smooth_profile.copy()),
+                ]
+            )
         ref -= smooth_profile[:, None]
         science = image[:, :2048].copy()
+        if diagnostic_file is not None:
+            diagnostic_arrays.extend(
+                [
+                    ("REF_RESID", ref.copy()),
+                    ("SCI_PREREF", science.copy()),
+                ]
+            )
         _reference_subtract_image(science, ref)
+        if diagnostic_file is not None:
+            diagnostic_arrays.append(("SCI_POSTREF", science.copy()))
         image = science
     else:
         image = image[:, :science_nx]
@@ -1308,6 +1334,13 @@ def process_array(
         ]
     global_variability = float(np.median(finite_var)) if finite_var.size else -1.0
     error = np.maximum(np.sqrt(variance), 1.0)
+    if diagnostic_file is not None:
+        diagnostic_arrays.extend(
+            [
+                ("SAMPLE_NOISE", sample_noise.copy()),
+                ("FINAL_VARIANCE", variance.copy()),
+            ]
+        )
     _update_header(
         hdr,
         nread=nread,
@@ -1347,6 +1380,15 @@ def process_array(
             f"Completed array processing in {processing_seconds:.2f} s",
             processing_started,
         )
+    if diagnostic_file is not None:
+        _write_stage_diagnostics(
+            diagnostic_file,
+            hdr,
+            diagnostic_arrays,
+            overwrite=diagnostic_overwrite,
+        )
+        if verbose:
+            _log(f"Wrote stage diagnostics: {diagnostic_file}")
     return ProcessResult(
         flux=image.astype(np.float32),
         error=error.astype(np.float32),
@@ -1358,6 +1400,39 @@ def process_array(
         persistence_model=pmodel,
         read_mask=bad_reads,
         global_variability=global_variability,
+    )
+
+
+def _write_stage_diagnostics(
+    filename: str | Path,
+    header: fits.Header,
+    arrays: Sequence[tuple[str, np.ndarray]],
+    *,
+    overwrite: bool = False,
+) -> None:
+    """Write named AP3D intermediate arrays for IDL/Python comparisons.
+
+    The primary HDU contains processing metadata. Each image extension is a
+    checkpoint copied before later in-place operations can modify it.
+    Detector images use NumPy ``(y, x)`` ordering.
+    """
+
+    diagnostic_header = header.copy()
+    diagnostic_header["AP3DSTAG"] = (
+        True,
+        "File contains Python AP3D intermediate stages",
+    )
+    hdus: list[fits.hdu.base.ExtensionHDU | fits.PrimaryHDU] = [
+        fits.PrimaryHDU(header=diagnostic_header)
+    ]
+    for name, array in arrays:
+        hdus.append(
+            fits.ImageHDU(np.asarray(array, dtype=np.float32), name=name)
+        )
+    fits.HDUList(hdus).writeto(
+        filename,
+        overwrite=overwrite,
+        checksum=True,
     )
 
 
