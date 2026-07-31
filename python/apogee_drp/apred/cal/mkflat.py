@@ -191,10 +191,11 @@ def mkflat(images, apred="daily", telescope="apo25m", cmjd=None, detid=None, dar
         for inum in images:
             ifile = load.filename('R', num=inum, chips=True).replace('R-',f'R-{ichip}-')
             ofile = load.filename('2D', num=inum, chips=True).replace('2D-',f'2D-{ichip}-')
-            import pdb; pdb.set_trace()
-            ap3d.ap3dproc(ifile, os.path.join(outdir, ofile), detcorr=detcorr, darkcorr=darkcorr, nocr=nocr,
-                          uptheramp=uptheramp, nfowler=nfs, fitsdir=getlocaldir())
+            ap3d.process_file(ifile, os.path.join(outdir, ofile), detcorr=detcorr, darkcorr=darkcorr, nocr=nocr,
+                              uptheramp=uptheramp, nfowler=nfs, fitsdir=utils.localdir())
 
+    import pdb; pdb.set_trace()
+            
     # Sum up all of the individual flats
     #  Median nrep frames before summing if requested
     flats = np.zeros((2048, 2048, 3, nframes), dtype=float)
