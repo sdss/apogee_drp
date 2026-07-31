@@ -2,6 +2,8 @@ from astropy.time import Time
 import numpy as np
 import os
 from scipy.ndimage import median_filter,generic_filter
+from pathlib import Path
+import subprocess
 
 def getmjd5(dateobs):
     """ Convert a DATE-OBS string to 5-digit MJD number."""
@@ -87,3 +89,41 @@ def nanmedfilt(x,size,mode='reflect',check=True):
         out[:size//2] = out[size//2]
         out[-size//2:] = out[-size//2-1]
     return out
+
+
+def software_version() -> str:
+    """Return the APOGEE DRP Git commit."""
+
+    module_path = Path(__file__).resolve()
+    for parent in module_path.parents:
+        if (parent / ".git").exists():
+            try:
+                completed = subprocess.run(
+                    ["git", "-C", str(parent), "rev-parse", "HEAD"],
+                    check=True,
+                    stdout=subprocess.PIPE,
+                    stderr=subprocess.DEVNULL,
+                    text=True,
+                    timeout=5,
+                )
+            except (OSError, subprocess.SubprocessError):
+                break
+            commit = completed.stdout.strip()
+            if commit:
+                return commit
+    try:
+        from importlib.metadata import version
+
+        return version("sdss-apogee-drp")
+    except Exception:
+        return "unknown"
+
+
+def reduction_version() -> str:
+    """Return the apogee_drp module version"""
+
+    return (
+        os.environ.get("APOGEE_DRP_VER")
+        or os.environ.get("APRED")
+	or "unknown"
+    )
