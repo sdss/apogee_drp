@@ -433,7 +433,8 @@ class PSFProfile(object):
                 hi = self.n
                 lo = hi-3
             # a*x^2+b*x+c
-            coef[i,:] = dln.quadratic_coefficients(self.x[lo:hi],self.y[lo:hi])  # a,b,c
+            coef[i,:] = np.polyfit(self.x[lo:hi],self.y[lo:hi],2)
+            #coef[i,:] = dln.quadratic_coefficients(self.x[lo:hi],self.y[lo:hi])  # a,b,c
         self._xcoefind = xcoefind
         self._coef = coef
 
@@ -446,7 +447,8 @@ class PSFProfile(object):
         if isinstance(other,int) or isinstance(other,float):
             new = self.copy()
             new.y += other
-            new._coef += other
+            # Adding a constant changes only the constant polynomial term.
+            new._coef[:, 2] += other
             return new
         # Add two profiles
         if isinstance(other,PSFProfile) is False:
@@ -465,7 +467,8 @@ class PSFProfile(object):
         if isinstance(other,int) or isinstance(other,float):
             new = self.copy()
             new.y -= other
-            new._coef -= other
+            # Subtracting a constant changes only the constant term.
+            new._coef[:, 2] -= other
             return new        
         if isinstance(other,PSFProfile) is False:
             raise Exception('Other object must also be a PSFProfile')
@@ -649,27 +652,36 @@ class PSF(object):
         epsfimg = fiber_grid(trace_y, self.y, self._xgrid, self._ygrid, self._grid, self._log)
         return epsfimg
 
-    # Make full epsf grid
+
     def buildepsf(self,traceim_y,fibers=np.arange(300),offcoef=np.zeros(4)):
-        """ Construct profiles for all columns of all fibers."""
+        """Construct profiles for the requested fibers and columns."""
+
+        # Numba requires native-endian arrays.
+        traceim_y = np.asarray(traceim_y,dtype=traceim_y.dtype.newbyteorder("="))
+        ntrace, ncolumns = traceim_y.shape
+
         if fibers is None:
-            fibers = np.arange(300)
+            fibers = np.arange(ntrace)
+
+        fibers = np.asarray(fibers,dtype=np.int64)
         nfibers = len(fibers)
+
         if offcoef is None:
             offcoef = np.zeros(4)
-        # all y-values must be given
-        traceim_y = np.asarray(traceim_y, dtype=traceim_y.dtype.newbyteorder("="))
-        nfibers,ncolumns = traceim_y.shape
-        epsfimg,ycen,ylo,yhi = build_epsf_grid(traceim_y, fibers, offcoef,
-                                               self.y, self._xgrid, self._ygrid,
-                                               self._grid, self._log)
-        # Make the output list
+        offcoef = np.asarray(offcoef,dtype=np.float64)
+
+        epsfimg, ycen, ylo, yhi = build_epsf_grid(traceim_y,fibers,offcoef,self.y,
+                                                  self._xgrid,self._ygrid,self._grid,self._log)
+        
         epsf = []
         for i in range(nfibers):
-            ny = yhi[i]-ylo[i]+1
-            data = {'fiber':fibers[i], 'lo':ylo[i], 'hi':yhi[i], 'img':epsfimg[i,:ny,:], 'ycen':ycen[i,:]}
+            ny = yhi[i] - ylo[i] + 1
+            data = {"fiber": fibers[i],"lo": ylo[i],"hi": yhi[i],
+                    "img": epsfimg[i, :ny, :],"ycen": ycen[i, :]}
             epsf.append(data)
+
         return epsf
+
     
     def mkgrid(self,nx=None,ny=None):
         """ Make a grid of models to be used later."""
@@ -1514,25 +1526,43 @@ def epsfmodel(epsf,spec,skip=False,subonly=False,fibers=None,yrange=[0,2048]):
     bad = (t<=0)
     if np.sum(bad)>0:
         t[bad] = 0
-    for k in fibers:
-        nf = 1
-        ns = 0
-        if subonly:
-            junk, = np.where(subonly==k)
-            nf = len(junk)
-        if skip:
-            junk, = np.where(skip==k)
-            ns = len(junk)
-        if nf > 0 and ns==0:
-            p1 = epsf[k]
-            lo = epsf[k]['lo']
-            hi = epsf[k]['hi']
-            img = p1['img'].T
-            rows = np.ones(hi-lo+1,int)
-            fiber = epsf[k]['fiber']
-            model[:,lo-ylo:hi+1-ylo] += img[:,:]*(rows.reshape(-1,1)*t[:,fiber]).T                                    
-    model = model.T
+    #for k in fibers:
+    #    nf = 1
+    #    ns = 0
+    #    if subonly:
+    #        junk, = np.where(subonly==k)
+    #        nf = len(junk)
+    #    if skip:
+    #        junk, = np.where(skip==k)
+    #        ns = len(junk)
+    #    if nf > 0 and ns==0:
+    #        p1 = epsf[k]
+    #        lo = epsf[k]['lo']
+    #        hi = epsf[k]['hi']
+    #        img = p1['img'].T
+    #        rows = np.ones(hi-lo+1,int)
+    #        fiber = epsf[k]['fiber']
+    #        model[:,lo-ylo:hi+1-ylo] += img[:,:]*(rows.reshape(-1,1)*t[:,fiber]).T                                    
 
+    for k in fibers:
+        include = True
+        if subonly is not False and subonly is not None:
+            subonly_array = np.asarray(subonly,dtype=int)
+            include = np.any(subonly_array == k)
+        if skip is not False and skip is not None:
+            skip_array = np.asarray(skip,dtype=int)
+            if np.any(skip_array == k):
+                include = False
+        if include:
+            p1 = epsf[k]
+            lo = p1["lo"]
+            hi = p1["hi"]
+            img = p1["img"].T
+            fiber = p1["fiber"]
+            model[:, lo-ylo:hi+1-ylo] += img * t[:, fiber].reshape(-1, 1)
+
+    model = model.T
+        
     return model
 
 
