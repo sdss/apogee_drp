@@ -717,7 +717,9 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 if verbose: 
                     print('res: ',len(gd),np.median(res),np.median(np.abs(res)),res[gd].std())
                     print(pars)
-            except :
+            except KeyboardInterrupt: 
+                raise
+            except:
                 print('Solution failed for row: ', row)
                 #import pdb; pdb.set_trace()
                 popt = pars*0.
@@ -1181,6 +1183,8 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                     elif verbose :
                         print('{:5d}{:5d}{:12.3f}{:12.3f}{:12.3f}{:12.3f}{:12d}'.format(
                               ichip+1,row,wave,pars[0],pars[1],pars[1]-pix0,num))
+                except KeyboardInterrupt: 
+                    raise
                 # Peakfit failed
                 except:
                     if verbose : print('failed: ',num,row,chip,wave)
@@ -1250,6 +1254,8 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                             if verbose:
                                 print('{:5d}{:5d}{:12.3f}{:12.3f}{:12.3f}{:12.3f}{:12d}'.format(
                                     ichip+1,row,linestr['wave'][nline1],pars[0],pars[1],pars[1]-pix0,num))
+                        except KeyboardInterrupt: 
+                            raise
                         except:
                             if lines['USEWAVE'][iline] == 1: dpixel[-1] = np.nan
                             if verbose : print('failed: ',num,row,chip,wave)
@@ -1306,6 +1312,8 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                             if verbose:
                                 print('{:5d}{:5d}{:12.3f}{:12.3f}{:12.3f}{:12.3f}{:12d}'.format(
                                     ichip+1,row,linestr['wave'][nline1],pars[0],pars[1],pars[1]-pix0,num))
+                        except KeyboardInterrupt: 
+                            raise
                         except:
                             if verbose : print('peakfit_multi failed: ',iline)
                             if DEBUG:
@@ -1386,7 +1394,9 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                 try:
                     newlinestr = findlines(frame,[badrow],waves1,lines,verbose=False,estsig=1,plot=False)
                     ind, = np.where(linestr['row']==badrow)
-                    linestr[ind] = newlinestr   # number of lines should be identical                    
+                    linestr[ind] = newlinestr   # number of lines should be identical
+                except KeyboardInterrupt: 
+                    raise
                 except:
                     traceback.print_exc()
                     print('problems in refitting bad rows')
@@ -1530,6 +1540,8 @@ def _peakfit_fast(x,y,yerr,pars0,xwid):
         covariance *= 2.0*result.cost/dof
         perror[1] = np.sqrt(np.maximum(covariance[0,0],0.0))
         perror[2] = width*np.sqrt(np.maximum(covariance[1,1],0.0))
+    except KeyboardInterrupt: 
+        raise
     except Exception:
         pass
     return pars,perror
@@ -1586,6 +1598,8 @@ def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin,ini
         if func is gaussbin:
             try:
                 pars,perror = _peakfit_fast(xfit,y,yerr,pars0,xwid)
+            except KeyboardInterrupt: 
+                raise
             except Exception:
                 #pars,pcov = curve_fit(func,xfit,y,p0=pars0,sigma=yerr,bounds=bounds)
                 pars,pcov = curve_fit(func,xfit,y,p0=pars0,sigma=yerr,
