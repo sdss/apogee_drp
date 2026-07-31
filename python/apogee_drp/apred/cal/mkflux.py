@@ -3,6 +3,11 @@ import time
 import numpy as np
 from astropy.io import fits
 
+def make_flux():
+
+    
+
+
 def mkflux(ims, cmjd=None, darkid=None, flatid=None, psfid=None, modelpsf=None,
            waveid=None, littrowid=None, persistid=None, clobber=False,
            onedclobber=False, bbtemp=None, plate=None, plugid=None, holtz=False,

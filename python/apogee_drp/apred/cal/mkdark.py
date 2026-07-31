@@ -5,6 +5,11 @@ from astropy.io import fits
 from ..utils import apload,lock
 from . import process
 
+def make_dark():
+
+    return res
+
+
 def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
     """
     Makes APOGEE superdark calibration product.
@@ -90,7 +95,7 @@ def mkdark(ims, cmjd=None, step=None, psfid=None, clobber=False, unlock=False):
             print('{:d}/{:d} {:s} {:s}'.format(j,len(ims),chip,im))
 
             # Process (bias-only) each individual frame
-            d = ap3d.ap3dproc(im)
+            d = ap3d.process_file(im)
             #d = process.process(cm, im, chip, head, r, step=step, nofs=True, nofix=True, nocr=True)
             print('Done process')
             if d.shape[0] != 2048:
