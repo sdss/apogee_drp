@@ -24,7 +24,7 @@ import pdb
 from functools import wraps
 from astropy.io import ascii, fits
 from scipy import signal, interpolate
-from scipy.optimize import curve_fit
+from scipy.optimize import curve_fit, least_squares
 from scipy.special import erf, erfc
 from scipy.signal import medfilt, convolve, boxcar
 from ..database import apogeedb
@@ -117,7 +117,7 @@ def getarcpairs(frameinfo,linestr):
     return frameinfo,linestr
 
 
-def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=False,verbose=True):
+def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=False,verbose=False):
     """
     Function to run daily that generates a wavelength solution using a week's worth of
     arclamp data simultaneously fit with "apmultiwavecal".
@@ -1157,7 +1157,7 @@ def findlines(frame,rows,waves,lines,out=None,verbose=False,estsig=2,plot=False)
                 linestr['failed'][nline] = 1  # everything's bad until proven good
 
                 # Check if the spectrum is saturated
-
+                
                 # Run peakfit on this line
                 try:
                     pix0 = wave2pix(wave,waves[chip][row,:])+dpixel_median
@@ -1414,6 +1414,127 @@ def gaussbin(x,*args):
         y += a * (np.sqrt(2.0)*sig * np.sqrt(np.pi)/2.0) * (erf(t2)-erf(t1)) + yoff
     return y
 
+def gaussbin_jac(x, *args):
+    """
+    Analytic Jacobian for gaussbin().
+
+    Parameters are repeated groups of:
+
+        amplitude, center, sigma, background
+
+    Returns
+    -------
+    jac : ndarray, shape (len(x), len(args))
+        Derivative of the model with respect to each parameter.
+    """
+    x = np.asarray(x, dtype=float)
+    ngauss = len(args) // 4
+    jac = np.empty((x.size, len(args)), dtype=float)
+
+    sqrt2 = np.sqrt(2.0)
+    sqrtpi = np.sqrt(np.pi)
+    norm = np.sqrt(np.pi / 2.0)
+
+    for i in range(ngauss):
+        amplitude, center, sigma, background = (
+            args[4*i:4*i+4]
+        )
+
+        t1 = (x - center - 0.5) / (sqrt2 * sigma)
+        t2 = (x - center + 0.5) / (sqrt2 * sigma)
+
+        e1 = np.exp(-t1*t1)
+        e2 = np.exp(-t2*t2)
+        delta_erf = erf(t2) - erf(t1)
+
+        # d(model)/d(amplitude)
+        jac[:, 4*i] = norm * sigma * delta_erf
+
+        # d(model)/d(center)
+        jac[:, 4*i+1] = amplitude * (e1 - e2)
+
+        # d(model)/d(sigma)
+        jac[:, 4*i+2] = amplitude * norm * (
+            delta_erf
+            + 2.0/sqrtpi * (t1*e1 - t2*e2)
+        )
+
+        # d(model)/d(background)
+        jac[:, 4*i+3] = 1.0
+
+    return jac
+
+
+def _gaussbin_profile(x,center,width):
+    """Evaluate a unit-amplitude, pixel-integrated Gaussian profile."""
+    t1 = (x-center-0.5)/(np.sqrt(2.0)*width)
+    t2 = (x-center+0.5)/(np.sqrt(2.0)*width)
+    return np.sqrt(np.pi/2.0)*width*(erf(t2)-erf(t1))
+
+
+def _peakfit_linear_data(y,yerr):
+    """Precompute fixed terms for the peakfit variable-projection fit."""
+    weight = 1.0/(yerr*yerr)
+    return y,yerr,weight,np.sum(weight),np.sum(weight*y)
+
+
+def _peakfit_linear_pars(x,center,width,data):
+    """Solve analytically for Gaussian amplitude and constant background."""
+    y,yerr,weight,s11,s1y = data
+    profile = _gaussbin_profile(x,center,width)
+    spp = np.sum(weight*profile*profile)
+    sp1 = np.sum(weight*profile)
+    spy = np.sum(weight*profile*y)
+    determinant = spp*s11-sp1*sp1
+    if not np.isfinite(determinant) or np.abs(determinant) < 1e-30:
+        return np.nan,np.nan,profile
+    amplitude = (spy*s11-s1y*sp1)/determinant
+    background = (spp*s1y-sp1*spy)/determinant
+    return amplitude,background,profile
+
+
+def _peakfit_residual(pars,x,data):
+    """Weighted residuals for center and log(width)."""
+    center,logwidth = pars
+    width = np.exp(logwidth)
+    amplitude,background,profile = _peakfit_linear_pars(x,center,width,data)
+    if not np.isfinite(amplitude+background):
+        return np.zeros(len(x),float)+1e20
+    y,yerr,weight,s11,s1y = data
+    return (amplitude*profile+background-y)/yerr
+
+
+def _peakfit_fast(x,y,yerr,pars0,xwid):
+    """Fit center and width nonlinearly, eliminating amplitude/background."""
+    data = _peakfit_linear_data(y,yerr)
+    result = least_squares(_peakfit_residual,
+                           [pars0[1],np.log(np.clip(pars0[2],0.5,5.0))],
+                           args=(x,data),method='lm',
+                           ftol=1e-4,xtol=1e-4,gtol=1e-4,max_nfev=12)
+    center = result.x[0]
+    width = np.exp(result.x[1])
+    amplitude,background,profile = _peakfit_linear_pars(x,center,width,data)
+    pars = np.array([amplitude,center,width,background])
+    valid = (np.all(np.isfinite(pars)) and amplitude > 0.0 and
+             0.5 <= width <= 5.0 and x[0] <= center <= x[-1] and
+             np.abs(center-pars0[1]) <= xwid)
+    if not valid:
+        raise RuntimeError('Invalid fast peak fit')
+
+    # Only the center uncertainty is currently used by findlines().  The
+    # reduced fit has two nonlinear and two eliminated linear parameters.
+    perror = np.zeros(4,float)+np.nan
+    dof = max(1,len(y)-4)
+    try:
+        covariance = np.linalg.pinv(result.jac.T @ result.jac)
+        covariance *= 2.0*result.cost/dof
+        perror[1] = np.sqrt(np.maximum(covariance[0,0],0.0))
+        perror[2] = width*np.sqrt(np.maximum(covariance[1,1],0.0))
+    except Exception:
+        pass
+    return pars,perror
+
+
 def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin,initpars=None) :
     """ Return integrated-Gaussian centers near input pixel center
     
@@ -1431,14 +1552,15 @@ def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin,ini
     sig = estsig
     back = 0.
     for niter in range(11) :
+    #for niter in range(2):
         # window width to search
         xwid = int(round(5*sig))
         if xwid < 3 : xwid=3
-        xlo = cen-xwid
-        xhi = cen+xwid
+        xlo = np.maximum(cen-xwid,0)
+        xhi = np.minimum(cen+xwid,len(spec)-1)
         y = spec[xlo:xhi+1]
         yerr = sigma[xlo:xhi+1]
-        x0 = y.argmax()+(cen-xwid)
+        x0 = y.argmax()+xlo
         peak = y.max()
         sig = np.sqrt(y.sum()**2/peak**2/(2*np.pi))
         sig = np.maximum(sig,0.51)
@@ -1457,8 +1579,21 @@ def peakfit(spec,pix0,estsig=5,sigma=None,mask=None,plot=False,func=gaussbin,ini
         bounds[1][2] = np.maximum(5,2*sig)
         bounds[0][3] = np.minimum(np.min(y),pars0[3])-10   # yoffset
         bounds[1][3] = np.maximum(np.max(y),pars0[3])+10
-        pars,pcov = curve_fit(func,x[xlo:xhi+1],y,p0=pars0,sigma=yerr,bounds=bounds)
-        perror = np.sqrt(np.diag(pcov))
+        xfit = x[xlo:xhi+1]
+        
+        # The common single-Gaussian case uses a two-parameter nonlinear fit.
+        # Retain the original bounded fit as a fallback and for custom models.
+        if func is gaussbin:
+            try:
+                pars,perror = _peakfit_fast(xfit,y,yerr,pars0,xwid)
+            except Exception:
+                #pars,pcov = curve_fit(func,xfit,y,p0=pars0,sigma=yerr,bounds=bounds)
+                pars,pcov = curve_fit(func,xfit,y,p0=pars0,sigma=yerr,
+                                      bounds=bounds,jac=gaussbin_jac)
+                perror = np.sqrt(np.diag(pcov))
+        else:
+            pars,pcov = curve_fit(func,xfit,y,p0=pars0,sigma=yerr,bounds=bounds)
+            perror = np.sqrt(np.diag(pcov))
         # iterate unless new array range is the same
         if int(round(5*pars[2])) == xwid and int(round(pars[1])) == cen : break
         cen = int(round(pars[1]))
@@ -1515,7 +1650,7 @@ def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin,plot=Fa
     xlo = int(np.maximum(np.min(initpars1[1::4])-5,0))
     xhi = int(np.minimum(np.max(initpars1[1::4])+5,2048))
     pars1,pcov1 = curve_fit(gaussbin,x[xlo:xhi],spec[xlo:xhi],p0=initpars1,
-                            sigma=sigma[xlo:xhi],bounds=bounds1)
+                            sigma=sigma[xlo:xhi],bounds=bounds1,jac=gaussbin_jac)
     perror1 = np.sqrt(np.diag(pcov1))
     
     
@@ -1539,7 +1674,7 @@ def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin,plot=Fa
     xhi = int(np.minimum(np.max(initpars2[1::4])+5,2048))
     x = np.arange(len(spec))
     pars2,pcov2 = curve_fit(gaussbin,x[xlo:xhi],spec[xlo:xhi],p0=initpars2,
-                            sigma=sigma[xlo:xhi],bounds=bounds2)
+                            sigma=sigma[xlo:xhi],bounds=bounds2,jac=gaussbin_jac)
     perror2 = np.sqrt(np.diag(pcov2))
 
     # Final pass, fix neighbors and let main line completely float
@@ -1554,7 +1689,7 @@ def peakfit_multi(spec,pars0,neipars0,sigma=None,mask=None,func=gaussbin,plot=Fa
     xhi = int(np.minimum(np.max(initpars3[1::4])+5,2048))
     x = np.arange(len(spec))
     pars3,pcov3 = curve_fit(gaussbin,x[xlo:xhi],spec[xlo:xhi],p0=initpars3,
-                            sigma=sigma[xlo:xhi],bounds=bounds3)
+                            sigma=sigma[xlo:xhi],bounds=bounds3,jac=gaussbin_jac)
     perror3 = np.sqrt(np.diag(pcov3))
 
     # Final parameters
@@ -2009,51 +2144,75 @@ def scalarDecorator(func):
             return result
     return scalar_wrapper
 
+#@scalarDecorator
+#def wave2pix(wave,wave0) :
+#    """ convert wavelength to pixel given wavelength array
+#    Args :
+#       wave(s) : wavelength(s) (\AA) to get pixel of
+#       wave0 : array with wavelength as a function of pixel number 
+#    Returns :
+#       pixel(s) in the chip
+#    """
+#    pix0= np.arange(len(wave0))
+#    # Need to sort into ascending order
+#    sindx= np.argsort(wave0)
+#    wave0= wave0[sindx]
+#    pix0= pix0[sindx]
+#    # Start from a linear baseline
+#    baseline= np.polynomial.Polynomial.fit(wave0,pix0,1)
+#    ip= interpolate.InterpolatedUnivariateSpline(wave0,pix0/baseline(wave0),k=3)
+#    out= baseline(wave)*ip(wave)
+#    # NaN for out of bounds
+#    out[wave > wave0[-1]]= np.nan
+#    out[wave < wave0[0]]= np.nan
+#    return out
+    
+#@scalarDecorator
+#def pix2wave(pix,wave0) :
+#    """ convert pixel(s) to wavelength(s)
+#    Args :
+#       pix : pixel(s) to get wavelength at
+#       wave0 : array with wavelength as a function of pixel number 
+#    Returns :
+#       wavelength(s) in \AA
+#    """
+#    pix0= np.arange(len(wave0))
+#    # Need to sort into ascending order
+#    sindx= np.argsort(pix0)
+#    wave0= wave0[sindx]
+#    pix0= pix0[sindx]
+#    # Start from a linear baseline
+#    baseline= np.polynomial.Polynomial.fit(pix0,wave0,1)
+#    ip= interpolate.InterpolatedUnivariateSpline(pix0,wave0/baseline(pix0), k=3)
+#    out= baseline(pix)*ip(pix)
+#    # NaN for out of bounds
+#    out[pix < 0]= np.nan
+#    out[pix > 2047]= np.nan
+#    return out
+
+
 @scalarDecorator
-def wave2pix(wave,wave0) :
-    """ convert wavelength to pixel given wavelength array
-    Args :
-       wave(s) : wavelength(s) (\AA) to get pixel of
-       wave0 : array with wavelength as a function of pixel number 
-    Returns :
-       pixel(s) in the chip
-    """
-    pix0= np.arange(len(wave0))
-    # Need to sort into ascending order
-    sindx= np.argsort(wave0)
-    wave0= wave0[sindx]
-    pix0= pix0[sindx]
-    # Start from a linear baseline
-    baseline= np.polynomial.Polynomial.fit(wave0,pix0,1)
-    ip= interpolate.InterpolatedUnivariateSpline(wave0,pix0/baseline(wave0),k=3)
-    out= baseline(wave)*ip(wave)
-    # NaN for out of bounds
-    out[wave > wave0[-1]]= np.nan
-    out[wave < wave0[0]]= np.nan
+def wave2pix(wave,wave0):
+    pix0 = np.arange(len(wave0))
+    # Ascending order
+    if wave0[1] > wave0[0]:
+        out = np.interp(wave, wave0, pix0, left=np.nan, right=np.nan)
+    # Descending order
+    else:
+        out = np.interp(wave, wave0[::-1], pix0[::-1], left=np.nan, right=np.nan)
     return out
 
 @scalarDecorator
-def pix2wave(pix,wave0) :
-    """ convert pixel(s) to wavelength(s)
-    Args :
-       pix : pixel(s) to get wavelength at
-       wave0 : array with wavelength as a function of pixel number 
-    Returns :
-       wavelength(s) in \AA
-    """
-    pix0= np.arange(len(wave0))
-    # Need to sort into ascending order
-    sindx= np.argsort(pix0)
-    wave0= wave0[sindx]
-    pix0= pix0[sindx]
-    # Start from a linear baseline
-    baseline= np.polynomial.Polynomial.fit(pix0,wave0,1)
-    ip= interpolate.InterpolatedUnivariateSpline(pix0,wave0/baseline(pix0), k=3)
-    out= baseline(pix)*ip(pix)
-    # NaN for out of bounds
-    out[pix < 0]= np.nan
-    out[pix > 2047]= np.nan
+def pix2wave(pix,wave0):
+    pix0 = np.arange(len(wave0))
+    # Ascending order
+    if pix0[1] > pix0[0]:
+        out = np.interp(pix, pix0, wave0, left=np.nan, right=np.nan)
+    # Descending order
+    else:
+        out = np.interp(pix, pix0[::-1], wave0[::-1], pix0[::-1], left=np.nan, right=np.nan)
     return out
+
 
 def compare(npoly=4,lco=False) :
 
