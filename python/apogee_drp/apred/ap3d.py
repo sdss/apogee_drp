@@ -42,13 +42,21 @@ from typing import Any, Callable, Iterable, Mapping, Sequence
 import numpy as np
 from astropy.io import fits
 from astropy.time import Time, TimeDelta
-from apogee_drp.utils import apzip
-from apogee_drp.utils.bitmask import PixelBitMask
+#from apogee_drp.utils import apzip
+#from apogee_drp.utils.bitmask import PixelBitMask
 from dlnpyutils import utils as dln
 from scipy.ndimage import median_filter
+from ..utils import apzip,utils
+from ..utils.bitmask import PixelBitMask
+
+try:
+    from numba import njit
+except ImportError:  # pragma: no cover - exercised in no-Numba environments
+    njit = None
 
 __all__ = [
     "AP3D_VERSION",
+    "NUMBA_AVAILABLE",
     "PIXMASK",
     "CosmicRay",
     "ProcessResult",
@@ -67,16 +75,9 @@ __all__ = [
 ]
 
 
-AP3D_VERSION = "v17"
+AP3D_VERSION = "v25"
+NUMBA_AVAILABLE = njit is not None
 PIXMASK = PixelBitMask()
-
-
-def _bit(name: str) -> int:
-    """Return a named APOGEE pixel-mask value."""
-
-    return int(PIXMASK.getval(name))
-
-
 BAD_VARIANCE = np.float32(99_999_999.0)
 NONFINITE_ERROR = np.float32(1.0e10)
 
@@ -92,49 +93,7 @@ def _log(message: str, started: float | None = None) -> None:
     )
     print(f"{timestamp}{elapsed} {message}", flush=True)
 
-
-def _software_version() -> str:
-    """Return the APOGEE DRP Git commit or the best available version tag."""
-
-    for variable in ("APOGEE_DRP_VER", "APOGEE_DRP_VERSION"):
-        value = os.environ.get(variable)
-        if value:
-            return value
-    module_path = Path(__file__).resolve()
-    for parent in module_path.parents:
-        if (parent / ".git").exists():
-            try:
-                completed = subprocess.run(
-                    ["git", "-C", str(parent), "rev-parse", "HEAD"],
-                    check=True,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.DEVNULL,
-                    text=True,
-                    timeout=5,
-                )
-            except (OSError, subprocess.SubprocessError):
-                break
-            commit = completed.stdout.strip()
-            if commit:
-                return commit
-    try:
-        from importlib.metadata import version
-
-        return version("sdss-apogee-drp")
-    except Exception:
-        return "unknown"
-
-
-def _reduction_version() -> str:
-    """Return the configured APOGEE reduction name."""
-
-    return (
-        os.environ.get("APOGEE_REDUX")
-        or os.environ.get("APRED")
-        or "unknown"
-    )
-
-
+    
 @dataclass
 class CosmicRay:
     """Description of a cosmic ray detected in one detector pixel.
@@ -158,11 +117,12 @@ class CosmicRay:
 
 @dataclass
 class ProcessResult:
-    """Calibrated 2-D products and diagnostics returned by the reduction.
+    """Calibrated 2-D products and auxiliary reduction information.
 
     ``flux``, ``error``, and ``mask`` have shape ``(2048, 2048)``.  The
-    optional arrays retain intermediate information useful for diagnostics
-    when requested by :func:`process_array`.
+    optional fields describe detected events, saturation and read state.
+    ``fixed_cube`` is retained only when :func:`process_array` is called with
+    ``return_cube=True``.
     """
 
     flux: np.ndarray
@@ -196,103 +156,66 @@ class PlanProcessRecord:
     error: str | None = None
 
 
-def _idl_median(
-    a: np.ndarray,
-    axis: int | None = None,
-    *,
-    even: bool = False,
-) -> np.ndarray:
-    """Compute an IDL-compatible median while ignoring NaNs.
+if NUMBA_AVAILABLE:
 
-    IDL returns the upper of the two middle values for an even number of
-    samples unless the ``/EVEN`` keyword is supplied. NumPy instead averages
-    the middle pair. This distinction matters for the 512-column reference
-    output used by AP3D.
+    @njit(cache=True)
+    def _rolling_nanmedian_numba_float32(
+        values: np.ndarray,
+        width: int,
+    ) -> np.ndarray:
+        """Numba kernel for IDL-compatible float32 rolling nanmedians."""
 
-    Parameters
-    ----------
-    a
-        Input values. NaNs are ignored, matching IDL ``MEDIAN`` behavior.
-    axis
-        Axis along which to compute the median. ``None`` flattens the input.
-    even
-        Reproduce IDL's ``/EVEN`` keyword by averaging the middle pair.
+        nrow, nvalue = values.shape
+        result = values.copy()
+        if width <= 1:
+            return result
+        left = width // 2
+        right = width - left
+        scratch = np.empty(width, dtype=np.float32)
 
-    Returns
-    -------
-    numpy.ndarray
-        Median values with the selected axis removed.
-    """
+        for row in range(nrow):
+            for index in range(left, nvalue - right):
+                count = 0
+                start = index - left
+                for offset in range(width):
+                    value = values[row, start + offset]
+                    if np.isfinite(value):
+                        # Insertion sorting is efficient for APOGEE's
+                        # eleven-element windows and avoids allocations.
+                        position = count
+                        while (
+                            position > 0
+                            and scratch[position - 1] > value
+                        ):
+                            scratch[position] = scratch[position - 1]
+                            position -= 1
+                        scratch[position] = value
+                        count += 1
+                if count == 0:
+                    result[row, index] = np.nan
+                elif count % 2 == 1:
+                    result[row, index] = scratch[count // 2]
+                else:
+                    result[row, index] = (
+                        scratch[count // 2 - 1] + scratch[count // 2]
+                    ) / np.float32(2.0)
 
-    values = np.asarray(a)
-    if even:
-        return np.nanmedian(values, axis=axis)
-    if axis is None:
-        values = values.ravel()
-        axis = 0
-    axis = np.core.numeric.normalize_axis_index(axis, values.ndim)
-    ordered = np.sort(values, axis=axis)
-    finite_count = np.sum(~np.isnan(ordered), axis=axis)
-    upper_index = finite_count // 2
-    safe_index = np.minimum(
-        upper_index, max(ordered.shape[axis] - 1, 0)
-    )
-    result = np.take_along_axis(
-        ordered,
-        np.expand_dims(safe_index, axis=axis),
-        axis=axis,
-    ).squeeze(axis=axis)
-    if np.ndim(result) == 0:
-        return np.asarray(np.nan if finite_count == 0 else result)
-    return np.where(finite_count == 0, np.nan, result)
+            for index in range(left):
+                result[row, index] = result[row, left]
+            last = nvalue - right - 1
+            for index in range(nvalue - right, nvalue):
+                result[row, index] = result[row, last]
+        return result
 
+else:
 
-def _idl_median_filter_1d(
-    a: np.ndarray,
-    width: int,
-    *,
-    edge_copy: bool,
-) -> np.ndarray:
-    """Apply the one-dimensional IDL median-filter placement convention.
+    def _rolling_nanmedian_numba_float32(
+        values: np.ndarray,
+        width: int,
+    ) -> np.ndarray:
+        """Raise when the optional Numba rolling-median kernel is unavailable."""
 
-    Filtering is along the final axis.  With ``edge_copy=True``, this matches
-    ``MEDFILT1D(..., /EDGE_COPY)`` and ``MEDFILT2D(..., DIM=2,
-    /EDGE_COPY)``.  Otherwise, incompletely supported edge values retain
-    their unfiltered input values, as in IDL ``MEDIAN(array, width)``.
-    """
-
-    values = np.asarray(a)
-    width = max(1, int(width))
-    if width == 1:
-        return values.copy()
-    nvalue = values.shape[-1]
-    if width > nvalue:
-        raise ValueError("width must not exceed the length of the final axis")
-    if width == nvalue:
-        median = np.nanmedian(values, axis=-1, keepdims=True)
-        if edge_copy:
-            return np.broadcast_to(median, values.shape).copy()
-        return values.astype(
-            np.result_type(values.dtype, np.float32), copy=True
-        )
-
-    left = width // 2
-    right = width - left
-    result = values.astype(
-        np.result_type(values.dtype, np.float32), copy=True
-    )
-    for index in range(left, nvalue - right):
-        result[..., index] = np.nanmedian(
-            values[..., index - left : index - left + width],
-            axis=-1,
-        )
-
-    if edge_copy:
-        result[..., :left] = result[..., left : left + 1]
-        result[..., nvalue - right :] = result[
-            ..., nvalue - right - 1 : nvalue - right
-        ]
-    return result
+        raise RuntimeError("Numba is not available")
 
 
 def _rolling_nanmedian(a: np.ndarray, width: int) -> np.ndarray:
@@ -325,7 +248,23 @@ def _rolling_nanmedian(a: np.ndarray, width: int) -> np.ndarray:
         Median-filtered array with the same shape as ``a``.
     """
 
-    return _idl_median_filter_1d(a, width, edge_copy=True)
+    values = np.asarray(a)
+    normalized_width = max(1, int(width))
+    if (
+        NUMBA_AVAILABLE
+        and values.ndim == 2
+        and values.dtype == np.dtype(np.float32)
+        and normalized_width < values.shape[-1]
+    ):
+        return _rolling_nanmedian_numba_float32(
+            values,
+            normalized_width,
+        )
+    return utils.idl_median_filter_1d(
+        values,
+        normalized_width,
+        edge_copy=True,
+    )
 
 
 def _expand_quadrants(values: np.ndarray, shape: tuple[int, int]) -> np.ndarray:
@@ -358,26 +297,9 @@ def _reference_subtract_image_long(
     """IDL ``APREFCORR_SUB`` with assignment back into a LONG image."""
 
     image[:, 0:512] = (image[:, 0:512] - ref).astype(np.int32)
-    image[:, 512:1024] = (
-        image[:, 512:1024] - ref[:, ::-1]
-    ).astype(np.int32)
+    image[:, 512:1024] = (image[:, 512:1024] - ref[:, ::-1]).astype(np.int32)
     image[:, 1024:1536] = (image[:, 1024:1536] - ref).astype(np.int32)
-    image[:, 1536:2048] = (
-        image[:, 1536:2048] - ref[:, ::-1]
-    ).astype(np.int32)
-
-
-def _median_filter_2d(a: np.ndarray, size: int) -> np.ndarray:
-    """Apply IDL's 2-D median filter, including its zero perimeter."""
-
-    result = median_filter(a, size=(size, size), mode="nearest")
-    edge = size // 2
-    if edge:
-        result[:edge, :] = 0
-        result[-edge:, :] = 0
-        result[:, :edge] = 0
-        result[:, -edge:] = 0
-    return result
+    image[:, 1536:2048] = (image[:, 1536:2048] - ref[:, ::-1]).astype(np.int32)
 
 
 def reference_correct(
@@ -406,7 +328,6 @@ def reference_correct(
         Positive: subtract each reference output, median-filtered with this
         width when greater than one.  Negative: subtract the mean reference
         pattern.  Zero: do not subtract the reference output.
-
     Returns
     -------
     corrected, mask, read_mask, last_good
@@ -480,8 +401,8 @@ def reference_correct(
             nsat0 = nsat
         if nsat > nsat0 + 2000 and last_good == nread - 1:
             last_good = i - 1
-        mask[red == 0] |= _bit("BADPIX")
-        mask[saturated] |= _bit("SATPIX")
+        mask[red == 0] |= PIXELMASK.getval("BADPIX")
+        mask[saturated] |= PIXELMASK.getval("SATPIX")
         red[saturated] = 65_535
 
         if read_mask[i]:
@@ -498,7 +419,7 @@ def reference_correct(
         if indiv == 1:
             correction = ref
         elif indiv > 1:
-            correction = _median_filter_2d(ref, indiv)
+            correction = utils.idl_median_filter_2d(ref, indiv)
         elif indiv < 0:
             correction = mean_ref
         else:
@@ -510,64 +431,43 @@ def reference_correct(
         if vertical:
             for q in range(4):
                 sl = slice(q * 512, (q + 1) * 512)
-                rlo = np.float32(np.nanmean(red[2:4, sl]))
-                rhi = np.float32(np.nanmean(red[2045:2047, sl]))
-                red[:, sl] = (
-                    red[:, sl] - rlo * (np.float32(1.0) - yfrac[:, None])
-                ).astype(np.int32)
-                red[:, sl] = (
-                    red[:, sl] - rhi * yfrac[:, None]
-                ).astype(np.int32)
+                rlo = utils.idl_mean_float(red[2:4, sl],ignore_nonfinite=True)
+                rhi = utils.idl_mean_float(red[2045:2047, sl],ignore_nonfinite=True)
+                red[:,sl] = (red[:,sl] - rlo * (np.float32(1.0) - yfrac[:,None])).astype(np.int32)
+                red[:,sl] = (red[:,sl] - rhi * yfrac[:,None]).astype(np.int32)
 
         if horizontal:
-            clo = np.nanmean(red[:, 1:4], axis=1).astype(np.float32)
-            chi = np.nanmean(red[:, 2044:2047], axis=1).astype(np.float32)
-            slo = _idl_median_filter_1d(
-                clo[None, :], 7, edge_copy=True
-            )[0]
-            shi = _idl_median_filter_1d(
-                chi[None, :], 7, edge_copy=True
-            )[0]
+            clo = utils.idl_mean_float(red[:, 1:4],axis=1,ignore_nonfinite=True,)
+            chi = utils.idl_mean_float(red[:, 2044:2047],axis=1,ignore_nonfinite=True)
+            slo = utils.idl_median_filter_1d(clo[None, :], 7, edge_copy=True)[0]
+            shi = utils.idl_median_filter_1d(chi[None, :], 7, edge_copy=True)[0]
             if noflip:
-                red = (
-                    red
-                    - (
-                        slo[:, None]
-                        * (np.float32(1.0) - xfrac[None, :])
-                        + shi[:, None] * xfrac[None, :]
-                    )
-                ).astype(np.int32)
+                red = (red- (slo[:, None]* (np.float32(1.0) - xfrac[None, :])
+                        + shi[:, None] * xfrac[None, :])).astype(np.int32)
             else:
                 bias = np.minimum(slo, shi)[:, None] * np.ones(
-                    (1, 2048), dtype=np.float32
-                )
+                    (1, 2048), dtype=np.float32)
                 bias[:, 512:1024] = bias[:, 512:1024][:, ::-1]
                 bias[:, 1536:2048] = bias[:, 1536:2048][:, ::-1]
                 red = (red - bias).astype(np.int32)
 
         if q3fix:
-            offset = 0.5 * (
-                np.median(red[:, 923:1024], axis=1)
-                - np.median(red[:, 1024:1125], axis=1)
-                + np.median(red[:, 1536:1637], axis=1)
-                - np.median(red[:, 1435:1536], axis=1)
-            )
-            offset = _idl_median_filter_1d(
-                offset[None, :], 7, edge_copy=True
-            )[0]
-            red[:, 1024:1536] = (
-                red[:, 1024:1536] + offset[:, None]
-            ).astype(np.int32)
+            offset = 0.5 * (np.median(red[:, 923:1024], axis=1)
+                            - np.median(red[:, 1024:1125], axis=1)
+                            + np.median(red[:, 1536:1637], axis=1)
+                            - np.median(red[:, 1435:1536], axis=1))
+            offset = utils.idl_median_filter_1d(offset[None, :], 7, edge_copy=True)[0]
+            red[:, 1024:1536] = (red[:, 1024:1536] + offset[:, None]).astype(np.int32)
 
         red[saturated] = 65_535
         out[i] = red
         if refout is not None:
             refout[i] = ref
 
-    mask[:4, :] |= _bit("BADPIX")
-    mask[-4:, :] |= _bit("BADPIX")
-    mask[:, :4] |= _bit("BADPIX")
-    mask[:, -4:] |= _bit("BADPIX")
+    mask[:4, :] |= PIXELMASK.getval("BADPIX")
+    mask[-4:, :] |= PIXELMASK.getval("BADPIX")
+    mask[:, :4] |= PIXELMASK.getval("BADPIX")
+    mask[:, -4:] |= PIXELMASK.getval("BADPIX")
     if refout is not None:
         out = np.concatenate((out, refout), axis=2)
     return out, mask, read_mask, last_good
@@ -581,26 +481,20 @@ def _detect_bad_reads(
     nread, ny, nx = cube.shape
     first = cube[: min(4, nread)]
     edge0 = np.concatenate(
-        (
-            np.median(first[:, :4, :2048], axis=0).ravel(),
-            np.median(first[:, :, :4], axis=0).ravel(),
-            np.median(first[:, :, 2044:2048], axis=0).ravel(),
-            np.median(first[:, -4:, :2048], axis=0).ravel(),
-        )
-    )
+        (np.median(first[:, :4, :2048], axis=0).ravel(),
+         np.median(first[:, :, :4], axis=0).ravel(),
+         np.median(first[:, :, 2044:2048], axis=0).ravel(),
+         np.median(first[:, -4:, :2048], axis=0).ravel()))
     edge_rms = np.empty(nread)
     ref_rms = np.empty(nread) if nx == 2560 else None
     if nx == 2560:
         ref0 = np.median(first[:, :, 2048:], axis=0)
     for i in range(nread):
         edge = np.concatenate(
-            (
-                cube[i, :4, :2048].ravel(),
-                cube[i, :, :4].ravel(),
-                cube[i, :, 2044:2048].ravel(),
-                cube[i, -4:, :2048].ravel(),
-            )
-        )
+            (cube[i, :4, :2048].ravel(),
+             cube[i, :, :4].ravel(),
+             cube[i, :, 2044:2048].ravel(),
+             cube[i, -4:, :2048].ravel()))
         edge_rms[i] = np.sqrt(np.mean((edge.astype(float) - edge0) ** 2))
         if ref_rms is not None:
             diff = cube[i, :, 2048:].astype(float) - ref0
@@ -615,9 +509,7 @@ def _detect_bad_reads(
     if debug:
         source = "reference-output RMS" if ref_rms is not None else "reference-pixel RMS"
         _log(f"Initial bad-read diagnostic ({source}; sigma={sigma:.3f}):")
-        for i, (value, baseline, bad) in enumerate(
-            zip(series, local, rejected)
-        ):
+        for i, (value, baseline, bad) in enumerate(zip(series, local, rejected)):
             _log(
                 f"  read {i + 1:3d}: RMS={value:10.3f}, "
                 f"local={baseline:10.3f}, delta={value - baseline:9.3f}, "
@@ -646,9 +538,7 @@ def _interpolate_bad_reads(cube: np.ndarray, bad: np.ndarray) -> np.ndarray:
             lo, hi = below[-2:]
         else:
             lo, hi = below[-1], above[0]
-        interpolated = result[lo] + (index - lo) * (
-            result[hi] - result[lo]
-        ) / (hi - lo)
+        interpolated = result[lo] + (index - lo) * (result[hi] - result[lo]) / (hi - lo)
         # AP3DPROC stores ROUND(im0) back into its LONG cube.
         result[index] = np.rint(interpolated)
     return result
@@ -725,11 +615,8 @@ def _apply_linearity(
 
     count_level = result.copy()
     for read_index in range(2, result.shape[0]):
-        count_level[read_index] = (
-            (result[read_index] - result[1])
-            * (read_index + 1.0)
-            / (read_index - 1.0)
-        )
+        count_level[read_index] = ((result[read_index] - result[1])
+                                   * (read_index + 1.0) / (read_index - 1.0))
     count_level[~np.isfinite(count_level)] = 0.0
     count_level[0] = count_level[2]
     count_level[1] = count_level[2]
@@ -743,9 +630,8 @@ def _apply_linearity(
             columns = slice(output_index * 512, (output_index + 1) * 512)
             output_factor = np.zeros_like(result[:, :, columns])
             for coefficient in c[output_index, ::-1]:
-                output_factor = (
-                    output_factor * count_level[:, :, columns] + coefficient
-                )
+                output_factor = (output_factor * count_level[:, :, columns] +
+                                 coefficient)
             factor[:, :, columns] = output_factor
 
     with np.errstate(divide="ignore", invalid="ignore"):
@@ -785,19 +671,15 @@ def detect_and_fix_cosmic_rays(
         model = _rolling_nanmedian(dc, width)
         bad = ~np.isfinite(model)
         model[bad] = np.broadcast_to(median[:, None], dc.shape)[bad]
-    variability = dln.mad(
-        dc - median[:, None], axis=1, zero=True
-    ) / np.maximum(median, 0.001)
+    variability = dln.mad(dc - median[:, None], axis=1, zero=True) / np.maximum(median, 0.001)
     variability[~np.isfinite(variability)] = 0
     variability[two] = 0.5
     sigma = np.maximum(dln.mad(dc - model, axis=1, zero=True), noise)
     sigma[~np.isfinite(sigma)] = noise
     sigma[two] = np.maximum(0.3 * median[two], noise)
     nsigma = (dc - model) / sigma[:, None]
-    candidates = np.argwhere(
-        (nsigma > max(sigma_threshold, 3.0))
-        & (dc > noise * max(sigma_threshold, 3.0))
-    )
+    candidates = np.argwhere((nsigma > max(sigma_threshold, 3.0))
+                             & (dc > noise * max(sigma_threshold, 3.0)))
     events: list[CosmicRay] = []
     for pixel, diff_index in candidates:
         read = int(diff_index + 1)
@@ -809,17 +691,12 @@ def detect_and_fix_cosmic_rays(
         if fix:
             fixed[pixel, diff_index] = local_med
         events.append(
-            CosmicRay(
-                x=int(pixel),
-                read=read,
+            CosmicRay(x=int(pixel),read=read,
                 counts=float(dc[pixel, diff_index] - model[pixel, diff_index]),
                 nsigma=float(nsigma[pixel, diff_index]),
-                global_sigma=float(sigma[pixel]),
-                fixed=fix,
+                global_sigma=float(sigma[pixel]),fixed=fix,
                 local_sigma=local_sigma,
-                fix_error=fix_error if fix else 0.0,
-            )
-        )
+                fix_error=fix_error if fix else 0.0))
     return fixed, median, variability, events
 
 
@@ -874,9 +751,7 @@ def fowler_sampling(
     beginning = reads[:nfowler_used]
     ending = reads[-nfowler_used:]
     image = data[ending].mean(axis=0) - data[beginning].mean(axis=0)
-    sample_noise = np.asarray(readnoise, dtype=np.float32) * np.sqrt(
-        2.0 / nfowler_used
-    )
+    sample_noise = np.asarray(readnoise, dtype=np.float32) * np.sqrt( 2.0 / nfowler_used)
     return image, sample_noise, nfowler_used
 
 
@@ -960,21 +835,12 @@ def up_the_ramp_sampling(
     gain_image = np.asarray(gain, dtype=np.float32)
     noise_image = np.asarray(readnoise, dtype=np.float32)
     signal = image[:, :science_nx]
-    sample_noise = np.sqrt(
-        np.float32(12.0)
-        * (n_good - np.float32(1.0))
-        / (n_total * (n_good + np.float32(1.0)))
-        * noise_image**2
-        + np.float32(6.0)
-        * (n_good**2 + np.float32(1.0))
-        / (
-            np.float32(5.0)
-            * n_good
-            * (n_good + np.float32(1.0))
-        )
-        * signal
-        * gain_image
-    ) / gain_image
+    sample_noise = np.sqrt(np.float32(12.0) * (n_good - np.float32(1.0))
+                           / (n_total * (n_good + np.float32(1.0)))
+                           * noise_image**2 + np.float32(6.0)
+                           * (n_good**2 + np.float32(1.0))
+                           / ( np.float32(5.0) * n_good * (n_good + np.float32(1.0)))
+                           * signal * gain_image ) / gain_image
     return image, sample_noise
 
 
@@ -1004,8 +870,6 @@ def process_array(
     use_reference: bool = True,
     q3fix: bool = False,
     return_cube: bool = False,
-    diagnostic_file: str | Path | None = None,
-    diagnostic_overwrite: bool = False,
     verbose: bool = False,
     debug: bool = False,
 ) -> ProcessResult:
@@ -1021,10 +885,7 @@ def process_array(
     calibrations, cosmic-ray and saturation treatment, ramp sampling,
     persistence subtraction, and flat-fielding. With ``verbose=True``, major
     stages are timestamped. The returned FITS header records the UTC processing
-    start in ``AP3DTIME`` and elapsed seconds in ``AP3DSEC``. When
-    ``diagnostic_file`` is supplied, selected full-frame intermediate arrays
-    surrounding the final reference subtraction are written to a separate
-    FITS file for numerical comparisons with matching IDL checkpoints.
+    start in ``AP3DTIME`` and elapsed seconds in ``AP3DSEC``.
     """
 
     processing_started = perf_counter()
@@ -1052,14 +913,8 @@ def process_array(
     if raw.shape[2] == 2560:
         if verbose:
             _log("Applying reference-output and reference-pixel correction")
-        cube, mask, ref_bad, _ = reference_correct(
-            raw,
-            hdr,
-            keep_reference=use_reference,
-            q3fix=q3fix,
-            verbose=verbose,
-            debug=debug,
-        )
+        cube, mask, ref_bad, _ = reference_correct(raw,hdr,keep_reference=use_reference,
+                                                   q3fix=q3fix,verbose=verbose,debug=debug)
         bad_reads = pre_bad | ref_bad
     else:
         cube = raw.astype(np.float32)
@@ -1097,12 +952,12 @@ def process_array(
         # BPM coordinates apply only to the first 2048 science columns.
         cube[:, bad_y, bad_x] = 0
     if littrow is not None:
-        mask[np.asarray(littrow) == 1] |= _bit("LITTROW_GHOST")
+        mask[np.asarray(littrow) == 1] |= PIXELMASK.getval("LITTROW_GHOST")
     if persistence_mask is not None:
         p = np.asarray(persistence_mask)
-        mask[(p & 1) != 0] |= _bit("PERSIST_HIGH")
-        mask[(p & 2) != 0] |= _bit("PERSIST_MED")
-        mask[(p & 4) != 0] |= _bit("PERSIST_LOW")
+        mask[(p & 1) != 0] |= PIXELMASK.getval("PERSIST_HIGH")
+        mask[(p & 2) != 0] |= PIXELMASK.getval("PERSIST_MED")
+        mask[(p & 4) != 0] |= PIXELMASK.getval("PERSIST_LOW")
 
     linearity_mode = str(linearity_mode).lower()
     if linearity_mode not in {"idl", "all", "none"}:
@@ -1113,11 +968,8 @@ def process_array(
                 "Applying detector linearity correction "
                 f"(mode={linearity_mode})"
             )
-        science = _apply_linearity(
-            cube[:, :, :science_nx],
-            linearity,
-            mode=linearity_mode,
-        )
+        science = _apply_linearity(cube[:, :, :science_nx],
+                                   linearity,mode=linearity_mode,)
         cube[:, :, :science_nx] = science
     elif linearity is not None and verbose:
         _log("Skipping detector linearity correction (mode=none)")
@@ -1151,23 +1003,20 @@ def process_array(
             ramp[x, first:] = np.nan
             sat_info[y, x] = (1, first, nread - first)
             if x < science_nx:
-                mask[y, x] |= _bit("SATPIX")
+                mask[y, x] |= PIXELMASK.getval("SATPIX")
 
         dcounts = np.diff(ramp, axis=1)
         if detect_cosmic_rays and nread > 2:
             dcounts, med, row_var, events = detect_and_fix_cosmic_rays(
-                dcounts,
-                sat_info[y],
+                dcounts,sat_info[y],
                 noise=float(np.nanmedian(readnoise) if readnoise is not None else 12.0)
-                * np.sqrt(2.0),
-                fix=fix_cosmic_rays,
-            )
+                * np.sqrt(2.0),fix=fix_cosmic_rays)
             variability[y] = row_var
             for event in events:
                 event.y = y
                 cosmic_rays.append(event)
                 if event.x < science_nx:
-                    mask[y, event.x] |= _bit("CRPIX")
+                    mask[y, event.x] |= PIXELMASK.getval("CRPIX")
         else:
             med = np.nanmedian(dcounts, axis=1)
 
@@ -1177,7 +1026,7 @@ def process_array(
         dcounts[unfixable] = 0.0
         unfixable_science = np.flatnonzero(unfixable)
         unfixable_science = unfixable_science[unfixable_science < science_nx]
-        mask[y, unfixable_science] |= _bit("UNFIXABLE")
+        mask[y, unfixable_science] |= PIXELMASK.getval("UNFIXABLE")
         for x in np.flatnonzero((sat_info[y, :, 0] == 1) & ~unfixable):
             start = max(sat_info[y, x, 1] - 1, 0)
             if fix_saturation:
@@ -1189,7 +1038,7 @@ def process_array(
 
         first = np.nan_to_num(ramp[:, 0], nan=0.0)
         science_first = first[:science_nx]
-        science_first[(mask[y] & _bit("UNFIXABLE")) != 0] = 0
+        science_first[(mask[y] & PIXELMASK.getval("UNFIXABLE")) != 0] = 0
         fixed = np.empty_like(ramp)
         fixed[:, 0] = first
         fixed[:, 1:] = first[:, None] + np.cumsum(dcounts, axis=1)
@@ -1222,12 +1071,8 @@ def process_array(
     )
 
     if not up_the_ramp:
-        image, sample_noise, nf = fowler_sampling(
-            cube,
-            good_reads,
-            noise_image,
-            nfowler=nfowler,
-        )
+        image, sample_noise, nf = fowler_sampling(cube,good_reads,
+                                                  noise_image,nfowler=nfowler)
         if verbose:
             _log(f"Collapsing ramp with Fowler sampling (Nfowler={nf})")
     else:
@@ -1236,47 +1081,20 @@ def process_array(
                 f"Collapsing ramp with up-the-ramp sampling "
                 f"({good_reads.size} good reads)"
             )
-        image, sample_noise = up_the_ramp_sampling(
-            cube,
-            good_reads,
-            noise_image,
-            gain_image,
-            science_nx=science_nx,
-        )
-
-    diagnostic_arrays: list[tuple[str, np.ndarray]] = []
-    if diagnostic_file is not None:
-        diagnostic_arrays.append(("COLLAPSED", image.copy()))
+        image, sample_noise = up_the_ramp_sampling(cube,good_reads,noise_image,
+                                                gain_image,science_nx=science_nx)
 
     if use_reference and image.shape[1] == 2560:
         ref = image[:, 2048:].copy()
         # IDL uses MEDIAN(ref, DIM=1) without /EVEN. Because the reference
         # output has 512 columns, it selects the upper middle value rather
         # than averaging the central pair as np.median would.
-        ref_profile = _idl_median(ref, axis=1).astype(np.float32)
-        smooth_profile = _idl_median_filter_1d(
-            ref_profile[None, :], 7, edge_copy=False
-        )[0]
-        if diagnostic_file is not None:
-            diagnostic_arrays.extend(
-                [
-                    ("REF_RAW", ref.copy()),
-                    ("REF_PROFILE", ref_profile.copy()),
-                    ("REF_SMOOTH", smooth_profile.copy()),
-                ]
-            )
+        ref_profile = utils.idl_median(ref, axis=1).astype(np.float32)
+        smooth_profile = utils.idl_median_filter_1d(ref_profile[None, :], 7,
+                                                    edge_copy=False)[0]
         ref -= smooth_profile[:, None]
         science = image[:, :2048].copy()
-        if diagnostic_file is not None:
-            diagnostic_arrays.extend(
-                [
-                    ("REF_RESID", ref.copy()),
-                    ("SCI_PREREF", science.copy()),
-                ]
-            )
         _reference_subtract_image(science, ref)
-        if diagnostic_file is not None:
-            diagnostic_arrays.append(("SCI_POSTREF", science.copy()))
         image = science
     else:
         image = image[:, :science_nx]
@@ -1301,14 +1119,14 @@ def process_array(
         variance += sat_error[:, :science_nx]
     else:
         variance[sat_info[:, :science_nx, 0] != 0] = BAD_VARIANCE
-    variance[(mask & _bit("UNFIXABLE")) != 0] = BAD_VARIANCE
+    variance[(mask & PIXELMASK.getval("UNFIXABLE")) != 0] = BAD_VARIANCE
     if fix_cosmic_rays:
         for event in cosmic_rays:
             if event.x < science_nx:
                 variance[event.y, event.x] += event.fix_error
     else:
-        variance[(mask & _bit("CRPIX")) != 0] = BAD_VARIANCE
-    variance[(mask & _bit("BADPIX")) != 0] = BAD_VARIANCE
+        variance[(mask & PIXELMASK.getval("CRPIX")) != 0] = BAD_VARIANCE
+    variance[(mask & PIXELMASK.getval("BADPIX")) != 0] = BAD_VARIANCE
 
     if flat is not None:
         if verbose:
@@ -1322,43 +1140,26 @@ def process_array(
         image *= gain_image
         variance *= gain_image**2
 
-    finite_var = variability[:, :science_nx][
-        (sat_info[:, :science_nx, 0] == 0)
-        & ((mask & _bit("CRPIX")) == 0)
-        & (median_dcounts[:, :science_nx] > 40)
-    ]
+    finite_var = variability[:, :science_nx][(sat_info[:, :science_nx, 0] == 0)
+                                             & ((mask & PIXELMASK.getval("CRPIX")) == 0)
+                                             & (median_dcounts[:, :science_nx] > 40)]
     if finite_var.size == 0:
-        finite_var = variability[:, :science_nx][
-            (sat_info[:, :science_nx, 0] == 0)
-            & (median_dcounts[:, :science_nx] > 20)
-        ]
+        finite_var = variability[:, :science_nx][(sat_info[:, :science_nx, 0] == 0)
+                                                 & (median_dcounts[:, :science_nx] > 20)]
     global_variability = float(np.median(finite_var)) if finite_var.size else -1.0
     error = np.maximum(np.sqrt(variance), 1.0)
-    if diagnostic_file is not None:
-        diagnostic_arrays.extend(
-            [
-                ("SAMPLE_NOISE", sample_noise.copy()),
-                ("FINAL_VARIANCE", variance.copy()),
-            ]
-        )
-    _update_header(
-        hdr,
-        nread=nread,
-        gain=float(np.median(gain_image)),
+    _update_header(hdr,nread=nread,gain=float(np.median(gain_image)),
         # AP3DPROC uses MEDIAN([sample_noise]) without /EVEN. The helper also
         # ignores the minority of non-finite per-pixel noise estimates.
-        readnoise=float(
-            _idl_median(sample_noise[np.isfinite(sample_noise)])
-        ),
+        readnoise=float(utils.idl_median(sample_noise[np.isfinite(sample_noise)])),
         up_the_ramp=up_the_ramp,
         nfowler=None if up_the_ramp else nf,
         global_variability=global_variability,
-        output_electrons=output_electrons,
-    )
+        output_electrons=output_electrons)
     if verbose:
-        nsat = int(np.count_nonzero(mask & _bit("SATPIX")))
-        nunfix = int(np.count_nonzero(mask & _bit("UNFIXABLE")))
-        nbad = int(np.count_nonzero(mask & _bit("BADPIX")))
+        nsat = int(np.count_nonzero(mask & PIXELMASK.getval("SATPIX")))
+        nunfix = int(np.count_nonzero(mask & PIXELMASK.getval("UNFIXABLE")))
+        nbad = int(np.count_nonzero(mask & PIXELMASK.getval("BADPIX")))
         _log(
             f"Reduction summary: bad={nbad}, CR={len(cosmic_rays)}, "
             f"saturated={nsat}, unfixable={nunfix}, "
@@ -1366,74 +1167,19 @@ def process_array(
         )
     processing_seconds = perf_counter() - processing_started
     hdr["AP3DTIME"] = (
-        processing_timestamp.isoformat(timespec="seconds").replace(
-            "+00:00", "Z"
-        ),
-        "UTC start of Python AP3D processing",
-    )
-    hdr["AP3DSEC"] = (
-        processing_seconds,
-        "Python AP3D array processing time (seconds)",
-    )
+        processing_timestamp.isoformat(timespec="seconds").replace("+00:00", "Z"),
+        "UTC start of Python AP3D processing")
+    hdr["AP3DSEC"] = (processing_seconds,
+                      "Python AP3D array processing time (seconds)")
     if verbose:
-        _log(
-            f"Completed array processing in {processing_seconds:.2f} s",
-            processing_started,
-        )
-    if diagnostic_file is not None:
-        _write_stage_diagnostics(
-            diagnostic_file,
-            hdr,
-            diagnostic_arrays,
-            overwrite=diagnostic_overwrite,
-        )
-        if verbose:
-            _log(f"Wrote stage diagnostics: {diagnostic_file}")
-    return ProcessResult(
-        flux=image.astype(np.float32),
-        error=error.astype(np.float32),
-        mask=mask,
-        header=hdr,
-        cosmic_rays=cosmic_rays,
-        saturation=sat_info[:, :science_nx],
-        fixed_cube=cube if return_cube else None,
-        persistence_model=pmodel,
-        read_mask=bad_reads,
-        global_variability=global_variability,
-    )
-
-
-def _write_stage_diagnostics(
-    filename: str | Path,
-    header: fits.Header,
-    arrays: Sequence[tuple[str, np.ndarray]],
-    *,
-    overwrite: bool = False,
-) -> None:
-    """Write named AP3D intermediate arrays for IDL/Python comparisons.
-
-    The primary HDU contains processing metadata. Each image extension is a
-    checkpoint copied before later in-place operations can modify it.
-    Detector images use NumPy ``(y, x)`` ordering.
-    """
-
-    diagnostic_header = header.copy()
-    diagnostic_header["AP3DSTAG"] = (
-        True,
-        "File contains Python AP3D intermediate stages",
-    )
-    hdus: list[fits.hdu.base.ExtensionHDU | fits.PrimaryHDU] = [
-        fits.PrimaryHDU(header=diagnostic_header)
-    ]
-    for name, array in arrays:
-        hdus.append(
-            fits.ImageHDU(np.asarray(array, dtype=np.float32), name=name)
-        )
-    fits.HDUList(hdus).writeto(
-        filename,
-        overwrite=overwrite,
-        checksum=True,
-    )
+        _log(f"Completed array processing in {processing_seconds:.2f} s",
+            processing_started)
+    return ProcessResult(flux=image.astype(np.float32),error=error.astype(np.float32),
+                         mask=mask,header=hdr,cosmic_rays=cosmic_rays,
+                         saturation=sat_info[:, :science_nx],
+                         fixed_cube=cube if return_cube else None,
+                         persistence_model=pmodel,read_mask=bad_reads,
+                         global_variability=global_variability)
 
 
 def _update_header(
@@ -1453,11 +1199,8 @@ def _update_header(
     header["GAIN"] = (gain, "Median gain in electron/ADU")
     header["RDNOISE"] = (readnoise, "Median sampled read noise")
     header.add_history("AP3D Python 3-D to 2-D processing")
-    header.add_history(
-        "Up-the-ramp sampling"
-        if up_the_ramp
-        else f"Fowler sampling, Nfowler={nfowler}"
-    )
+    header.add_history("Up-the-ramp sampling" if up_the_ramp
+                       else f"Fowler sampling, Nfowler={nfowler}")
     header.add_history(
         f"AP3D: Global fractional variability = {global_variability:.3f}"
     )
@@ -1532,27 +1275,15 @@ def process_cube(
     started = perf_counter()
     filename = Path(filename)
     if filename.suffix.lower() == ".apz":
-        raise ValueError(
-            "process_cube() requires a decompressed FITS file; "
-            "use process_file() for APZ inputs"
-        )
+        raise ValueError("process_cube() requires a decompressed FITS file; "
+                         "use process_file() for APZ inputs")
     if verbose:
         _log(f"Reading decompressed ramp: {filename}", started)
-    cube, header = read_ramp(
-        filename, max_read=max_read, verbose=verbose
-    )
+    cube, header = read_ramp(filename, max_read=max_read, verbose=verbose)
     if verbose:
-        _log(
-            f"Loaded ramp with shape {cube.shape} and dtype {cube.dtype}",
-            started,
-        )
-    result = process_array(
-        cube,
-        header,
-        verbose=verbose,
-        debug=debug,
-        **options,
-    )
+        _log(f"Loaded ramp with shape {cube.shape} and dtype {cube.dtype}",
+            started)
+    result = process_array(cube,header,verbose=verbose,debug=debug,**options)
     if verbose:
         _log("Finished decompressed-ramp processing", started)
     return result
@@ -1601,14 +1332,9 @@ def read_calibrations(
             # 3-D image (often in extension 1) and can have additional HDUs
             # with unrelated dimensions.  Use the first 3-D image rather
             # than attempting to stack every nonempty extension.
-            dark_cube = next(
-                (
-                    np.asarray(hdu.data)
-                    for hdu in hdul
-                    if hdu.data is not None and hdu.data.ndim == 3
-                ),
-                None,
-            )
+            dark_cube = next((np.asarray(hdu.data)
+                              for hdu in hdul
+                              if hdu.data is not None and hdu.data.ndim == 3),None)
             if dark_cube is None:
                 # Older products can store one 2-D read per extension.
                 reads = [
@@ -1651,27 +1377,19 @@ def _add_provenance_header(
     """Add IDL-compatible software, calibration, and processing provenance."""
 
     header = result.header
-    reduction_version = _reduction_version()
-    header["V_APRED"] = (_software_version(), "apogee software version")
+    reduction_version = utils.reduction_version()
+    header["V_APRED"] = (utils.software_version(), "apogee software version")
     header["APRED"] = (reduction_version, "apogee reduction version")
-    header["LONGSTRN"] = (
-        "OGIP 1.0",
-        "The OGIP long string convention may be used.",
-    )
+    header["LONGSTRN"] = ("OGIP 1.0",
+                          "The OGIP long string convention may be used.")
 
-    calibrations = (
-        ("BPMFILE", bpm, "bpm file", "BAD PIXEL MASK"),
-        ("DETFILE", detector, "det file", "DETECTOR"),
-        ("DARKFILE", dark, "dark file", "Dark Current Correction"),
-        ("FLATFILE", flat, "flat file", "Flat Field Correction"),
-        ("LITTROW", littrow, "littrow file", "Littrow ghost mask"),
-        (
-            "PERSIST",
-            persistence_mask,
-            "persist mask file",
-            "Persistence mask",
-        ),
-    )
+    calibrations = (("BPMFILE", bpm, "bpm file", "BAD PIXEL MASK"),
+                    ("DETFILE", detector, "det file", "DETECTOR"),
+                    ("DARKFILE", dark, "dark file", "Dark Current Correction"),
+                    ("FLATFILE", flat, "flat file", "Flat Field Correction"),
+                    ("LITTROW", littrow, "littrow file", "Littrow ghost mask"),
+                    ("PERSIST",persistence_mask,"persist mask file",
+                     "Persistence mask"))
     for keyword, filename, comment, label in calibrations:
         if filename is not None:
             value = str(filename)
@@ -1679,18 +1397,13 @@ def _add_provenance_header(
             header.add_history(f'AP3D: {label} file="{value}"')
 
     unit = "electrons" if header.get("BUNIT") == "electron" else "ADU"
-    header.add_history(
-        "AP3D: "
-        + datetime.now().astimezone().strftime("%a %b %d %H:%M:%S %Y")
-    )
+    header.add_history("AP3D: "
+                       + datetime.now().astimezone().strftime("%a %b %d %H:%M:%S %Y"))
     header.add_history(f"AP3D: {getpass.getuser()} on {socket.gethostname()}")
+    header.add_history(f"AP3D: Python {platform.python_version()} "
+                       f"{platform.system().lower()} {platform.machine()}")
     header.add_history(
-        f"AP3D: Python {platform.python_version()} "
-        f"{platform.system().lower()} {platform.machine()}"
-    )
-    header.add_history(
-        f"AP3D: APOGEE Reduction Pipeline Version: {reduction_version}"
-    )
+        f"AP3D: APOGEE Reduction Pipeline Version: {reduction_version}")
     header.add_history(f"AP3D: Output File: {output}")
     header.add_history(f"AP3D: HDU1 - image ({unit})")
     header.add_history(f"AP3D: HDU2 - error ({unit})")
@@ -1702,10 +1415,10 @@ def _add_provenance_header(
     if result.persistence_model is not None:
         header.add_history("AP3D: HDU4 - persistence correction (ADU)")
 
-    nbad = int(np.count_nonzero(result.mask & _bit("BADPIX")))
-    ncr = int(np.count_nonzero(result.mask & _bit("CRPIX")))
-    nsat = int(np.count_nonzero(result.mask & _bit("SATPIX")))
-    nunfixable = int(np.count_nonzero(result.mask & _bit("UNFIXABLE")))
+    nbad = int(np.count_nonzero(result.mask & PIXELMASK.getval("BADPIX")))
+    ncr = int(np.count_nonzero(result.mask & PIXELMASK.getval("CRPIX")))
+    nsat = int(np.count_nonzero(result.mask & PIXELMASK.getval("SATPIX")))
+    nunfixable = int(np.count_nonzero(result.mask & PIXELMASK.getval("UNFIXABLE")))
     nfixed_saturation = nsat - nunfixable if fix_saturation else 0
     header.add_history(f"AP3D: {nbad} pixels are bad")
     header.add_history(f"AP3D: {ncr} pixels have cosmic rays")
@@ -1713,9 +1426,7 @@ def _add_provenance_header(
         header.add_history("AP3D: Cosmic Rays FIXED")
     header.add_history(f"AP3D: {nsat} pixels are saturated")
     if fix_saturation:
-        header.add_history(
-            f"AP3D: {nfixed_saturation} saturated pixels FIXED"
-        )
+        header.add_history(f"AP3D: {nfixed_saturation} saturated pixels FIXED")
     header.add_history(f"AP3D: {nunfixable} pixels are unfixable")
     if up_the_ramp:
         header.add_history("AP3D: UP-THE-RAMP Sampling")
@@ -1740,18 +1451,9 @@ def write_ap2d(
     ``1e4``.
     """
 
-    flux = np.nan_to_num(
-        result.flux,
-        nan=0.0,
-        posinf=0.0,
-        neginf=0.0,
-    )
-    error = np.nan_to_num(
-        result.error,
-        nan=NONFINITE_ERROR,
-        posinf=NONFINITE_ERROR,
-        neginf=NONFINITE_ERROR,
-    )
+    flux = np.nan_to_num(result.flux,nan=0.0,posinf=0.0,neginf=0.0,)
+    error = np.nan_to_num(result.error,nan=NONFINITE_ERROR,
+                          posinf=NONFINITE_ERROR,neginf=NONFINITE_ERROR)
     if integer_output:
         flux = np.rint(flux).astype(np.int32)
         error = np.rint(error).astype(np.int32)
@@ -1772,8 +1474,7 @@ def write_ap2d(
     hdus[3].header.add_history(" 8 - unfixable")
     if result.persistence_model is not None:
         hdus.append(
-            fits.ImageHDU(result.persistence_model, name="PERSIST CORRECTION")
-        )
+            fits.ImageHDU(result.persistence_model, name="PERSIST CORRECTION"))
         hdus[-1].header["BUNIT"] = ("ADU", "Persistence correction")
     fits.HDUList(hdus).writeto(filename, overwrite=overwrite, checksum=True)
 
@@ -1821,14 +1522,9 @@ def process_file(
         ):
             if value is not None:
                 _log(f"Using {label}: {value}", started)
-    calibrations = read_calibrations(
-        detector=detector,
-        bpm=bpm,
-        dark=dark,
-        flat=flat,
-        littrow=littrow,
-        persistence_mask=persistence_mask,
-    )
+    calibrations = read_calibrations(detector=detector,bpm=bpm,
+                                     dark=dark,flat=flat,littrow=littrow,
+                                     persistence_mask=persistence_mask)
     if verbose:
         shapes = ", ".join(
             f"{name}={np.shape(value)}" for name, value in calibrations.items()
@@ -1842,13 +1538,8 @@ def process_file(
             if verbose:
                 _log("Starting APZ decompression", started)
             temporary_directory = tempfile.TemporaryDirectory(prefix="ap3d-")
-            apzip.unzip(
-                str(input_file),
-                clobber=True,
-                delete=False,
-                silent=not verbose,
-                fitsdir=temporary_directory.name,
-            )
+            apzip.unzip(str(input_file),clobber=True,delete=False,
+                        silent=not verbose,fitsdir=temporary_directory.name)
             cube_file = (
                 Path(temporary_directory.name) / f"{input_file.stem}.fits"
             )
@@ -1860,32 +1551,19 @@ def process_file(
             if verbose:
                 _log("Finished APZ decompression", started)
 
-        result = process_cube(
-            cube_file,
-            max_read=max_read,
-            **calibrations,
-            verbose=verbose,
-            debug=debug,
-            **options,
-        )
+        result = process_cube(cube_file,max_read=max_read,**calibrations,
+                              verbose=verbose,debug=debug,**options)
     finally:
         if temporary_directory is not None:
             temporary_directory.cleanup()
 
-    _add_provenance_header(
-        result,
-        output=output,
-        detector=detector,
-        bpm=bpm,
-        dark=dark,
-        flat=flat,
-        littrow=littrow,
-        persistence_mask=persistence_mask,
-        up_the_ramp=bool(options.get("up_the_ramp", False)),
-        nfowler=int(options.get("nfowler", 10)),
-        fix_cosmic_rays=bool(options.get("fix_cosmic_rays", True)),
-        fix_saturation=bool(options.get("fix_saturation", True)),
-    )
+    _add_provenance_header(result,output=output,detector=detector,bpm=bpm,
+                           dark=dark,flat=flat,littrow=littrow,
+                           persistence_mask=persistence_mask,
+                           up_the_ramp=bool(options.get("up_the_ramp", False)),
+                           nfowler=int(options.get("nfowler", 10)),
+                           fix_cosmic_rays=bool(options.get("fix_cosmic_rays", True)),
+                           fix_saturation=bool(options.get("fix_saturation", True)))
     if verbose:
         _log(f"Writing ap2D product: {output}", started)
     write_ap2d(output, result, overwrite=overwrite)
@@ -1966,11 +1644,9 @@ def _flavor_options(flavor: str, *, single_plate: bool = False) -> dict[str, Any
     """Return the legacy ``ap3d.pro`` processing choices for an exposure."""
 
     flavor = str(flavor).strip().lower()
-    common = {
-        "fix_saturation": True,
-        "fix_three_read_saturation": False,
-        "iterative_cosmic_rays": False,
-    }
+    common = {"fix_saturation": True,
+              "fix_three_read_saturation": False,
+              "iterative_cosmic_rays": False}
     if flavor == "psf":
         return dict(common, **{
             "detect_cosmic_rays": False,
@@ -2112,33 +1788,18 @@ def ap3d(
             "persistence_mask": _calibration_id(plan_data, "persistid"),
         }
         if make_calibrations:
-            cal_types = {
-                "detector": "det",
-                "bpm": "bpm",
-                "dark": "dark",
-                "flat": "flat",
-                "littrow": "littrow",
-                "persistence_mask": "persist",
-            }
+            cal_types = {"detector": "det","bpm": "bpm","dark": "dark",
+                         "flat": "flat","littrow": "littrow",
+                         "persistence_mask": "persist"}
             for name, cal_id in cal_ids.items():
                 if cal_id is not None:
-                    calibration_builder(
-                        cal_id,
-                        cal_types[name],
-                        load=load,
-                        clobber=calclobber,
-                        unlock=unlock,
-                        verbose=verbose,
-                    )
+                    calibration_builder(cal_id,cal_types[name],
+                        load=load,clobber=calclobber,
+                        unlock=unlock,verbose=verbose)
 
-        cal_roots = {
-            "detector": "Detector",
-            "bpm": "BPM",
-            "dark": "Dark",
-            "flat": "Flat",
-            "littrow": "Littrow",
-            "persistence_mask": "Persist",
-        }
+        cal_roots = {"detector": "Detector","bpm": "BPM","dark": "Dark",
+                     "flat": "Flat","littrow": "Littrow",
+                     "persistence_mask": "Persist"}
         cal_bases = {
             name: (
                 None
@@ -2148,9 +1809,7 @@ def ap3d(
             for (name, cal_id), root in zip(cal_ids.items(), cal_roots.values())
         }
 
-        plan_plate_type = str(
-            _plan_scalar(plan_data.get("platetype"), "")
-        ).strip().lower()
+        plan_plate_type = str(_plan_scalar(plan_data.get("platetype"), "")).strip().lower()
         mjd = int(_plan_scalar(plan_data.get("mjd"), 0))
         plan_reference = _plan_bool(plan_data.get("usereference"), True)
         plan_max_read = _plan_scalar(plan_data.get("maxread"))
@@ -2163,14 +1822,9 @@ def ap3d(
                 _plan_scalar(_record_value(exposure, "flavor"), "")
             ).strip().lower()
             settings = _flavor_options(
-                flavor, single_plate=plan_plate_type == "single"
-            )
-            settings.update(
-                {
-                    "linearity_mode": "idl",
-                    "use_reference": plan_reference,
-                }
-            )
+                flavor, single_plate=plan_plate_type == "single")
+            settings.update({"linearity_mode": "idl",
+                             "use_reference": plan_reference})
             if plan_max_read is not None:
                 settings["max_read"] = int(plan_max_read)
             settings.update(process_options)
@@ -2178,24 +1832,18 @@ def ap3d(
             raw_base = load.filename("R", num=number, mjd=mjd, chips=True)
             output_base = load.filename("2D", num=number, mjd=mjd, chips=True)
             if verbose:
-                _log(
-                    f"Exposure {exposure_index + 1}/{len(exposures)}: "
-                    f"{number:08d} ({flavor})",
-                    plan_started,
-                )
+                _log(f"Exposure {exposure_index + 1}/{len(exposures)}: "
+                    f"{number:08d} ({flavor})",plan_started)
 
             for chip in ("a", "b", "c"):
                 raw_file = _chip_filename(raw_base, "R", chip)
                 output_file = _chip_filename(output_base, "2D", chip)
                 chip_started = perf_counter()
                 if Path(output_file).exists() and not clobber:
-                    records.append(
-                        PlanProcessRecord(
-                            str(plan_path), number, flavor, chip,
-                            raw_file, output_file, "skipped",
-                            perf_counter() - chip_started,
-                        )
-                    )
+                    records.append(PlanProcessRecord(
+                                       str(plan_path), number, flavor, chip,
+                                       raw_file, output_file, "skipped",
+                                       perf_counter() - chip_started))
                     if verbose:
                         _log(f"Skipping existing {output_file}", exposure_started)
                     continue
@@ -2219,13 +1867,10 @@ def ap3d(
                     error = "Required input file(s) missing: " + ", ".join(missing)
                     if not continue_on_error:
                         raise FileNotFoundError(error)
-                    records.append(
-                        PlanProcessRecord(
-                            str(plan_path), number, flavor, chip,
-                            raw_file, output_file, "failed",
-                            perf_counter() - chip_started, error,
-                        )
-                    )
+                    records.append(PlanProcessRecord(
+                                         str(plan_path), number, flavor, chip,
+                                         raw_file, output_file, "failed",
+                                         perf_counter() - chip_started, error))
                     continue
 
                 Path(output_file).parent.mkdir(parents=True, exist_ok=True)
@@ -2236,34 +1881,21 @@ def ap3d(
                 )
                 max_read = chip_settings.pop("max_read", None)
                 try:
-                    process_file(
-                        raw_file,
-                        output_file,
-                        overwrite=clobber,
-                        max_read=max_read,
-                        verbose=verbose,
-                        debug=debug,
-                        **calibration_files,
-                        **chip_settings,
-                    )
+                    process_file(raw_file,output_file,overwrite=clobber,
+                                 max_read=max_read,verbose=verbose,
+                                 debug=debug,**calibration_files,**chip_settings)
                 except Exception as exc:
                     if not continue_on_error:
                         raise
-                    records.append(
-                        PlanProcessRecord(
-                            str(plan_path), number, flavor, chip,
-                            raw_file, output_file, "failed",
-                            perf_counter() - chip_started, str(exc),
-                        )
-                    )
+                    records.append(PlanProcessRecord(
+                                       str(plan_path), number, flavor, chip,
+                                       raw_file, output_file, "failed",
+                                       perf_counter() - chip_started, str(exc)))
                 else:
-                    records.append(
-                        PlanProcessRecord(
-                            str(plan_path), number, flavor, chip,
-                            raw_file, output_file, "processed",
-                            perf_counter() - chip_started,
-                        )
-                    )
+                    records.append(PlanProcessRecord(
+                                       str(plan_path), number, flavor, chip,
+                                       raw_file, output_file, "processed",
+                                       perf_counter() - chip_started))
         if verbose:
             _log(f"Finished plan {plan_path}", plan_started)
 
@@ -2271,9 +1903,6 @@ def ap3d(
         nprocessed = sum(item.status == "processed" for item in records)
         nskipped = sum(item.status == "skipped" for item in records)
         nfailed = sum(item.status == "failed" for item in records)
-        _log(
-            f"AP3D wrapper finished: processed={nprocessed}, "
-            f"skipped={nskipped}, failed={nfailed}",
-            overall_started,
-        )
+        _log(f"AP3D wrapper finished: processed={nprocessed}, "
+             f"skipped={nskipped}, failed={nfailed}",overall_started)
     return records
