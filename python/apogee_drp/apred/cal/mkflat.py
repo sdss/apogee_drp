@@ -1,285 +1,345 @@
+"""Build APOGEE superflat calibration products."""
+
+import getpass
 import os
-import time
+import platform
+import socket
+from datetime import datetime
+
 import numpy as np
-from scipy.signal import medfilt
-from scipy.ndimage import uniform_filter
-from ...utils import apload,lock,utils
+from astropy.io import fits
+from scipy.ndimage import binary_dilation, uniform_filter
+
+from ...utils import apload, lock, utils
+from ...utils.bitmask import PixelBitMask
 from .. import ap3d
+from .flathtml import flathtml
+from .flatplot import flatplot
 
-def make_flat_chip(flat,flatmask):
-    """ Make super superflat for a single chip """
-    
-    perclow = 0.85              # fraction for rejecting pixels
-    nperclow = 0.95             # fraction for rejecting neighbor pixels 
-    perchi = 1.25               # fraction for rejecting pixels
-    nperchi = 1.05              # fraction for rejecting neighbor pixels 
-    x1norm = 800                # region for getting normalization 
-    x2norm = 1200
-    y1norm = 800
-    y2norm = 1000
-    filter_size = [50,1]        # filter size for smoothing for large scale structure
 
-    # Create mask
-    sz = flat.shape
-    mask = np.zeros(sz, dtype=np.uint8)
-    # Mask from reductions, using last frame read
-    bad = np.where((flatmask & badmask()) > 0)
-    flat[bad] = np.nan
-    mask[bad] |= 1
+CHIPS = ("a", "b", "c")
+DETECTOR_SHAPE = (2048, 2048)
+NORM_SLICE = (slice(800, 1200), slice(800, 1000))
 
-    # Set pixels to bad when below some fraction
-    localflat = flat / np.where(flat < 100, 100, 1)
-    # Relative to neighbors
-    low = np.where(localflat < perclow)
-    mask[low] |= 2
-    # Absolute
-    low = np.where(flat < 0.1)
-    mask[low] |= 2
-    # High pixels
-    hi = np.where(localflat > perchi)
-    mask[hi] |= 2
 
-    # Set neighboring pixels to bad at slightly lower threshoold, iteratively
-    for _ in range(10):
-        low = np.where(mask > 0)
-        n = [-1, 1, -2049, -2048, -2047, 2047, 2048, 2049]
-        for in_ in range(len(n)):
-            neigh = low + n[in_]
-            off = np.where((neigh < 0) | (neigh > 2048 * 2048))
-            neigh[off] = 0
-            lowneigh = np.where(localflat[neigh] < nperclow)
-            mask[neigh[lowneigh]] |= 4
-            hineigh = np.where(localflat[neigh] > nperchi)
-            mask[neigh[hineigh]] |= 4
+def _nan_uniform_filter(array, size):
+    """Boxcar-smooth an array while ignoring nonfinite pixels."""
+    array = np.asarray(array, dtype=float)
+    finite = np.isfinite(array)
+    values = uniform_filter(
+        np.where(finite, array, 0.0),
+        size=size,
+        mode="nearest",
+    )
+    weights = uniform_filter(
+        finite.astype(float),
+        size=size,
+        mode="nearest",
+    )
+    output = np.full(array.shape, np.nan, dtype=float)
+    np.divide(values, weights, out=output, where=weights > 0)
+    return output
 
-    # Mask any zero values
-    bad = np.where(flat == 0)
-    flat[bad] = -100
-    mask[bad] |= 8
+
+def _safe_divide(numerator, denominator):
+    """Divide finite, nonzero values and return NaN elsewhere."""
+    numerator, denominator = np.broadcast_arrays(
+        np.asarray(numerator, dtype=float),
+        np.asarray(denominator, dtype=float),
+    )
+    output = np.full(numerator.shape, np.nan, dtype=float)
+    good = (
+        np.isfinite(numerator)
+        & np.isfinite(denominator)
+        & (denominator != 0)
+    )
+    np.divide(numerator, denominator, out=output, where=good)
+    return output
+
+
+def _finite_median(array, region, label):
+    """Return a usable normalization median or raise a clear error."""
+    value = np.nanmedian(np.asarray(array)[region])
+    if not np.isfinite(value) or value == 0:
+        raise ValueError(f"Invalid {label} normalization: {value}")
+    return float(value)
+
+
+def normalize_flat_chips(flatsum):
+    """Normalize three summed detector flats across their chip boundaries."""
+    flatsum = np.asarray(flatsum, dtype=float).copy()
+    if flatsum.shape != DETECTOR_SHAPE + (3,):
+        raise ValueError(
+            "flatsum must have shape (2048, 2048, 3); "
+            f"received {flatsum.shape}"
+        )
+
+    middle_norm = _finite_median(
+        flatsum[:, :, 1], NORM_SLICE, "middle-chip"
+    )
+    flatsum[:, :, 1] /= middle_norm
+
+    a_outer = _finite_median(
+        flatsum[:, :, 0],
+        (slice(1950, 2045), slice(500, 1501)),
+        "chip-a outer edge",
+    )
+    b_left = _finite_median(
+        flatsum[:, :, 1],
+        (slice(5, 101), slice(500, 1501)),
+        "chip-b left edge",
+    )
+    c_inner = _finite_median(
+        flatsum[:, :, 2],
+        (slice(5, 101), slice(500, 1501)),
+        "chip-c inner edge",
+    )
+    b_right = _finite_median(
+        flatsum[:, :, 1],
+        (slice(1950, 2045), slice(500, 1501)),
+        "chip-b right edge",
+    )
+
+    flatsum[:, :, 0] /= a_outer / b_left
+    flatsum[:, :, 2] /= c_inner / b_right
+    return flatsum
+
+
+def make_flat_chip(flat,flatmask,dithered=False,kludge=False,bad_pixel_bits=None):
+    """Create the flat, spectral-flat, and mask arrays for one chip.
+
+    This function contains no APOGEE path handling or FITS I/O, making it
+    suitable for direct unit testing with synthetic arrays.
+    """
+    flat = np.asarray(flat, dtype=float).copy()
+    flatmask = np.asarray(flatmask)
+    if flat.shape != flatmask.shape:
+        raise ValueError("flat and flatmask must have identical shapes")
+    if flat.ndim != 2:
+        raise ValueError("flat and flatmask must be two-dimensional")
+
+    if bad_pixel_bits is None:
+        bad_pixel_bits = PixelBitMask().badval()
+
+    mask = np.zeros(flat.shape, dtype=np.uint8)
+    reduction_bad = (flatmask.astype(np.uint64) & bad_pixel_bits) != 0
+    flat[reduction_bad] = np.nan
+    mask[reduction_bad] |= np.uint8(1)
+
+    # IDL used ZAP(flat, [100, 10]) as a local reference image.  A
+    # NaN-aware boxcar gives the same intended large-scale comparison
+    # without the enormous cost of a 100x10 running median.
+    reference = _nan_uniform_filter(flat, size=(100, 10))
+    localflat = _safe_divide(flat, reference)
+
+    rejected = (
+        (localflat < 0.85)
+        | (localflat > 1.25)
+        | (flat < 0.1)
+    )
+    mask[rejected] |= np.uint8(2)
+
+    # Grow only into neighboring pixels that exceed the looser thresholds.
+    loose_rejection = (localflat < 0.95) | (localflat > 1.05)
+    structure = np.ones((3, 3), dtype=bool)
+    for _ in range(11):
+        neighbors = binary_dilation(mask != 0, structure=structure)
+        new_neighbors = neighbors & loose_rejection & (mask == 0)
+        if not np.any(new_neighbors):
+            break
+        mask[new_neighbors] |= np.uint8(4)
+
+    zero = np.isfinite(flat) & (flat == 0)
+    mask[zero] |= np.uint8(8)
+    flat[zero] = np.nan
 
     if dithered:
-        # Get the large scale structure from smoothing, avoiding bad pixels (NaNs)
-        sm = uniform_filter(flat, size=100, mode='constant', cval=np.nan)
-        rows = np.arange(2048) + 1
-        smrows = np.nan_to_num(np.nanmedian(sm, axis=1)) ** rows
-        smcols = rows ** np.nan_to_num(np.nanmedian(sm, axis=0))
+        smooth = _nan_uniform_filter(flat, size=100)
+        row_level = np.nanmean(smooth, axis=1)[:, None]
+        column_level = np.nanmean(smooth, axis=0)[None, :]
 
-        # Median filter the median flat with a rectangular filter and 
-        #  divide flat by this to remove horizontal structure
-        sflat = np.nan_to_num(smrows[:, np.newaxis] * smcols[np.newaxis, :])
-        flat /= sflat
+        spectral_flat = _nan_uniform_filter(flat, size=(50, 1))
+        flat = _safe_divide(flat, spectral_flat)
+        flat *= _safe_divide(
+            smooth,
+            row_level * column_level,
+        )
 
-        # Now put the large scale structure in apart from
-        #  structure that is horizontal (fibers) or vertical (SED)
-        flat *= sm/smrows/smcols
-
-        # Kludge to set unilluminated pixels to 1
-        for i in range(14):
-            dark = np.where(flat[:, i] < -99)
-            flat[dark, i] = 1
-            mask[dark, i] = 0
-            dark = np.where(flat[:, 2047 - i] < -99)
-            flat[dark, 2047 - i] = 1
-            mask[dark, 2047 - i] = 0
+        if kludge:
+            width = min(14, flat.shape[1] // 2)
+            for column in list(range(width)) + list(
+                range(flat.shape[1] - width, flat.shape[1])
+            ):
+                bad = ~np.isfinite(flat[:, column])
+                flat[bad, column] = 1.0
+                mask[bad, column] = 0
     else:
-        # If not dithered, still take out spectral signature
-        rows = np.arange(2048) + 1
-        cols = np.nanmedian(flat, axis=0)
-        
-        # Spectral signature from median of each column
-        for icol in range(2048):
-            cols[icol] = np.median(flat[icol,:])
-        # Medfilt doesn't do much if intensity is varying across cols
-        smrows = np.matmul(rows,medfilt1d(cols,100))
-        sflat = smrows
-
-        # Dec 2018: don't take out median spectral signature, this leaves 
-        #  structure in spectra that is hard to normalize out
-        # instead, take out a low order polynomial fit to estimate spectral signature
-        x = np.arange(2048)
-        gd, = np.where(np.isfinite(cols))
-        coef = robust.polyfit(x[gd],cols[gd],2)
-        smrows = np.matmul(rows,poly(x,coef))
-        sflat = smrows
-
-        # Feb 2019: polynomial fit introduces spurious signal, so just don't bother with spectral signature!
-        # divide out estimate of spectral signature
-        #flat/=smrows
-            
-    # Set bad values to -100 before writing to avoid NaNs in output file
-    bad = np.where(np.isnan(flat))
-    flat[bad] = 0
-
-    return flat,sflat,mask
-        
-
-def mkflat(images, apred="daily", telescope="apo25m", cmjd=None, detid=None, darkid=None,
-           clobber=False, kludge=False, nrep=1, dithered=False, unlock=False):
-    """
-    Makes APOGEE superflat calibration files from dithered individual frames.
-
-    Parameters
-    ----------
-    ims: list of image numbers to include in superflat
-    cmjd=cmjd : (optional,obsolete) gives MJD directory name if not encoded in file number
-    darkid=darkid : dark frame to be used if images are reduced
-    /clobber : rereduce images even if they exist
-    /kludge : set bottom and top non-illuminated pixels to unity
-    nrep=nrep : median filters each batch of nrep frames before combining
-    /unlock : delete lock file and start fresh 
-
-    Returns
-    -------
-    A set of apFlat-[abc]-ID8.fits files in the appropriate location
-    determined by the SDSS/APOGEE tree directory structure.
-
-    Example
-    -------
-
-    mkflat,ims,cmjd=cmjd,darkid=darkid,/clobber,/kludge,nrep=nrep
-
-    By J. Holtzman, 2011?
-    Added doc strings, updates to use data model  D. Nidever, Sep 2020 
-    Translated to Python  D. Nidever, July 2026
-    """
-
-    images = np.atleast_1d(images)
-    flatid = images[0]
-    nframes = len(images)
-
-    load = apload.ApLoad(apred=apred,telescope=telescope)
-    flatdir = os.path.dirname(load.filename('Flat', num=flatid, chips=True))
-    flatfile = load.filename('Flat', num=flatid, chips=True)
-    cmjd = load.cmjd(flatid)
-    
-    # If another process is already making this file, wait!
-    lock.lock(flatfile, waittime=10, unlock=unlock)
-    
-    # Does the file already exist?
-    # check all three chip files
-    sflatid = str(images[0]).zfill(8)
-    chip = ['a', 'b', 'c']
-    allfiles = [os.path.join(flatdir, load.prefix + f"Flat-{chip_i}-{sflatid}.fits") for chip_i in chip]
-    allfiles.append(os.path.join(flatdir, load.prefix + f"Flat-{sflatid}.tab"))
-    if all([os.path.exists(file) for file in allfiles]) and not clobber:
-        print('Flat file:', flatfile, 'already made')
-        return
-    #  Delete any existing files to start fresh
-    for file in allfiles:
-        if os.path.exists(file):
-            os.remove(file)
-
-    # Open lock file
-    lock.lock(flatfile, lock=True)
-
-    dt = [('name',str,100), ('num',int), ('nframes',int)]
-    flatlog = np.zeros(3,dtype=np.dtype(dt))
-    flatlog['name'] = flatid
-
-    outdir = flatdir
-    if not os.path.exists(outdir):
-        os.makedirs(outdir)
-
-    nfs = 1
-    uptheramp = 0
-    nocr = 1
-
-    # Read and process frames to 2D
-    for ichip in range(3):
-        darkcorr = load.filename('Dark', num=darkid, chips=True)
-        detcorr = load.filename('Detector', num=detid, chips=True)
-        for inum in images:
-            ifile = load.filename('R', num=inum, chips=True).replace('R-',f'R-{ichip}-')
-            ofile = load.filename('2D', num=inum, chips=True).replace('2D-',f'2D-{ichip}-')
-            ap3d.process_file(ifile, os.path.join(outdir, ofile), detcorr=detcorr, darkcorr=darkcorr, nocr=nocr,
-                              uptheramp=uptheramp, nfowler=nfs, fitsdir=utils.localdir())
-
-    import pdb; pdb.set_trace()
-            
-    # Sum up all of the individual flats
-    #  Median nrep frames before summing if requested
-    flats = np.zeros((2048, 2048, 3, nframes), dtype=float)
-    flatmasks = np.zeros((2048, 2048, 3), dtype=int)
-    flatsum = np.zeros((2048, 2048, 3), dtype=float)
-    for ii in range(0, nframes, nrep):
-        for irep in range(nrep):
-            i = images[ii + irep]
-            for ichip in range(3):
-                ofile = load.filename('2D', num=i, chips=True).replace('2D-',f'2D-{ichip}-')
-                fhdu = fits.open(ofile)
-                head = fhdu[0].header
-                #f = mrdfits(os.path.join(outdir, ofile), 0, head)
-                flats[:, :, ichip, ii + irep] = fhdu[1].data
-                flatmasks[:, :, ichip] = fhdu[3].data
-
-        if ii == 0:
-            head0 = head
-
-        if nrep > 1:
-            flatsum += np.median(flats[:, :, :, ii:ii + nrep], axis=3)
+        # Preserve the historical behavior: record an estimate of the
+        # spectral signature, but do not divide it out of the flat.
+        profile = np.nanmedian(flat, axis=1)
+        x = np.arange(flat.shape[0], dtype=float)
+        good = np.isfinite(profile)
+        if np.count_nonzero(good) >= 3:
+            coefficients = np.polyfit(x[good], profile[good], 2)
+            profile = np.polyval(coefficients, x)
         else:
-            flatsum += flats[:, :, :, ii]
+            profile = np.ones(flat.shape[0], dtype=float)
+        spectral_flat = np.broadcast_to(
+            profile[:, None], flat.shape
+        ).copy()
 
-    # Normalize the flatsums to roughly avoid discontinuities across chips
-    # Normalize center of middle chip to unity
-    norm = np.median(flatsum[x1norm:x2norm, y1norm:y2norm, 1])
-    flatsum[:, :, 1] /= norm
-    flatsum[:, :, 0] /= np.median(flatsum[1950:2044, 500:1500, 0]) / np.median(flatsum[5:100, 500:1500, 1])
-    flatsum[:, :, 2] /= np.median(flatsum[5:100, 500:1500, 2]) / np.median(flatsum[1950:2044, 500:1500, 1])
+    flat[~np.isfinite(flat)] = 0.0
+    spectral_flat[~np.isfinite(spectral_flat)] = 0.0
+    return flat, spectral_flat, mask
 
-    # Create the superflat
-    for ichip in range(3):
-        flat,sflat,mask = make_flat_chip(flatsum[:,:,ichip], flatmasks[:,:,ichip], dithered=dithered)
 
-        # Output the superflat
-        primary = fits.PrimaryHDU()
-        # Add dark/fits                                                                                                   
-        primary.header["darkfile"] = (darkfile,'dark file')
-        primary.header["flatfile"] = (flatfile,'flat file')
-        gitvers = utils.software_version()
-        softvers = utils.reduction_version()
-        primary.header["V_APRED"] = (softvers, "apogee software version")
-        primary.header["APRED"] = (gitvers, "apogee reduction version")
+def _calibration_filename(load, kind, number, chip):
+    """Return a chip calibration filename, or None when no ID was supplied."""
+    if number is None or int(number) <= 0:
+        return None
+    return load.filename(kind, num=int(number), chip=chip)
 
-        module = __name__.split('.')[-1]
-        primary.header.add_history(f"{module}: "
-                                   + datetime.now().astimezone().strftime("%a %b %d %H:%M:%S %Y")
-        )
-        primary.header.add_history(f"{module}: {getpass.getuser()} on {socket.gethostname()}")
-        primary.header.add_history(
-            f"{module}: Python {platform.python_version()} "
-            f"{platform.system().lower()} {platform.machine()}"
-        )
-        primary.header.add_history(
-            f"{module}: APOGEE Reduction Pipeline Version: {softvers}"
-        )
-        
-        outfile = load.filename('Flat', num=flatid, chip=chip[ichip])
 
-        hdulist = fits.HDUList()
-        hdulist.append(primary)
-        hdulist.append(fits.ImageHDU(flat))
-        hdulist[1].header['EXTNAME'] = 'FLAT'
-        hdulist.append(fits.ImageHDU(sflat))
-        hdulist[2].header['EXTNAME'] = 'SPECTRAL FLAT'
-        hdulist.append(fits.ImageHDU(mask))
-        hdulist[3].header['EXTNAME'] = 'MASK'
-        hdulist.writeto(outfile,overwrite=True)
+def _process_flat_frames(load, images, detid=None, darkid=None, clobber=False, verbose=False):
+    """Reduce all requested raw flat ramps to ap2D products."""
+    for chip in CHIPS:
+        detector = _calibration_filename(load, "Detector", detid, chip)
+        dark = _calibration_filename(load, "Dark", darkid, chip)
+        for number in images:
+            rawfile = load.filename("R", num=int(number), chip=chip)
+            outfile = load.filename("2D", num=int(number), chip=chip)
+            if os.path.exists(outfile) and not clobber:
+                continue
+            ap3d.process_file(rawfile,outfile,detector=detector,dark=dark,
+                              overwrite=clobber,detect_cosmic_rays=False,
+                              up_the_ramp=False,nfowler=1,verbose=verbose)
 
-        # Make a jpg of the flat
-        if not os.path.exists(flatdir + 'plots'):
-            os.makedirs(flatdir + 'plots')
-        flatplot(flat, os.path.join(flatdir, 'plots', outfile), hard=True)
-        
-        flatlog[ichip]['name'] = outfile
-        flatlog[ichip]['num'] = flatid
-        flatlog[ichip]['nframes'] = nframes
 
-    outfile = load.prefix + 'Flat-{:08d}'.format(flatid)
-    fits.writeto(os.path.join(flatdir,outfile+'.tab'),flatlog,overwrite=True)
-    
-    # Remove lock file
-    lock.lock(flatfile, clear=True)
+def _combine_flat_frames(load, images, nrep):
+    """Median groups of ap2D frames and sum the resulting groups."""
+    flatsum = np.zeros(DETECTOR_SHAPE + (3,), dtype=np.float64)
+    flatmasks = np.zeros(DETECTOR_SHAPE + (3,), dtype=np.uint32)
+    first_header = None
 
-    # Compile summary web page (Python equivalent)
-    flathtml(flatdir)
+    for start in range(0, len(images), nrep):
+        group = images[start : start + nrep]
+        for ichip, chip in enumerate(CHIPS):
+            samples = []
+            for number in group:
+                filename = load.filename("2D", num=int(number), chip=chip)
+                with fits.open(filename, memmap=True) as hdul:
+                    if first_header is None:
+                        first_header = hdul[0].header.copy()
+                    samples.append(np.asarray(hdul[1].data, dtype=np.float32))
+                    flatmasks[:, :, ichip] = hdul[3].data
+
+            if len(samples) == 1:
+                flatsum[:, :, ichip] += samples[0]
+            else:
+                flatsum[:, :, ichip] += np.nanmedian(np.stack(samples), axis=0)
+
+    if first_header is None:
+        raise RuntimeError("No ap2D flat frames were read")
+    return flatsum, flatmasks, first_header
+
+
+def _add_provenance(header, darkfile, flatid):
+    """Add calibration and software provenance to a FITS header."""
+    header["DARKFILE"] = (os.path.basename(darkfile), "dark file")
+    header["FLATID"] = (int(flatid), "flat calibration ID")
+
+    gitvers = utils.software_version()
+    softvers = utils.reduction_version()
+    header["V_APRED"] = (gitvers, "apogee software version")
+    header["APRED"] = (softvers, "apogee reduction version")
+
+    module = __name__.split(".")[-1]
+    header.add_history(
+        f"{module}: "
+        + datetime.now().astimezone().strftime("%a %b %d %H:%M:%S %Y")
+    )
+    header.add_history(f"{module}: {getpass.getuser()} on {socket.gethostname()}")
+    header.add_history(
+        f"{module}: Python {platform.python_version()} "
+        f"{platform.system().lower()} {platform.machine()}"
+    )
+    header.add_history(f"{module}: APOGEE Reduction Pipeline Version: {softvers}")
+
+
+def mkflat(images,apred="daily",telescope="apo25m",detid=None,darkid=None,
+           clobber=False,kludge=False,nrep=1,dithered=False,unlock=False,
+           verbose=False):
+    """Make APOGEE superflat calibration files from individual flat ramps."""
+    images = np.atleast_1d(images).astype(np.int64)
+    if images.size == 0:
+        raise ValueError("images must contain at least one exposure number")
+    nrep = int(nrep)
+    if nrep < 1:
+        raise ValueError("nrep must be at least 1")
+
+    flatid = int(images[0])
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    cmjd = load.cmjd(flatid)
+
+    flatdir = os.path.dirname(load.filename("Flat", num=flatid, chip="a"))
+    os.makedirs(flatdir, exist_ok=True)
+
+    output_files = [load.filename("Flat", num=flatid, chip=chip) for chip in CHIPS]
+    summary_file = os.path.join(flatdir, f"{load.prefix}Flat-{flatid:08d}.tab")
+    allfiles = output_files + [summary_file]
+
+    lock.lock(summary_file, waittime=10, unlock=unlock)
+    if all(os.path.exists(path) for path in allfiles) and not clobber:
+        print("Flat file:", summary_file, "already made")
+        return output_files
+
+    lock.lock(summary_file, lock=True)
+    try:
+        for path in allfiles:
+            if os.path.exists(path):
+                os.remove(path)
+
+        _process_flat_frames(load,images,detid=detid,darkid=darkid,
+                             clobber=clobber,verbose=verbose)
+        flatsum, flatmasks, header = _combine_flat_frames(load, images, nrep)
+        flatsum = normalize_flat_chips(flatsum)
+
+        dtype = np.dtype([("name", "S256"), ("num", np.int64), ("nframes", np.int32)])
+        flatlog = np.zeros(3, dtype=dtype)
+        plotdir = os.path.join(flatdir, "plots")
+        os.makedirs(plotdir, exist_ok=True)
+
+        for ichip, chip in enumerate(CHIPS):
+            flat, spectral_flat, mask = make_flat_chip(flatsum[:, :, ichip],
+                                                       flatmasks[:, :, ichip],
+                                                       dithered=dithered,
+                                                       kludge=kludge)
+            chip_header = header.copy()
+            darkfile = _calibration_filename(load, "Dark", darkid, chip)
+            _add_provenance(chip_header,darkfile,flatid)
+
+            outfile = output_files[ichip]
+            hdul = fits.HDUList(
+                [
+                    fits.PrimaryHDU(header=chip_header),
+                    fits.ImageHDU(flat.astype(np.float32), name="FLAT"),
+                    fits.ImageHDU(
+                        spectral_flat.astype(np.float32),
+                        name="SPECTRAL FLAT",
+                    ),
+                    fits.ImageHDU(mask, name="MASK"),
+                ]
+            )
+            hdul.writeto(outfile, overwrite=True)
+
+            flatplot(flat,os.path.join(plotdir,
+                                       os.path.splitext(os.path.basename(outfile))[0]))
+            flatlog[ichip] = (outfile.encode(),flatid,len(images))
+
+        fits.BinTableHDU(flatlog, name="FLATLOG").writeto(summary_file, overwrite=True)
+        flathtml(flatdir,[{"num": flatid, "nframes": len(images)}])
+    finally:
+        lock.lock(summary_file, clear=True)
+
+    return output_files
+
