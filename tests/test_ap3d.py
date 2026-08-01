@@ -391,7 +391,7 @@ class TestLinearity:
         coefficients[..., 1] = 2.0
         coefficients[..., 2] = 3.0
         result = ap3d._apply_linearity(cube, coefficients, mode="all")
-        level = np.broadcast_to(cube[2] * 3.0, cube.shape)
+        level = np.broadcast_to((cube[2] - cube[1]) * 3.0, cube.shape)
         expected = cube / (1 + 2 * level + 3 * level**2)
         np.testing.assert_allclose(result, expected)
 
