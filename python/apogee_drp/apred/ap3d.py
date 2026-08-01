@@ -1569,7 +1569,7 @@ def process_file(
         _log(f"Writing ap2D product: {output}", started)
     write_ap2d(output, result, overwrite=overwrite)
     if verbose:
-        _log("Finished complete AP3D processing", started)
+        _log(f"Finished processing {input_file.name}", started)
     return result
 
 
@@ -1816,6 +1816,7 @@ def ap3d(
         plan_max_read = _plan_scalar(plan_data.get("maxread"))
         plan_q3fix = _plan_bool(plan_data.get("q3fix"), False)
 
+        # Loop over exposures for this plan file
         for exposure_index, exposure in enumerate(exposures):
             exposure_started = perf_counter()
             number = int(_plan_scalar(_record_value(exposure, "name")))
@@ -1835,19 +1836,20 @@ def ap3d(
                 _log(f"Exposure {exposure_index + 1}/{len(exposures)}: "
                     f"{number:08d} ({flavor})",plan_started)
 
+            # Loop over the three chips
             for chip in ("a", "b", "c"):
                 raw_file = _chip_filename(raw_base, "R", chip)
                 output_file = _chip_filename(output_base, "2D", chip)
                 chip_started = perf_counter()
+                # skipping chip
                 if Path(output_file).exists() and not clobber:
-                    records.append(PlanProcessRecord(
-                                       str(plan_path), number, flavor, chip,
-                                       raw_file, output_file, "skipped",
-                                       perf_counter() - chip_started))
+                    chip_elapsed = perf_counter() - chip_started
+                    records.append(PlanProcessRecord(str(plan_path), number, flavor,
+                                                     chip,raw_file, output_file,
+                                                     "skipped", chip_elapsed))
                     if verbose:
-                        _log(f"Skipping existing {output_file}", exposure_started)
+                        _log(f"Skipped chip {chip} in {chip_elapsed:.1f} s")
                     continue
-
                 calibration_files = {}
                 for name, base in cal_bases.items():
                     if base is None or (name == "littrow" and chip != "b"):
@@ -1865,12 +1867,14 @@ def ap3d(
                     missing.insert(0, raw_file)
                 if missing:
                     error = "Required input file(s) missing: " + ", ".join(missing)
+                    chip_elapsed = perf_counter() - chip_started
+                    if verbose:
+                        _log(f"Failed chip {chip} after {chip_elapsed:.1f} s")
                     if not continue_on_error:
                         raise FileNotFoundError(error)
-                    records.append(PlanProcessRecord(
-                                         str(plan_path), number, flavor, chip,
-                                         raw_file, output_file, "failed",
-                                         perf_counter() - chip_started, error))
+                    records.append(PlanProcessRecord(str(plan_path), number, flavor,
+                                                     chip,raw_file, output_file,
+                                                     "failed", chip_elapsed, error))
                     continue
 
                 Path(output_file).parent.mkdir(parents=True, exist_ok=True)
@@ -1884,20 +1888,34 @@ def ap3d(
                     process_file(raw_file,output_file,overwrite=clobber,
                                  max_read=max_read,verbose=verbose,
                                  debug=debug,**calibration_files,**chip_settings)
+                    if verbose:
+                        _log(" ")
                 except Exception as exc:
+                    chip_elapsed = perf_counter() - chip_started
+                    if verbose:
+                        _log(f"Failed chip {chip} after {chip_elapsed:.1f} s")
                     if not continue_on_error:
                         raise
-                    records.append(PlanProcessRecord(
-                                       str(plan_path), number, flavor, chip,
-                                       raw_file, output_file, "failed",
-                                       perf_counter() - chip_started, str(exc)))
+                    records.append(PlanProcessRecord(str(plan_path), number, flavor,
+                                                     chip, raw_file, output_file,
+                                                     "failed", chip_elapsed, str(exc)))
                 else:
-                    records.append(PlanProcessRecord(
-                                       str(plan_path), number, flavor, chip,
-                                       raw_file, output_file, "processed",
-                                       perf_counter() - chip_started))
+                    chip_elapsed = perf_counter() - chip_started
+                    records.append(PlanProcessRecord(str(plan_path), number, flavor,
+                                                     chip, raw_file, output_file,
+                                                     "processed", chip_elapsed))
+                    if verbose:
+                        _log(f"Finished chip {chip} in {chip_elapsed:.1f} s")
+                        
+            # exposure elapsed time
+            exposure_elapsed = perf_counter() - exposure_started
+            if verbose:
+                _log(f"Finished exposure {number:08d} in {exposure_elapsed:.1f} s")
+                
+        # plan file elapsed time
         if verbose:
-            _log(f"Finished plan {plan_path}", plan_started)
+            plan_elapsed = perf_counter() - plan_started
+            _log(f"Finished plan {plan_path} in {plan_elapsed:.1f} s")
 
     if verbose:
         nprocessed = sum(item.status == "processed" for item in records)
