@@ -35,7 +35,6 @@ from pathlib import Path
 import platform
 import socket
 import subprocess
-import tempfile
 from time import perf_counter
 from typing import Any, Callable, Iterable, Mapping, Sequence
 
@@ -401,8 +400,8 @@ def reference_correct(
             nsat0 = nsat
         if nsat > nsat0 + 2000 and last_good == nread - 1:
             last_good = i - 1
-        mask[red == 0] |= PIXELMASK.getval("BADPIX")
-        mask[saturated] |= PIXELMASK.getval("SATPIX")
+        mask[red == 0] |= PIXMASK.getval("BADPIX")
+        mask[saturated] |= PIXMASK.getval("SATPIX")
         red[saturated] = 65_535
 
         if read_mask[i]:
@@ -464,10 +463,10 @@ def reference_correct(
         if refout is not None:
             refout[i] = ref
 
-    mask[:4, :] |= PIXELMASK.getval("BADPIX")
-    mask[-4:, :] |= PIXELMASK.getval("BADPIX")
-    mask[:, :4] |= PIXELMASK.getval("BADPIX")
-    mask[:, -4:] |= PIXELMASK.getval("BADPIX")
+    mask[:4, :] |= PIXMASK.getval("BADPIX")
+    mask[-4:, :] |= PIXMASK.getval("BADPIX")
+    mask[:, :4] |= PIXMASK.getval("BADPIX")
+    mask[:, -4:] |= PIXMASK.getval("BADPIX")
     if refout is not None:
         out = np.concatenate((out, refout), axis=2)
     return out, mask, read_mask, last_good
@@ -952,12 +951,12 @@ def process_array(
         # BPM coordinates apply only to the first 2048 science columns.
         cube[:, bad_y, bad_x] = 0
     if littrow is not None:
-        mask[np.asarray(littrow) == 1] |= PIXELMASK.getval("LITTROW_GHOST")
+        mask[np.asarray(littrow) == 1] |= PIXMASK.getval("LITTROW_GHOST")
     if persistence_mask is not None:
         p = np.asarray(persistence_mask)
-        mask[(p & 1) != 0] |= PIXELMASK.getval("PERSIST_HIGH")
-        mask[(p & 2) != 0] |= PIXELMASK.getval("PERSIST_MED")
-        mask[(p & 4) != 0] |= PIXELMASK.getval("PERSIST_LOW")
+        mask[(p & 1) != 0] |= PIXMASK.getval("PERSIST_HIGH")
+        mask[(p & 2) != 0] |= PIXMASK.getval("PERSIST_MED")
+        mask[(p & 4) != 0] |= PIXMASK.getval("PERSIST_LOW")
 
     linearity_mode = str(linearity_mode).lower()
     if linearity_mode not in {"idl", "all", "none"}:
@@ -1003,7 +1002,7 @@ def process_array(
             ramp[x, first:] = np.nan
             sat_info[y, x] = (1, first, nread - first)
             if x < science_nx:
-                mask[y, x] |= PIXELMASK.getval("SATPIX")
+                mask[y, x] |= PIXMASK.getval("SATPIX")
 
         dcounts = np.diff(ramp, axis=1)
         if detect_cosmic_rays and nread > 2:
@@ -1016,7 +1015,7 @@ def process_array(
                 event.y = y
                 cosmic_rays.append(event)
                 if event.x < science_nx:
-                    mask[y, event.x] |= PIXELMASK.getval("CRPIX")
+                    mask[y, event.x] |= PIXMASK.getval("CRPIX")
         else:
             med = np.nanmedian(dcounts, axis=1)
 
@@ -1026,7 +1025,7 @@ def process_array(
         dcounts[unfixable] = 0.0
         unfixable_science = np.flatnonzero(unfixable)
         unfixable_science = unfixable_science[unfixable_science < science_nx]
-        mask[y, unfixable_science] |= PIXELMASK.getval("UNFIXABLE")
+        mask[y, unfixable_science] |= PIXMASK.getval("UNFIXABLE")
         for x in np.flatnonzero((sat_info[y, :, 0] == 1) & ~unfixable):
             start = max(sat_info[y, x, 1] - 1, 0)
             if fix_saturation:
@@ -1038,7 +1037,7 @@ def process_array(
 
         first = np.nan_to_num(ramp[:, 0], nan=0.0)
         science_first = first[:science_nx]
-        science_first[(mask[y] & PIXELMASK.getval("UNFIXABLE")) != 0] = 0
+        science_first[(mask[y] & PIXMASK.getval("UNFIXABLE")) != 0] = 0
         fixed = np.empty_like(ramp)
         fixed[:, 0] = first
         fixed[:, 1:] = first[:, None] + np.cumsum(dcounts, axis=1)
@@ -1119,14 +1118,14 @@ def process_array(
         variance += sat_error[:, :science_nx]
     else:
         variance[sat_info[:, :science_nx, 0] != 0] = BAD_VARIANCE
-    variance[(mask & PIXELMASK.getval("UNFIXABLE")) != 0] = BAD_VARIANCE
+    variance[(mask & PIXMASK.getval("UNFIXABLE")) != 0] = BAD_VARIANCE
     if fix_cosmic_rays:
         for event in cosmic_rays:
             if event.x < science_nx:
                 variance[event.y, event.x] += event.fix_error
     else:
-        variance[(mask & PIXELMASK.getval("CRPIX")) != 0] = BAD_VARIANCE
-    variance[(mask & PIXELMASK.getval("BADPIX")) != 0] = BAD_VARIANCE
+        variance[(mask & PIXMASK.getval("CRPIX")) != 0] = BAD_VARIANCE
+    variance[(mask & PIXMASK.getval("BADPIX")) != 0] = BAD_VARIANCE
 
     if flat is not None:
         if verbose:
@@ -1141,7 +1140,7 @@ def process_array(
         variance *= gain_image**2
 
     finite_var = variability[:, :science_nx][(sat_info[:, :science_nx, 0] == 0)
-                                             & ((mask & PIXELMASK.getval("CRPIX")) == 0)
+                                             & ((mask & PIXMASK.getval("CRPIX")) == 0)
                                              & (median_dcounts[:, :science_nx] > 40)]
     if finite_var.size == 0:
         finite_var = variability[:, :science_nx][(sat_info[:, :science_nx, 0] == 0)
@@ -1157,9 +1156,9 @@ def process_array(
         global_variability=global_variability,
         output_electrons=output_electrons)
     if verbose:
-        nsat = int(np.count_nonzero(mask & PIXELMASK.getval("SATPIX")))
-        nunfix = int(np.count_nonzero(mask & PIXELMASK.getval("UNFIXABLE")))
-        nbad = int(np.count_nonzero(mask & PIXELMASK.getval("BADPIX")))
+        nsat = int(np.count_nonzero(mask & PIXMASK.getval("SATPIX")))
+        nunfix = int(np.count_nonzero(mask & PIXMASK.getval("UNFIXABLE")))
+        nbad = int(np.count_nonzero(mask & PIXMASK.getval("BADPIX")))
         _log(
             f"Reduction summary: bad={nbad}, CR={len(cosmic_rays)}, "
             f"saturated={nsat}, unfixable={nunfix}, "
@@ -1415,10 +1414,10 @@ def _add_provenance_header(
     if result.persistence_model is not None:
         header.add_history("AP3D: HDU4 - persistence correction (ADU)")
 
-    nbad = int(np.count_nonzero(result.mask & PIXELMASK.getval("BADPIX")))
-    ncr = int(np.count_nonzero(result.mask & PIXELMASK.getval("CRPIX")))
-    nsat = int(np.count_nonzero(result.mask & PIXELMASK.getval("SATPIX")))
-    nunfixable = int(np.count_nonzero(result.mask & PIXELMASK.getval("UNFIXABLE")))
+    nbad = int(np.count_nonzero(result.mask & PIXMASK.getval("BADPIX")))
+    ncr = int(np.count_nonzero(result.mask & PIXMASK.getval("CRPIX")))
+    nsat = int(np.count_nonzero(result.mask & PIXMASK.getval("SATPIX")))
+    nunfixable = int(np.count_nonzero(result.mask & PIXMASK.getval("UNFIXABLE")))
     nfixed_saturation = nsat - nunfixable if fix_saturation else 0
     header.add_history(f"AP3D: {nbad} pixels are bad")
     header.add_history(f"AP3D: {ncr} pixels have cosmic rays")
@@ -1531,31 +1530,33 @@ def process_file(
         )
         _log(f"Calibration shapes: {shapes}", started)
 
-    temporary_directory = None
+    temporary_file = None
     try:
         cube_file = input_file
         if input_file.suffix.lower() == ".apz":
             if verbose:
                 _log("Starting APZ decompression", started)
-            temporary_directory = tempfile.TemporaryDirectory(prefix="ap3d-")
-            apzip.unzip(str(input_file),clobber=True,delete=False,
-                        silent=not verbose,fitsdir=temporary_directory.name)
-            cube_file = (
-                Path(temporary_directory.name) / f"{input_file.stem}.fits"
-            )
+
+            temporary_directory = Path(utils.localdir())
+            temporary_directory.mkdir(parents=True, exist_ok=True)
+            cube_file = temporary_directory / f"{input_file.stem}.fits"
+            temporary_file = cube_file
+
+            apzip.unzip(str(input_file), clobber=True, delete=False, silent=not verbose,
+                        fitsdir=str(temporary_directory))
+
             if not cube_file.exists():
-                raise RuntimeError(
-                    "APZ decompression did not create expected file "
-                    f"{cube_file}"
-                )
+                raise RuntimeError(f"APZ decompression did not create expected file {cube_file}")
+
             if verbose:
                 _log("Finished APZ decompression", started)
 
-        result = process_cube(cube_file,max_read=max_read,**calibrations,
-                              verbose=verbose,debug=debug,**options)
+        result = process_cube(cube_file, max_read=max_read, **calibrations,
+                              verbose=verbose, debug=debug, **options)
+
     finally:
-        if temporary_directory is not None:
-            temporary_directory.cleanup()
+        if temporary_file is not None and temporary_file.exists():
+            temporary_file.unlink()
 
     _add_provenance_header(result,output=output,detector=detector,bpm=bpm,
                            dark=dark,flat=flat,littrow=littrow,
@@ -1821,8 +1822,7 @@ def ap3d(
             flavor = str(
                 _plan_scalar(_record_value(exposure, "flavor"), "")
             ).strip().lower()
-            settings = _flavor_options(
-                flavor, single_plate=plan_plate_type == "single")
+            settings = _flavor_options(flavor, single_plate=plan_plate_type == "single")
             settings.update({"linearity_mode": "idl",
                              "use_reference": plan_reference})
             if plan_max_read is not None:

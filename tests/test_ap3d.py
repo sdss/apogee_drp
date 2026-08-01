@@ -28,12 +28,7 @@ import numpy as np
 import pytest
 from astropy.io import fits
 
-try:
-    from apogee_drp.apred import ap3d_v17 as ap3d
-except ImportError:
-    # This fallback makes the downloaded test file usable beside ap3d_v17.py.
-    import ap3d_v17 as ap3d
-
+from apogee_drp.apred import ap3d
 
 def _linear_cube(nread=6, ny=2, nx=3, intercept=100.0, signal=None):
     """Return a small exactly linear test ramp."""
@@ -207,8 +202,8 @@ class TestSmallNumericalHelpers:
         """IDL's default even-length median selects the upper middle value."""
 
         values = np.array([1.0, 2.0, 3.0, 4.0])
-        assert ap3d._idl_median(values) == 3.0
-        assert ap3d._idl_median(values, even=True) == 2.5
+        assert ap3d.utils.idl_median(values) == 3.0
+        assert ap3d.utils.idl_median(values, even=True) == 2.5
 
     def test_idl_median_axis_and_nan_handling(self):
         """Upper medians are computed independently while ignoring NaNs."""
@@ -216,13 +211,13 @@ class TestSmallNumericalHelpers:
         values = np.array(
             [[1.0, 2.0, 3.0, 4.0], [10.0, np.nan, 30.0, 40.0]]
         )
-        result = ap3d._idl_median(values, axis=1)
+        result = ap3d.utils.idl_median(values, axis=1)
         np.testing.assert_array_equal(result, [3.0, 30.0])
 
     def test_idl_median_all_nan(self):
         """An all-NaN sample remains NaN."""
 
-        assert np.isnan(ap3d._idl_median([np.nan, np.nan]))
+        assert np.isnan(ap3d.utils.idl_median([np.nan, np.nan]))
 
     def test_rolling_nanmedian_width_one_returns_copy(self):
         """A width-one rolling median preserves values but returns a copy."""
@@ -321,17 +316,17 @@ class TestSmallNumericalHelpers:
 
         image = np.ones((5, 5), dtype=np.float32)
         image[2, 2] = 100
-        result = ap3d._median_filter_2d(image, 3)
+        result = ap3d.utils.idl_median_filter_2d(image, 3)
         assert result[2, 2] == 1
 
-    def test_idl_2d_median_filter_has_zero_perimeter(self):
-        """IDL MEDIAN(image, width) zeros its unsupported perimeter."""
+    def test_idl_2d_median_filter_preserves_perimeter(self):
+        """IDL MEDIAN preserves pixels without a complete neighborhood."""
 
-        image = np.ones((5, 5), dtype=np.float32)
-        result = ap3d._median_filter_2d(image, 3)
-        assert np.all(result[[0, -1], :] == 0)
-        assert np.all(result[:, [0, -1]] == 0)
-        np.testing.assert_array_equal(result[1:-1, 1:-1], 1)
+        image = np.arange(25, dtype=np.float32).reshape(5, 5)
+        result = ap3d.utils.idl_median_filter_2d(image, 3)
+
+        np.testing.assert_array_equal(result[[0, -1], :], image[[0, -1], :])
+        np.testing.assert_array_equal(result[:, [0, -1]], image[:, [0, -1]])
 
 
 class TestBadReadHandling:
@@ -714,11 +709,6 @@ class TestUpTheRampSampling:
 class TestHeader:
     """Tests for output-header bookkeeping."""
 
-    def test_code_version_is_recorded(self):
-        """The explicit source version is available for validation products."""
-
-        assert ap3d.AP3D_VERSION == "v17"
-
     @pytest.mark.parametrize(
         "up_the_ramp,nfowler,history",
         [
@@ -744,7 +734,7 @@ class TestHeader:
         assert header["GAIN"] == 2.0
         assert header["RDNOISE"] == 5.0
         assert header["BUNIT"] == "ADU"
-        assert header["AP3DVER"] == "v17"
+        assert header["AP3DVER"] == ap3d.AP3D_VERSION
 
     def test_idl_compatible_provenance(self, monkeypatch):
         """Calibration keywords, execution details, and counts are recorded."""
@@ -753,8 +743,8 @@ class TestHeader:
         result.mask[0, 0] = ap3d.PIXMASK.getval("BADPIX")
         result.mask[0, 1] = ap3d.PIXMASK.getval("CRPIX")
         result.mask[0, 2] = ap3d.PIXMASK.getval("SATPIX")
-        monkeypatch.setenv("APOGEE_REDUX", "testredux")
-        monkeypatch.setattr(ap3d, "_software_version", lambda: "abc123")
+        monkeypatch.setattr(ap3d.utils, "reduction_version", lambda: "testredux")
+        monkeypatch.setattr(ap3d.utils, "software_version", lambda: "abc123")
         ap3d._add_provenance_header(
             result,
             output="ap2D-test.fits",
@@ -1003,25 +993,6 @@ class TestOutputIO:
             ap3d.write_ap2d(filename, _process_result())
         ap3d.write_ap2d(filename, _process_result(), overwrite=True)
 
-    def test_write_stage_diagnostics(self, tmp_path):
-        """The diagnostic writer preserves names, shapes, and float32 data."""
-
-        filename = tmp_path / "stages.fits"
-        header = fits.Header({"AP3DVER": ap3d.AP3D_VERSION})
-        arrays = [
-            ("COLLAPSED", np.arange(12).reshape(3, 4)),
-            ("REF_PROFILE", np.arange(3)),
-        ]
-        ap3d._write_stage_diagnostics(filename, header, arrays)
-        with fits.open(filename) as hdul:
-            assert hdul[0].header["AP3DSTAG"]
-            assert hdul["COLLAPSED"].data.shape == (3, 4)
-            assert hdul["COLLAPSED"].data.dtype == np.dtype(">f4")
-            np.testing.assert_array_equal(
-                hdul["REF_PROFILE"].data,
-                np.arange(3, dtype=np.float32),
-            )
-
 
 class TestOrchestration:
     """Fast tests of file-level control flow using monkeypatching."""
@@ -1154,7 +1125,61 @@ class TestOrchestration:
         with pytest.raises(RuntimeError, match="did not create expected file"):
             ap3d.process_file(input_file, tmp_path / "out.fits")
 
+    def test_process_file_apz_uses_localdir_and_removes_decompressed_file(
+            self, tmp_path, monkeypatch):
+        localdir = tmp_path / "local"
+        localdir.mkdir()
 
+        sentinel = localdir / "keep.txt"
+        sentinel.write_text("keep")
+
+        input_file = tmp_path / "input.apz"
+        input_file.touch()
+        output_file = tmp_path / "output.fits"
+
+        monkeypatch.setattr(ap3d.utils, "localdir", lambda: str(localdir))
+
+        def fake_unzip(filename, clobber=False, delete=False, silent=True, fitsdir=None):
+            assert filename == str(input_file)
+            assert Path(fitsdir) == localdir
+            (localdir / "input.fits").touch()
+
+        monkeypatch.setattr(ap3d.apzip, "unzip", fake_unzip)
+        monkeypatch.setattr(ap3d, "process_cube", lambda *args, **kwargs: _process_result())
+        monkeypatch.setattr(ap3d, "write_ap2d", lambda *args, **kwargs: None)
+
+        ap3d.process_file(input_file, output_file)
+
+        assert sentinel.exists()
+        assert not (localdir / "input.fits").exists()
+
+    def test_process_file_apz_removes_decompressed_file_after_error(
+            self, tmp_path, monkeypatch):
+        localdir = tmp_path / "local"
+        localdir.mkdir()
+
+        input_file = tmp_path / "input.apz"
+        input_file.touch()
+        output_file = tmp_path / "output.fits"
+        decompressed_file = localdir / "input.fits"
+
+        monkeypatch.setattr(ap3d.utils, "localdir", lambda: str(localdir))
+
+        def fake_unzip(filename, clobber=False, delete=False, silent=True, fitsdir=None):
+            decompressed_file.touch()
+
+        def fail_process_cube(*args, **kwargs):
+            raise RuntimeError("processing failed")
+
+        monkeypatch.setattr(ap3d.apzip, "unzip", fake_unzip)
+        monkeypatch.setattr(ap3d, "process_cube", fail_process_cube)
+
+        with pytest.raises(RuntimeError, match="processing failed"):
+            ap3d.process_file(input_file, output_file)
+
+        assert not decompressed_file.exists()
+
+        
 @pytest.mark.slow
 class TestFullDetectorSynthetic:
     """Synthetic integration tests requiring full APOGEE detector geometry."""
