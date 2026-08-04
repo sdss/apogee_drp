@@ -1669,7 +1669,7 @@ print,'no_checksum: ', no_checksum
   
   
     ; SHOULD I FIX BAD READS HERE?????
-  
+
     ;----------------------------
     ; Detect and Fix cosmic rays
     ;----------------------------
