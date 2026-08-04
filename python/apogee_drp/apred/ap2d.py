@@ -1256,10 +1256,23 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         else:
             modelpsffile = None
 
+
+        # Are we using sky lines for wavelength solution?
+        plugmap = 0
+        if 'platetype' in planstr.keys():
+            if planstr['platetype'] == 'cal': 
+                skywave = False
+            else: 
+                skywave = True 
+        #if 'platetype' in planstr.keys():
+        #    if planstr['platetype'] == 'sky': 
+        #        plugmap = 0
+            
             
         # Load the Plug Plate Map file
         #-----------------------------
-        if 'platetype' in planstr.keys():
+        # only need it if we are using skylines for the wavelength solution
+        if 'platetype' in planstr.keys() and skywave:
             if planstr['platetype'] == 'cal' or planstr['platetype'] == 'extra' or planstr['platetype'] == 'single':
                 plugmap = 0 
             else:
@@ -1342,14 +1355,6 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             print('-------------------------------------------')
             
             # Run AP2DPROC
-            if 'platetype' in planstr.keys():
-                if planstr['platetype'] == 'cal': 
-                    skywave = False
-                else: 
-                    skywave = True 
-            if 'platetype' in planstr.keys():
-                if planstr['platetype'] == 'sky': 
-                    plugmap = 0
             outdir = os.path.dirname(load.filename('1D',num=framenum,chips=True))
             if os.path.exists(outdir)==False:
                 file_mkdir,outdir 
