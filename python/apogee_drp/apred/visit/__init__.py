@@ -26,8 +26,13 @@ from .driver import (
     ap1dvisit,
 )
 from .io import BADERR, read_cframes, write_cframes
+from .backend import NativeVisitBackendMixin
+from .apload_backend import ApLoadVisitBackend
 from .flux import BADMASK, H_ZEROPOINT_FLAMBDA, flux_calibrate
-from .qa import check
+try:
+    from .qa import check
+except ImportError:  # The standalone translation bundle omits full Yanny I/O.
+    check = None
 from .shift import DitherShiftResult, LinePeak, dither_shift
 from .output import (
     VisitProductResult,
@@ -46,6 +51,8 @@ __all__ = [
     "H_ZEROPOINT_FLAMBDA",
     "PlanFailure",
     "LinePeak",
+    "NativeVisitBackendMixin",
+    "ApLoadVisitBackend",
     "ShiftRecord",
     "VisitBackend",
     "VisitProductResult",
