@@ -32,6 +32,350 @@ def leaky_relu(z):
     """ This is the activation function used by default in all our neural networks. """
     return z*(z > 0) + 0.01*z*(z < 0)
 
+def interpolate(x):
+    """ Fast interpolation."""        
+    newy = np.zeros(len(x),float)
+    xind = np.floor((x-self._xrange[0])/(self._dx*self._xcoefsteps)).astype(int)
+    #good, = np.where((xind >= 0) & (xind <= self.n))
+    good, = np.where((x >= self._xrange[0]) & (x <= self._xrange[1]))
+    ngood = len(good)
+    if ngood>0:
+        newy[good] = self._coef[xind[good],0]*x[good]**2 + self._coef[xind[good],1]*x[good] + self._coef[xind[good],2]
+    # points outside of the range are zero by default
+    return newy
+
+@njit(cache=True)
+def func_poly2d_numba(x,y,pars):
+    """ 2D polynomial surface"""
+    npars = len(pars)
+    a = np.zeros(len(x), dtype=np.float64)
+    if npars==0:
+        a[:] = pars[0]
+    elif npars==3:
+        a[:] = pars[0] + pars[1]*x + pars[2]*y
+    elif npars==4:
+        a[:] = pars[0] + pars[1]*x + pars[2]*x*y + pars[3]*y
+    else:
+        raise Exception('Only 0, 3, and 4 parameters supported')
+    return a
+
+@njit(cache=True)
+def gridinterp(labels,xgrid,ygrid,grid):
+    """ Interpolate model in the grid."""
+
+    if labels[0]<0 or labels[0]>2047 or labels[1]<0 or labels[1]>2047:
+        raise ValueError('X/Y must be between 0 and 2047')
+
+    nxgrid,nygrid,npix = grid.shape
+    
+    # xgrid/ygrid are 2D [Nx,Ny] and not quite a regular rectangular grid
+    # Find closest X position
+    xind = np.searchsorted(xgrid[:,nygrid//2],labels[0])
+    yind = np.searchsorted(ygrid[np.minimum(xind,nxgrid-1),:],labels[1])
+    xind = np.searchsorted(xgrid[:,np.minimum(yind,nygrid-1)],labels[0])
+    yind = np.searchsorted(ygrid[np.minimum(xind,nxgrid-1),:],labels[1])            
+        
+    # Find the closest points on the grid
+    #------------------------------------
+    # -- At corners, use corner values --
+    # bottom left
+    if xind==0 and yind==0:
+        return grid[0,0,:]
+    # top left
+    if xind==0 and yind==nygrid:
+        return grid[0,-1,:]
+    # bottom right
+    if xind==nxgrid and yind==0:        
+        return grid[-1,0,:]
+    # top right
+    if xind==nxgrid and yind==nygrid:
+        return grid[-1,-1,:]
+        
+    # -- Edges, use two points --
+    # linearly interpolate so it's smooth        
+    # Left
+    #   use left-most X and interpolate only in Y
+    if xind==0:
+        yind1 = yind-1
+        yind2 = yind
+        wt = (labels[1]-ygrid[xind,yind1])/(ygrid[xind,yind2]-ygrid[xind,yind1])
+        profile = (1-wt)*grid[0,yind1,:] + wt*grid[0,yind2,:]
+        return profile
+    # Right
+    #  use right-most X and interpolate only in Y
+    if xind==nxgrid:
+        yind1 = yind-1
+        yind2 = yind
+        wt = (labels[1]-ygrid[xind-1,yind1])/(ygrid[xind-1,yind2]-ygrid[xind-1,yind1])
+        profile = (1-wt)*grid[-1,yind1,:] + wt*grid[-1,yind2,:]
+        return profile
+    # Bottom
+    #  use Bottom-most Y and interpolate only in X
+    if yind==0:
+        xind1 = xind-1
+        xind2 = xind
+        wt = (labels[0]-xgrid[xind1,yind])/(xgrid[xind2,yind]-xgrid[xind1,yind])
+        profile = (1-wt)*grid[xind1,0,:] + wt*grid[xind2,0,:]
+        return profile
+    # Top
+    #  use top-most Y and interpolate only in X
+    if yind==nygrid:
+        xind1 = xind-1
+        xind2 = xind
+        wt = (labels[0]-xgrid[xind1,yind-1])/(xgrid[xind2,yind-1]-xgrid[xind1,yind-1])
+        profile = (1-wt)*grid[xind1,-1,:] + wt*grid[xind2,-1,:]
+        return profile
+            
+    # -- In the middle --
+    # linearly interpolate so it's smooth
+    xind1 = xind-1
+    xind2 = xind
+    yind1 = yind-1
+    yind2 = yind
+    # bilinear interpolation
+    x1 = xgrid[xind1,yind1]
+    x2 = xgrid[xind2,yind1]
+    y1 = ygrid[xind1,yind1]
+    y2 = ygrid[xind1,yind2]
+        
+    tx = (labels[0]-x1)/(x2-x1)
+    ty = (labels[1]-y1)/(y2-y1)
+    
+    profile = (
+        (1-tx)*(1-ty)*grid[xind1,yind1,:] +
+        (1-tx)*ty    *grid[xind1,yind2,:] +
+        tx    *(1-ty)*grid[xind2,yind1,:] +
+        tx    *ty    *grid[xind2,yind2,:]
+    )
+        
+    return profile
+
+@njit(cache=True)
+def build_fiber_epsf(trace_y,detector_y,profile_dy,xgrid,
+                     ygrid,profile_grid,logscale):
+    """
+    Construct the effective PSF for every column of one fiber.
+
+    At each detector column, the profile is interpolated from the
+    irregular PSF grid at the fiber-center position. The oversampled
+    profile is then resampled onto the requested detector rows and
+    normalized to unit sum.
+
+    Parameters
+    ----------
+    trace_y : ndarray, shape (n_columns,)
+        Detector y coordinate of the fiber center at every column.
+
+    detector_y : ndarray, shape (n_detector_rows,)
+        Absolute detector-row coordinates at which the final profile
+        should be evaluated. For example,
+        ``[1005, 1006, ..., 1035, 1036]``.
+
+    profile_dy : ndarray, shape (n_profile_samples,)
+        Relative, possibly oversampled, y coordinates of the model
+        profile with respect to its center. For example,
+        ``[-14.95, -14.85, ..., 14.85, 14.95]``.
+
+    xgrid, ygrid : ndarray, shape (nxgrid, nygrid)
+        Detector coordinates of the irregular PSF grid.
+
+    profile_grid : ndarray, shape (nxgrid, nygrid, n_profile_samples)
+        Model profile at every PSF-grid position. Values may be linear
+        or base-10 logarithmic, as specified by ``logscale``.
+
+    logscale : bool
+        If True, ``profile_grid`` contains base-10 logarithmic profile
+        values, which are converted to linear values after interpolation.
+
+    Returns
+    -------
+    epsf_image : ndarray, shape (n_detector_rows, n_columns)
+        Normalized effective PSF evaluated at every requested detector
+        row and detector column.
+
+    Notes
+    -----
+    Values requested outside the range of ``profile_dy`` are assigned
+    the corresponding endpoint value by ``np.interp``.
+    """
+    n_columns = trace_y.size
+    n_detector_rows = detector_y.size
+
+    epsf_image = np.empty(
+        (n_detector_rows, n_columns),
+        dtype=np.float64,
+    )
+
+    # Reuse this small array instead of allocating it in every iteration.
+    grid_position = np.empty(2, dtype=np.float64)
+
+    for column in range(n_columns):
+        fiber_center_y = trace_y[column]
+
+        grid_position[0] = column
+        grid_position[1] = fiber_center_y
+
+        oversampled_profile = gridinterp(
+            grid_position,
+            xgrid,
+            ygrid,
+            profile_grid,
+        )
+
+        # Convert absolute detector rows to offsets from the fiber
+        # center and resample the model profile at those positions.
+        detector_profile = np.interp(
+            detector_y - fiber_center_y,
+            profile_dy,
+            oversampled_profile,
+        )
+
+        if logscale:
+            detector_profile = 10.0 ** detector_profile
+
+        profile_sum = np.sum(detector_profile)
+
+        if profile_sum <= 0.0:
+            raise ValueError("Interpolated profile has a non-positive sum")
+
+        epsf_image[:, column] = detector_profile / profile_sum
+
+    return epsf_image
+
+
+@njit(cache=True)
+def build_epsf_grid(trace_y,fiber_indices,offset_coefficients,profile_dy,
+                    xgrid,ygrid,profile_grid,logscale):
+    """
+    Construct an effective-PSF image for multiple fiber traces.
+
+    For each requested fiber, this function evaluates the polynomial trace
+    offset, determines the detector rows covered by the profile, and
+    interpolates the effective PSF at every detector column.
+
+    Parameters
+    ----------
+    trace_y : ndarray, shape (n_trace_fibers, n_columns)
+        Nominal detector y coordinate of every fiber trace as a function
+        of detector column.
+
+    fiber_indices : ndarray, shape (n_output_fibers,)
+        Indices of the fibers in ``trace_y`` for which profiles should be
+        generated.
+
+    offset_coefficients : ndarray
+        Coefficients passed to ``func_poly2d_numba`` to calculate the
+        position-dependent y offset from the nominal trace.
+
+    profile_dy : ndarray, shape (n_profile_samples,)
+        Relative detector-y coordinates at which the model profiles are
+        sampled.
+
+    xgrid, ygrid : ndarray, shape (nxgrid, nygrid)
+        Detector coordinates of the irregular effective-PSF grid.
+
+    profile_grid : ndarray, shape (nxgrid, nygrid, n_profile_samples)
+        Effective-PSF profiles sampled at each grid position.
+
+    logscale : bool
+        Passed to ``fiber_grid``. Indicates whether the profile-grid
+        values are logarithmically scaled.
+
+    Returns
+    -------
+    epsf_cube : ndarray, shape (n_output_fibers, 100, n_columns)
+        Effective-PSF image for each requested fiber. Only rows
+        ``0:profile_height`` contain the profile for a given fiber.
+
+    trace_centers_y : ndarray, shape (n_output_fibers, n_columns)
+        Offset-corrected y coordinate of each fiber center.
+
+    row_start : ndarray, shape (n_output_fibers,)
+        First detector row represented in each fiber's PSF image.
+
+    row_stop : ndarray, shape (n_output_fibers,)
+        Last detector row represented in each fiber's PSF image,
+        inclusive.
+
+    Notes
+    -----
+    The second dimension of ``epsf_cube`` is currently fixed at 100.
+    Therefore, the detector-row range occupied by any fiber must not
+    exceed 100 pixels.
+    """
+    n_trace_fibers, n_columns = trace_y.shape
+    n_output_fibers = len(fiber_indices)
+
+    max_profile_rows = 100
+    detector_row_min = 0
+    detector_row_max = 2047
+
+    row_start = np.zeros(n_output_fibers, dtype=np.int64)
+    row_stop = np.zeros(n_output_fibers, dtype=np.int64)
+
+    trace_centers_y = np.zeros(
+        (n_output_fibers, n_columns),
+        dtype=np.float64,
+    )
+    epsf_cube = np.zeros(
+        (n_output_fibers, max_profile_rows, n_columns),
+        dtype=np.float64,
+    )
+
+    column_x = np.arange(n_columns)
+
+    for output_index in range(n_output_fibers):
+        fiber_index = fiber_indices[output_index]
+        nominal_trace_y = trace_y[fiber_index, :]
+
+        trace_offset_y = func_poly2d_numba(
+            column_x,
+            nominal_trace_y,
+            offset_coefficients,
+        )
+        fiber_center_y = nominal_trace_y + trace_offset_y
+
+        # Determine the detector rows covered by the profile. The model
+        # currently extends approximately 14 pixels from its center.
+        first_row = int(np.round(np.min(fiber_center_y))) - 14
+        last_row = int(np.round(np.max(fiber_center_y))) + 14
+
+        first_row = max(first_row, detector_row_min)
+        last_row = min(last_row, detector_row_max)
+
+        profile_height = last_row - first_row + 1
+
+        if profile_height > max_profile_rows:
+            raise ValueError(
+                "Fiber profile requires more than 100 detector rows"
+            )
+
+        detector_y = np.arange(first_row, last_row + 1)
+
+        fiber_profile = build_fiber_epsf(
+            fiber_center_y,
+            detector_y,
+            profile_dy,
+            xgrid,
+            ygrid,
+            profile_grid,
+            logscale,
+        )
+
+        epsf_cube[
+            output_index,
+            :profile_height,
+            :,
+        ] = fiber_profile
+
+        trace_centers_y[output_index, :] = fiber_center_y
+        row_start[output_index] = first_row
+        row_stop[output_index] = last_row
+
+    return epsf_cube, trace_centers_y, row_start, row_stop
+
+
+
 class PSFProfile(object):
     """ This holds an oversampled PSF profile and interpolation coefficients
          for fast interplation."""
@@ -89,7 +433,8 @@ class PSFProfile(object):
                 hi = self.n
                 lo = hi-3
             # a*x^2+b*x+c
-            coef[i,:] = dln.quadratic_coefficients(self.x[lo:hi],self.y[lo:hi])  # a,b,c
+            coef[i,:] = np.polyfit(self.x[lo:hi],self.y[lo:hi],2)
+            #coef[i,:] = dln.quadratic_coefficients(self.x[lo:hi],self.y[lo:hi])  # a,b,c
         self._xcoefind = xcoefind
         self._coef = coef
 
@@ -102,7 +447,8 @@ class PSFProfile(object):
         if isinstance(other,int) or isinstance(other,float):
             new = self.copy()
             new.y += other
-            new._coef += other
+            # Adding a constant changes only the constant polynomial term.
+            new._coef[:, 2] += other
             return new
         # Add two profiles
         if isinstance(other,PSFProfile) is False:
@@ -121,7 +467,8 @@ class PSFProfile(object):
         if isinstance(other,int) or isinstance(other,float):
             new = self.copy()
             new.y -= other
-            new._coef -= other
+            # Subtracting a constant changes only the constant term.
+            new._coef[:, 2] -= other
             return new        
         if isinstance(other,PSFProfile) is False:
             raise Exception('Other object must also be a PSFProfile')
@@ -201,6 +548,11 @@ class PSF(object):
             self.y = y
             self.xmin = [np.min(labels[0]),np.min(labels[1])]
             self.xmax = [np.max(labels[1]),np.max(labels[1])]
+            # Make sure the arrays are native-endian, numba needs this
+            for c in ['_labels','_xgrid','_ygrid','_grid','y']:
+                data = getattr(self,c)
+                data = np.asarray(data, dtype=data.dtype.newbyteorder("="))
+                setattr(self,c,data)
             nxgrid,nygrid,npix = grid.shape
         else:
             raise ValueError('Only "ann" and "grid" supported at this time')
@@ -280,163 +632,57 @@ class PSF(object):
 
         if labels[0]<0 or labels[0]>2047 or labels[1]<0 or labels[1]>2047:
             raise ValueError('X/Y must be between 0 and 2047')
+
+        labels = np.asarray(labels, dtype=np.float64)
         
         if self._grid is None:
             self.mkgrid()
 
         if self.kind=='grid':
-            # xgrid/ygrid are 2D [Nx,Ny] and not quite a regular rectangular grid
-            # Find closest X position
-            xind = np.searchsorted(self._xgrid[:,self._nygrid//2],labels[0])
-            yind = np.searchsorted(self._ygrid[np.minimum(xind,self._nxgrid-1),:],labels[1])
-            xind = np.searchsorted(self._xgrid[:,np.minimum(yind,self._nygrid-1)],labels[0])
-            yind = np.searchsorted(self._ygrid[np.minimum(xind,self._nxgrid-1),:],labels[1])            
+            return gridinterp(labels,self._xgrid,self._ygrid,self._grid)
         else:
-            xind = np.searchsorted(self._xgrid,labels[0])
-            yind = np.searchsorted(self._ygrid,labels[1])        
+            raise Exception('not implemented yet')
         
-        # Find the closest points on the grid
-        #------------------------------------
-        # -- At corners, use corner values --
-        # bottom left
-        if xind==0 and yind==0:
-            return self._grid[0,0,:]
-        # top left
-        if xind==0 and yind==self._nygrid:
-            return self._grid[0,-1,:]
-        # bottom right
-        if xind==self._nxgrid and yind==0:        
-            return self._grid[-1,0,:]
-        # top right
-        if xind==self._nxgrid and yind==self._nygrid:
-            return self._grid[-1,-1,:]
-        
-        # -- Edges, use two points --
-        # linearly interpolate so it's smooth        
-        # Left
-        #   use left-most X and interpolate only in Y
-        if xind==0:
-            yind1 = yind-1
-            yind2 = yind
-            if self.kind=='grid':
-                wt = (labels[1]-self._ygrid[xind,yind1])/(self._ygrid[xind,yind2]-self._ygrid[xind,yind1])
-            else:
-                wt = (labels[1]-self._ygrid[yind1])/(self._ygrid[yind2]-self._ygrid[yind1])                
-            profile = (1-wt)*self._grid[0,yind1,:] + wt*self._grid[0,yind2,:]
-            return profile
-        # Right
-        #  use right-most X and interpolate only in Y
-        if xind==self._nxgrid:
-            yind1 = yind-1
-            yind2 = yind
-            if self.kind=='grid':
-                wt = (labels[1]-self._ygrid[xind-1,yind1])/(self._ygrid[xind-1,yind2]-self._ygrid[xind-1,yind1])
-            else:
-                wt = (labels[1]-self._ygrid[yind1])/(self._ygrid[yind2]-self._ygrid[yind1])
-            profile = (1-wt)*self._grid[-1,yind1,:] + wt*self._grid[-1,yind2,:]
-            return profile
-        # Bottom
-        #  use Bottom-most Y and interpolate only in X
-        if yind==0:
-            xind1 = xind-1
-            xind2 = xind
-            if self.kind=='grid':
-                wt = (labels[0]-self._xgrid[xind1,yind])/(self._xgrid[xind2,yind]-self._xgrid[xind1,yind])
-            else:
-                wt = (labels[0]-self._xgrid[xind1])/(self._xgrid[xind2]-self._xgrid[xind1])
-            profile = (1-wt)*self._grid[xind1,0,:] + wt*self._grid[xind2,0,:]
-            return profile
-        # Top
-        #  use top-most Y and interpolate only in X
-        if yind==self._nygrid:
-            xind1 = xind-1
-            xind2 = xind
-            if self.kind=='grid':
-                wt = (labels[0]-self._xgrid[xind1,yind-1])/(self._xgrid[xind2,yind-1]-self._xgrid[xind1,yind-1])
-            else:
-                wt = (labels[0]-self._xgrid[xind1])/(self._xgrid[xind2]-self._xgrid[xind1])            
-            profile = (1-wt)*self._grid[xind1,-1,:] + wt*self._grid[xind2,-1,:]
-            return profile
-            
-        # -- In the middle --
-        # linearly interpolate so it's smooth
-        xind1 = xind-1
-        xind2 = xind
-        yind1 = yind-1
-        yind2 = yind
-        # bilinear interpolation
-        if self.kind == 'grid':
-            x1 = self._xgrid[xind1,yind1]
-            x2 = self._xgrid[xind2,yind1]
-            y1 = self._ygrid[xind1,yind1]
-            y2 = self._ygrid[xind1,yind2]
-        else:
-            x1 = self._xgrid[xind1]
-            x2 = self._xgrid[xind2]
-            y1 = self._ygrid[yind1]
-            y2 = self._ygrid[yind2]
-
-        tx = (labels[0]-x1)/(x2-x1)
-        ty = (labels[1]-y1)/(y2-y1)
-        
-        profile = (
-            (1-tx)*(1-ty)*self._grid[xind1,yind1,:] +
-            (1-tx)*ty    *self._grid[xind1,yind2,:] +
-            tx    *(1-ty)*self._grid[xind2,yind1,:] +
-            tx    *ty    *self._grid[xind2,yind2,:]
-        )
-        
-        return profile
-
     # Make a new method that does the interpolation for an entire fiber all at once (all 2048 pixels)
     # might allow for some speedups.  Would need to have y values (trace) input.
-    def fiber(self,y):
+    def fiber(self,trace_y):
         """ Construct profiles for all columns of a fiber."""
         # all y-values must be given
+        trace_y = np.asarray(trace_y, dtype=trace_y.dtype.newbyteorder("="))
+        epsfimg = fiber_grid(trace_y, self.y, self._xgrid, self._ygrid, self._grid, self._log)
+        return epsfimg
 
-        # Just pick ONE y-value
-        x = np.arange(2048)
-        ymn = np.mean(y)
-        profile = np.zeros((2048,self.npix),float)
 
-        if self.kind=='grid':
-            # xgrid/ygrid are 2D [Nx,Ny] and not quite a regular rectangular grid
-            yind = np.searchsorted(self._ygrid[self._nxgrid//2,:],ymn)
-            xarr = self._xgrid[:,yind]
-        else:
-            yind = np.searchsorted(self._ygrid,ymn)
-            xarr = self._xgrid
+    def buildepsf(self,traceim_y,fibers=np.arange(300),offcoef=np.zeros(4)):
+        """Construct profiles for the requested fibers and columns."""
 
-        yfine = np.arange(self.npix)            
-        for i in range(2048):
-            if self.kind=='grid':
-                xind = np.searchsorted(self._xgrid[:,yind],i)
-            else:
-                xind = np.searchsorted(self._xgrid,i)
-            xind2 = None
-            if xind==0:
-                xind1 = xind
-            elif xind==self._nxgrid-1:
-                xind1 = xind
-            else:
-                xind1 = xind-1
-                xind2 = xind
-            prof1 = self._grid[xind1,yind,:]
-            # Shift and interpolate
-            ycen = y[i]
-            prof = np.interp(y-ycen,y,prof1,left=0.0,right=0.0)
-            if xind2 is not None:
-                prof2 = self._grid[xind2,yind,:]
-                # Shift and interpolate
-                iprof2 = np.interp(y-ycen,y,prof2,left=0.0,right=0.0)
-                wt = (self._xgrid[xind1,yind]-i)/(self._xgrid[xind2,yind]-self._xgrid[xind1,yind])
-                prof = profile*wt + (1-wt)*iprof2
-            profile[:,i] = prof
-            import pdb; pdb.set_trace()
-            
-        import pdb; pdb.set_trace()
-            
+        # Numba requires native-endian arrays.
+        traceim_y = np.asarray(traceim_y,dtype=traceim_y.dtype.newbyteorder("="))
+        ntrace, ncolumns = traceim_y.shape
+
+        if fibers is None:
+            fibers = np.arange(ntrace)
+
+        fibers = np.asarray(fibers,dtype=np.int64)
+        nfibers = len(fibers)
+
+        if offcoef is None:
+            offcoef = np.zeros(4)
+        offcoef = np.asarray(offcoef,dtype=np.float64)
+
+        epsfimg, ycen, ylo, yhi = build_epsf_grid(traceim_y,fibers,offcoef,self.y,
+                                                  self._xgrid,self._ygrid,self._grid,self._log)
         
+        epsf = []
+        for i in range(nfibers):
+            ny = yhi[i] - ylo[i] + 1
+            data = {"fiber": fibers[i],"lo": ylo[i],"hi": yhi[i],
+                    "img": epsfimg[i, :ny, :],"ycen": ycen[i, :]}
+            epsf.append(data)
+
+        return epsf
+
+    
     def mkgrid(self,nx=None,ny=None):
         """ Make a grid of models to be used later."""
 
@@ -1280,26 +1526,529 @@ def epsfmodel(epsf,spec,skip=False,subonly=False,fibers=None,yrange=[0,2048]):
     bad = (t<=0)
     if np.sum(bad)>0:
         t[bad] = 0
-    for k in fibers:
-        nf = 1
-        ns = 0
-        if subonly:
-            junk, = np.where(subonly==k)
-            nf = len(junk)
-        if skip:
-            junk, = np.where(skip==k)
-            ns = len(junk)
-        if nf > 0 and ns==0:
-            p1 = epsf[k]
-            lo = epsf[k]['lo']
-            hi = epsf[k]['hi']
-            img = p1['img'].T
-            rows = np.ones(hi-lo+1,int)
-            fiber = epsf[k]['fiber']
-            model[:,lo-ylo:hi+1-ylo] += img[:,:]*(rows.reshape(-1,1)*t[:,fiber]).T                                    
-    model = model.T
+    #for k in fibers:
+    #    nf = 1
+    #    ns = 0
+    #    if subonly:
+    #        junk, = np.where(subonly==k)
+    #        nf = len(junk)
+    #    if skip:
+    #        junk, = np.where(skip==k)
+    #        ns = len(junk)
+    #    if nf > 0 and ns==0:
+    #        p1 = epsf[k]
+    #        lo = epsf[k]['lo']
+    #        hi = epsf[k]['hi']
+    #        img = p1['img'].T
+    #        rows = np.ones(hi-lo+1,int)
+    #        fiber = epsf[k]['fiber']
+    #        model[:,lo-ylo:hi+1-ylo] += img[:,:]*(rows.reshape(-1,1)*t[:,fiber]).T                                    
 
+    for k in fibers:
+        include = True
+        if subonly is not False and subonly is not None:
+            subonly_array = np.asarray(subonly,dtype=int)
+            include = np.any(subonly_array == k)
+        if skip is not False and skip is not None:
+            skip_array = np.asarray(skip,dtype=int)
+            if np.any(skip_array == k):
+                include = False
+        if include:
+            p1 = epsf[k]
+            lo = p1["lo"]
+            hi = p1["hi"]
+            img = p1["img"].T
+            fiber = p1["fiber"]
+            model[:, lo-ylo:hi+1-ylo] += img * t[:, fiber].reshape(-1, 1)
+
+    model = model.T
+        
     return model
+
+
+@njit(cache=True)
+def solve_all_columns(
+        tridiag,
+        beta,
+        betavar,
+        psftot,
+        fibers,
+        warnmasked,
+        badmasked,
+        doback=False,
+        nout=300,
+        min_psf=0.5,
+        baderr=1.0e10,
+        initial_baderr=999999.09,
+        not_enough_psf=16384,
+):
+    """
+    Solve the tridiagonal extraction system for all detector columns.
+
+    Parameters
+    ----------
+    tridiag : ndarray, shape (3, nsystem, ncol)
+        Lower diagonal, main diagonal, and upper diagonal of the
+        extraction matrix.
+
+    beta, betavar : ndarray, shape (nsystem, ncol)
+        Right-hand side and its variance.
+
+    psftot : ndarray, shape (nsystem, ncol)
+        Total valid PSF contribution for each spectrum and column.
+
+    fibers : ndarray, shape (ntrace,)
+        Output fiber index associated with each trace. The optional
+        background element is not included in this array.
+
+    warnmasked, badmasked : ndarray, shape (nsystem, ncol)
+        Combined warning and bad-pixel mask values.
+
+    doback : bool, optional
+        If True, the final system element is the background.
+
+    nout : int, optional
+        Number of spectra in the output arrays.
+
+    Returns
+    -------
+    spec : ndarray, shape (ncol, nout)
+        Extracted spectra.
+
+    err : ndarray, shape (ncol, nout)
+        Extracted uncertainties.
+
+    outmask : ndarray, shape (ncol, nout)
+        Output pixel masks.
+
+    back : ndarray, shape (ncol,)
+        Extracted background. Zero when ``doback=False``.
+    """
+    nsystem = tridiag.shape[1]
+    ncol = tridiag.shape[2]
+    ntrace = fibers.size
+
+    spec = np.zeros((ncol, nout), dtype=np.float64)
+    err = np.full((ncol, nout), initial_baderr, dtype=np.float64)
+    outmask = np.ones((ncol, nout), dtype=np.int64)
+    back = np.zeros(ncol, dtype=np.float64)
+
+    # Each detector column is independent.
+    for i in range(4, ncol - 4):
+
+        # Store the system indices having sufficient valid PSF coverage.
+        good = np.empty(nsystem, dtype=np.int64)
+        ngood = 0
+
+        for k in range(nsystem):
+            if psftot[k, i] > min_psf:
+                good[ngood] = k
+                ngood += 1
+
+        if ngood == 0:
+            for fiber in range(nout):
+                spec[i, fiber] = 0.0
+                err[i, fiber] = baderr
+
+            for k in range(ntrace):
+                fiber = fibers[k]
+                outmask[i, fiber] = (
+                    not_enough_psf | badmasked[k, i]
+                )
+
+            continue
+
+        # Local work arrays. These replace the small temporary arrays
+        # created by advanced NumPy indexing for every detector column.
+        a = np.empty(ngood, dtype=np.float64)
+        b = np.empty(ngood, dtype=np.float64)
+        c = np.empty(ngood, dtype=np.float64)
+        v = np.empty(ngood, dtype=np.float64)
+        vvar = np.empty(ngood, dtype=np.float64)
+
+        for j in range(ngood):
+            k = good[j]
+
+            a[j] = tridiag[0, k, i]
+            b[j] = tridiag[1, k, i]
+            c[j] = tridiag[2, k, i]
+            v[j] = beta[k, i]
+            vvar[j] = betavar[k, i]
+
+            # Disconnect this system element from a rejected neighbor.
+            # This is equivalent to modifying the corresponding entries
+            # of tridiag in the original Python loop.
+            if k > 0 and psftot[k - 1, i] <= min_psf:
+                a[j] = 0.0
+
+            if k < nsystem - 1 and psftot[k + 1, i] <= min_psf:
+                c[j] = 0.0
+
+        # Forward elimination.
+        for j in range(1, ngood):
+            m = a[j] / b[j - 1]
+            b[j] -= m * c[j - 1]
+            v[j] -= m * v[j - 1]
+            vvar[j] += m * m * vvar[j - 1]
+
+        # Back substitution.
+        x = np.empty(ngood, dtype=np.float64)
+        xvar = np.empty(ngood, dtype=np.float64)
+
+        j = ngood - 1
+        x[j] = v[j] / b[j]
+        xvar[j] = vvar[j] / (b[j] * b[j])
+
+        for j in range(ngood - 2, -1, -1):
+            x[j] = (v[j] - c[j] * x[j + 1]) / b[j]
+            xvar[j] = (
+                vvar[j] + c[j] * c[j] * xvar[j + 1]
+            ) / (b[j] * b[j])
+
+        # Mark rejected traces first.
+        for k in range(ntrace):
+            if psftot[k, i] <= min_psf:
+                fiber = fibers[k]
+                outmask[i, fiber] = (
+                    not_enough_psf | badmasked[k, i]
+                )
+
+        # Copy fitted trace values into their output fiber positions.
+        # The optional background element has k == ntrace and is handled
+        # separately below.
+        for j in range(ngood):
+            k = good[j]
+
+            if k < ntrace:
+                fiber = fibers[k]
+                spec[i, fiber] = x[j]
+                err[i, fiber] = np.sqrt(xvar[j])
+                outmask[i, fiber] = 0
+
+            elif doback and k == ntrace:
+                back[i] = x[j]
+
+        # Propagate warning bits to all trace outputs.
+        for k in range(ntrace):
+            fiber = fibers[k]
+            outmask[i, fiber] |= warnmasked[k, i]
+
+    return spec, err, outmask, back
+
+
+def extract2(frame, epsf, doback=False, skip=False, scat=None,
+            subonly=False, guess=None):
+    """
+    Extract spectra using an empirical PSF.
+
+    The extraction assumes that a given detector pixel receives significant
+    contributions from at most two neighboring traces. This produces a
+    tridiagonal system that is solved independently for every detector
+    column.
+
+    Parameters
+    ----------
+    frame : dict
+        Input 2D frame containing ``flux``, ``err``, ``mask``, and
+        ``header``.
+
+    epsf : list
+        Empirical PSF information for each trace.
+
+    doback : bool, optional
+        Fit a background term. Default is False.
+
+    skip : array-like or bool, optional
+        Fibers to omit from the final model.
+
+    scat : optional
+        Scattered-light removal option.
+
+    subonly : array-like or bool, optional
+        If supplied, only these fibers are included in the final model.
+
+    guess : ndarray, shape (2048, 300), optional
+        Initial estimates of the extracted spectra. The complete guess
+        model is subtracted before extraction. For each trace, the model
+        contributions from that trace and its immediate neighbors are
+        temporarily added back.
+
+    Returns
+    -------
+    outstr : dict
+        Extracted spectra containing ``flux``, ``err``, ``mask``, and
+        ``header``.
+
+    back : ndarray, shape (2048,)
+        Extracted background.
+
+    model : ndarray, shape (2048, 2048)
+        Final two-dimensional model image.
+    """
+    ntrace = len(epsf)
+
+    fibers = np.asarray(
+        [e['fiber'] for e in epsf],
+        dtype=np.int64,
+    )
+
+    # Internally use transposed detector images with shape
+    # (spectral column, spatial row).
+    flux = np.copy(frame['flux'].T)
+    red = np.copy(frame['flux'].T)
+    var = np.copy(frame['err'].T**2)
+    inmask = np.copy(frame['mask'].T)
+
+    if scat:
+        red = scat_remove(red, scat=scat, mask=inmask)
+
+    # Subtract the complete initial model once. epsfmodel() previously
+    # clipped non-positive fluxes internally on every call. Do that once
+    # here so that the same sanitized guess can be reused below.
+    if guess is not None:
+        guess1 = np.copy(guess)
+        guess1[guess1 <= 0] = 0.0
+
+        gmodel = epsfmodel(epsf, guess1)
+        red -= gmodel.T
+    else:
+        guess1 = None
+
+    # The optional background is an additional system component but is
+    # not an output fiber.
+    if doback:
+        nback = 1
+    else:
+        nback = 0
+
+    nsystem = ntrace + nback
+    ncol = flux.shape[0]
+    nout = 300
+
+    # Arrays describing the extraction equations.
+    beta = np.zeros((nsystem, ncol), dtype=float)
+    betavar = np.zeros((nsystem, ncol), dtype=float)
+    psftot = np.zeros((nsystem, ncol), dtype=float)
+    tridiag = np.zeros((3, nsystem, ncol), dtype=float)
+
+    warnmasked = np.zeros((nsystem, ncol), dtype=np.int64)
+    badmasked = np.zeros((nsystem, ncol), dtype=np.int64)
+
+    inmask_warn = inmask & WARNMASK
+    inmask_bad = inmask & BADMASK
+
+    # These retain the bounds of the last trace, matching the original
+    # behavior of the optional background calculation.
+    lo = 0
+    hi = inmask.shape[1] - 1
+
+    # Construct the extraction equations.
+    for k in range(nsystem):
+
+        # --------------------------------------------------------------
+        # Background system element
+        # --------------------------------------------------------------
+        if k >= ntrace:
+            beta[k, :] = np.nansum(
+                red[:, lo:hi+1],
+                axis=1,
+            )
+
+            betavar[k, :] = np.nansum(
+                var[:, lo:hi+1],
+                axis=1,
+            )
+
+            psftot[k, :] = 1.0
+            tridiag[1, k, :] = hi - lo + 1
+            continue
+
+        # --------------------------------------------------------------
+        # Trace system element
+        # --------------------------------------------------------------
+        if guess1 is not None:
+            if k == 0:
+                fibs = (k, k + 1)
+            elif k == ntrace - 1:
+                fibs = (k - 1, k)
+            else:
+                fibs = (k - 1, k, k + 1)
+
+            # The complete guess model was subtracted above. Temporarily
+            # add back this trace and its immediate neighbors.
+            for j in fibs:
+                pj = epsf[j]
+                jlo = pj['lo']
+                jhi = pj['hi']
+                jfiber = pj['fiber']
+                jimg = pj['img'].T
+
+                red[:, jlo:jhi+1] += (
+                    jimg * guess1[:, jfiber].reshape(-1, 1)
+                )
+
+        p1 = epsf[k]
+        lo = p1['lo']
+        hi = p1['hi']
+
+        # Identify unusable detector pixels within this trace.
+        trace_flux = flux[:, lo:hi+1]
+        trace_mask = inmask[:, lo:hi+1]
+
+        bad = (
+            ~np.isfinite(trace_flux)
+            | (trace_flux == 0)
+            | ((trace_mask & BADMASK) > 0)
+        )
+
+        img = np.copy(p1['img'].T)
+
+        if np.any(bad):
+            img[bad] = np.nan
+
+        # Combine warning and bad mask values along the spatial
+        # footprint of the trace.
+        warnmasked[k, :] = np.bitwise_or.reduce(
+            inmask_warn[:, lo:hi+1],
+            axis=1,
+        )
+
+        badmasked[k, :] = np.bitwise_or.reduce(
+            inmask_bad[:, lo:hi+1],
+            axis=1,
+        )
+
+        # Construct the right-hand side and its variance.
+        psftot[k, :] = np.nansum(
+            img,
+            axis=1,
+        )
+
+        beta[k, :] = np.nansum(
+            red[:, lo:hi+1] * img,
+            axis=1,
+        )
+
+        betavar[k, :] = np.nansum(
+            var[:, lo:hi+1] * img**2,
+            axis=1,
+        )
+
+        if guess1 is not None:
+            # Return red to the image with the complete initial model
+            # subtracted.
+            for j in fibs:
+                pj = epsf[j]
+                jlo = pj['lo']
+                jhi = pj['hi']
+                jfiber = pj['fiber']
+                jimg = pj['img'].T
+
+                red[:, jlo:jhi+1] -= (
+                    jimg * guess1[:, jfiber].reshape(-1, 1)
+                )
+
+        # --------------------------------------------------------------
+        # Construct the tridiagonal matrix
+        # --------------------------------------------------------------
+        if k == 0:
+            # First trace: main diagonal and upper diagonal.
+            tridiag[1, k, :] = extract_pmul(
+                p1['lo'],
+                p1['hi'],
+                img,
+                epsf[k],
+            )
+
+            tridiag[2, k, :] = extract_pmul(
+                p1['lo'],
+                p1['hi'],
+                img,
+                epsf[k + 1],
+            )
+
+        elif k == ntrace - 1:
+            # Last trace: lower diagonal and main diagonal.
+            tridiag[0, k, :] = extract_pmul(
+                p1['lo'],
+                p1['hi'],
+                img,
+                epsf[k - 1],
+            )
+
+            tridiag[1, k, :] = extract_pmul(
+                p1['lo'],
+                p1['hi'],
+                img,
+                epsf[k],
+            )
+
+        else:
+            # Middle traces: lower, main, and upper diagonals.
+            tridiag[0, k, :] = extract_pmul(
+                p1['lo'],
+                p1['hi'],
+                img,
+                epsf[k - 1],
+            )
+
+            tridiag[1, k, :] = extract_pmul(
+                p1['lo'],
+                p1['hi'],
+                img,
+                epsf[k],
+            )
+
+            tridiag[2, k, :] = extract_pmul(
+                p1['lo'],
+                p1['hi'],
+                img,
+                epsf[k + 1],
+            )
+
+    # Solve every detector column inside a single Numba call.
+    spec, err, outmask, back = solve_all_columns(
+        tridiag,
+        beta,
+        betavar,
+        psftot,
+        fibers,
+        warnmasked,
+        badmasked,
+        doback=doback,
+        nout=nout,
+        min_psf=0.5,
+        baderr=BADERR,
+        initial_baderr=999999.09,
+        not_enough_psf=maskval['NOT_ENOUGH_PSF'],
+    )
+
+    # Catch unexpected non-finite extracted values.
+    bad = ~np.isfinite(spec)
+
+    if np.any(bad):
+        spec[bad] = 0.0
+        err[bad] = BADERR
+        outmask[bad] = 1
+
+    outstr = {
+        'flux': spec,
+        'err': err,
+        'mask': outmask,
+        'header': frame['header'].copy(),
+    }
+
+    # Construct the final 2D model from the extracted spectra.
+    model = epsfmodel(
+        epsf,
+        spec,
+        subonly=subonly,
+        skip=skip,
+    )
+
+    return outstr, back, model
+
+
 
 
 def extract(frame,epsf,doback=False,skip=False,scat=None,subonly=False,guess=None):
@@ -1528,12 +2277,12 @@ def func_poly2d(inp,*args):
     x = inp[0]
     y = inp[1]
     p = args
-    np = len(p)
-    if np==0:
+    npp = len(p)
+    if npp==0:
         a = p[0]
-    elif np==3:
+    elif npp==3:
         a = p[0] + p[1]*x + p[2]*y
-    elif np==4:
+    elif npp==4:
         a = p[0] + p[1]*x + p[2]*x*y + p[3]*y
     else:
         raise Exception('Only 0, 3, and 4 parameters supported')
@@ -1893,6 +2642,8 @@ def fullepsfgrid(psf,traceim,fibers,offcoef,verbose=True):
     epsf = fullepsfgrid(psf,traceim,fibers,offcoef)
 
     """
+
+    # DEPRICATED!!  Use PSF.buildepsf() method now
     
     nfibers = traceim.shape[0]
     if nfibers != len(fibers):
@@ -2004,9 +2755,8 @@ def extractwing(frame,modelpsffile,epsffile,tracefile,trace2dfile):
     # Generate the input that extract() expects
     # this currently takes about 176 sec. to run
     print('Generating full EPSF grid with spatial offsets')
-    epsf = fullepsfgrid(psf,traceim,fibers,offcoef)
-    #np.savez('fullepsfgrid.npz',epsf=epsf)
-    #epsf = np.load('fullepsfgrid.npz',allow_pickle=True)['epsf']
+    #epsf = fullepsfgrid(psf,traceim,fibers,offcoef)
+    epsf = psf.buildepsf(traceim,fibers,offcoef)
     
     # Step 3) Regular fiber+2 neighbor extraction
     out1,back1,model1 = extract(frame,epsf)
