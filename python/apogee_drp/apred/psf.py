@@ -63,8 +63,9 @@ def func_poly2d_numba(x,y,pars):
 def gridinterp(labels,xgrid,ygrid,grid):
     """ Interpolate model in the grid."""
 
-    if labels[0]<0 or labels[0]>2047 or labels[1]<0 or labels[1]>2047:
-        raise ValueError('X/Y must be between 0 and 2047')
+    if labels[0]<0 or labels[0]>2047 or labels[1]<-10 or labels[1]>2047+10:
+        # allow Y to extend slightly beyond the chip borders
+        raise ValueError('X must be between 0 and 2047 and Y between -10 and 2057')
 
     nxgrid,nygrid,npix = grid.shape
     
@@ -201,10 +202,7 @@ def build_fiber_epsf(trace_y,detector_y,profile_dy,xgrid,
     n_columns = trace_y.size
     n_detector_rows = detector_y.size
 
-    epsf_image = np.empty(
-        (n_detector_rows, n_columns),
-        dtype=np.float64,
-    )
+    epsf_image = np.empty((n_detector_rows, n_columns),dtype=np.float64)
 
     # Reuse this small array instead of allocating it in every iteration.
     grid_position = np.empty(2, dtype=np.float64)
@@ -214,21 +212,14 @@ def build_fiber_epsf(trace_y,detector_y,profile_dy,xgrid,
 
         grid_position[0] = column
         grid_position[1] = fiber_center_y
-
-        oversampled_profile = gridinterp(
-            grid_position,
-            xgrid,
-            ygrid,
-            profile_grid,
-        )
+        
+        oversampled_profile = gridinterp(grid_position,xgrid,
+                                         ygrid,profile_grid)
 
         # Convert absolute detector rows to offsets from the fiber
         # center and resample the model profile at those positions.
-        detector_profile = np.interp(
-            detector_y - fiber_center_y,
-            profile_dy,
-            oversampled_profile,
-        )
+        detector_profile = np.interp(detector_y - fiber_center_y,
+                                     profile_dy,oversampled_profile)
 
         if logscale:
             detector_profile = 10.0 ** detector_profile
@@ -244,7 +235,7 @@ def build_fiber_epsf(trace_y,detector_y,profile_dy,xgrid,
 
 
 @njit(cache=True)
-def build_epsf_grid(trace_y,fiber_indices,offset_coefficients,profile_dy,
+def build_epsf_grid(trace_y,offset_coefficients,profile_dy,
                     xgrid,ygrid,profile_grid,logscale):
     """
     Construct an effective-PSF image for multiple fiber traces.
@@ -258,10 +249,6 @@ def build_epsf_grid(trace_y,fiber_indices,offset_coefficients,profile_dy,
     trace_y : ndarray, shape (n_trace_fibers, n_columns)
         Nominal detector y coordinate of every fiber trace as a function
         of detector column.
-
-    fiber_indices : ndarray, shape (n_output_fibers,)
-        Indices of the fibers in ``trace_y`` for which profiles should be
-        generated.
 
     offset_coefficients : ndarray
         Coefficients passed to ``func_poly2d_numba`` to calculate the
@@ -303,38 +290,30 @@ def build_epsf_grid(trace_y,fiber_indices,offset_coefficients,profile_dy,
     Therefore, the detector-row range occupied by any fiber must not
     exceed 100 pixels.
     """
-    n_trace_fibers, n_columns = trace_y.shape
-    n_output_fibers = len(fiber_indices)
+    nfibers, n_columns = trace_y.shape
 
     max_profile_rows = 100
     detector_row_min = 0
     detector_row_max = 2047
 
-    row_start = np.zeros(n_output_fibers, dtype=np.int64)
-    row_stop = np.zeros(n_output_fibers, dtype=np.int64)
+    row_start = np.zeros(nfibers, dtype=np.int64)
+    row_stop = np.zeros(nfibers, dtype=np.int64)
 
-    trace_centers_y = np.zeros(
-        (n_output_fibers, n_columns),
-        dtype=np.float64,
-    )
-    epsf_cube = np.zeros(
-        (n_output_fibers, max_profile_rows, n_columns),
-        dtype=np.float64,
-    )
+    trace_centers_y = np.zeros((nfibers, n_columns),
+                               dtype=np.float64)
+    epsf_cube = np.zeros((nfibers, max_profile_rows, n_columns),
+                         dtype=np.float64)
 
     column_x = np.arange(n_columns)
 
-    for output_index in range(n_output_fibers):
-        fiber_index = fiber_indices[output_index]
+    for fiber_index in range(nfibers):
         nominal_trace_y = trace_y[fiber_index, :]
-
-        trace_offset_y = func_poly2d_numba(
-            column_x,
-            nominal_trace_y,
-            offset_coefficients,
-        )
+            
+        trace_offset_y = func_poly2d_numba(column_x,
+                                           nominal_trace_y,
+                                           offset_coefficients)
         fiber_center_y = nominal_trace_y + trace_offset_y
-
+        
         # Determine the detector rows covered by the profile. The model
         # currently extends approximately 14 pixels from its center.
         first_row = int(np.round(np.min(fiber_center_y))) - 14
@@ -352,25 +331,15 @@ def build_epsf_grid(trace_y,fiber_indices,offset_coefficients,profile_dy,
 
         detector_y = np.arange(first_row, last_row + 1)
 
-        fiber_profile = build_fiber_epsf(
-            fiber_center_y,
-            detector_y,
-            profile_dy,
-            xgrid,
-            ygrid,
-            profile_grid,
-            logscale,
-        )
+        fiber_profile = build_fiber_epsf(fiber_center_y,detector_y,
+                                         profile_dy,xgrid,ygrid,
+                                         profile_grid,logscale)
 
-        epsf_cube[
-            output_index,
-            :profile_height,
-            :,
-        ] = fiber_profile
+        epsf_cube[fiber_index,:profile_height,:] = fiber_profile
 
-        trace_centers_y[output_index, :] = fiber_center_y
-        row_start[output_index] = first_row
-        row_stop[output_index] = last_row
+        trace_centers_y[fiber_index, :] = fiber_center_y
+        row_start[fiber_index] = first_row
+        row_stop[fiber_index] = last_row
 
     return epsf_cube, trace_centers_y, row_start, row_stop
 
@@ -653,24 +622,28 @@ class PSF(object):
         return epsfimg
 
 
-    def buildepsf(self,traceim_y,fibers=np.arange(300),offcoef=np.zeros(4)):
+    def buildepsf(self,traceim_y,fibers=None,offcoef=np.zeros(4)):
         """Construct profiles for the requested fibers and columns."""
-
+        # fibers are the fiber indices for the input trace values
+        
         # Numba requires native-endian arrays.
         traceim_y = np.asarray(traceim_y,dtype=traceim_y.dtype.newbyteorder("="))
         ntrace, ncolumns = traceim_y.shape
 
         if fibers is None:
             fibers = np.arange(ntrace)
-
+            
         fibers = np.asarray(fibers,dtype=np.int64)
         nfibers = len(fibers)
 
+        if nfibers != ntrace:
+            raise Exception("number of traces in 'traceim_y' needs to match the number in 'fibers'")
+        
         if offcoef is None:
             offcoef = np.zeros(4)
         offcoef = np.asarray(offcoef,dtype=np.float64)
 
-        epsfimg, ycen, ylo, yhi = build_epsf_grid(traceim_y,fibers,offcoef,self.y,
+        epsfimg, ycen, ylo, yhi = build_epsf_grid(traceim_y,offcoef,self.y,
                                                   self._xgrid,self._ygrid,self._grid,self._log)
         
         epsf = []
@@ -2643,7 +2616,7 @@ def fullepsfgrid(psf,traceim,fibers,offcoef,verbose=True):
 
     """
 
-    # DEPRICATED!!  Use PSF.buildepsf() method now
+    # DEPRECATED!!  Use PSF.buildepsf() method now
     
     nfibers = traceim.shape[0]
     if nfibers != len(fibers):
@@ -2739,7 +2712,7 @@ def extractwing(frame,modelpsffile,epsffile,tracefile,trace2dfile):
     traceframe = loadframe(trace2dfile)
     
     # Load the EPSF fiber information
-    # Need this to get the missing fiber numbers
+    # Need this to get the missing fiber numbers (fiber index, not fiberID)
     hdu = fits.open(epsffile)
     fibers = []
     for i in np.arange(1,len(hdu)):

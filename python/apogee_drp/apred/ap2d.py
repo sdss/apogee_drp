@@ -1259,8 +1259,9 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
 
         # Are we using sky lines for wavelength solution?
         plugmap = 0
+        skywave = False
         if 'platetype' in planstr.keys():
-            if planstr['platetype'] == 'cal': 
+            if planstr['platetype'] == 'cal' or fpiid == 0:
                 skywave = False
             else: 
                 skywave = True 

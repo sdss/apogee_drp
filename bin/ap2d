@@ -21,6 +21,7 @@ import pdb
 import traceback
 import datetime
 import time
+from astropy.io import fits
 from apogee_drp.plan import mkplan
 from apogee_drp.apred import ap2d
 from apogee_drp.utils import apload
@@ -87,15 +88,29 @@ if __name__ == '__main__' :
             psflibrary = True
         else:
             psflibrary = False
+        # Is this a cal file
+        # arc, flat
+        filename = load.filename('2D',num=num,chips=True).replace('2D-','2D-a-')
+        if os.path.exists(filename)==False:
+            raise FileNotFoundError(filename)
+        hdu = fits.open(filename)
+        exptype = hdu[0].header['exptype']
+        hdu.close()
+        if exptype.upper() != 'OBJECT':
+            cal = True
+        else:
+            cal = False
+        print('NUM =',num)
+        print('EXPTYPE =',exptype)
         planfile = mkplan.mkplan(num,apred=apred,telescope=telescope,waveid=waveid,
                                  psfid=psfid,modelpsf=modelpsf,psflibrary=psflibrary,
-                                 fluxid=fluxid,fps=fps,ap2d=True,clobber=True)
+                                 fluxid=fluxid,fps=fps,cal=cal,ap2d=True,clobber=True)
     else:
         planfile = args.planfile[0]
 
     now = datetime.datetime.now()
     start = time.time()
-    print ("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+    print("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
         
     try:
         ap2d.ap2d(planfile,clobber=args.clobber,unlock=args.unlock)
@@ -104,5 +119,5 @@ if __name__ == '__main__' :
         traceback.print_exc()
 
     now = datetime.datetime.now()
-    print ("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+    print("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
     print("elapsed: ",time.time()-start)
