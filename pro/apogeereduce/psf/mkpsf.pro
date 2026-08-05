@@ -18,6 +18,7 @@
 ;  /average    Find the fibers    
 ;  /clobber    Overwrite any existing files.
 ;  /unlock     Remove any existing lock file and start fresh.
+;  /etraceonly Only make fiber ETrace files, not the full EPSF.
 ;
 ; OUTPUTS:
 ;  A set of apPSF-[abc]-ID8.fits files in the appropriate location      
@@ -31,7 +32,8 @@
 ;-
 
 pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
-          littrowid=littrowid,yshift=yshift,average=average,clobber=clobber,unlock=unlock
+          littrowid=littrowid,yshift=yshift,average=average,clobber=clobber,$
+          unlock=unlock,etraceonly=etraceonly
 
   dirs = getdir(apodir,caldir,spectrodir,vers)
   caldir = dirs.caldir
@@ -66,7 +68,8 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
   print,'mkpsf approcess...'
   d = approcess(psfid,darkid=darkid,flatid=flatid,littrowid=littrowid,/nocr,nfs=1,/doap3dproc,unlock=unlock)
   psffile = apogee_filename('2D',num=psfid[0],chip='c',/dir)+'/'+string(format='(i8.8)',psfid)
-  APMKPSF,psffile,psfdir,sparseid=sparseid,fiberid=fiberid,yshift=yshift,average=average,clobber=clobber,unlock=unlock
+  APMKPSF,psffile,psfdir,sparseid=sparseid,fiberid=fiberid,yshift=yshift,average=average,$
+          clobber=clobber,unlock=unlock,etraceonly=etraceonly
 
   ;;file_delete,lockfile,/allow
   aplock,file,/clear

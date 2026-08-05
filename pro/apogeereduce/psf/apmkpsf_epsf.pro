@@ -25,7 +25,8 @@
 ;-
 
 pro apmkpsf_epsf,frame,caldir,im,ichip,silent=silent,sparseid=sparseid,dmax=dmax,sdmax=sdmax,$
-                 thresh=thresh,smooth=smooth,fiberid=fiberid,scat=scat,average=average,yshift=yshift
+                 thresh=thresh,smooth=smooth,fiberid=fiberid,scat=scat,average=average,yshift=yshift,$
+                 etraceonly=etraceonly
 
 ; Not enough inputs
 if n_elements(frame) eq 0 then begin
@@ -233,6 +234,11 @@ sxaddpar,head,'AVGDIST',MEAN(dmin)
 file=apogee_filename('ETrace',chip=chip[ichip],num=im)
 if file_test(file_dirname(file)) eq 0 then file_mkdir,file_dirname(file)
 MWRFITS,trace,file,head,/create
+
+;; When making the fiber calibration, only the trace positions are needed.
+;; Do not continue with the empirical-PSF construction, which may require
+;; the sparse calibration and introduce a circular dependency.
+if keyword_set(etraceonly) then return
 
 ;; Get sparse pack PSF if desired and available
 if keyword_set(sparseid) then begin

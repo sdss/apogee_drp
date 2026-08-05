@@ -22,6 +22,7 @@
 ;  /verbose    Verbose output to the screen.
 ;  /silent     Don't print anything to the screen
 ;  /stp        Stop at the end of the program
+;  /etraceonly Only make fiber ETrace files, not the full EPSF.
 ;
 ; OUTPUTS:
 ;  The apTrace files are written to the "outdir" directory.
@@ -35,7 +36,7 @@
 pro apmkpsf,flatframe,outdir,no_epsf=no_epsf,pl=pl,clobber=clobber,$
             peakthresh=peakthresh,verbose=verbose,silent=silent,stp=stp,$
             sparseid=sparseid,fiberid=fiberid,yshift=yshift,$
-            average=average,unlock=unlock
+            average=average,unlock=unlock,etraceonly=etraceonly
 
 t0 = systime(1)
 if not keyword_set(sparseid) then sparseid=0 else makecal,sparse=sparseid
@@ -343,7 +344,8 @@ FOR i=0,nflatframe-1 do begin
     ;---------------------------
     if not keyword_set(no_epsf) then $
        APMKPSF_EPSF,str.(j),strmid(outdir,0,strlen(outdir)-4),flatid,j,sparseid=sparseid,$
-                    fiberid=fiberid,/scat,average=average,yshift=yshift[i]
+                    fiberid=fiberid,/scat,average=average,yshift=yshift[i],$
+                    etraceonly=etraceonly
 
     outfile = apogee_filename('PSF',chip=chiptag[j],num=flatframeid)
     ;;file_delete,lockfile
