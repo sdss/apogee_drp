@@ -203,6 +203,31 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
     endelse
   endif
 
+  ;; Make fiber calibration file
+  ;;----------------------------
+  if keyword_set(fiber) then begin
+    print,'makecal fiber: ', fiber
+    if fiber gt 1 then begin
+      file = apogee_filename('PSF',num=fiber,chip='c')
+      psfdir = file_dirname(file)
+      sfiberid = string(fiber,format='(i08)')
+      allfiles = psfdir+'/'+[dirs.prefix+'EPSF-'+chips+'-'+sfiberid+'.fits',dirs.prefix+'PSF-'+chips+'-'+sfiberid+'.fits']
+      if total(file_test(allfiles)) eq 6 and not keyword_set(clobber) then begin
+        print,' psf file: ',file, ' already made'
+        return
+      endif
+      i = where(fiberstr.name eq fiber)
+      if i lt 0 then begin
+        print,'No matching calibration line for ', fiber
+        stop
+      endif
+      yshift = fiberstr[i].yshift
+      cmjd = getcmjd(fiber,mjd=mjd)
+      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid
+      MKPSF,fiber,darkid=darkid,flatid=flatid,yshift=yshift,unlock=unlock,/etraceonly
+    endif
+  endif
+  
   ;; Make Sparsepak PSF calibration product
   ;;---------------------------------------
   if keyword_set(sparse) then begin
@@ -240,31 +265,6 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       ssparse = string(sparse,format='(i08)')
       psffiles = psfdir+'/'+[dirs.prefix+'PSF-'+chips+'-'+ssparse+'.fits']
       TOUCHZERO,psffiles
-    endif
-  endif
-
-  ;; Make fiber calibration file
-  ;;----------------------------
-  if keyword_set(fiber) then begin
-    print,'makecal fiber: ', fiber
-    if fiber gt 1 then begin
-      file = apogee_filename('PSF',num=fiber,chip='c')
-      psfdir = file_dirname(file)
-      sfiberid = string(fiber,format='(i08)')
-      allfiles = psfdir+'/'+[dirs.prefix+'EPSF-'+chips+'-'+sfiberid+'.fits',dirs.prefix+'PSF-'+chips+'-'+sfiberid+'.fits']
-      if total(file_test(allfiles)) eq 6 and not keyword_set(clobber) then begin
-        print,' psf file: ',file, ' already made'
-        return
-      endif
-      i = where(fiberstr.name eq fiber)
-      if i lt 0 then begin
-        print,'No matching calibration line for ', fiber
-        stop
-      endif
-      yshift = fiberstr[i].yshift
-      cmjd = getcmjd(fiber,mjd=mjd)
-      GETCAL,mjd,calfile,darkid=darkid,flatid=flatid,sparseid=sparseid
-      MKPSF,fiber,darkid=darkid,flatid=flatid,sparseid=sparseid,yshift=yshift,unlock=unlock
     endif
   endif
 
