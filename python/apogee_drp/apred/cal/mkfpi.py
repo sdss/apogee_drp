@@ -1,6 +1,7 @@
 import os
 import subprocess
-
+from .. import process
+from ...utils import utils,apload
 
 def mkfpi(fpiid, name=None, darkid=None, flatid=None, psfid=None, modelpsf=None,
           fiberid=None, clobber=False, unlock=False, psflibrary=None):
@@ -87,7 +88,8 @@ def mkfpi(fpiid, name=None, darkid=None, flatid=None, psfid=None, modelpsf=None,
 
     # Process the frames
     for num in allfpinum:
-        w = approcess(num, dark=darkid, flat=flatid, psf=psfid, modelpsf=modelpsf, flux=0, doproc=True, unlock=unlock)
+        w = process.process(num, dark=darkid, flat=flatid, psf=psfid, modelpsf=modelpsf,
+                            flux=0, doproc=True, unlock=unlock)
 
     # Make sure the dailywave file is there; it uses modelpsf by default now
     makecal(dailywave=mjd, unlock=unlock, librarypsf=psflibrary)

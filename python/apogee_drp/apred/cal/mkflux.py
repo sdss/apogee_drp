@@ -2,6 +2,8 @@ import os
 import time
 import numpy as np
 from astropy.io import fits
+from .. import process
+from ...utils import utils,apload
 
 def make_flux():
 
@@ -92,13 +94,13 @@ def mkflux(ims, cmjd=None, darkid=None, flatid=None, psfid=None, modelpsf=None,
             if os.path.exists(fil): os.remove(fil)
 
     if cmjd is not None:
-        d = approcess(ims, cmjd=cmjd, darkid=darkid, flatid=flatid, psfid=psfid,
-                      littrowid=littrowid, persistid=persistid, modelpsf=modelpsf,
-                      fluxid=0, nocr=True, nfs=1, doproc=True, unlock=unlock)
+        d = process.process(ims, cmjd=cmjd, darkid=darkid, flatid=flatid, psfid=psfid,
+                            littrowid=littrowid, persistid=persistid, modelpsf=modelpsf,
+                            fluxid=0, nocr=True, nfs=1, doproc=True, unlock=unlock)
     else:
-        d = approcess(ims, darkid=darkid, flatid=flatid, psfid=psfid,
-                      littrowid=littrowid, persistid=persistid, modelpsf=modelpsf,
-                      fluxid=0, nocr=True, nfs=1, doproc=True, unlock=unlock)
+        d = process.process(ims, darkid=darkid, flatid=flatid, psfid=psfid,
+                            littrowid=littrowid, persistid=persistid, modelpsf=modelpsf,
+                            fluxid=0, nocr=True, nfs=1, doproc=True, unlock=unlock)
 
     cmjd = getcmjd(i1)
     inpfile = os.path.join(load.filename('1D', num=i1, chip='a', dir=True), f'{i1:08d}')

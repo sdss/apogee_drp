@@ -2,6 +2,8 @@ import os
 import subprocess
 from astropy.io import fits
 import numpy as np
+from .. import process
+from ...utils import lock,apload
 
 def mklsf(lsfid, waveid, darkid=None, flatid=None, psfid=None, fiberid=None, clobber=False,
           full=False, newwave=False, pl=False, fibers=None, nowait=False, unlock=False):
@@ -79,8 +81,8 @@ def mklsf(lsfid, waveid, darkid=None, flatid=None, psfid=None, fiberid=None, clo
     clobber = 0
     mkpsf(psfid, darkid=darkid, flatid=flatid, fiberid=fiberid, clobber=clobber, unlock=True)
 
-    w = approcess(lsfid, dark=darkid, flat=flatid, psf=psfid, flux=0,
-                  doproc=True, skywave=True, clobber=clobber)
+    w = process.process(lsfid, dark=darkid, flat=flatid, psf=psfid, flux=0,
+                        doproc=True, skywave=True, clobber=clobber)
 
     cmd = ['apskywavecal', 'dummy', '--frameid', str(lsfid), '--waveid', str(waveid),
            '--apred', dirs.apred, '--telescope', dirs.telescope]

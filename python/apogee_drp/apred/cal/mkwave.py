@@ -5,7 +5,7 @@ import time
 import datetime
 from astropy.io import fits
 from scipy.signal import medfilt2d
-from .. import wave
+from .. import wave,process
 from ...utils import lock,apload
 
 def mkwave(waveid, apred='daily',telescope='apo25m', name=None,
@@ -97,8 +97,8 @@ def mkwave(waveid, apred='daily',telescope='apo25m', name=None,
         if psfid is not None:
             cmjd = getcmjd(psfid)
             mkpsf(psfid, darkid=darkid, flatid=flatid, fiberid=fiberid, unlock=unlock)
-        w = approcess(waveid, dark=darkid, flat=flatid, psf=psfid, modelpsf=modelpsf, flux=0,
-                      doproc=True, unlock=unlock)
+        w = process.process(waveid, dark=darkid, flat=flatid, psf=psfid, modelpsf=modelpsf, flux=0,
+                            doproc=True, unlock=unlock)
 
     # Check that the data is okay
     chfile = load.filename('2D', num=waveid, chip='b')
