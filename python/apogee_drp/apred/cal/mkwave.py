@@ -1,10 +1,15 @@
 import os
 import subprocess
 import numpy as np
+import time
+import datetime
 from astropy.io import fits
 from scipy.signal import medfilt2d
+from .. import wave
+from ...utils import lock,apload
 
-def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
+def mkwave(waveid, apred='daily',telescope='apo25m', name=None,
+           darkid=None, flatid=None, psfid=None,
            modelpsf=None, fiberid=None, clobber=False, nowait=False,
            nofit=False, unlock=False, plot=False):
     """
@@ -16,6 +21,10 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
     ----------
     waveid : list or array
        The ID8 numbers of the arc lamp exposures to use.
+    apred : str, optional
+       APOGEE reduction version.  Default is 'daily'.
+    telescope : str, optional
+       Telescope name, 'apo25m' or 'lco25m'.  Default is 'apo25m'.
     name : str, optional
        Output filename base.  By default waveid[0] is used.
     darkid : int
@@ -54,9 +63,9 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
 
     """
 
-    images = np.atleast_id(waveid)
+    images = np.atleast_1d(waveid)
     if name is None:
-        name = str(image[0])
+        name = str(images[0])
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
     wavedir = os.path.dirname(load.filename('Wave',num=name, chips=True))
@@ -66,7 +75,7 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
     # check all three chips and .dat file
     chips = ['a', 'b', 'c']
     chipfiles = [wavefile.replace('Wave-','Wave-'+c) for c in chips]
-    if all(np.array([os.path.exists(fil) for fil in allfiles])) and clobber==False:
+    if all(np.array([os.path.exists(fil) for fil in chipfiles])) and clobber==False:
         print('Wavecal file:',wavefile,'already exists')
         return
 
@@ -74,11 +83,15 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
     lock.lock(wavefile, waittime=10, unlock=unlock)
     
     # Delete existing files to start fresh
-    for fil in allfiles:
+    for fil in chipfiles:
         if os.path.exists(fil): os.remove(fil)
 
     print('Making wave:', name)
 
+    now = datetime.datetime.now()
+    start = time.time()
+    print ("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+    
     # Process the frame if necessary
     if not all([os.path.exists(fil) for fil in chipfiles]):
         if psfid is not None:
@@ -119,30 +132,37 @@ def mkwave(waveid, name=None, darkid=None, flatid=None, psfid=None,
         lock.lock(wavefile, clear=True)
         return
 
+    # Run 
+    wave.wavecal(waveid,rows=np.arange(300),name=name,npoly=4,inst=load.instrument,plot=plot,hard=plot,
+                 nofit=nofit,verbose=False,clobber=clobber,init=False,vers=apred)
+    
     # Call external Python script using subprocess
-    cmd = ['apmultiwavecal', '--name', name.strip(), '--vers', load.apred]
-    if nofit:
-        cmd += ['--nofit']
-    if plot:
-        cmd += ['--plot', '--hard']
-    if clobber:
-        cmd += ['--clobber']
-    cmd += ['--inst', load.instrument, '--verbose']
-    cmd += [str(waveid)]
-    subprocess.run(cmd)
-    res = subprocess.run(cmd,capture_output=True,shell=False)
-    stdout = res.stdout.decode()
-    stderr = res.stderr.decode()
-    if res.returncode != 0:
-        print('subprocess failed:')
-        print(stdout)
-        print(stderr)
-        lock.lock(wavefile, clear=True)
-        return
+    #cmd = ['apmultiwavecal', '--name', name.strip(), '--vers', load.apred]
+    #if nofit:
+    #    cmd += ['--nofit']
+    #if plot:
+    #    cmd += ['--plot', '--hard']
+    #if clobber:
+    #    cmd += ['--clobber']
+    #cmd += ['--inst', load.instrument, '--verbose']
+    #cmd += [str(waveid)]
+    #subprocess.run(cmd)
+    #res = subprocess.run(cmd,capture_output=True,shell=False)
+    #stdout = res.stdout.decode()
+    #stderr = res.stderr.decode()
+    #if res.returncode != 0:
+    #    print('subprocess failed:')
+    #    print(stdout)
+    #    print(stderr)
+    #    lock.lock(wavefile, clear=True)
+    #    return
     
     # Check if the calibration file was successfully created
     if all(np.array([os.path.exists(fil) for fil in allfiles])):
-        open(wavefile.replace('.fits','.dat', 'a').close()
+        open(wavefile.replace('.fits','.dat', 'a')).close()
 
     lock.lock(wavefile, clear=True)
 
+    now = datetime.datetime.now()
+    print ("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+    print("elapsed: ",time.time()-start)
