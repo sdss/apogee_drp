@@ -8,7 +8,7 @@ from numpy.lib import recfunctions as rfn
 
 from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email,info,slurm as slrm,bitmask
-from ..apred import mkcal,cal,qa,monitor
+from ..apred import mkcal,calplots,qa,monitor
 from ..database import apogeedb
 from . import mkplan,check
 from sdss_access.path import path
