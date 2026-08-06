@@ -1,4 +1,4 @@
-"""Plan APOGEE calibration dependencies before starting worker jobs.
+"""Plan APOGEE calibration dependencies before starting worker jobs (v3).
 
 The calibration builders historically call ``makecal`` recursively.  That is
 convenient interactively, but it means dependencies outside a requested MJD
@@ -9,6 +9,7 @@ complete graph up front without creating any products.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import os
 from typing import Callable, Iterable, Mapping, Sequence
 
 import numpy as np
@@ -20,7 +21,33 @@ __all__ = [
     "CalibrationGraph",
     "CalibrationDependencyResolver",
     "apload_exists",
+    "calibration_dependency_tree",
 ]
+
+
+DEFAULT_MASTER_CALTYPES = (
+    "detector",
+    "dark",
+    "flat",
+    "bpm",
+    "fiber",
+    "sparse",
+    "littrow",
+    "response",
+    "modelpsf",
+    "multiwave",
+    "lsf",
+)
+
+
+def _canonical_name(value) -> str:
+    """Normalize numeric IDs while preserving compound names."""
+
+    text = str(value).strip()
+    try:
+        return str(int(text))
+    except ValueError:
+        return text
 
 
 _APLOAD_ROOTS = {
@@ -48,6 +75,117 @@ def apload_exists(load, node: "CalibrationNode") -> bool:
     if root is None:
         raise ValueError(f"No ApLoad root is defined for {node.caltype!r}")
     return bool(load.exists(root, num=node.name))
+
+
+def calibration_dependency_tree(
+    mjdstart: int,
+    mjdstop: int | None = None,
+    *,
+    apred: str | None = None,
+    telescope: str | None = None,
+    load=None,
+    caltypes: Sequence[str] | None = None,
+    calfile: str | None = None,
+    check_exists: bool = True,
+    print_tree: bool = True,
+    logger=None,
+) -> "CalibrationGraph":
+    """Plan every calibration needed for an inclusive MJD range.
+
+    This is the public convenience interface for this module.  It selects
+    master calibrations whose validity intervals overlap the requested MJDs,
+    recursively adds prerequisites outside that range, optionally checks the
+    reduction tree for products that already exist, and returns a dependency
+    graph whose topological levels can be submitted in parallel.
+
+    Parameters
+    ----------
+    mjdstart, mjdstop
+        Inclusive MJD range.  If ``mjdstop`` is omitted, plan one MJD.
+    apred, telescope
+        Reduction version and telescope.  Required unless ``load`` is given.
+    load
+        Existing :class:`~apogee_drp.utils.apload.ApLoad` instance.
+    caltypes
+        Root master-calibration types.  The default matches
+        :func:`mkmastercals`.
+    calfile
+        Master calibration index.  The instrument index under
+        ``$APOGEE_DRP_DIR/data/cal`` is used by default.
+    check_exists
+        Mark complete products already present in the reduction tree and
+        exclude them from ``graph.missing``.
+    print_tree
+        Print the resolved tree before returning it.
+    logger : logging.Logger, optional
+        Logger used for dependency-tree output. If not supplied, output is
+        printed to the terminal.
+
+
+    Returns
+    -------
+    graph : CalibrationGraph
+        Complete dependency graph.  Use
+        ``graph.topological_levels(missing_only=True)`` for execution groups.
+
+    Examples
+    --------
+    >>> graph = calibration_dependency_tree(
+    ...     60000, 60100, apred="1.6", telescope="apo25m"
+    ... )
+    >>> levels = graph.topological_levels(missing_only=True)
+    """
+
+    if mjdstop is None:
+        mjdstop = mjdstart
+    mjdstart, mjdstop = int(mjdstart), int(mjdstop)
+    if mjdstop < mjdstart:
+        raise ValueError("mjdstop must be greater than or equal to mjdstart")
+
+    if load is None:
+        if apred is None or telescope is None:
+            raise ValueError("Provide either load or both apred and telescope")
+        from ...utils.apload import ApLoad
+
+        load = ApLoad(apred=apred, telescope=telescope)
+
+    if calfile is None:
+        drp_dir = os.environ.get("APOGEE_DRP_DIR")
+        if not drp_dir:
+            raise EnvironmentError(
+                "APOGEE_DRP_DIR must be set when calfile is not supplied"
+            )
+        calfile = os.path.join(drp_dir, "data", "cal", load.instrument + ".par")
+
+    from ..mkcal import readcal
+
+    caldict = readcal(calfile)
+    exists = (lambda node: apload_exists(load, node)) if check_exists else None
+    resolver = CalibrationDependencyResolver(caldict, load, exists=exists)
+    requested_types = DEFAULT_MASTER_CALTYPES if caltypes is None else caltypes
+    mjds = np.arange(mjdstart, mjdstop + 1, dtype=int)
+    roots = resolver.roots_for_mjds(mjds, requested_types)
+    graph = resolver.resolve(roots)
+    if print_tree:
+        tree = graph.format_tree(show_existing=check_exists)
+        summary = (
+            f'{len(graph.roots)} requested products; '
+            f'{len(graph.nodes)} including dependencies; '
+            f'{len(graph.missing)} missing.'
+        )
+
+        if logger is not None:
+            logger.info('Calibration dependency tree:')
+            for line in tree.splitlines():
+                logger.info(line)
+            logger.info(summary)
+        else:
+            print('Calibration dependency tree:')
+            print(tree)
+            print()
+            print(summary)
+
+    return graph
 
 
 @dataclass(frozen=True, order=True)
@@ -81,6 +219,33 @@ class CalibrationGraph:
     @property
     def missing(self) -> set[CalibrationNode]:
         return self.nodes - self.existing
+
+    def required_by_type(self, missing_only: bool = True) -> dict[str, list[str]]:
+        """Return calibration names grouped for ``mkmastercals`` stages."""
+
+        selected = self.missing if missing_only else self.nodes
+        result: dict[str, list[str]] = {}
+        for node in sorted(selected):
+            result.setdefault(node.caltype, []).append(node.name)
+        return result
+
+    def required_names(self, caltype: str, missing_only: bool = True) -> set[str]:
+        """Return names needed in one calibration stage."""
+
+        selected = self.missing if missing_only else self.nodes
+        return {
+            node.name for node in selected
+            if node.caltype == caltype.lower()
+        }
+
+    def is_required(
+        self, caltype: str, name, missing_only: bool = True
+    ) -> bool:
+        """Return whether one product should be run by ``mkmastercals``."""
+
+        return _canonical_name(name) in self.required_names(
+            caltype, missing_only=missing_only
+        )
 
     def topological_levels(self, missing_only: bool = False) -> list[list[CalibrationNode]]:
         """Return parallelizable levels, with prerequisites first."""
@@ -152,7 +317,7 @@ class CalibrationDependencyResolver:
     def node(caltype: str, name) -> CalibrationNode | None:
         if name is None:
             return None
-        text = str(name).strip()
+        text = _canonical_name(name)
         if text in ("", "0", "None"):
             return None
         kind = caltype.lower()
@@ -305,7 +470,9 @@ class CalibrationDependencyResolver:
                 continue
             for row in table:
                 if np.any((values >= row["mjd1"]) & (values <= row["mjd2"])):
-                    roots.add(CalibrationNode(kind, str(row["name"]).strip()))
+                    root = self.node(kind, row["name"])
+                    if root is not None:
+                        roots.add(root)
         return roots
 
     def resolve(
@@ -313,11 +480,14 @@ class CalibrationDependencyResolver:
     ) -> CalibrationGraph:
         """Recursively resolve all prerequisites, checking for cycles."""
 
-        normalized = {
-            item if isinstance(item, CalibrationNode)
-            else CalibrationNode(str(item[0]).lower(), str(item[1]).strip())
-            for item in roots
-        }
+        normalized = set()
+        for item in roots:
+            if isinstance(item, CalibrationNode):
+                normalized.add(CalibrationNode(item.caltype, _canonical_name(item.name)))
+            else:
+                node = self.node(str(item[0]), item[1])
+                if node is not None:
+                    normalized.add(node)
         graph = CalibrationGraph(roots=normalized)
         visiting: set[CalibrationNode] = set()
 
@@ -327,10 +497,16 @@ class CalibrationDependencyResolver:
             if node in graph.dependencies:
                 return
             visiting.add(node)
-            dependencies = self.direct_dependencies(node)
-            graph.dependencies[node] = dependencies
+            # An existing product is a satisfied leaf.  Its own prerequisites
+            # are not execution requirements and must not trigger rebuilding
+            # older calibrations outside the requested MJD range.
             if self.exists is not None and self.exists(node):
                 graph.existing.add(node)
+                graph.dependencies[node] = set()
+                visiting.remove(node)
+                return
+            dependencies = self.direct_dependencies(node)
+            graph.dependencies[node] = dependencies
             for dependency in dependencies:
                 visit(dependency)
             visiting.remove(node)

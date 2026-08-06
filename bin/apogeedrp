@@ -29,6 +29,7 @@ if __name__ == "__main__":
     parser.add_argument('--debug', action='store_true', help='For testing purposes')
     parser.add_argument('--inputlist', type=str, nargs=1, help='Filename containing list of inputs.')
     parser.add_argument('--sparsegrid', type=str, nargs="?", const="0", default=None, help='Run sparse set of MJDs but expand arcs for dailywave')
+    parser.add_argument('--dryrun', action='store_true', help='Perform dry run on the master cals')
     args = parser.parse_args()
 
     t0 = time.time()
@@ -94,4 +95,4 @@ if __name__ == "__main__":
                   rvlimited=args.rvlimited,clobber=args.clobber,alloc=alloc,
                   nodes=nodes,walltime=walltime,fresh=args.fresh,
                   linkvers=linkvers,debug=args.debug,inputlist=inputlist,
-                  sparsegrid=sparsegrid)
+                  sparsegrid=sparsegrid,dryrun=args.dryrun)

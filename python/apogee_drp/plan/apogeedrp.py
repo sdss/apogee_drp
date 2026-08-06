@@ -8,7 +8,8 @@ from numpy.lib import recfunctions as rfn
 
 from dlnpyutils import utils as dln
 from ..utils import spectra,yanny,apload,platedata,plan,email,info,slurm as slrm,bitmask
-from ..apred import mkcal,cal,qa,monitor
+from ..apred import mkcal,calplots,qa,monitor
+from ..apred.cal.dependencies import calibration_dependency_tree
 from ..database import apogeedb
 from . import mkplan,check
 from sdss_access.path import path
@@ -1548,7 +1549,7 @@ def mkvers(apred,logger=None):
         os.makedirs(localdir,exist_ok=True)
         
 
-def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,logger=None):
+def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,logger=None,dryrun=False):
     """
     Make the master calibration products for a reduction version and MJD range.
 
@@ -1775,6 +1776,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
 
         return
 
+    
     # Input MJD range
     mjdstart = np.min(mjds)
     mjdstop = np.max(mjds)
@@ -1793,6 +1795,15 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
     #   rm $APOGEE_LOCALDIR/*
     #endif
 
+
+    # Figure out the entire dependency tree
+    logger.info('Generating dependency tree')
+    logger.info(' ')
+    graph = calibration_dependency_tree(np.min(mjds),np.max(mjds),load=load,
+                                        caltypes=caltypes,calfile=calfile,
+                                        check_exists=not clobber,print_tree=True,
+                                        logger=logger)
+    
 
     # -- Master calibration products made every year or so --
     # Detector
@@ -1821,7 +1832,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
 
     # Make Detector and Linearity 
     #----------------------------
-    if 'detector' in caltypes:
+    if graph.required_names('detector'):
         # MKDET.PRO makes both
         detdict = allcaldict['det']
         logger.info('--------------------------------------------')
@@ -1842,7 +1853,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(detdict)):
             name = detdict['name'][i]
-            if np.sum((mjds >= detdict['mjd1'][i]) & (mjds <= detdict['mjd2'][i])) > 0:
+            if graph.is_required('detector', name):
                 outfile = load.filename('Detector',num=name,chips=True)
                 logfile1 = os.path.dirname(outfile)+'/mkdet-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
@@ -1869,7 +1880,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Detector files to run')        
@@ -1883,12 +1894,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            logger.info('No master Detector calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No master Detector calibration files need to be run')
             
 
     # Make darks in parallel
     #-----------------------
-    if 'dark' in caltypes:
+    if graph.required_names('dark'):
         # they take too much memory to run in parallel
         #idl -e "makecal,dark=1,vers='$vers',telescope='$telescope'" >& log/mkdark-$telescope.$host.log
         #darkplot --apred $vers --telescope $telescope
@@ -1915,7 +1927,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(darkdict)):
             name = darkdict['name'][i]
-            if np.sum((mjds >= darkdict['mjd1'][i]) & (mjds <= darkdict['mjd2'][i])) > 0:
+            if graph.is_required('dark', name):
                 outfile = load.filename('Dark',num=name,chips=True)
                 logfile1 = os.path.dirname(outfile)+'/mkdark-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
@@ -1942,7 +1954,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Dark files to run')        
@@ -1958,10 +1970,11 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            logger.info('No master Dark calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No master Dark calibration files need to be run')
         # Make the dark plots
-        if np.sum(docal)>0:
-            cal.darkplot(apred=apred,telescope=telescope)
+        if np.sum(docal)>0 and dryrun==False:
+            calplots.darkplot(apred=apred,telescope=telescope)
 
 
     # I could process the individual flat exposures in parallel first
@@ -1969,7 +1982,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
 
     # Make flats in parallel
     #-------------------------
-    if 'flat' in caltypes:
+    if graph.required_names('flat'):
         #idl -e "makecal,flat=1,vers='$vers',telescope='$telescope'" >& log/mkflat-$telescope.$host.log
         #flatplot --apred $vers --telescope $telescope
         flatdict = allcaldict['flat']
@@ -1990,7 +2003,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(flatdict)):
             name = flatdict['name'][i]
-            if np.sum((mjds >= flatdict['mjd1'][i]) & (mjds <= flatdict['mjd2'][i])) > 0:
+            if graph.is_required('flat', name):
                 outfile = load.filename('Flat',num=name,chips=True)
                 logfile1 = os.path.dirname(outfile)+'/mkflat-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
@@ -2017,7 +2030,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Flat files to run')        
@@ -2031,15 +2044,16 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            logger.info('No master Flat calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No master Flat calibration files need to be run')
         # Make the flat plots
-        if np.sum(docal)>0:
-            cal.flatplot(apred=apred,telescope=telescope)
+        if np.sum(docal)>0 and dryrun==False:
+            calplots.flatplot(apred=apred,telescope=telescope)
 
     
     # Make BPM in parallel
     #----------------------
-    if 'bpm' in caltypes:
+    if graph.required_names('bpm'):
         #idl -e "makecal,bpm=1,vers='$vers',telescope='$telescope'" >& log/mkbpm-$telescope.$host.log
         bpmdict = allcaldict['bpm']
         logger.info('')
@@ -2065,7 +2079,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(bpmdict)):
             name = bpmdict['name'][i]
-            if np.sum((mjds >= bpmdict['mjd1'][i]) & (mjds <= bpmdict['mjd2'][i])) > 0:
+            if graph.is_required('bpm', name):
                 outfile = load.filename('BPM',num=name,chips=True)
                 logfile1 = os.path.dirname(outfile)+'/mkbpm-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
@@ -2092,7 +2106,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' BPM files to run')        
@@ -2108,12 +2122,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            logger.info('No master BPM calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No master BPM calibration files need to be run')
 
 
     # Make Fiber in parallel
     #--------------------------
-    if 'fiber' in caltypes:
+    if graph.required_names('fiber'):
         fiberdict = allcaldict['fiber']
         logger.info('')
         logger.info('---------------------------------')
@@ -2132,7 +2147,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(fiberdict)):
             name = fiberdict['name'][i]
-            if np.sum((mjds >= fiberdict['mjd1'][i]) & (mjds <= fiberdict['mjd2'][i])) > 0:
+            if graph.is_required('fiber', name):
                 outfile = load.filename('ETrace',num=name,chips=True)
                 logfile1 = os.path.dirname(outfile)+'/mkfiber-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
@@ -2159,7 +2174,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Fiber files to run')        
@@ -2175,12 +2190,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            logger.info('No master Fiber calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No master Fiber calibration files need to be run')
 
             
     # Make Sparse in parallel
     #--------------------------
-    if 'sparse' in caltypes:
+    if graph.required_names('sparse'):
         sparsedict = allcaldict['sparse']
         logger.info('')
         logger.info('---------------------------------')
@@ -2199,7 +2215,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(sparsedict)):
             name = sparsedict['name'][i]
-            if np.sum((mjds >= sparsedict['mjd1'][i]) & (mjds <= sparsedict['mjd2'][i])) > 0:
+            if graph.is_required('sparse', name):
                 outfile = load.filename('Sparse',num=name,chips=True)
                 logfile1 = os.path.dirname(outfile)+'/mksparse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
@@ -2226,7 +2242,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Sparse files to run')        
@@ -2242,12 +2258,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            logger.info('No master Sparse calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No master Sparse calibration files need to be run')
             
 
     # Make Littrow in parallel
     #--------------------------
-    if 'littrow' in caltypes:
+    if graph.required_names('littrow'):
         #idl -e "makecal,littrow=1,vers='$vers',telescope='$telescope'" >& log/mklittrow-$telescope.$host.log
         littdict = allcaldict['littrow']
         logger.info('')
@@ -2267,7 +2284,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(littdict)):
             name = littdict['name'][i]
-            if np.sum((mjds >= littdict['mjd1'][i]) & (mjds <= littdict['mjd2'][i])) > 0:
+            if graph.is_required('littrow', name):
                 outfile = load.filename('Littrow',num=name,chips=True)
                 logfile1 = os.path.dirname(outfile)+'/mklittrow-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
@@ -2294,7 +2311,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Littrow files to run')        
@@ -2310,12 +2327,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            logger.info('No master Littrow calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No master Littrow calibration files need to be run')
 
     
     # Make Response in parallel
     #--------------------------
-    if 'response' in caltypes:
+    if graph.required_names('response'):
         responsedict = allcaldict['response']
         logger.info('')
         logger.info('-----------------------------------')
@@ -2334,7 +2352,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(responsedict)):
             name = responsedict['name'][i]
-            if np.sum((mjds >= responsedict['mjd1'][i]) & (mjds <= responsedict['mjd2'][i])) > 0:
+            if graph.is_required('response', name):
                 outfile = load.filename('Response',num=name,chips=True)
                 logfile1 = os.path.dirname(outfile)+'/mkresponse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
@@ -2361,7 +2379,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)                    
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' Response files to run')        
@@ -2377,12 +2395,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            logger.info('No master Response calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No master Response calibration files need to be run')
 
             
     # Make Model PSFs in parallel
     #--------------------------
-    if 'modelpsf' in caltypes:
+    if graph.required_names('modelpsf'):
         modelpsfdict = allcaldict['modelpsf']
         logger.info('')
         logger.info('------------------------------------')
@@ -2401,7 +2420,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(modelpsfdict)):
             name = modelpsfdict['name'][i]
-            if np.sum((mjds >= modelpsfdict['mjd1'][i]) & (mjds <= modelpsfdict['mjd2'][i])) > 0:
+            if graph.is_required('modelpsf', name):
                 outfile = load.filename('PSFModel',num=name,chips=True)
                 logfile1 = os.path.dirname(outfile)+'/mkpsfmodel-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
@@ -2428,7 +2447,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' PSFModel files to run')        
@@ -2444,21 +2463,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            logger.info('No master PSF Model calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No master PSF Model calibration files need to be run')
     
 
     # Make multiwave cals in parallel
     #--------------------------------
-    # we need the multiwave for the LSFs
-    #set n = 0
-    #while ( $n < 5 ) 
-    #   idl -e "makecal,multiwave=1,vers='$vers',telescope='$telescope'" >& log/mkwave-$telescope"$n".$host.log &
-    #   sleep 20
-    #   @ n = $n + 1
-    #end
-    #wait
-
-    if 'multiwave' in caltypes:
+    if graph.required_names('multiwave'):
         multiwavedict = allcaldict['multiwave']
         logger.info('')
         logger.info('-----------------------------------')
@@ -2468,12 +2479,23 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         if multiwavedict is None or len(multiwavedict)==0:
             multiwavedict = []
             logger.info('No master multiwave calibration files to make')
+
+        expinfo_cache = {}
+        def get_expinfo(mjd):
+            if mjd not in expinfo_cache:
+                expinfo_cache[mjd] = info.expinfo(
+                    observatory=load.observatory,
+                    mjd5=mjd,
+                    fieldinfo=False,
+                )
+            return expinfo_cache[mjd]
+            
         # Which multiwave and individual wave still need to be made
         multiwave_names = []
         wave_names = []
         for i in range(len(multiwavedict)):
             name = multiwavedict['name'][i]
-            if np.sum((mjds >= multiwavedict['mjd1'][i]) & (mjds <= multiwavedict['mjd2'][i])) > 0:
+            if graph.is_required('multiwave', name):
                 if clobber or load.exists('Wave',num=multiwavedict['name'][i])==False:
                     multiwave_names.append(name)
                     wnames = multiwavedict['frames'][i].split(',')
@@ -2491,7 +2513,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             name = wave_names[i]
             mjd = int(load.cmjd(int(name)))            
             # Use a quartzflat for the PSF, the PSF cal file will automatically be created
-            expinfo1 = info.expinfo(observatory=load.observatory,mjd5=mjd)
+            expinfo1 = get_expinfo(mjd)
             if len(expinfo1)==0:
                 print('no quartz for this '+str(mjd))
                 continue
@@ -2507,6 +2529,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logger.info(str(len(psf_names))+' apPSF files need to be made')
 
         # Create the apPSF files so we can extract the individual wave files
+        logger.info('')
+        logger.info('Making apPSF files')
         dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
               ('errfile',str,1000),('dir',str,1000),('num',int),
               ('mjd',int),('observatory',str,10),
@@ -2552,7 +2576,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 tasks['configid'][i] = ''
                 tasks['designid'][i] = ''
                 tasks['fieldid'][i] =  ''               
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' PSF files to run')
@@ -2567,9 +2591,12 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             indcal, = np.where(chkcal['success']==True)
             logger.info('%d/%d apPSF successfully processed' % (len(indcal),len(chkcal)))
         else:
-            logger.info('No individual PSF calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No individual PSF calibration files need to be run')
             
-        # Creating individual wave files to the multiwave calibration files
+        # Creating individual wave files for the multiwave calibration files
+        logger.info('')
+        logger.info('Making individual apWave files')
         dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
               ('errfile',str,1000),('dir',str,1000),('num',int),
               ('mjd',int),('observatory',str,10),
@@ -2590,7 +2617,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 os.makedirs(os.path.dirname(logfile1),exist_ok=True)
             cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)            
             # Use a quartzflat for the PSF, the PSF cal file will automatically be created
-            expinfo1 = info.expinfo(observatory=load.observatory,mjd5=mjd)
+            expinfo1 = get_expinfo(mjd)
             qtzind, = np.where(expinfo1['exptype']=='QUARTZFLAT')
             psfid = None
             if len(qtzind)>0:
@@ -2628,7 +2655,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 tasks['configid'][i] = ''
                 tasks['designid'][i] = ''
                 tasks['fieldid'][i] =  ''               
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' wave files to run')
@@ -2643,9 +2670,12 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             indcal, = np.where(chkcal['success']==True)
             logger.info('%d/%d apWave successfully processed' % (len(indcal),len(chkcal)))
         else:
-            logger.info('No individual wave calibration files need to be run')        
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No individual wave calibration files need to be run')        
 
         # Creating the multiwave calibration files
+        logger.info('')
+        logger.info('Making multiwave files')
         dt = [('cmd',str,1000),('name',str,1000),('outfile',str,1000),
               ('errfile',str,1000),('dir',str,1000)]
         tasks = np.zeros(len(multiwave_names),dtype=np.dtype(dt))
@@ -2681,7 +2711,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 tasks['outfile'][i] = logfile1
                 tasks['errfile'][i] = errfile1
                 tasks['dir'][i] = os.path.dirname(logfile1)
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' multiwave files to run')        
@@ -2697,12 +2727,13 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))
         else:
-            logger.info('No master multiwave calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No master multiwave calibration files need to be run')
     
 
     # Make LSFs in parallel
     #-----------------------
-    if 'lsf' in caltypes:
+    if graph.required_names('lsf'):
         lsfdict = allcaldict['lsf']
         logger.info('')
         logger.info('--------------------------------')
@@ -2721,7 +2752,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(lsfdict)):
             name = lsfdict['name'][i]
-            if np.sum((mjds >= lsfdict['mjd1'][i]) & (mjds <= lsfdict['mjd2'][i])) > 0:
+            if graph.is_required('lsf', name):
                 outfile = load.filename('LSF',num=name,chips=True)
                 logfile1 = os.path.dirname(outfile)+'/mklsf-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
@@ -2748,7 +2779,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     tasks['outfile'][i] = logfile1
                     tasks['errfile'][i] = errfile1
                     tasks['dir'][i] = os.path.dirname(logfile1)
-        if np.sum(docal)>0:
+        if np.sum(docal)>0 and dryrun==False:
             gd, = np.where(tasks['cmd'] != '')
             tasks = tasks[gd]
             logger.info(str(len(tasks))+' LSF files to run')        
@@ -2764,7 +2795,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             else:
                 chkmaster = np.hstack((chkmaster,chkmaster1))        
         else:
-            logger.info('No master LSF calibration files need to be run')
+            logger.info(('DRYRUN - ' if dryrun else '') +
+                        'No master LSF calibration files need to be run')
         
     return chkmaster
     
@@ -4250,7 +4282,7 @@ def summary_email(observatory,apred,mjd,steps,chkmaster=None,chk3d=None,chkcal=N
 
 def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         clobber=False,fresh=False,linkvers=None,nodes=5,alloc='sdss-np',qos=None,
-        walltime='336:00:00',debug=False,inputlist=None,sparsegrid=None):
+        walltime='336:00:00',debug=False,inputlist=None,sparsegrid=None,dryrun=False):
     """
     Perform APOGEE Data Release Processing
 
@@ -4293,10 +4325,12 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
        For testing purposes.  Default is False.
     inputlist : str, optional
        File containing list of inputs to process.
-    sparsegrid : istr, optional
+    sparsegrid : str, optional
        Run sparse grid of MJDs.  Expand processing of arcs +/-3 days for dailywave.
          If sparsegrid=0, then the MJDs must be input.  If sparsegrid>0, then it
          will grab the MJDs from the master calibration library file (i.e. apogee-n.par).
+    dryrun : bool, optional
+       Option to perform a dry run on the master cals.
 
     Returns
     -------
@@ -4464,7 +4498,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         rootLogger.info('2) Generating master calibration products')
         rootLogger.info('=========================================')
         rootLogger.info('')
-        chkmaster = mkmastercals(load,mjds,caltypes=caltypes,linkvers=linkvers,**kws)
+        chkmaster = mkmastercals(load,mjds,caltypes=caltypes,linkvers=linkvers,dryrun=dryrun,**kws)
 
     # 3) Process all exposures through ap3d
     #---------------------------------------

@@ -1,8 +1,9 @@
 import numpy as np
 
-from apogee_drp.apred.cal.dependencies import (
+from apogee_drp.apred.cal.dependencies_v3 import (
     CalibrationDependencyResolver,
     CalibrationNode,
+    calibration_dependency_tree,
 )
 
 
@@ -68,6 +69,28 @@ def test_existing_products_are_removed_only_from_missing_plan():
     assert CalibrationNode("flat", "13001") in graph.missing
 
 
+def test_existing_product_prunes_its_dependencies():
+    existing = {CalibrationNode("bpm", "14001")}
+    resolver = CalibrationDependencyResolver(
+        sample_caldict(), FakeLoad(), exists=lambda node: node in existing
+    )
+    graph = resolver.resolve([("bpm", "14001")])
+
+    assert graph.nodes == {CalibrationNode("bpm", "14001")}
+    assert graph.missing == set()
+
+
+def test_required_names_groups_missing_jobs_for_mastercal_stages():
+    resolver = CalibrationDependencyResolver(sample_caldict(), FakeLoad())
+    graph = resolver.resolve([("sparse", "16001")])
+
+    grouped = graph.required_by_type()
+    assert grouped["sparse"] == ["16001"]
+    assert grouped["fiber"] == ["15001"]
+    assert graph.required_names("dark") == {"12001"}
+    assert graph.is_required("dark", "00012001")
+
+
 def test_roots_for_mjds_selects_only_overlapping_products():
     resolver = CalibrationDependencyResolver(sample_caldict(), FakeLoad())
     roots = resolver.roots_for_mjds([12], ["detector", "dark", "fiber"])
@@ -77,3 +100,22 @@ def test_roots_for_mjds_selects_only_overlapping_products():
         CalibrationNode("dark", "12001"),
         CalibrationNode("fiber", "15001"),
     }
+
+
+def test_public_function_plans_range(monkeypatch, tmp_path):
+    from apogee_drp.apred import mkcal
+
+    monkeypatch.setattr(mkcal, "readcal", lambda filename: sample_caldict())
+    graph = calibration_dependency_tree(
+        12,
+        13,
+        load=FakeLoad(),
+        caltypes=["sparse"],
+        calfile=str(tmp_path / "unused.par"),
+        check_exists=False,
+        print_tree=False,
+    )
+
+    assert graph.roots == {CalibrationNode("sparse", "16001")}
+    assert CalibrationNode("fiber", "15001") in graph.nodes
+    assert CalibrationNode("detector", "10001") in graph.nodes

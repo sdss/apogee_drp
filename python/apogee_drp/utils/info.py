@@ -44,7 +44,7 @@ def file_status(filename):
     return out
                 
 def expinfo(observatory=None,mjd5=None,files=None,expnum=None,
-            logger=None,verbose=False):
+            logger=None,verbose=False,fieldinfo=True):
     """
     Get header information about raw APOGEE files.
     This program can be run with observatory+mjd5 or
@@ -64,6 +64,8 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None,
        Logging object for printing logs.
     verbose : bool, optional
        Verbose output to the screen.  Default is False.
+    fieldinfo : bool, optional
+       Return field information.  Default is True.
 
     Returns
     -------
@@ -149,7 +151,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None,
             tab['mjd'] = mjd
             #    tab['mjd'] = utils.getmjd5(head['date-obs'])
             plate = head.get('plateid')            
-            if mjd<59556 and plate is not None and str(plate) != '' and int(plate)>0:
+            if fieldinfo and mjd<59556 and plate is not None and str(plate) != '' and int(plate)>0:
                 plugid = head.get('name')
                 if plate2plugmap.get(plate) is not None:
                     plfilename = plate2plugmap.get(plate)
