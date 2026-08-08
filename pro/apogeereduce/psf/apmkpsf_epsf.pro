@@ -96,6 +96,7 @@ endif else begin
   endif
   ref = mrdfits(reftracefile)
   fibers = ref[ichip,*] + yshift  ;; apply trace yshift for this exposure
+  print,'Using yshift = ',yshift
 endelse
 
 ;; Determine which fiber each trace corresponds to
@@ -199,11 +200,13 @@ for i=1024,2047-average do begin
     pc = (nint(ptmp[j]) > 0) < 2047
     lo = (pc-wind) > 0
     hi = (pc+wind) < 2047
-    trace[i,j] = TOTAL(yp[lo:hi])/TOTAL(psf[i,lo:hi])
+    trace[i,j] = TOTAL(yp[lo:hi],/nan)/TOTAL(psf[i,lo:hi],/nan)
+ bad = where(finite(trace[i,j]) eq 0,nbad)
+if nbad gt 0 then stop,'bad trace pixels'
   endfor
   new = trace[i,*]
-  good = where(finite(new))
-  ptmp[good] = new[good]
+  good = where(finite(new),ngood)
+  if ngood gt 0 then ptmp[good] = new[good]
 endfor
 
 ;; Now march to lower columns using locations from last column to get location in next column 
@@ -214,19 +217,25 @@ for i=1023,average,-1 do begin
     pc = (nint(ptmp[j]) > 0) < 2047
     lo = (pc-wind) > 0
     hi = (pc+wind) < 2047
-    trace[i,j] = TOTAL(yp[lo:hi])/TOTAL(psf[i,lo:hi])
+    trace[i,j] = TOTAL(yp[lo:hi],/nan)/TOTAL(psf[i,lo:hi],/nan)
   endfor
   new = trace[i,*]
-  good = where(finite(new))
-  ptmp[good] = new[good]
+  good = where(finite(new),ngood)
+  if ngood gt 0 then ptmp[good] = new[good]
 endfor
 
 ;; Do polynomical fit to traces, and replace into trace
 ftrace = trace*0.
 for j=0,ntrace-1 do begin
-  gd=where(y gt average and y lt 2047-average and finite(trace[*,j]) eq 1)
-  coef = poly_fit(y[gd],trace[gd,j],2,yfit=yfit)
-  ftrace[*,j] = coef[0]+coef[1]*y+coef[2]*y*y
+  gd=where(y gt average and y lt 2047-average and finite(trace[*,j]) eq 1,ngd)
+  if ngd gt 3 then begin
+    coef = poly_fit(y[gd],trace[gd,j],2,yfit=yfit)
+    ftrace[*,j] = coef[0]+coef[1]*y+coef[2]*y*y
+  ;; problematic fiber
+  endif else begin
+    print,'trace=',j,' has no good pixels'
+    ftrace[*,j] = !values.f_nan 
+  endelse
 endfor
 trace = ftrace
 sxaddpar,head,'NTRACE',ntrace

@@ -56,6 +56,7 @@ if nflatframe eq 0 or noutdir eq 0 then begin
 endif
 
 print,'Processing ',strtrim(nflatframe,2),' Flat Frames'
+print,'Yshift = ',yshift
 
 chiptag = ['a','b','c']
 
@@ -344,7 +345,7 @@ FOR i=0,nflatframe-1 do begin
     ;---------------------------
     if not keyword_set(no_epsf) then $
        APMKPSF_EPSF,str.(j),strmid(outdir,0,strlen(outdir)-4),flatid,j,sparseid=sparseid,$
-                    fiberid=fiberid,/scat,average=average,yshift=yshift[i],$
+                    fiberid=fiberid,/scat,average=average,yshift=yshift[j],$
                     etraceonly=etraceonly
 
     outfile = apogee_filename('PSF',chip=chiptag[j],num=flatframeid)
