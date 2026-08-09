@@ -509,6 +509,9 @@ class PSF(object):
             # y should be [Npix]
             self.kind = kind
             grid,labels,y = data
+            grid = np.asarray(grid)
+            labels = np.asarray(labels)
+            y = np.asarray(y)
             self._grid = grid
             self._log = log        
             self._labels = labels
