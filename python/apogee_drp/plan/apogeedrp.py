@@ -2491,7 +2491,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             name = wave_names[i]
             mjd = int(load.cmjd(int(name)))            
             # Use a quartzflat for the PSF, the PSF cal file will automatically be created
-            expinfo1 = info.expinfo(observatory=load.observatory,mjd5=mjd)
+            expinfo1 = info.expinfo(observatory=load.observatory,mjd5=mjd,fieldinfo=False)
             if len(expinfo1)==0:
                 print('no quartz for this '+str(mjd))
                 continue
@@ -2590,7 +2590,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 os.makedirs(os.path.dirname(logfile1),exist_ok=True)
             cmd1 = 'makecal --vers {0} --telescope {1}'.format(apred,telescope)            
             # Use a quartzflat for the PSF, the PSF cal file will automatically be created
-            expinfo1 = info.expinfo(observatory=load.observatory,mjd5=mjd)
+            expinfo1 = info.expinfo(observatory=load.observatory,mjd5=mjd,fieldinfo=False)
             qtzind, = np.where(expinfo1['exptype']=='QUARTZFLAT')
             psfid = None
             if len(qtzind)>0:
