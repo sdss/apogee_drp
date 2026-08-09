@@ -201,8 +201,6 @@ for i=1024,2047-average do begin
     lo = (pc-wind) > 0
     hi = (pc+wind) < 2047
     trace[i,j] = TOTAL(yp[lo:hi],/nan)/TOTAL(psf[i,lo:hi],/nan)
- bad = where(finite(trace[i,j]) eq 0,nbad)
-if nbad gt 0 then stop,'bad trace pixels'
   endfor
   new = trace[i,*]
   good = where(finite(new),ngood)
@@ -243,6 +241,7 @@ sxaddpar,head,'AVGDIST',MEAN(dmin)
 file=apogee_filename('ETrace',chip=chip[ichip],num=im)
 if file_test(file_dirname(file)) eq 0 then file_mkdir,file_dirname(file)
 MWRFITS,trace,file,head,/create
+print,'Writing ',file
 
 ;; When making the fiber calibration, only the trace positions are needed.
 ;; Do not continue with the empirical-PSF construction, which may require
@@ -352,16 +351,18 @@ for i=0,2047 do begin
 
       ;; Add this pixel into the empirical PSFs for the neighboring traces with
       ;; appropriate weights.  This preserves the original overlap treatment.
-      if wtot gt 0 then begin
-        tmp[j,k1] = psf[i,j]*w1/wtot
-        tmp[j,k2] = psf[i,j]*w2/wtot
+      ;; Only distribute finite image pixels.  Test each weight separately because
+      ;; NaN*0 is still NaN and would contaminate a zero-weight neighboring trace.
+      if wtot gt 0 and finite(psf[i,j]) then begin
+        if w1 gt 0 then tmp[j,k1] = psf[i,j]*w1/wtot
+        if w2 gt 0 then tmp[j,k2] = psf[i,j]*w2/wtot
       endif
     endfor
   endif
 
   ;; Normalize each trace contribution in this column, as before, but store it
   ;; in the compact strip rather than in bpsf[2048,2048,ntrace].
-  norm = TOTAL(tmp,1)
+  norm = TOTAL(tmp,1,/nan)
   for k=0,ntrace-1 do begin
     bp = where(tmp[*,k] gt 0,nbp)
     if nbp gt 0 and norm[k] gt 0 then begin
@@ -380,9 +381,11 @@ file = apogee_filename('EPSF',chip=chip[ichip],num=im)
 sxdelpar,head,'NAXIS1'
 sxdelpar,head,'NAXIS2'
 MWRFITS,0,file,head,/create
+print,'Writing ',file
 
 ;; Put the PSFs in the output structure.  Trim each compact strip down to the
 ;; actually non-zero rows before writing, preserving the original LO/HI meaning.
+print,'ntrace=',ntrace
 for k=0,ntrace-1 do begin
   p = imgptr[k]
   m = TOTAL(*p,1,/nan)
@@ -392,7 +395,9 @@ for k=0,ntrace-1 do begin
     i2 = MAX(ind)
     outpsf = {fiber: fiber[k], cent: trace[*,k], lo: loarr[k]+i1, hi: loarr[k]+i2, img: (*p)[*,i1:i2]}
     MWRFITS,outpsf,file,/silent
-  endif else print,'not halted, but bad PSF at: ',k
+  endif else begin
+    print,'not halted, but bad PSF at: ',k
+  endelse
   ptr_free,p
 endfor
 
