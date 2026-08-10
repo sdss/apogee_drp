@@ -818,7 +818,7 @@ for ii=0,n_elements(ifibers)-1 do begin
     ; Add to the final fit structure for all lines
     PUSH,allfitstr,fitstr
 
-    if i eq 50 then stop
+    ;;if i eq 50 then stop
 
     ;stop
 
@@ -1339,8 +1339,6 @@ for ii=0,n_elements(ifibers)-1 do begin
       ;plot,xx,lsf
       ;oplot,xx,lsf_yfit,co=250
       ;wset,0
-
-      stop
 
     Endfor ; chip loop
 
