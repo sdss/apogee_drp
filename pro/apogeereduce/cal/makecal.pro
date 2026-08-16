@@ -212,10 +212,9 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
       psfdir = file_dirname(file)
       tracedir = repstr(psfdir,'/psf','/trace')
       sfiberid = string(fiber,format='(i08)')
-      allfiles = [tracedir+'/'+dirs.prefix+'ETrace-'+chips+'-'+sfiberid+'.fits',$
-                  psfdir+'/'+dirs.prefix+'PSF-'+chips+'-'+sfiberid+'.fits']
-      if total(file_test(allfiles)) eq 6 and not keyword_set(clobber) then begin
-        print,' psf file: ',file, ' already made'
+      allfiles = tracedir+'/'+dirs.prefix+'Fiber-'+chips+'-'+sfiberid+'.fits'
+      if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+        print,' fiber file: ',allfiles[0], ' already made'
         return
       endif
       i = where(fiberstr.name eq fiber)

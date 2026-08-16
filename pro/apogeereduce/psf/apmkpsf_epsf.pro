@@ -82,6 +82,7 @@ print,'Found ',strtrim(ntrace,2),' traces'
 ;; Getting reference positions from FIBER calibration file
 if fiberid gt 0 then begin
   file = apogee_filename('ETrace',chip=chip[ichip],num=fiberid)
+  file = repstr(file,'ETrace','Fiber')
   ref = mrdfits(file)
   fibers = ref[1000,*]
 
@@ -246,8 +247,14 @@ print,'Writing ',file
 ;; When making the fiber calibration, only the trace positions are needed.
 ;; Do not continue with the empirical-PSF construction, which may require
 ;; the sparse calibration and introduce a circular dependency.
-if keyword_set(etraceonly) then return
-
+if keyword_set(etraceonly) then begin
+  ;; Move ETrace to Fiber calibration filename
+  fiberfile = repstr(file,'ETrace','Fiber')
+  print,'Moving to ',fiberfile 
+  FILE_MOVE,file,fiberfile
+  return
+endif
+  
 ;; Get sparse pack PSF if desired and available
 if keyword_set(sparseid) then begin
   file = apogee_filename('EPSF',chip=chip[ichip],num=sparseid)
