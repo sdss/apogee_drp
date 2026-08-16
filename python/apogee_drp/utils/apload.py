@@ -877,17 +877,11 @@ class ApLoad:
             else:
                 healpix = None
 
-            # Temporary KLUDGE until Fiber is added to "tree"
-            if root=='Fiber':
-                sdssroot = 'apETrace'
             filePath = self.sdss_path.full(sdssroot,
                                            apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
                                            field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
                                            telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument,
                                            healpix=healpix,configid=configid,obs=self.observatory)
-            if root=='Fiber':
-                sdssroot = 'apFiber'
-                filePath = filePath.replace('ETrace','Fiber')
             if self.verbose: print('filePath',filePath)
             if os.path.exists(filePath) is False and download: 
                 downloadPath = self.sdss_path.url(sdssroot,
@@ -903,9 +897,6 @@ class ApLoad:
                                      healpix=healpix,configid=configid,obs=self.observatory)
             return filePath
         else :
-            # Temporary KLUDGE until Fiber is added to "tree"
-            if root=='Fiber':
-                sdssroot = 'apETrace'
             for chip in ['a','b','c'] :
                 #print(chip,root,num,mjd,prefix)
                 filePath = self.sdss_path.full(sdssroot,
@@ -913,9 +904,6 @@ class ApLoad:
                                 field=field, location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
                                 telescope=self.telescope,fiber=fiber,
                                 chip=chip,prefix=prefix,instrument=self.instrument)+suffix
-                # Temporary KLUDGE until Fiber is added to "tree"
-                if root=='Fiber':
-                    filePath = filePath.replace('ETrace','Fiber')
                 if self.verbose : print('filePath: ', filePath, os.path.exists(filePath))
                 if os.path.exists(filePath) is False and download : 
                   try:
