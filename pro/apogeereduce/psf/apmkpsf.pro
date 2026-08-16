@@ -110,7 +110,8 @@ FOR i=0,nflatframe-1 do begin
     sflatframeid = string(flatframeid,format='(i08)')
     allfiles = psfdir+[dirs.prefix+'PSF-'+chiptag[j]+'-'+sflatframeid,dirs.prefix+'EPSF-'+chiptag[j]+'-'+sflatframeid]+'.fits'
     allfiles = [allfiles,tracedir+dirs.prefix+'ETrace-'+chiptag[j]+'-'+sflatframeid+'.fits']
-    if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
+    if keyword_set(etraceonly) then allfiles=tracedir+dirs.prefix+'Fiber-'+chiptag[j]+'-'+sflatframeid+'.fits'
+    if total(file_test(allfiles)) eq n_elements(allfiles) and not keyword_set(clobber) then begin
       print,outfile,' already exists and CLOBBER=0'
       goto,BOMB1
     endif

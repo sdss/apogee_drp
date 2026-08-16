@@ -51,8 +51,9 @@ pro mkpsf,psfid,darkid=darkid,flatid=flatid,sparseid=sparseid,fiberid=fiberid,$
   chips = ['a','b','c']
   spsfid = string(psfid[0],format='(i08)')
   allfiles = psfdir+[dirs.prefix+'PSF-'+chips+'-'+spsfid,dirs.prefix+'EPSF-'+chips+'-'+spsfid]+'.fits'
-  allfiles = [allfiles,tracedir+'apETrace-'+chips+'-'+spsfid+'.fits']
-  if total(file_test(allfiles)) eq 9 and not keyword_set(clobber) then begin
+  allfiles = [allfiles,tracedir+dirs.prefix+'ETrace-'+chips+'-'+spsfid+'.fits']
+  if keyword_set(etraceonly) then allfiles=tracedir+dirs.prefix+'Fiber-'+chips+'-'+spsfid+'.fits'
+  if total(file_test(allfiles)) eq n_elements(allfiles) and not keyword_set(clobber) then begin
     print,' PSF file: ', psfdir+file, ' already made'
     return
   endif
