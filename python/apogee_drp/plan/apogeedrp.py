@@ -417,6 +417,7 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False
         #-----------------------
         if caltype[i] == 'Fiber':
             base = load.filename('ETrace',num=name,chips=True)
+            base = base.replace('ETrace','Fiber')
         else:
             base = load.filename(caltype[i],num=name,chips=True)
         chkmaster['calfile'][i] = base
@@ -427,17 +428,14 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False
         elif caltype[i]=='Littrow':
             chfiles = [base.replace(caltype[i]+'-',caltype[i]+'-b-')]
         # Fiber
-        elif caltype[i]=='Fiber':
-            chfiles = [base.replace('ETrace-','ETrace-'+ch+'-') for ch in ['a','b','c']]
-        else:
-            chfiles = [base.replace(caltype[i]+'-',caltype[i]+'-'+ch+'-') for ch in ['a','b','c']]
+        chfiles = [base.replace(caltype[i]+'-',caltype[i]+'-'+ch+'-') for ch in ['a','b','c']]
         chinfo = info.file_status(chfiles)
         if chinfo['okay'][0]:  # get V_APRED (git version) from file
             chead = fits.getheader(chfiles[0])
             chkmaster['v_apred'][i] = chead.get('V_APRED')
         # Overall success
         if caltype[i]=='Fiber':
-            if load.exists('ETrace',num=name):
+            if np.sum(chinfo['exists'])==3:
                 chkmaster['success'][i] = True
         else:
             if load.exists(caltype[i],num=name):
@@ -2134,6 +2132,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             name = fiberdict['name'][i]
             if np.sum((mjds >= fiberdict['mjd1'][i]) & (mjds <= fiberdict['mjd2'][i])) > 0:
                 outfile = load.filename('ETrace',num=name,chips=True)
+                outfile = outfile.replace('ETrace','Fiber')
                 logfile1 = os.path.dirname(outfile)+'/mkfiber-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2145,7 +2144,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
-                    if load.exists('ETrace',num=name):
+                    files = [outfile.replace('Fiber-','Fiber-'+chip+'-') for chip in ['a','b','c']]
+                    files_exist = [os.path.exists(f) for f in files]
+                    #if load.exists('ETrace',num=name):
+                    if np.sum(files_exist)==3:
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:
