@@ -238,7 +238,13 @@ MWRFITS,trace,file,head,/create
 ;; When making the fiber calibration, only the trace positions are needed.
 ;; Do not continue with the empirical-PSF construction, which may require
 ;; the sparse calibration and introduce a circular dependency.
-if keyword_set(etraceonly) then return
+if keyword_set(etraceonly) then begin
+  ;; Move ETrace to Fiber calibration filename
+  fiberfile = repstr(file,'ETrace','Fiber')
+  print,'Moving to ',fiberfile 
+  FILE_MOVE,file,fiberfile
+  return
+endif
 
 ;; Get sparse pack PSF if desired and available
 if keyword_set(sparseid) then begin
