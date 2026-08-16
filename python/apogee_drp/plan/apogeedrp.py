@@ -2146,8 +2146,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(fiberdict)):
             name = fiberdict['name'][i]
             if graph.is_required('fiber', name):
-                outfile = load.filename('ETrace',num=name,chips=True)
-                outfile = outfile.replace('ETrace','Fiber')
+                outfile = load.filename('Fiber',num=name,chips=True)
                 logfile1 = os.path.dirname(outfile)+'/mkfiber-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2159,10 +2158,10 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
-                    files = [outfile.replace('Fiber-','Fiber-'+chip+'-') for chip in ['a','b','c']]
-                    files_exist = [os.path.exists(f) for f in files]
-                    #if load.exists('ETrace',num=name):
-                    if np.sum(files_exist)==3:
+                    #files = [outfile.replace('Fiber-','Fiber-'+chip+'-') for chip in ['a','b','c']]
+                    #files_exist = [os.path.exists(f) for f in files]
+                    #if np.sum(files_exist)==3:
+                    if load.exists('Fiber',num=name):
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:

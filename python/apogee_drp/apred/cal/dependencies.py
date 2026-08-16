@@ -55,7 +55,7 @@ _APLOAD_ROOTS = {
     "dark": "Dark",
     "flat": "Flat",
     "bpm": "BPM",
-    "fiber": "ETrace",
+    "fiber": "Fiber",
     "sparse": "Sparse",
     "littrow": "Littrow",
     "modelpsf": "PSFModel",
