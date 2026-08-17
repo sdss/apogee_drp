@@ -208,9 +208,8 @@ pro makecal,file=file,det=det,dark=dark,flat=flat,wave=wave,multiwave=multiwave,
   if keyword_set(fiber) then begin
     print,'makecal fiber: ', fiber
     if fiber gt 1 then begin
-      file = apogee_filename('PSF',num=fiber,chip='c')
-      psfdir = file_dirname(file)
-      tracedir = repstr(psfdir,'/psf','/trace')
+      file = apogee_filename('Fiber',num=fiber,chip='c')
+      tracedir = file_dirname(file)
       sfiberid = string(fiber,format='(i08)')
       allfiles = tracedir+'/'+dirs.prefix+'Fiber-'+chips+'-'+sfiberid+'.fits'
       if total(file_test(allfiles)) eq 3 and not keyword_set(clobber) then begin
