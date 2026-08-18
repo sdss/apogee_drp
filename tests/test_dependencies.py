@@ -1,6 +1,6 @@
 import numpy as np
 
-from apogee_drp.apred.cal.dependencies_v3 import (
+from apogee_drp.apred.cal.dependencies import (
     CalibrationDependencyResolver,
     CalibrationNode,
     calibration_dependency_tree,
@@ -33,6 +33,22 @@ def sample_caldict():
         "modelpsf": table(common + [("sparse", "U20"), ("psf", "U20")],
                           [(10, 99, "18001", "16001", "18002")]),
     }
+
+
+def sample_caldict_with_additional_types():
+    caldict = sample_caldict()
+    common = [("mjd1", int), ("mjd2", int), ("name", "U20")]
+    caldict.update({
+        "wave": table(common + [("frames", "U40"), ("psfid", int)],
+                      [(10, 99, "19001", "19001-19002", 18002)]),
+        "multiwave": table(common + [("frames", "U40")],
+                           [(10, 99, "19501", "19001-19002")]),
+        "lsf": table(common + [("frames", "U40"), ("psfid", int)],
+                     [(10, 99, "19601", "19601-19602", 18002)]),
+        "persistmodel": table(common, [(10, 99, "19701")]),
+        "flux": table(common, [(10, 99, "19801")]),
+    })
+    return caldict
 
 
 def test_sparse_dependency_closure_has_no_fiber_sparse_cycle():
@@ -119,3 +135,73 @@ def test_public_function_plans_range(monkeypatch, tmp_path):
     assert graph.roots == {CalibrationNode("sparse", "16001")}
     assert CalibrationNode("fiber", "15001") in graph.nodes
     assert CalibrationNode("detector", "10001") in graph.nodes
+
+
+def test_dailywave_dependencies_include_psf_model_by_default():
+    resolver = CalibrationDependencyResolver(
+        sample_caldict_with_additional_types(), FakeLoad()
+    )
+
+    dependencies = resolver.direct_dependencies(
+        CalibrationNode("dailywave", "12")
+    )
+
+    assert dependencies == {
+        CalibrationNode("bpm", "14001"),
+        CalibrationNode("fiber", "15001"),
+        CalibrationNode("modelpsf", "18001"),
+    }
+
+
+def test_library_psf_omits_model_psf_dependencies():
+    resolver = CalibrationDependencyResolver(
+        sample_caldict_with_additional_types(), FakeLoad(),
+        options={"librarypsf": True},
+    )
+
+    daily = resolver.direct_dependencies(CalibrationNode("dailywave", "12"))
+    fpi = resolver.direct_dependencies(CalibrationNode("fpi", "12001"))
+
+    assert CalibrationNode("modelpsf", "18001") not in daily
+    assert CalibrationNode("modelpsf", "18001") not in fpi
+    assert CalibrationNode("dailywave", "12") in fpi
+
+
+def test_flux_dependencies_honor_explicit_psf():
+    resolver = CalibrationDependencyResolver(
+        sample_caldict_with_additional_types(), FakeLoad(),
+        options={"psfid": "18002"},
+    )
+
+    dependencies = resolver.direct_dependencies(CalibrationNode("flux", "12001"))
+
+    assert dependencies == {
+        CalibrationNode("littrow", "17001"),
+        CalibrationNode("wave", "19001"),
+        CalibrationNode("psf", "18002"),
+    }
+
+
+def test_telluric_dependencies_parse_compound_name():
+    resolver = CalibrationDependencyResolver(
+        sample_caldict_with_additional_types(), FakeLoad()
+    )
+
+    dependencies = resolver.direct_dependencies(
+        CalibrationNode("telluric", "12-19601")
+    )
+
+    assert dependencies == {
+        CalibrationNode("dailywave", "12"),
+        CalibrationNode("lsf", "19601"),
+    }
+
+
+def test_persistmodel_has_no_builder_dependencies():
+    resolver = CalibrationDependencyResolver(
+        sample_caldict_with_additional_types(), FakeLoad()
+    )
+
+    assert resolver.direct_dependencies(
+        CalibrationNode("persistmodel", "19701")
+    ) == set()

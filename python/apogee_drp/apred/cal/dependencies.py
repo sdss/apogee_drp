@@ -64,7 +64,12 @@ _APLOAD_ROOTS = {
     "multiwave": "Wave",
     "lsf": "LSF",
     "persist": "Persist",
+    "persistmodel": "PersistModel",
+    "flux": "Flux",
     "response": "Response",
+    "fpi": "WaveFPI",
+    "dailywave": "Wave",
+    "telluric": "Telluric",
 }
 
 
@@ -308,10 +313,12 @@ class CalibrationDependencyResolver:
         caldict: Mapping[str, np.ndarray | None],
         load,
         exists: Callable[[CalibrationNode], bool] | None = None,
+        options: Mapping[str, object] | None = None,
     ) -> None:
         self.caldict = caldict
         self.load = load
         self.exists = exists
+        self.options = {} if options is None else dict(options)
 
     @staticmethod
     def node(caltype: str, name) -> CalibrationNode | None:
@@ -418,7 +425,17 @@ class CalibrationDependencyResolver:
             row = self._row("wave", name, required=False)
             if row is None:
                 mjd = self._mjd(name)
-                psf = self._valid("modelpsf", mjd)
+                psfid = self.options.get("psfid", self.options.get("psf"))
+                if psfid is not None:
+                    psf = self.node("psf", psfid)
+                elif self.options.get("librarypsf"):
+                    psf = None
+                else:
+                    modelpsf = self.options.get("modelpsf")
+                    psf = (
+                        self.node("modelpsf", modelpsf)
+                        if modelpsf is not None else self._valid("modelpsf", mjd)
+                    )
             else:
                 frames = getnums(str(row["frames"]))
                 mjd = self._mjd(frames[0])
@@ -445,12 +462,67 @@ class CalibrationDependencyResolver:
             return self._clean([
                 self._valid("dark", mjd), self._valid("flat", mjd),
             ])
+        if kind == "persistmodel":
+            return set()
+        if kind == "dailywave":
+            mjd = int(name)
+            dependencies = [
+                self._valid("bpm", mjd), self._valid("fiber", mjd),
+            ]
+            if not self.options.get("librarypsf"):
+                modelpsf = self.options.get("modelpsf")
+                dependencies.append(
+                    self.node("modelpsf", modelpsf)
+                    if modelpsf is not None else self._valid("modelpsf", mjd)
+                )
+            return self._clean(dependencies)
+        if kind == "fpi":
+            mjd = self._mjd(name)
+            dependencies = [
+                self._valid("fiber", mjd), self.node("dailywave", mjd),
+            ]
+            psfid = self.options.get("psfid", self.options.get("psf"))
+            if psfid is not None:
+                dependencies.append(self.node("psf", psfid))
+            elif not self.options.get("librarypsf"):
+                modelpsf = self.options.get("modelpsf")
+                dependencies.append(
+                    self.node("modelpsf", modelpsf)
+                    if modelpsf is not None else self._valid("modelpsf", mjd)
+                )
+            return self._clean(dependencies)
+        if kind == "flux":
+            mjd = self._mjd(name)
+            dependencies = [
+                self._valid("littrow", mjd), self._valid("wave", mjd),
+            ]
+            psfid = self.options.get("psfid", self.options.get("psf"))
+            if psfid is not None:
+                dependencies.append(self.node("psf", psfid))
+            elif not self.options.get("librarypsf"):
+                modelpsf = self.options.get("modelpsf")
+                dependencies.append(
+                    self.node("modelpsf", modelpsf)
+                    if modelpsf is not None else self._valid("modelpsf", mjd)
+                )
+            return self._clean(dependencies)
         if kind == "response":
             row = self._row("response", name)
             mjd = self._mjd(name)
             return self._clean([
                 self.node("psf", row["psfid"]), self._valid("wave", mjd),
                 self._valid("fiber", mjd), self._valid("littrow", mjd),
+            ])
+        if kind == "telluric":
+            parts = name.split("-")
+            if len(parts) != 2:
+                raise ValueError(
+                    f"Telluric name must be '<waveid>-<lsfid>', got {name!r}"
+                )
+            waveid, lsfid = parts
+            wavekind = "dailywave" if int(waveid) < 10_000_000 else "wave"
+            return self._clean([
+                self.node(wavekind, waveid), self.node("lsf", lsfid),
             ])
         raise ValueError(f"No dependency rule is defined for calibration type {kind!r}")
 

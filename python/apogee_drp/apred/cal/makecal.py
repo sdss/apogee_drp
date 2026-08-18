@@ -1,579 +1,508 @@
+"""Build APOGEE calibration products in dependency order (version 2).
+
+``makecal`` is the orchestration layer. Dependency discovery lives in
+``dependencies.py`` and each registered builder below creates exactly one
+product, assuming that its prerequisites have already been built.
+"""
+
+from __future__ import annotations
+
+from dataclasses import dataclass, field
+from importlib import import_module
 import os
-import subprocess
+from typing import Any, Callable, Mapping
+
 import numpy as np
-from astropy.io import fits
-from scipy.signal import medfilt2d
-from ..mkcal import getcal,readcal,getnums
-from ...utils import apload
-from .. import cal
 
-chips = ['a','b','c']
+from ..mkcal import getcal, getnums, readcal
+from .dependencies import CalibrationDependencyResolver, CalibrationGraph
 
-_DATAMODEL_ROOTS = {
-    "det": "Detector",
-    "dark": "Dark",
-    "flat": "Flat",
-    "bpm": "BPM",
-    "fiber": "Fiber",
-    "sparse": "Sparse",
-    "littrow": "Littrow",
-    "modelpsf": "PSFModel",
-    "psf": "PSF",
-    "wave": "Wave",
-    "multiwave": "Wave",
-    "lsf": "LSF",
-    "persist": "Persist",
-    "response": "Response",
-}
+__all__ = [
+    "BUILDERS", "BuilderSpec", "CalibrationContext",
+    "calibration_builder", "makecal",
+]
 
-def makecal(name,caltype,apred=None,telescope=None,**kw):
-    """
-    This will make one or ALL of the specified calibration product types
-    listed in the master calibration index file.
+BuilderFunction = Callable[[str, "CalibrationContext"], None]
 
-    Parameters
-    ----------
-    name : str
-       ID or name of the calibration file.
-    caltype : str
-       Name of the calibration, e.g. "det", "dark", "wave".
-         det, dark, flat, bpm, sparse, fiber, psf, modelpsf,
-         fpi, littrow, persist, persistmodel, flux, 
-         response, wave, multiwave, dailywave, telluric, lsf
-    apred : str, optional
-       APOGEE reduction version, e.g. "daily" or "1.4".
-    telescope :str, optional
-       Telescope name, either "apo25m" or "lco25m".
-    load : ApLoad object, optional
-       ApLoad object with reduction information.  Either this or 
-         apred+telescope have to be input.
-    calfile : str, optional
-        Name of master calibration index file, if not
-         specified use default cal.par in calibration directory
-    Other calibration IDs can be input such as bpmid, flatid, darkid,
-    that will then be passed on the other functions in the kw dictionary.
+
+@dataclass(frozen=True)
+class BuilderSpec:
+    """Registered implementation and data-model root for one product type."""
+
+    caltype: str
+    root: str
+    function: BuilderFunction
+
+
+BUILDERS: dict[str, BuilderSpec] = {}
+
+
+def calibration_builder(caltype: str, root: str):
+    """Register a function that builds one calibration product."""
+
+    kind = caltype.lower()
+
+    def register(function: BuilderFunction) -> BuilderFunction:
+        if kind in BUILDERS:
+            raise ValueError(f"A builder is already registered for {kind!r}")
+        BUILDERS[kind] = BuilderSpec(kind, root, function)
+        return function
+
+    return register
+
+
+@dataclass
+class CalibrationContext:
+    """Shared, typed state used by calibration builders."""
+
+    load: Any
+    calfile: str
+    allcaldict: Mapping[str, np.ndarray | None]
+    clobber: bool = False
+    unlock: bool = False
+    verbose: bool = False
+    librarypsf: bool = False
+    psfid: Any = None
+    modelpsf: Any = None
+    nofit: bool = False
+    full: bool = False
+    newwave: bool = False
+    doplot: bool = False
+    extra: dict[str, Any] = field(default_factory=dict)
+
+    @property
+    def apred(self) -> str:
+        return self.load.apred
+
+    @property
+    def telescope(self) -> str:
+        return self.load.telescope
+
+    def option(self, name: str, default=None):
+        """Return a named standard or extra builder option."""
+
+        if hasattr(self, name):
+            return getattr(self, name)
+        return self.extra.get(name, default)
+
+    def dependency_options(self) -> dict[str, Any]:
+        """Return options that can change dependency selection."""
+
+        options = dict(self.extra)
+        options.update({
+            "librarypsf": self.librarypsf,
+            "psfid": self.psfid,
+            "modelpsf": self.modelpsf,
+        })
+        return options
+
+    @staticmethod
+    def _same_name(left, right) -> bool:
+        left, right = str(left).strip(), str(right).strip()
+        try:
+            return int(left) == int(right)
+        except ValueError:
+            return left == right
+
+    def row(self, caltype: str, name, *, required: bool = True):
+        """Return the last matching master-calibration table row."""
+
+        table = self.allcaldict.get(caltype)
+        if table is not None and table.dtype.names and "name" in table.dtype.names:
+            matches = [
+                row for row in table
+                if self._same_name(row["name"], name)
+            ]
+            if matches:
+                return matches[-1]
+        if required:
+            raise KeyError(f"No {caltype!r} calibration entry named {name!r}")
+        return None
+
+    def frames(self, caltype: str, name, field_name: str = "frames") -> list[int]:
+        """Return exposure IDs stored in a calibration-table field."""
+
+        frames = getnums(str(self.row(caltype, name)[field_name]))
+        if not frames:
+            raise ValueError(f"{caltype}:{name} has no frames in {field_name!r}")
+        return frames
+
+    def mjd(self, exposure) -> int:
+        return int(self.load.cmjd(int(np.atleast_1d(exposure)[0])))
+
+    def calibrations(self, mjd: int) -> dict[str, Any]:
+        return getcal(self.calfile, int(mjd))
+
+    @staticmethod
+    def calid(calibrations: Mapping[str, Any], *names: str, default=None):
+        """Return the first available spelling of a calibration ID."""
+
+        for name in names:
+            value = calibrations.get(name)
+            if value not in (None, 0, "0", ""):
+                return value
+        return default
+
+
+def _routine(name: str) -> Callable:
+    """Load a translated calibration routine only when its builder runs."""
+
+    module_name = f"{__package__}.{name}"
+    try:
+        module = import_module(module_name)
+    except ModuleNotFoundError as error:
+        if error.name == module_name:
+            raise NotImplementedError(
+                f"The Python calibration routine {name!r} has not been translated yet"
+            ) from error
+        raise
+    try:
+        return getattr(module, name)
+    except AttributeError as error:
+        raise NotImplementedError(
+            f"{module_name!r} does not define {name!r}"
+        ) from error
+
+
+def _context_from_arguments(apred, telescope, options) -> CalibrationContext:
+    """Construct a context while preserving the legacy ``makecal`` API."""
+
+    values = dict(options)
+    load = values.pop("load", None)
+    if load is None:
+        if apred is None or telescope is None:
+            raise ValueError("Provide either load or both apred and telescope")
+        from ...utils.apload import ApLoad
+
+        load = ApLoad(apred=apred, telescope=telescope)
+
+    calfile = values.pop("calfile", None)
+    if not calfile:
+        drp_dir = os.environ.get("APOGEE_DRP_DIR")
+        if not drp_dir:
+            raise EnvironmentError(
+                "APOGEE_DRP_DIR must be set when calfile is not supplied"
+            )
+        calfile = os.path.join(drp_dir, "data", "cal", load.instrument + ".par")
+
+    allcaldict = values.pop("allcaldict", None)
+    if allcaldict is None:
+        allcaldict = readcal(calfile)
+
+    standard = {}
+    for key, default in (
+        ("clobber", False), ("unlock", False), ("verbose", False),
+        ("librarypsf", False), ("psfid", None), ("modelpsf", None),
+        ("nofit", False), ("full", False), ("newwave", False),
+        ("doplot", False),
+    ):
+        standard[key] = values.pop(key, default)
+
+    return CalibrationContext(
+        load=load, calfile=calfile, allcaldict=allcaldict,
+        extra=values, **standard,
+    )
+
+
+def _product_exists(context: CalibrationContext, node) -> bool:
+    kind = "det" if node.caltype == "detector" else node.caltype
+    spec = BUILDERS.get(kind)
+    if spec is None:
+        raise ValueError(f"No builder is registered for {node.caltype!r}")
+    return bool(context.load.exists(spec.root, num=node.name))
+
+
+def _run_calibration_graph(
+    name, caltype: str, context: CalibrationContext
+) -> CalibrationGraph:
+    """Resolve and execute a calibration dependency graph."""
+
+    resolver = CalibrationDependencyResolver(
+        context.allcaldict,
+        context.load,
+        exists=(None if context.clobber else
+                lambda node: _product_exists(context, node)),
+        options=context.dependency_options(),
+    )
+    graph = resolver.resolve([(caltype, name)])
+    for level in graph.topological_levels(missing_only=True):
+        for node in level:
+            kind = "det" if node.caltype == "detector" else node.caltype
+            spec = BUILDERS.get(kind)
+            if spec is None:
+                raise ValueError(f"No builder is registered for {node.caltype!r}")
+            if context.verbose:
+                print(f"makecal {kind}: {node.name}")
+            spec.function(node.name, context)
+    return graph
+
+
+def makecal(name, caltype, apred=None, telescope=None, **options):
+    """Build one calibration and all of its missing prerequisites.
+
+    The public call remains compatible with the initial translation: callers
+    may provide either ``apred`` plus ``telescope`` or an existing ``load``,
+    along with ``calfile``, ``allcaldict``, and execution options.
 
     Returns
     -------
-
-    Calibration products are generated in places specified by the
-    SDSS/APOGEE directory tree.
-
-    Examples
-    --------
-    
-    makecal(file=file,/dark,/flat,/wave,/lsf)
-        OR
-    makecal(file=file,dark=darkid,flat=flatid,wave=waveid,lsf=lsfid)
-    
-    Written by J.Holtzman Aug 2011
-    Added doc strings and general cleanup by D. Nidever, Sep 2020
-    Translated to Python  D. Nidever  2023/2024
+    CalibrationGraph
+        Resolved graph, including products that already existed.
     """
 
-    if 'load' in kw.keys():
-        load = kw['load']
-    elif apred is not None and telescope is not None:
-        load = apload.ApLoad(apred=apred,telescope=telescope)
-        kw['load'] = load
-    else:
-        raise ValueError('Either apred+telescope or load have to be input')
-        
-    # Get default file name if file not specified
-    if 'calfile' not in kw.keys() or kw['calfile'] is None or kw['calfile']=='':
-        caldir = os.path.join(os.environ['APOGEE_DRP_DIR'],'data','cal')
-        calfile = os.path.join(caldir,load.instrument+'.par')
-    else:
-        calfile = kw['calfile']
-    kw['calfile'] = calfile
-    # Get calibration dictionary
-    if 'allcaldict' not in kw.keys():
-        allcaldict = readcal(calfile)
-        kw['allcaldict'] = allcaldict
-    if 'verbose' not in kw.keys():
-        kw['verbose'] = False
-    
-    funcdict = {'det':det,'dark':dark,'flat':flat,'bpm':bpm,'sparse':sparse,
-                'fiber':fiber,'psf':psf,'modelpsf':modelpsf,'fpi':fpi,
-                'littrow':littrow,'persist':persist,'persistmodel':persistmodel,
-                'flux':flux,'response':response,'wave':wave,'multiwave':multiwave,
-                'dailywave':dailywave,'telluric':telluric,'lsf':lsf}
+    kind = caltype.lower()
+    if kind == "detector":
+        kind = "det"
+    if kind not in BUILDERS:
+        supported = ", ".join(sorted(BUILDERS))
+        raise ValueError(f"Unsupported calibration type {caltype!r}; use {supported}")
+    context = _context_from_arguments(apred, telescope, options)
+    return _run_calibration_graph(name, kind, context)
 
-    if caltype not in functdict.keys():
-        raise ValueError(str(caltype)+' not supported')
 
-    # Call the appropriate function
-    if kw['verbose']:
-        print('makecal '+str(caltype)+': '+str(name))
-    functdict[caltype](name,**kw)
+@calibration_builder("det", "Detector")
+def det(name: str, context: CalibrationContext) -> None:
+    row = context.row("det", name)
+    _routine("mkdet")(
+        name, linid=row["linid"], apred=context.apred,
+        telescope=context.telescope, clobber=context.clobber,
+        unlock=context.unlock,
+    )
 
-    
-def det(name,**kw):
-    """ Make Detector calibration files """
-    caltype = 'det'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    detfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' detector file: ',detfile,' already made')
-        return
-    dettab = kw['allcaldict'][caltype] 
-    ind, = np.where(dettab['name']==str(name))
-    if len(ind)==0:
-        print('No matching calibration line for',name)
-        return
-    else:
-        ind = ind[0]
-    cal.mkdet(dettab[ind]['name'],dettab[ind]['linid'],unlock=kw['unlock'])  # clobber?
 
-def dark(name,**kw):
-    """ Make Dark calibration files """
-    caltype = 'dark'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exist(calroot,num=name) and clobber=False:
-        print(' ',caltype,' file: ',calfile,' already made')
-        return
-    caltab = kw['allcaldict'][caltype]
-    ind, = np.where(caltab['name']==str(name))
-    if len(ind)==0:
-        print('No matching calibration line for',name)
-        return
-    else:
-        ind = ind[0]
-    ims = getnums(caltab[ind]['frames'])
-    mjd = int(load.cmjd(ims[0]))
-    caldict = getcal(kw['calfile'],mjd)
-    # Make the det calibration file exists
-    makecal(caldict['detit'],'det',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkdark(ims,**kw.fromkeys(['clobber','unlock']))
+@calibration_builder("dark", "Dark")
+def dark(name: str, context: CalibrationContext) -> None:
+    _routine("mkdark")(
+        context.frames("dark", name), apred=context.apred,
+        telescope=context.telescope, clobber=context.clobber,
+        unlock=context.unlock, verbose=context.verbose,
+    )
 
-def flat(name,**kw):
-    """ Make Flat calibration files """
-    caltype = 'flat'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile,' already made')
-        return
-    caltab = kw['allcaldict'][caltype]
-    ind, = np.where(caltab['name']==str(name))
-    if len(ind)==0:
-        print('No matching calibration line for',name)
-        return
-    ind = ind[0]
-    ims = getnums(caltab[ind]['frames'])
-    cmjd = int(load.cmjd(ims[0]))
-    caldict = getcal(kw['calfile'],mjd)
-    # Make sure the dark exists
-    makecal(caldict['darkid'],'dark',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkflat(ims,darkid=caldict['darkid'],nrep=caltab[ind]['nrep'],
-               dithered=caltab[ind]['dithered'],**kw.fromkeys(['clobber','unlock']))
 
-def bpm(name,**kw):
-    """ Make BPM calibration files """
-    caltype = 'bpm'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber=False:
-        print(' ',caltype,' file: ',calfile, ' already made')
-        return
-    caltab = kw['allcaldict'][caltype]
-    ind, = np.where(caltab['name']==str(name))
-    if len(ind) == 0:
-        print('No matching calibration line for',name)
-        return
-    ind = ind[0]
-    # Make sure dark/flat that we need exist
-    makecal(bpmtab[ind]['darkid'],'dark',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(bpmtab[ind]['flatid'],'flat',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkbpm(bpmtab[ind]['name'],darkid=bpmtab[ind]['darkid'],flatid=bpmtab[ind]['flatid'],
-              clobber=kw['clobber'],unlock=kw['unlock'])
+@calibration_builder("flat", "Flat")
+def flat(name: str, context: CalibrationContext) -> None:
+    row = context.row("flat", name)
+    frames = context.frames("flat", name)
+    calibrations = context.calibrations(context.mjd(frames[0]))
+    _routine("mkflat")(
+        frames, apred=context.apred, telescope=context.telescope,
+        darkid=calibrations.get("darkid"), nrep=row["nrep"],
+        dithered=bool(row["dithered"]), clobber=context.clobber,
+        unlock=context.unlock, verbose=context.verbose,
+    )
 
-def fiber(name,**kw):
-    """ Make fiber calibration file """
-    caltype = 'fiber'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile, ' already made')
-        return
-    cmjd = int(load.cmjd(name))
-    caldict = getcal(kw['calfile'],mjd)
-    cal.mkfiber(name,darkid=caldict['darkid'],flatid=caldict['flatid'],
-                sparseid=caldict['sparseid'],unlock=kw['unlock'])
 
-def sparse(name,**kw):
-    """ Make Sparsepak PSF calibration product """
-    caltype = 'sparse'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile,' already made')
-        return
-    caltab = kw['allcaldict'][caltype]
-    ind, = np.where(caltab['name']==str(name))
-    if len(ind) < 0:
-        print('No matching calibration line for',name)
-        return
-    ind = ind[0]
-    ims = getnums(caltab[ind]['frames'])
-    mjd = int(load.cmjd(ims[0]))
-    # Make sure dark/flat/bpm exist for this night
-    caldict = getcal(kw['calfile'],mjd)
-    makecal(caldict['darkid'],'dark',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(caldict['flatid'],'flat',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(caldict['bpmid'],'bpm',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    darkims = getnums(sparsetab[ind]['darkframes'])
-    maxread = getnums(sparsetab[ind]['maxread'])
+@calibration_builder("bpm", "BPM")
+def bpm(name: str, context: CalibrationContext) -> None:
+    row = context.row("bpm", name)
+    _routine("mkbpm")(
+        name, apred=context.apred, telescope=context.telescope,
+        darkid=row["darkid"], flatid=row["flatid"],
+        clobber=context.clobber, unlock=context.unlock,
+    )
+
+
+@calibration_builder("fiber", "Fiber")
+def fiber(name: str, context: CalibrationContext) -> None:
+    calibrations = context.calibrations(context.mjd(name))
+    _routine("mkfiber")(
+        name, darkid=calibrations.get("darkid"),
+        flatid=calibrations.get("flatid"), clobber=context.clobber,
+        unlock=context.unlock,
+    )
+
+
+@calibration_builder("sparse", "Sparse")
+def sparse(name: str, context: CalibrationContext) -> None:
+    row = context.row("sparse", name)
+    frames = context.frames("sparse", name)
+    calibrations = context.calibrations(context.mjd(frames[0]))
+    maxread = getnums(str(row["maxread"]))
     if len(maxread) != 3:
-        print('sparse maxread does not have 3 elements! ')
-        return
-    cal.mkepsf(ims,darkid=caldict['darkid'],flatid=caldict['flatid'],darkims=darkims,
-               dmax=sparsetab[ind]['dmax'],maxread=maxread,clobber=kw['clobber'],
-               filter=True,thresh=0.2,scat=2,unlock=kw['unlock'])
-    # This creates apSparse and apEPSF files
-    # Make empty apPSF files to indicate to makecal.pro that this
-    #  PSF file was already made
-    psffiles = [os.path.join(psfdir,load.prefix+'PSF-{:s}-{:08d}.fits'.format(ch,int(name))) for ch in chips]
-    utils.touchzero(psffiles)
+        raise ValueError(f"sparse:{name} maxread must contain three values")
+    _routine("mkepsf")(
+        frames, darkid=calibrations.get("darkid"),
+        flatid=calibrations.get("flatid"),
+        fiberid=calibrations.get("fiberid"),
+        darkims=getnums(str(row["darkframes"])), dmax=row["dmax"],
+        maxread=maxread, clobber=context.clobber, filter=True,
+        thresh=0.2, scat=2, unlock=context.unlock,
+    )
 
-def psf(name,**kw):
-    """ Make PSF calibration file """
-    caltype = 'psf'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    #if keyword_set(psf) and not keyword_set(flux) and not keyword_set(wave)
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile, ' already made')
-        return
-    cmjd = int(load.cmjd(name))
-    caldict = getcal(kw['calfile'],mjd)
-    makecal(caldict['littrowid'],'littrow',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkpsf(psf,bpmid=caldict['bpmid'],darkid=caldict['darkid'],flatid=caldict['flatid'],
-              sparseid=caldict['sparseid'],fiberid=caldict['fiberid'],
-              littrowid=caldict['littrowid'],clobber=kw['clobber'],unlock=kw['unlock'])
 
-def modelpsf(name,**kw):
-    """ Make Model PSF calibration file """
-    #if keyword_set(modelpsf) and (not keyword_set(fpi) and not keyword_set(flux) and not keyword_set(wave)) then begin
-    caltype = 'psfmodel'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile, ' already made')
-        return
-    caltab = kw['allcaldict'][caltype]
-    ind, = np.where(caltab['name']==str(name))
-    if len(ind) < 0:
-        print('No matching calibration line for',name)
-        return
-    ind = ind[0]
-    makecal(caltab[ind]['sparse'],'sparse',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(caltab[ind]['psf'],'psf',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkmodelpsf(name,sparseid=caltab[ind]['sparse'],psfid=caltab[ind]['psf'],
-                   **kw.fromkeys(['clobber','unlock']))
+@calibration_builder("littrow", "Littrow")
+def littrow(name: str, context: CalibrationContext) -> None:
+    cmjd = context.load.cmjd(int(name))
+    calibrations = context.calibrations(int(cmjd))
+    _routine("mklittrow")(
+        name, cmjd=cmjd, darkid=calibrations.get("darkid"),
+        flatid=calibrations.get("flatid"),
+        sparseid=calibrations.get("sparseid"),
+        fiberid=calibrations.get("fiberid"), clobber=context.clobber,
+        unlock=context.unlock,
+    )
 
-def fpi(name,**kw):
-    """ Make FPI calibration file """
-    caltype = 'fpi'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename('WaveFPI',num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print,' ',caltype,' file: ',calfile, ' already made'
-        return
-    cmjd = load.cmjd(name)
-    mjd = int(mjd)
-    caldict = getcal(kw['calfile'],mjd)
-    librarypsf = kw.get('librarypsf')
-    psfid = kw.get('psfid')
-    modelpsf = None
-    # Use Model PSF by default
-    if psfid is None and librarypsf is not True:
-    #if not keyword_set(psf) and not keyword_set(librarypsf):
-        psfid = None
-        modelpsf = caldict.get('modelpsf')
-        makecal(modelpsf,'modelpsf',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    # Use PSF file     
+
+@calibration_builder("psf", "PSF")
+def psf(name: str, context: CalibrationContext) -> None:
+    calibrations = context.calibrations(context.mjd(name))
+    _routine("mkpsf")(
+        name, bpmid=calibrations.get("bpmid"),
+        darkid=calibrations.get("darkid"),
+        flatid=calibrations.get("flatid"),
+        sparseid=calibrations.get("sparseid"),
+        fiberid=calibrations.get("fiberid"),
+        littrowid=calibrations.get("littrowid"),
+        clobber=context.clobber, unlock=context.unlock,
+    )
+
+
+@calibration_builder("modelpsf", "PSFModel")
+def modelpsf(name: str, context: CalibrationContext) -> None:
+    row = context.row("modelpsf", name)
+    _routine("mkmodelpsf")(
+        name, sparseid=row["sparse"], psfid=row["psf"],
+        clobber=context.clobber, unlock=context.unlock,
+    )
+
+
+def _selected_psf(context: CalibrationContext, calibrations):
+    if context.psfid is not None:
+        return context.psfid, None
+    if context.librarypsf:
+        return None, None
+    model = context.modelpsf
+    if model is None:
+        model = context.calid(calibrations, "modelpsf", "modelpsfid")
+    return None, model
+
+
+@calibration_builder("fpi", "WaveFPI")
+def fpi(name: str, context: CalibrationContext) -> None:
+    calibrations = context.calibrations(context.mjd(name))
+    psfid, model = _selected_psf(context, calibrations)
+    _routine("mkfpi")(
+        name, name=name, darkid=calibrations.get("darkid"),
+        flatid=calibrations.get("flatid"), psfid=psfid,
+        modelpsf=model, fiberid=calibrations.get("fiberid"),
+        clobber=context.clobber, unlock=context.unlock,
+        psflibrary=context.librarypsf,
+    )
+
+
+@calibration_builder("persist", "Persist")
+def persist(name: str, context: CalibrationContext) -> None:
+    row = context.row("persist", name)
+    cmjd = context.load.cmjd(int(name))
+    calibrations = context.calibrations(int(cmjd))
+    _routine("mkpersist")(
+        name, row["darkid"], row["flatid"], apred=context.apred,
+        telescope=context.telescope, thresh=row["thresh"], cmjd=cmjd,
+        darkid=calibrations.get("darkid"),
+        flatid=calibrations.get("flatid"),
+        sparseid=calibrations.get("sparseid"),
+        fiberid=calibrations.get("fiberid"), clobber=context.clobber,
+        unlock=context.unlock,
+    )
+
+
+@calibration_builder("persistmodel", "PersistModel")
+def persistmodel(name: str, context: CalibrationContext) -> None:
+    context.row("persistmodel", name)
+    _routine("mkpersistmodel")(name)
+
+
+@calibration_builder("flux", "Flux")
+def flux(name: str, context: CalibrationContext) -> None:
+    calibrations = context.calibrations(context.mjd(name))
+    psfid, model = _selected_psf(context, calibrations)
+    _routine("mkflux")(
+        [int(name)], cmjd=context.load.cmjd(int(name)),
+        darkid=calibrations.get("darkid"),
+        flatid=calibrations.get("flatid"), psfid=psfid,
+        modelpsf=model, littrowid=calibrations.get("littrowid"),
+        waveid=calibrations.get("waveid"), clobber=context.clobber,
+        unlock=context.unlock,
+    )
+
+
+@calibration_builder("response", "Response")
+def response(name: str, context: CalibrationContext) -> None:
+    row = context.row("response", name)
+    calibrations = context.calibrations(context.mjd(name))
+    _routine("mkflux")(
+        [int(name)], cmjd=context.load.cmjd(int(name)),
+        darkid=calibrations.get("darkid"),
+        flatid=calibrations.get("flatid"), psfid=row["psf"],
+        littrowid=calibrations.get("littrowid"),
+        waveid=calibrations.get("waveid"), temp=row["temp"],
+        clobber=context.clobber, unlock=context.unlock,
+    )
+
+
+@calibration_builder("wave", "Wave")
+def wave(name: str, context: CalibrationContext) -> None:
+    row = context.row("wave", name, required=False)
+    if row is None:
+        frames, output_name, row_psfid = [int(name)], str(name), None
     else:
-        # What PSF to use
-        if keyword_set(psf):
-            psfid = psf
-        # Try to find a PSF from this day
-        else:
-            print,'Trying to automatically find a PSF calibration file'
-            psfid = getpsfcal(fpi[0],psflibrary=librarypsf,unlock=kw['unlock'])
-        makecal(psfid,'psf',**kw.fromkeys(['clobber','unlock','load','calfile']))
-        
-    makecal(caldict['fiberid'],'fiber',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(mjd,'dailywave',librarypsf=librarypsf,modelpsf=modelpsf,
-            **kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkfpi(name,name=name,darkid=caldict['darkid'],flatid=caldict['flatid'],psfid=psfid,
-              fiberid=caldict['fiberid'],clobber=kw['clobber'],unlock=kw['unlock'],
-              psflibrary=librarypsf,modelpsf=modelpsf)
-
-def littrow(name,**kw):
-    """ Make Littrow calibration file """
-    caltype = 'littrow'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile,' already made')
-        return
-    cmjd = load.cmjd(name)
-    mjd = int(cmjd)
-    caldict = getcal(kw['calfile'],mjd)
-    makecal(caldict['flatid'],'flat',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mklittrow(name,cmjd=cmjd,darkid=caldict['darkid'],flatid=caldict['flatid'],
-                  sparseid=caldict['sparseid'],fiberid=caldict['fiberid'],
-                  **kw.fromkeys(['clobber','unlock']))
-
-def persist(name,**kw):
-    """ Make Persistence calibration file """
-    caltype = 'persist'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile, ' already made')
-        return
-    caltab = kw['allcaldict'][caltype] 
-    ind, = np.where(caltab['name']==str(name))
-    if len(ind) <= 0:
-        print('No matching calibration line for',name)
-        return
-    ind = ind[0]
-    cmd = load.cmjd(name)
-    mjd = int(cmjd)
-    caldict = getcal(kw['calfile'],mjd)
-    cal.mkpersist(name,persisttab[ind]['darkid'],caltab[ind]['flatid'],
-                  thresh=caltab[ind]['thresh'],cmjd=cmjd,darkid=caldict['darkid'],
-                  flatid=caldict['flatid'],sparseid=caldict['sparseid'],
-                  fiberid=caldict['fiberid'],**kw.fromkeys(['clobber','unlock']))
-
-def persistmodel(name,**kw):
-    """ Make Persistence model calibration file """
-    caltype = 'persistmodel'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile, ' already made')
-        return
-    caltab = kw['allcaldict'][caltype]
-    ind, = np.where(caltab['name']==str(name))
-    if len(ind)<0:
-        print('No matching calibration line for',name)
-        return
-    ind = ind[0]
-    mjd = int(load.cmjd(name))
-    caldict = getcal(kw['calfile'],mjd)
-    cal.mkpersistmodel(name)
-
-def flux(name,**kw):
-    """ Make Flux calibration file """
-    caltyp = 'flux'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile, ' already made')
-        return
-    librarypsf = kw.get('librarypsf')
-    mjd = int(load.cmjd(name))
-    caldict = getcal(kw['calfile'],mjd)
-    psfid = kw.get('psfid')
-    # Use Model PSF by default
-    if psfid is None and librarypsf is not True and psfmodel is None:
-    #if not keyword_set(psf) and not keyword_set(librarypsf) and keyword_set(psfmodel):
-        psfid = None
-        modelpsf = caldict.get('modelpsfid')
-        makecal(modelpsf,'modelpsf',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    # Use PSF file     
+        frames = getnums(str(row["frames"]))
+        output_name, row_psfid = str(row["name"]), row["psfid"]
+    calibrations = context.calibrations(context.mjd(frames[0]))
+    if row_psfid not in (None, 0, "0", ""):
+        psfid, model = row_psfid, None
     else:
-        if keyword_set(psf):
-            psfid = psf
-        # Try to find a PSF from this day
-        else:
-            print('Trying to automatically find a PSF calibration file')
-            psfid = getpsfcal(flux[0],psflibrary=librarypsf,unlock=kw['unlock'])
-        makecal(psfid,'psf',**kw.fromkeys(['clobber','unlock','load','calfile']))
-        
-    makecal(littrowid,'littrow',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkflux(flux,darkid=caldict['darkid'],flatid=caldict['flatid'],psfid=psfid,
-               modelpsf=modelpsf,littrowid=caldict['littrowid'],waveid=caldict['waveid'],
-               **kw.fromkeys(['clobber','unlock']))
+        psfid, model = _selected_psf(context, calibrations)
+    _routine("mkwave")(
+        frames, apred=context.apred, telescope=context.telescope,
+        name=output_name, darkid=calibrations.get("darkid"),
+        flatid=calibrations.get("flatid"), psfid=psfid,
+        modelpsf=model, fiberid=calibrations.get("fiberid"),
+        clobber=context.clobber, nofit=context.nofit,
+        unlock=context.unlock, plot=context.doplot,
+    )
 
-def response(name,**kw):
-    """ Make Response calibration file """
-    caltype = 'response'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile, ' already made')
-        return
-    caltab = kw['allcaldict'][caltype]
-    ind, = np.where(caltab['name']==str(name))
-    if len(ind) == 0:
-        print('No matching calibration line for',name)
-    else:
-        if nres>1:
-            i=i[0]
-    mjd = int(load.cmjd(name))
-    caldict = getcal(kw['calfile'],mjd)
-    makecal(caltab[ind]['psf'],'psf',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(caldict['waveid'],'wave',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(caldict['fiberid'],'fiber',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(caldict['littrowid'],'littrow',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkflux(response,darkid=caldict['darkid'],flatid=caldict['flatid'],psfid=caltab[ind]['psf'],
-               littrowid=caldict['littrowid'],waveid=caldict['waveid'],temp=caltab[ind]['temp'],
-               **kw.fromkeys(['clobber','unlock']))
 
-def wave(name,**kw):
-    """ Make Wavelength calibration file """
-    caltype = 'wave'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chip='c')
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile, ' already made')
-        return
-    librarypsf = kw.get('librarypsf')
-    psfid = kw.get('psfid')
-    caltab = kw['allcaldict'][caltype]
-    ind, = np.where(caltab['name']==str(name))
-    if len(ind) > 0:
-        ind = ind[0]
-        ims = getnums(wavetab[ind]['frames'])
-        name = wavetab[ind]['name']
-        psfid = wavetab[ind]['psfid']
-    # Use the input filename
-    else:
-        ims = wave
-        name = ims[0]
-        mjd = int(load.cmjd(name))
-        caldict = getcal(kw['calfile'],mjd)
-        # Use Model PSF by default
-        if psfid is None and librarypsf is not True:
-        #if not keyword_set(psf) and not keyword_set(librarypsf):
-            psfid = None
-            modelpsf = caldict.get('modelpsfid')
-            makecal(modelpsf,'modelpsf',**kw.fromkeys(['clobber','unlock','load','calfile']))
-        # Use PSF file     
-        else:
-            if keyword_set(psf):
-                psfid = psf
-            # Try to find a PSF from this day
-            else:
-                print('Trying to automatically find a PSF calibration file')
-                psfid = getpsfcal(ims[0],psflibrary=librarypsf,unlock=kw['unlock'])
-            makecal(psfid,'psf',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    mjd = int(load.cmjd(ims[0]))
-    caldict = getcal(kw['calfile'],mjd)
-    # Make sure we have the bpm/fiber files for this night
-    makecal(caldict['bpmid'],'bpm',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(caldict['fiberid'],'fiber',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkwave(ims,name=name,darkid=caldict['darkid'],flatid=caldict['flatid'],
-               psfid=psfid,modelpsf=modelpsf,fiberid=caldict['fiberid'],
-               clobber=kw['clobber'],nofit=nofit,unlock=kw['unlock'])
-            
-def multiwave(name,**kw):
-    """ Make multi-night wavelength calibration file """
-    caltype = 'multiwave'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename('Wave',num=name,chips=True)
-    if load.exists('Wave',num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile,' already made')
-        return
-    librarypsf = kw.get('librarypsf')
-    caltab = kw['allcaldict'][caltype]
-    ind, = np.where(caltab['name']==str(name))
-    if len(ind)==0:
-        print('No matching calibration line for',name)
-        return
-    ind = ind[0]
-    ims = getnums(caltab[ind]['frames'])
-    cal.mkmultiwave(ims,name=caltab[ind]['name'],clobber=kw['clobber'],file=file,
-                    unlock=kw['unlock'],psflibrary=librarypsf)
+@calibration_builder("multiwave", "Wave")
+def multiwave(name: str, context: CalibrationContext) -> None:
+    _routine("mkmultiwave")(
+        context.frames("multiwave", name), name=name,
+        calfile=context.calfile, clobber=context.clobber,
+        unlock=context.unlock, psflibrary=context.librarypsf,
+    )
 
-def dailywave(name,**kw):
-    """ Make daily wavelength calibration file """
-    caltype = 'dailywave'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename('Wave',num=name,chips=True)
-    wavedir = os.path.dirname(load.filename('Wave',num=name,chips=True))
-    fmt = '{:s}Wave-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(wavedir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfiles])==3 and clobber==False:
-        print(' ',caltype,' file: ',calfile,' already made')
-        return
+
+@calibration_builder("dailywave", "Wave")
+def dailywave(name: str, context: CalibrationContext) -> None:
     mjd = int(name)
-    caldict = getcal(kw['calfile'],mjd)
-    librarypsf = kw.get('librarypsf')
-    modelpsf = caldict.get('modelpsf')
-    if librarypsf:
-        modelpsf = None
-    makecal(caldict['bpmid'],'bpm',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(caldict['fiberid'],'fiber',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkdailywave(name,darkid=caldict['darkid'],flatid=caldict['flatid'],psfid=psfid,
-                    fiberid=caldict['fiberid'],clobber=kw['clobber'],nofit=kw.get('nofit'),
-                    unlock=kw['unlock'],psflibrary=librarypsf,modelpsf=modelpsf)
+    calibrations = context.calibrations(mjd)
+    psfid, model = _selected_psf(context, calibrations)
+    _routine("mkdailywave")(
+        mjd, darkid=calibrations.get("darkid"),
+        flatid=calibrations.get("flatid"), psfid=psfid,
+        modelpsf=model, fiberid=calibrations.get("fiberid"),
+        clobber=context.clobber, nofit=context.nofit,
+        unlock=context.unlock, psflibrary=context.librarypsf,
+    )
 
-def telluric(name,**kw):
-    """ Make daily telluric calibration file """
-    caltype = 'telluric'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile,' already made')
-        return
-    waveid = int(telluric.split('-')[0])
-    lsfid = int(telluric.split('-')[1])
-    if waveid < 1e7:
-       makecal(waveid,'dailywave',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    else:
-       makecal(waveid,'wave',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(lsfid,'lsf',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mktelluric(name,**kw.fromkeys(['clobber','unlock']))
 
-def lsf(name,**kw):
-    """ Make LSF calibration file """
-    caltype = 'lsf'
-    calroot = _DATAMODEL_ROOTS[caltype]
-    load = kw['load']
-    calfile = load.filename(calroot,num=name,chips=True)
-    if load.exists(calroot,num=name) and clobber==False:
-        print(' ',caltype,' file: ',calfile,' already made')
-        return
-    caltab = kw['allcaldict'][caltype]
-    ind, = np.where(caltab['name']==str(name))
-    if len(ind) <= 0:
-        print('No matching calibration line for',name)
-        return
-    ind = ind[0]
-    ims = getnums(caltab[ind[0]]['frames'])
-    mjd = int(load.cmjd(ims[0]))
-    librarypsf = kw.get('librarypsf')
-    modelpsf = caldict.get('modelpsf')
-    if librarypsf:
-        modelpsf = None
-    caldict = getcal(kw['calfile'],mjd)
-    makecal(caldict['multiwaveid'],'multiwave',librarypsf=librarypsf,modelpsf=modelpsf,
-            **kw.fromkeys(['clobber','unlock','load','calfile']))  # librarypsf=librarypsf
-    cal.mklsf(ims,name,darkid=caldict['darkid'],flatid=caldict['flatid'],
-              fiberid=caldict['fiberid'],psfid=lsftab[ind]['psfid'],
-              full=kw.get('full'),newwave=kw.get('newwave'),clobber=kw['clobber'],
-              doplot=kw.get('dopl'),unlock=kw['unlock'])
+@calibration_builder("telluric", "Telluric")
+def telluric(name: str, context: CalibrationContext) -> None:
+    _routine("mktelluric")(
+        name, clobber=context.clobber, unlock=context.unlock,
+    )
+
+
+@calibration_builder("lsf", "LSF")
+def lsf(name: str, context: CalibrationContext) -> None:
+    row = context.row("lsf", name)
+    frames = context.frames("lsf", name)
+    calibrations = context.calibrations(context.mjd(frames[0]))
+    _routine("mklsf")(
+        frames, context.calid(calibrations, "multiwaveid", "waveid"),
+        darkid=calibrations.get("darkid"),
+        flatid=calibrations.get("flatid"), psfid=row["psfid"],
+        fiberid=calibrations.get("fiberid"), full=context.full,
+        newwave=context.newwave, clobber=context.clobber,
+        pl=context.doplot, unlock=context.unlock,
+    )
