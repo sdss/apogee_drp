@@ -167,6 +167,7 @@ pro mkdailywave,mjd,darkid=darkid,flatid=flatid,psfid=psfid,$
   if keyword_set(clobber) then cmd=[cmd,'--clobber']
   cmd = [cmd,'--observatory',strmid(dirs.telescope,0,3),'--verbose']
   cmd = [cmd,name]
+  print,cmd
   spawn,cmd,/noshell
   
   ;; Check that the calibration file was successfully created

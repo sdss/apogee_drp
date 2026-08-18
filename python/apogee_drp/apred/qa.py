@@ -993,7 +993,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
             fps = False
         prefix = 'as'
 
-    expinfo = info.expinfo(observatory=load.observatory, mjd5=int(mjd))
+    #expinfo = info.expinfo(observatory=load.observatory, mjd5=int(mjd))
     chips = np.array(['a','b','c'])
     nchips = len(chips)
 
@@ -1296,7 +1296,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     chiplab = np.array(['blue','green','red'])
     nchips = len(chips)
 
-    expinfo = info.expinfo(observatory=load.observatory, mjd5=int(mjd))
+    #expinfo = info.expinfo(observatory=load.observatory, mjd5=int(mjd))
 
     # Make plot and html directories if they don't already exist.
     platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))

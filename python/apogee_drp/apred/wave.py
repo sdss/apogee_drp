@@ -179,7 +179,7 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
     expinfo = None
     # Get exposure information
     for i,m in enumerate(mjds):
-        expinfo1 = info.expinfo(observatory=observatory,mjd5=m)
+        expinfo1 = info.expinfo(observatory=observatory,mjd5=m,fieldinfo=False)
         nexp = len(expinfo1)
         if nexp>0:
             if expinfo is None:
@@ -410,6 +410,9 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                 nexpforthisgroup += 1  # increment counter for this group
                 
             # Add information to the linelist
+            if len(flinestr)==0:
+                print('no lines. skipping',num)
+                continue
             flinestr = Table(flinestr)  # convert temporarily to astropy Table to easily add a column
             flinestr['group'] = -1
             flinestr['lamptype'] = '      '  # initalize with enough spaces for UNE and THARNE

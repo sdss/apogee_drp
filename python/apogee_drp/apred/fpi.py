@@ -62,7 +62,7 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     # Get exposure information
     if verbose:
         print('Getting exposure information')
-    expinfo = info.expinfo(observatory=observatory,mjd5=mjd5)
+    expinfo = info.expinfo(observatory=observatory,mjd5=mjd5,fieldinfo=False)
     nexp = len(expinfo)
     print(nexp,' exposures')
     # Sort them
