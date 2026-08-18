@@ -1,4 +1,4 @@
-"""Build APOGEE calibration products in dependency order (version 2).
+"""Build APOGEE calibration products, optionally including dependencies (v3).
 
 ``makecal`` is the orchestration layer. Dependency discovery lives in
 ``dependencies.py`` and each registered builder below creates exactly one
@@ -15,7 +15,10 @@ from typing import Any, Callable, Mapping
 import numpy as np
 
 from ..mkcal import getcal, getnums, readcal
-from .dependencies import CalibrationDependencyResolver, CalibrationGraph
+from .dependencies import (
+    CalibrationDependencyResolver,
+    CalibrationGraph,
+)
 
 __all__ = [
     "BUILDERS", "BuilderSpec", "CalibrationContext",
@@ -68,6 +71,7 @@ class CalibrationContext:
     full: bool = False
     newwave: bool = False
     doplot: bool = False
+    dependencies: bool = False
     extra: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -194,7 +198,7 @@ def _context_from_arguments(apred, telescope, options) -> CalibrationContext:
         ("clobber", False), ("unlock", False), ("verbose", False),
         ("librarypsf", False), ("psfid", None), ("modelpsf", None),
         ("nofit", False), ("full", False), ("newwave", False),
-        ("doplot", False),
+        ("doplot", False), ("dependencies", False),
     ):
         standard[key] = values.pop(key, default)
 
@@ -227,22 +231,46 @@ def _run_calibration_graph(
     graph = resolver.resolve([(caltype, name)])
     for level in graph.topological_levels(missing_only=True):
         for node in level:
-            kind = "det" if node.caltype == "detector" else node.caltype
-            spec = BUILDERS.get(kind)
-            if spec is None:
-                raise ValueError(f"No builder is registered for {node.caltype!r}")
-            if context.verbose:
-                print(f"makecal {kind}: {node.name}")
-            spec.function(node.name, context)
+            _run_node(node, context)
+    return graph
+
+
+def _run_node(node, context: CalibrationContext) -> None:
+    """Dispatch one resolved node to its registered builder."""
+
+    kind = "det" if node.caltype == "detector" else node.caltype
+    spec = BUILDERS.get(kind)
+    if spec is None:
+        raise ValueError(f"No builder is registered for {node.caltype!r}")
+    if context.verbose:
+        print(f"makecal {kind}: {node.name}")
+    spec.function(node.name, context)
+
+
+def _run_requested_calibration(
+    name, caltype: str, context: CalibrationContext
+) -> CalibrationGraph:
+    """Build only the requested product, without resolving prerequisites."""
+
+    node = CalibrationDependencyResolver.node(caltype, name)
+    if node is None:
+        raise ValueError(f"Invalid calibration name {name!r}")
+    graph = CalibrationGraph(roots={node}, dependencies={node: set()})
+    if not context.clobber and _product_exists(context, node):
+        graph.existing.add(node)
+        return graph
+    _run_node(node, context)
     return graph
 
 
 def makecal(name, caltype, apred=None, telescope=None, **options):
-    """Build one calibration and all of its missing prerequisites.
+    """Build one calibration, optionally including missing prerequisites.
 
     The public call remains compatible with the initial translation: callers
     may provide either ``apred`` plus ``telescope`` or an existing ``load``,
-    along with ``calfile``, ``allcaldict``, and execution options.
+    along with ``calfile``, ``allcaldict``, and execution options. By default
+    only the requested product is built. Set ``dependencies=True`` to resolve
+    and build its complete prerequisite graph first.
 
     Returns
     -------
@@ -257,7 +285,9 @@ def makecal(name, caltype, apred=None, telescope=None, **options):
         supported = ", ".join(sorted(BUILDERS))
         raise ValueError(f"Unsupported calibration type {caltype!r}; use {supported}")
     context = _context_from_arguments(apred, telescope, options)
-    return _run_calibration_graph(name, kind, context)
+    if context.dependencies:
+        return _run_calibration_graph(name, kind, context)
+    return _run_requested_calibration(name, kind, context)
 
 
 @calibration_builder("det", "Detector")
