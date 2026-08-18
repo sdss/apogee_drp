@@ -9,6 +9,23 @@ from .. import cal
 
 chips = ['a','b','c']
 
+_DATAMODEL_ROOTS = {
+    "det": "Detector",
+    "dark": "Dark",
+    "flat": "Flat",
+    "bpm": "BPM",
+    "fiber": "Fiber",
+    "sparse": "Sparse",
+    "littrow": "Littrow",
+    "modelpsf": "PSFModel",
+    "psf": "PSF",
+    "wave": "Wave",
+    "multiwave": "Wave",
+    "lsf": "LSF",
+    "persist": "Persist",
+    "response": "Response",
+}
+
 def makecal(name,caltype,apred=None,telescope=None,**kw):
     """
     This will make one or ALL of the specified calibration product types
@@ -93,15 +110,14 @@ def makecal(name,caltype,apred=None,telescope=None,**kw):
     
 def det(name,**kw):
     """ Make Detector calibration files """
+    caltype = 'det'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    detfile = load.filename('Detector',num=name,chips=True)
-    detdir = os.path.dirname(load.filename('Detector',num=name,chips=True))
-    fmt = '{:s}Detector-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(detdir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfiles])==3 and clobber==False:
+    detfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
         print(' detector file: ',detfile,' already made')
         return
-    dettab = kw['allcaldict']['det'] 
+    dettab = kw['allcaldict'][caltype] 
     ind, = np.where(dettab['name']==str(name))
     if len(ind)==0:
         print('No matching calibration line for',name)
@@ -112,66 +128,61 @@ def det(name,**kw):
 
 def dark(name,**kw):
     """ Make Dark calibration files """
+    caltype = 'dark'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    darkfile = load.filename('Dark',num=name,chips=True)
-    darkdir = os.path.dirname(load.filename('Dark',num=name,chips=True))
-    fmt = '{:s}Dark-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(darkdir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    outfiles += [os.path.join(darkdir,load.prefix+'Dark-{:08d}.tab'.format(int(name)))]
-    if np.sum([os.path.exists(f) for f in outfiles])==4 and clobber==False:
-        print(' dark file: ',darkfile+'.tab',' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exist(calroot,num=name) and clobber=False:
+        print(' ',caltype,' file: ',calfile,' already made')
         return
-    darktab = kw['allcaldict']['dark']
-    ind, = np.where(darktab['name']==str(name))
+    caltab = kw['allcaldict'][caltype]
+    ind, = np.where(caltab['name']==str(name))
     if len(ind)==0:
         print('No matching calibration line for',name)
         return
     else:
         ind = ind[0]
-    ims = getnums(darktab[ind]['frames'])
+    ims = getnums(caltab[ind]['frames'])
     mjd = int(load.cmjd(ims[0]))
     caldict = getcal(kw['calfile'],mjd)
     # Make the det calibration file exists
     makecal(caldict['detit'],'det',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkdark(ims,clobber=kw['clobber'],unlock=kw['unlock'])
+    cal.mkdark(ims,**kw.fromkeys(['clobber','unlock']))
 
 def flat(name,**kw):
     """ Make Flat calibration files """
+    caltype = 'flat'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    flatfile = load.filename('Flat',num=name,chips=True)
-    flatdir = os.path.dirname(load.filename('Flat',num=name,chips=True))
-    fmt = '{:s}Flat-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(flatdir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    outfiles += [os.path.join(flatdir,load.prefix+'Flat-{:08d}.tab'.format(int(name)))]
-    if np.sum([os.path.exists(f) for f in outfiles])==4 and clobber==False:
-        print(' flat file: ',flatfile+'.tab',' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile,' already made')
         return
-    flattab = kw['allcaldict']['flat']
-    ind, = np.where(flattab['name']==str(name))
+    caltab = kw['allcaldict'][caltype]
+    ind, = np.where(caltab['name']==str(name))
     if len(ind)==0:
         print('No matching calibration line for',name)
         return
     ind = ind[0]
-    ims = getnums(flattab[ind]['frames'])
+    ims = getnums(caltab[ind]['frames'])
     cmjd = int(load.cmjd(ims[0]))
     caldict = getcal(kw['calfile'],mjd)
     # Make sure the dark exists
     makecal(caldict['darkid'],'dark',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkflat(ims,darkid=caldict['darkid'],nrep=flattab[ind]['nrep'],dithered=flattab[ind]['dithered'],
-               clobber=kw['clobber'],unlock=kw['unlock'])
+    cal.mkflat(ims,darkid=caldict['darkid'],nrep=caltab[ind]['nrep'],
+               dithered=caltab[ind]['dithered'],**kw.fromkeys(['clobber','unlock']))
 
 def bpm(name,**kw):
     """ Make BPM calibration files """
+    caltype = 'bpm'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    bpmfile = load.filename('BPM',num=name,chips=True)
-    bpmdir = os.path.dirname(load.filename('BPM',num=name,chips=True))
-    fmt = '{:s}BPM-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(bpmdir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfiles])==3 and clobber==False:
-        print(' bpm file: ',bpmfile, ' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber=False:
+        print(' ',caltype,' file: ',calfile, ' already made')
         return
-    bpmtab = kw['allcaldict']['bpm']
-    ind, = np.where(bpmtab['name']==str(name))
+    caltab = kw['allcaldict'][caltype]
+    ind, = np.where(caltab['name']==str(name))
     if len(ind) == 0:
         print('No matching calibration line for',name)
         return
@@ -182,21 +193,36 @@ def bpm(name,**kw):
     cal.mkbpm(bpmtab[ind]['name'],darkid=bpmtab[ind]['darkid'],flatid=bpmtab[ind]['flatid'],
               clobber=kw['clobber'],unlock=kw['unlock'])
 
+def fiber(name,**kw):
+    """ Make fiber calibration file """
+    caltype = 'fiber'
+    calroot = _DATAMODEL_ROOTS[caltype]
+    load = kw['load']
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile, ' already made')
+        return
+    cmjd = int(load.cmjd(name))
+    caldict = getcal(kw['calfile'],mjd)
+    cal.mkfiber(name,darkid=caldict['darkid'],flatid=caldict['flatid'],
+                sparseid=caldict['sparseid'],unlock=kw['unlock'])
+
 def sparse(name,**kw):
     """ Make Sparsepak PSF calibration product """
+    caltype = 'sparse'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    sparsefile = load.filename('Sparse',num=name,chips=True)
-    psfdir = os.path.dirname(load.filename('Sparse',num=name,chips=True))
-    if os.path.exists(sparsefile) and clobber==False:
-        print(' sparse file: ',sparsefile,' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile,' already made')
         return
-    sparsetab = kw['allcaldict']['sparse'] 
-    ind, = np.where(sparsetab['name']==str(name))
+    caltab = kw['allcaldict'][caltype]
+    ind, = np.where(caltab['name']==str(name))
     if len(ind) < 0:
         print('No matching calibration line for',name)
         return
     ind = ind[0]
-    ims = getnums(sparsetab[ind]['frames'])
+    ims = getnums(caltab[ind]['frames'])
     mjd = int(load.cmjd(ims[0]))
     # Make sure dark/flat/bpm exist for this night
     caldict = getcal(kw['calfile'],mjd)
@@ -217,33 +243,15 @@ def sparse(name,**kw):
     psffiles = [os.path.join(psfdir,load.prefix+'PSF-{:s}-{:08d}.fits'.format(ch,int(name))) for ch in chips]
     utils.touchzero(psffiles)
 
-def fiber(name,**kw):
-    """ Make fiber calibration file """
-    load = kw['load']
-    psffile = load.filename('PSF',num=name,chips=True)
-    psfdir = os.path.dirname(load.filename('PSF',num=name,chips=True))
-    fmt = '{:s}{:s}-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(psfdir,fmt.format(load.prefix,'EPSF',ch,int(name))) for ch in chips]
-    outfiles = [os.path.join(psfdir,fmt.format(load.prefix,'PSF',ch,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfiles])==6 and clobber==False:
-        print(' psf file: ',psffile, ' already made')
-        return
-    cmjd = int(load.cmjd(name))
-    caldict = getcal(kw['calfile'],mjd)
-    cal.mkpsf(name,darkid=caldict['darkid'],flatid=caldict['flatid'],
-              sparseid=caldict['sparseid'],unlock=kw['unlock'])
-
 def psf(name,**kw):
     """ Make PSF calibration file """
+    caltype = 'psf'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
     #if keyword_set(psf) and not keyword_set(flux) and not keyword_set(wave)
-    psffile = load.filename('PSF',num=name,chips=True)
-    psfdir = os.path.dirname(load.filename('PSF',num=name,chips=True))
-    fmt = '{:s}{:s}-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(psfdir,fmt.format(load.prefix,'EPSF',ch,int(name))) for ch in chips]
-    outfiles += [os.path.join(psfdir,fmt.format(load.prefix,'PSF',ch,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfiles])==6 and clobber==False:
-        print(' psf file: ',psffile, ' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile, ' already made')
         return
     cmjd = int(load.cmjd(name))
     caldict = getcal(kw['calfile'],mjd)
@@ -255,37 +263,35 @@ def psf(name,**kw):
 def modelpsf(name,**kw):
     """ Make Model PSF calibration file """
     #if keyword_set(modelpsf) and (not keyword_set(fpi) and not keyword_set(flux) and not keyword_set(wave)) then begin
+    caltype = 'psfmodel'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    psffile = load.filename('PSFModel',num=name,chips=True)
-    psfdir = os.path.dirname(load.filename('PSFModel',num=name,chips=True))
-    fmt = '{:s}PSFModel-{:s}-{:08d}.fits'
-    allfiles = [os.path.join(psfdir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfile])==3 and clobber==False:
-        print(' modelpsf file: ',psffile, ' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile, ' already made')
         return
-    modelpsftab = kw['allcaldict']['modelpsf'] 
-    ind, = np.where(modelpsftab['name']==str(name))
+    caltab = kw['allcaldict'][caltype]
+    ind, = np.where(caltab['name']==str(name))
     if len(ind) < 0:
         print('No matching calibration line for',name)
         return
     ind = ind[0]
-    makecal(modelpsftab[ind]['sparse'],'sparse',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    makecal(modelpsftab[ind]['psf'],'psf',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkmodelpsf(name,sparseid=modelpsftab[ind]['sparse'],psfid=modelpsftab[ind]['psf'],
-                   clobber=kw['clobber'],unlock=kw['unlock'])
+    makecal(caltab[ind]['sparse'],'sparse',**kw.fromkeys(['clobber','unlock','load','calfile']))
+    makecal(caltab[ind]['psf'],'psf',**kw.fromkeys(['clobber','unlock','load','calfile']))
+    cal.mkmodelpsf(name,sparseid=caltab[ind]['sparse'],psfid=caltab[ind]['psf'],
+                   **kw.fromkeys(['clobber','unlock']))
 
 def fpi(name,**kw):
     """ Make FPI calibration file """
+    caltype = 'fpi'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    wavefpifile = load.filename('WaveFPI',num=name,chips=True)
-    wavefpidir = os.path.dirname(load.filename('WaveFPI',num=name,chips=True))
+    calfile = load.filename('WaveFPI',num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print,' ',caltype,' file: ',calfile, ' already made'
+        return
     cmjd = load.cmjd(name)
     mjd = int(mjd)
-    fmt = '{:s}WaveFPI-{:s}-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(wavedir,fmt.format(load.prefix,ch,cmjd,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfiles])==3 and clobber==False:
-        print,' fpi file: ',file, ' already made'
-        return
     caldict = getcal(kw['calfile'],mjd)
     librarypsf = kw.get('librarypsf')
     psfid = kw.get('psfid')
@@ -316,10 +322,12 @@ def fpi(name,**kw):
 
 def littrow(name,**kw):
     """ Make Littrow calibration file """
+    caltype = 'littrow'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    litfile = load.filename('Littrow',num=name,chips=True)
-    if os.path.exists(litfile) and clobber==False:
-        print(' littrow file: ',litfile,' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile,' already made')
         return
     cmjd = load.cmjd(name)
     mjd = int(cmjd)
@@ -327,20 +335,19 @@ def littrow(name,**kw):
     makecal(caldict['flatid'],'flat',**kw.fromkeys(['clobber','unlock','load','calfile']))
     cal.mklittrow(name,cmjd=cmjd,darkid=caldict['darkid'],flatid=caldict['flatid'],
                   sparseid=caldict['sparseid'],fiberid=caldict['fiberid'],
-                  clobber=kw['clobber'],unlock=kw['unlock'])
+                  **kw.fromkeys(['clobber','unlock']))
 
 def persist(name,**kw):
     """ Make Persistence calibration file """
+    caltype = 'persist'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    perfile = load.filename('Persist',num=name,chips=True)
-    perdir = os.path.dirname(load.filename('Persist',num=name,chips=True))
-    fmt = '{:s}Persist-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(perdir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfiles])==3 and clobber==False:
-        print(' persist file: ',perfile, ' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile, ' already made')
         return
-    persisttab = kw['allcaldict']['persist'] 
-    ind, = np.where(persisttab['name']==str(name))
+    caltab = kw['allcaldict'][caltype] 
+    ind, = np.where(caltab['name']==str(name))
     if len(ind) <= 0:
         print('No matching calibration line for',name)
         return
@@ -348,23 +355,22 @@ def persist(name,**kw):
     cmd = load.cmjd(name)
     mjd = int(cmjd)
     caldict = getcal(kw['calfile'],mjd)
-    cal.mkpersist(name,persisttab[ind]['darkid'],persisttab[ind]['flatid'],
-                  thresh=persisttab[ind]['thresh'],cmjd=cmjd,darkid=caldict['darkid'],
+    cal.mkpersist(name,persisttab[ind]['darkid'],caltab[ind]['flatid'],
+                  thresh=caltab[ind]['thresh'],cmjd=cmjd,darkid=caldict['darkid'],
                   flatid=caldict['flatid'],sparseid=caldict['sparseid'],
-                  fiberid=caldict['fiberid'],clobber=kw['clobber'],unlock=kw['unlock'])
+                  fiberid=caldict['fiberid'],**kw.fromkeys(['clobber','unlock']))
 
 def persistmodel(name,**kw):
     """ Make Persistence model calibration file """
+    caltype = 'persistmodel'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    perfile = load.filename('PersistModel',num=name,chips=True)
-    perdir = os.path.dirname(load.filename('PersistModel',num=name,chips=True))
-    fmt = '{:s}PersistModel-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(perdir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfiles])==3 and clobber==False:
-        print(' modelpersist file: ',file, ' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile, ' already made')
         return
-    persistmodeltab = kw['allcaldict']['persistmodel'] 
-    ind, = np.where(persistmodeltab['name']==str(name))
+    caltab = kw['allcaldict'][caltype]
+    ind, = np.where(caltab['name']==str(name))
     if len(ind)<0:
         print('No matching calibration line for',name)
         return
@@ -375,13 +381,12 @@ def persistmodel(name,**kw):
 
 def flux(name,**kw):
     """ Make Flux calibration file """
+    caltyp = 'flux'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    fluxfile = load.filename('Flux',num=name,chips=True)
-    fluxdir = os.path.dirname(load.filename('Flux',num=name,chips=True))
-    fmt = '{:s}Flux-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(fluxdir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfiles])==3 and clobber==False:
-        print(' flux file: ',fluxfile, ' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile, ' already made')
         return
     librarypsf = kw.get('librarypsf')
     mjd = int(load.cmjd(name))
@@ -406,20 +411,19 @@ def flux(name,**kw):
     makecal(littrowid,'littrow',**kw.fromkeys(['clobber','unlock','load','calfile']))
     cal.mkflux(flux,darkid=caldict['darkid'],flatid=caldict['flatid'],psfid=psfid,
                modelpsf=modelpsf,littrowid=caldict['littrowid'],waveid=caldict['waveid'],
-               clobber=kw['clobber'],unlock=kw['unlock'])
+               **kw.fromkeys(['clobber','unlock']))
 
 def response(name,**kw):
     """ Make Response calibration file """
+    caltype = 'response'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    resfile = load.filename('Response',num=name,chips=True)
-    resdir = os.path.dirname(load.filename('Response',num=name,chips=True))
-    fmt = '{:s}Response-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(resdir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfiles])==3 and clobber==False:
-        print(' response file: ',resfile, ' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile, ' already made')
         return
-    responsetab = kw['allcaldict']['response'] 
-    ind, = np.where(responsetab['name']==str(name))
+    caltab = kw['allcaldict'][caltype]
+    ind, = np.where(caltab['name']==str(name))
     if len(ind) == 0:
         print('No matching calibration line for',name)
     else:
@@ -427,28 +431,27 @@ def response(name,**kw):
             i=i[0]
     mjd = int(load.cmjd(name))
     caldict = getcal(kw['calfile'],mjd)
-    makecal(responsetab[ind]['psf'],'psf',**kw.fromkeys(['clobber','unlock','load','calfile']))
+    makecal(caltab[ind]['psf'],'psf',**kw.fromkeys(['clobber','unlock','load','calfile']))
     makecal(caldict['waveid'],'wave',**kw.fromkeys(['clobber','unlock','load','calfile']))
     makecal(caldict['fiberid'],'fiber',**kw.fromkeys(['clobber','unlock','load','calfile']))
     makecal(caldict['littrowid'],'littrow',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mkflux(response,darkid=caldict['darkid'],flatid=caldict['flatid'],psfid=responsetab[ind]['psf'],
-               littrowid=caldict['littrowid'],waveid=caldict['waveid'],temp=responsetab[ind]['temp'],
-               clobber=kw['clobber'],unlock=kw['unlock'])
+    cal.mkflux(response,darkid=caldict['darkid'],flatid=caldict['flatid'],psfid=caltab[ind]['psf'],
+               littrowid=caldict['littrowid'],waveid=caldict['waveid'],temp=caltab[ind]['temp'],
+               **kw.fromkeys(['clobber','unlock']))
 
 def wave(name,**kw):
     """ Make Wavelength calibration file """
+    caltype = 'wave'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    wavefile = load.filename('Wave',num=name,chip='c')
-    wavedir = os.path.dirname(load.filename('Wave',num=name,chip='c'))
-    fmt = '{:s}Wave-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(wavedir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    if np.sum([os.path.exists(f) for f in outfiles])==3 and clobber==False:
-        print(' wave file: ',wavefile, ' already made')
+    calfile = load.filename(calroot,num=name,chip='c')
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile, ' already made')
         return
     librarypsf = kw.get('librarypsf')
     psfid = kw.get('psfid')
-    wavetab = kw['allcaldict']['wave']
-    ind, = np.where(wavetab['name']==str(name))
+    caltab = kw['allcaldict'][caltype]
+    ind, = np.where(caltab['name']==str(name))
     if len(ind) > 0:
         ind = ind[0]
         ims = getnums(wavetab[ind]['frames'])
@@ -485,36 +488,36 @@ def wave(name,**kw):
                clobber=kw['clobber'],nofit=nofit,unlock=kw['unlock'])
             
 def multiwave(name,**kw):
-    load = kw['load']
     """ Make multi-night wavelength calibration file """
-    wavefile = load.filename('Wave',num=name,chips=True)
-    wavedir = os.path.dirname(load.filename('Wave',num=name,chips=True))
-    fmt = '{:s}Wave-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(wavedir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    outfiles += [os.path.join(wavedir,load.prefix+'Wave-{:08d}.py.dat'.format(int(name)))]
-    if np.sum([os.path.exists(f) for f in outfiles])==4 and clobber==False:
-        print(' multiwave file: ',wavefile+'.dat',' already made')
+    caltype = 'multiwave'
+    calroot = _DATAMODEL_ROOTS[caltype]
+    load = kw['load']
+    calfile = load.filename('Wave',num=name,chips=True)
+    if load.exists('Wave',num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile,' already made')
         return
     librarypsf = kw.get('librarypsf')
-    multiwavetab = kw['allcaldict']['multiwave'] 
-    ind, = np.where(multiwavetab['name']==str(name))
+    caltab = kw['allcaldict'][caltype]
+    ind, = np.where(caltab['name']==str(name))
     if len(ind)==0:
         print('No matching calibration line for',name)
         return
     ind = ind[0]
-    ims = getnums(multiwavetab[ind]['frames'])
-    cal.mkmultiwave(ims,name=multiwavetab[ind]['name'],clobber=kw['clobber'],file=file,
+    ims = getnums(caltab[ind]['frames'])
+    cal.mkmultiwave(ims,name=caltab[ind]['name'],clobber=kw['clobber'],file=file,
                     unlock=kw['unlock'],psflibrary=librarypsf)
 
 def dailywave(name,**kw):
     """ Make daily wavelength calibration file """
+    caltype = 'dailywave'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    wavefile = load.filename('Wave',num=name,chips=True)
+    calfile = load.filename('Wave',num=name,chips=True)
     wavedir = os.path.dirname(load.filename('Wave',num=name,chips=True))
     fmt = '{:s}Wave-{:s}-{:08d}.fits'
     outfiles = [os.path.join(wavedir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
     if np.sum([os.path.exists(f) for f in outfiles])==3 and clobber==False:
-        print(' dailywave file: ',wavefile,' already made')
+        print(' ',caltype,' file: ',calfile,' already made')
         return
     mjd = int(name)
     caldict = getcal(kw['calfile'],mjd)
@@ -530,14 +533,12 @@ def dailywave(name,**kw):
 
 def telluric(name,**kw):
     """ Make daily telluric calibration file """
+    caltype = 'telluric'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    telfile = load.filename('Telluric',num=name,chips=True)
-    teldir = os.path.dirname(load.filename('Telluric',num=name,chips=True))
-    fmt = '{:s}Telluric-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(teldir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    outfiles += [os.path.join(teldir,load.prefix+'Telluric-{:08d}.dat'.format(int(name)))]
-    if np.sum([os.path.exists(f) for f in outfiles])==4 and clobber==False:
-        print(' telluric file: ',telfile,' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile,' already made')
         return
     waveid = int(telluric.split('-')[0])
     lsfid = int(telluric.split('-')[1])
@@ -546,26 +547,24 @@ def telluric(name,**kw):
     else:
        makecal(waveid,'wave',**kw.fromkeys(['clobber','unlock','load','calfile']))
     makecal(lsfid,'lsf',**kw.fromkeys(['clobber','unlock','load','calfile']))
-    cal.mktelluric(name,clobber=kw['clobber'],unlock=kw['unlock'])
+    cal.mktelluric(name,**kw.fromkeys(['clobber','unlock']))
 
 def lsf(name,**kw):
     """ Make LSF calibration file """
+    caltype = 'lsf'
+    calroot = _DATAMODEL_ROOTS[caltype]
     load = kw['load']
-    lsffile = load.filename('LSF',num=name,chips=True)
-    lsfdir = os.path.dirname(load.filename('LSF',num=name,chips=True))
-    fmt = '{:s}LSF-{:s}-{:08d}.fits'
-    outfiles = [os.path.join(lsfdir,fmt.format(load.prefix,ch,int(name))) for ch in chips]
-    outfiles += [os.path.join(lsfdir,load.prefix+'LSF-{:08d}.sav'.format(int(name)))]
-    if np.sum([os.path.exists(f) for f in outfiles])==4 and clobber==False:
-        print(' lsf file: ',file+'.sav',' already made')
+    calfile = load.filename(calroot,num=name,chips=True)
+    if load.exists(calroot,num=name) and clobber==False:
+        print(' ',caltype,' file: ',calfile,' already made')
         return
-    lsftab = kw['allcaldict']['lsf'] 
-    ind, = np.where(lsftab['name']==str(name))
+    caltab = kw['allcaldict'][caltype]
+    ind, = np.where(caltab['name']==str(name))
     if len(ind) <= 0:
         print('No matching calibration line for',name)
         return
     ind = ind[0]
-    ims = getnums(lsftab[ind[0]]['frames'])
+    ims = getnums(caltab[ind[0]]['frames'])
     mjd = int(load.cmjd(ims[0]))
     librarypsf = kw.get('librarypsf')
     modelpsf = caldict.get('modelpsf')
