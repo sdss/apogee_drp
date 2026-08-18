@@ -1,4 +1,4 @@
-"""Build APOGEE calibration products, optionally including dependencies (v3).
+"""Build APOGEE calibration products, optionally including dependencies (v6).
 
 ``makecal`` is the orchestration layer. Dependency discovery lives in
 ``dependencies.py`` and each registered builder below creates exactly one
@@ -72,6 +72,7 @@ class CalibrationContext:
     newwave: bool = False
     doplot: bool = False
     dependencies: bool = False
+    return_graph: bool = False
     extra: dict[str, Any] = field(default_factory=dict)
 
     @property
@@ -199,6 +200,7 @@ def _context_from_arguments(apred, telescope, options) -> CalibrationContext:
         ("librarypsf", False), ("psfid", None), ("modelpsf", None),
         ("nofit", False), ("full", False), ("newwave", False),
         ("doplot", False), ("dependencies", False),
+        ("return_graph", False),
     ):
         standard[key] = values.pop(key, default)
 
@@ -216,6 +218,20 @@ def _product_exists(context: CalibrationContext, node) -> bool:
     return bool(context.load.exists(spec.root, num=node.name))
 
 
+def _report_existing(context: CalibrationContext, node) -> None:
+    """Report an existing product in the style of the IDL ``makecal``."""
+
+    if not context.verbose:
+        return
+    kind = "det" if node.caltype == "detector" else node.caltype
+    spec = BUILDERS[kind]
+    try:
+        filename = context.load.filename(spec.root, num=node.name, chips=True)
+    except (AttributeError, KeyError, TypeError, ValueError):
+        filename = f"{spec.root}:{node.name}"
+    print(f" {kind} file: {filename} already made")
+
+
 def _run_calibration_graph(
     name, caltype: str, context: CalibrationContext
 ) -> CalibrationGraph:
@@ -229,6 +245,8 @@ def _run_calibration_graph(
         options=context.dependency_options(),
     )
     graph = resolver.resolve([(caltype, name)])
+    for node in sorted(graph.existing):
+        _report_existing(context, node)
     for level in graph.topological_levels(missing_only=True):
         for node in level:
             _run_node(node, context)
@@ -258,24 +276,28 @@ def _run_requested_calibration(
     graph = CalibrationGraph(roots={node}, dependencies={node: set()})
     if not context.clobber and _product_exists(context, node):
         graph.existing.add(node)
+        _report_existing(context, node)
         return graph
     _run_node(node, context)
     return graph
 
 
-def makecal(name, caltype, apred=None, telescope=None, **options):
+def makecal(caltype, name, apred=None, telescope=None, **options):
     """Build one calibration, optionally including missing prerequisites.
 
-    The public call remains compatible with the initial translation: callers
-    may provide either ``apred`` plus ``telescope`` or an existing ``load``,
-    along with ``calfile``, ``allcaldict``, and execution options. By default
-    only the requested product is built. Set ``dependencies=True`` to resolve
-    and build its complete prerequisite graph first.
+    Parameters
+    ----------
+    caltype : str
+        Calibration type, such as ``det``, ``flat``, or ``dailywave``.
+    name
+        Calibration ID or compound product name.
+    apred, telescope : str, optional
+        Reduction version and telescope. They are required unless ``load`` is
+        supplied. By default only the requested product is built; set
+        ``dependencies=True`` to build its complete prerequisite graph first.
 
-    Returns
-    -------
-    CalibrationGraph
-        Resolved graph, including products that already existed.
+    By default the function returns ``None``, matching ``makecal.pro``. Set
+    ``return_graph=True`` to return the resolved :class:`CalibrationGraph`.
     """
 
     kind = caltype.lower()
@@ -286,8 +308,10 @@ def makecal(name, caltype, apred=None, telescope=None, **options):
         raise ValueError(f"Unsupported calibration type {caltype!r}; use {supported}")
     context = _context_from_arguments(apred, telescope, options)
     if context.dependencies:
-        return _run_calibration_graph(name, kind, context)
-    return _run_requested_calibration(name, kind, context)
+        graph = _run_calibration_graph(name, kind, context)
+    else:
+        graph = _run_requested_calibration(name, kind, context)
+    return graph if context.return_graph else None
 
 
 @calibration_builder("det", "Detector")
