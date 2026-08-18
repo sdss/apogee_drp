@@ -2976,13 +2976,20 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,
     if logger is None:
         logger = dln.basiclogger()
 
+    allcaltypes = ['psf','flux','arcs','dailywave','fpi','telluric']
     if caltypes is None:
-        caltypes = ['psf','flux','arcs','dailywave','fpi','telluric']
+        caltypes = allcaltypes.copy()
     else:
         caltypes = [c.lower() for c in caltypes]
         if 'wave' in caltypes:
             caltypes.append('arcs')
-        
+
+    # check that the input caltypes are correct
+    for c in caltypes:
+        if c not in allcaltypes:
+            logger.error('daily calibration type "'+c+'" NOT supported')
+            return
+    
     apred = load.apred
     telescope = load.telescope
     observatory = telescope[0:3]
