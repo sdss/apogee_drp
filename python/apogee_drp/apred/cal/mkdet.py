@@ -48,14 +48,14 @@ def mkdet(detid,apred='daily',telescope='apo25m',linid=None,
     # Does the product already exist?
     print('Testing detector file:', detfile)
     # check all three chip files
-    sdetid = '{:08d}'.format(detid)
+    sdetid = '{:08d}'.format(int(detid))
     chips = ['a', 'b', 'c']
-    detdir = os.path.dirname(load.filename('Detector', num=detid, chips=True))
-    allfiles = [detdir+load.prefix + 'Detector-{:s}-{:s}.fits'.format(chip,sdetid) for chip in chips]
-    if all([os.path.exists(f) for f in allfiles]) and not clobber:
+    if load.exists('Detector',num=detid) and not clobber:
         print('Detector file:', detfile, 'already made')
         return
     # Delete any existing files to start fresh
+    detdir = os.path.dirname(load.filename('Detector', num=detid, chips=True))
+    allfiles = [detdir+load.prefix + 'Detector-{:s}-{:s}.fits'.format(chip,sdetid) for chip in chips]
     for f in allfiles:
         if os.path.exists(f): os.remove(f)
 

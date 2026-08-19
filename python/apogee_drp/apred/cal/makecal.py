@@ -1,8 +1,30 @@
-"""Build APOGEE calibration products, optionally including dependencies (v6).
+"""Build APOGEE calibration products, optionally including dependencies.
 
 ``makecal`` is the orchestration layer. Dependency discovery lives in
 ``dependencies.py`` and each registered builder below creates exactly one
 product, assuming that its prerequisites have already been built.
+
+1) the builder registry (BuilderSpec)
+2) calibration context (CalibrationContext)
+     this object contains everything the builders need
+     use this instead of **kw
+3) context initialization
+4) calibration routine loading
+5) existing product handling
+6) executing one node
+7) requested-product-only execution
+8) dependency execution
+9) the public makecal() function
+10) the individual builders
+    det,dark,flat,bpm,fiber,sparse,littrow,psf,modelpsf,
+    fpi,persist,persistmodel,flux,response,wave,multiwave,
+    dailywave,telluric,lsf
+11) psf selection
+
+The central idea is that makecal() decides what to run,
+dependencies.py decides what is required, and each builder knows only
+how to construct its own calibration product.
+
 """
 
 from __future__ import annotations
@@ -19,6 +41,7 @@ from .dependencies import (
     CalibrationDependencyResolver,
     CalibrationGraph,
 )
+from .detector import build_detector
 
 __all__ = [
     "BUILDERS", "BuilderSpec", "CalibrationContext",
@@ -151,7 +174,6 @@ class CalibrationContext:
 
 def _routine(name: str) -> Callable:
     """Load a translated calibration routine only when its builder runs."""
-
     module_name = f"{__package__}.{name}"
     try:
         module = import_module(module_name)
@@ -211,8 +233,7 @@ def _context_from_arguments(apred, telescope, options) -> CalibrationContext:
 
 
 def _product_exists(context: CalibrationContext, node) -> bool:
-    kind = "det" if node.caltype == "detector" else node.caltype
-    spec = BUILDERS.get(kind)
+    spec = BUILDERS.get(node.caltype)
     if spec is None:
         raise ValueError(f"No builder is registered for {node.caltype!r}")
     return bool(context.load.exists(spec.root, num=node.name))
@@ -220,16 +241,14 @@ def _product_exists(context: CalibrationContext, node) -> bool:
 
 def _report_existing(context: CalibrationContext, node) -> None:
     """Report an existing product in the style of the IDL ``makecal``."""
-
     if not context.verbose:
         return
-    kind = "det" if node.caltype == "detector" else node.caltype
-    spec = BUILDERS[kind]
+    spec = BUILDERS[node.caltype]
     try:
         filename = context.load.filename(spec.root, num=node.name, chips=True)
     except (AttributeError, KeyError, TypeError, ValueError):
         filename = f"{spec.root}:{node.name}"
-    print(f" {kind} file: {filename} already made")
+    print(f" {node.caltype} file: {filename} already made")
 
 
 def _run_calibration_graph(
@@ -255,13 +274,11 @@ def _run_calibration_graph(
 
 def _run_node(node, context: CalibrationContext) -> None:
     """Dispatch one resolved node to its registered builder."""
-
-    kind = "det" if node.caltype == "detector" else node.caltype
-    spec = BUILDERS.get(kind)
+    spec = BUILDERS.get(node.caltype)
     if spec is None:
         raise ValueError(f"No builder is registered for {node.caltype!r}")
     if context.verbose:
-        print(f"makecal {kind}: {node.name}")
+        print(f"makecal {node.caltype}: {node.name}")
     spec.function(node.name, context)
 
 
@@ -288,7 +305,7 @@ def makecal(caltype, name, apred=None, telescope=None, **options):
     Parameters
     ----------
     caltype : str
-        Calibration type, such as ``det``, ``flat``, or ``dailywave``.
+        Calibration type, such as ``detector``, ``flat``, or ``dailywave``.
     name
         Calibration ID or compound product name.
     apred, telescope : str, optional
@@ -301,8 +318,6 @@ def makecal(caltype, name, apred=None, telescope=None, **options):
     """
 
     kind = caltype.lower()
-    if kind == "detector":
-        kind = "det"
     if kind not in BUILDERS:
         supported = ", ".join(sorted(BUILDERS))
         raise ValueError(f"Unsupported calibration type {caltype!r}; use {supported}")
@@ -314,15 +329,15 @@ def makecal(caltype, name, apred=None, telescope=None, **options):
     return graph if context.return_graph else None
 
 
-@calibration_builder("det", "Detector")
-def det(name: str, context: CalibrationContext) -> None:
+@calibration_builder("detector", "Detector")
+def detector(name: str, context: CalibrationContext) -> None:
     row = context.row("det", name)
-    _routine("mkdet")(
+    build_detector(
         name, linid=row["linid"], apred=context.apred,
         telescope=context.telescope, clobber=context.clobber,
-        unlock=context.unlock,
+        unlock=context.unlock, verbose=context.verbose,
     )
-
+    
 
 @calibration_builder("dark", "Dark")
 def dark(name: str, context: CalibrationContext) -> None:

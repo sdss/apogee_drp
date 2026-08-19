@@ -4472,25 +4472,26 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         rootLogger.info('1) Setting up the directory structure')
         rootLogger.info('=====================================')
         rootLogger.info('')
-        tasks = np.zeros(1,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
-                                           ('errfile',str,1000),('dir',str,1000)]))
-        tasks = Table(tasks)
-        cmd = 'mkvers {0}'.format(apred)        
-        mkvoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkvers.'+logtime+'.log'
-        mkverrfile = mkvoutfile.replace('-mkvers.log','-mkvers.'+logtime+'.err')
-        if os.path.exists(os.path.dirname(mkvoutfile))==False:
-            os.makedirs(os.path.dirname(mkvoutfile),exist_ok=True)
-        rootLogger.info('Command : '+cmd)
-        rootLogger.info('Logfile : '+mkvoutfile)        
-        tasks['cmd'][0] = cmd
-        tasks['outfile'][0] = mkvoutfile
-        tasks['errfile'][0] = mkverrfile
-        tasks['dir'][0] = os.path.dirname(mkvoutfile)
-        slurmpars1 = slurmpars.copy()
-        slurmpars1['nodes'] = 1
-        key,jobid = slrm.submit(tasks,label='mkvers',verbose=True,logger=rootLogger,**slurmpars1)
-        slrm.queue_wait('mkvers',key,jobid,sleeptime=60,verbose=True,logger=rootLogger) # wait for jobs to complete 
-
+        #tasks = np.zeros(1,dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+        #                                   ('errfile',str,1000),('dir',str,1000)]))
+        #tasks = Table(tasks)
+        #cmd = 'mkvers {0}'.format(apred)        
+        #mkvoutfile = os.environ['APOGEE_REDUX']+'/'+apred+'/log/mkvers.'+logtime+'.log'
+        #mkverrfile = mkvoutfile.replace('-mkvers.log','-mkvers.'+logtime+'.err')
+        #if os.path.exists(os.path.dirname(mkvoutfile))==False:
+        #    os.makedirs(os.path.dirname(mkvoutfile),exist_ok=True)
+        #rootLogger.info('Command : '+cmd)
+        #rootLogger.info('Logfile : '+mkvoutfile)        
+        #tasks['cmd'][0] = cmd
+        #tasks['outfile'][0] = mkvoutfile
+        #tasks['errfile'][0] = mkverrfile
+        #tasks['dir'][0] = os.path.dirname(mkvoutfile)
+        #slurmpars1 = slurmpars.copy()
+        #slurmpars1['nodes'] = 1
+        #key,jobid = slrm.submit(tasks,label='mkvers',verbose=True,logger=rootLogger,**slurmpars1)
+        #slrm.queue_wait('mkvers',key,jobid,sleeptime=60,verbose=True,logger=rootLogger) # wait for jobs to complete 
+        mkvers(apred,logger=rootLogger)
+        
     # 2) Master calibration products, make sure to do them in the right order
     #------------------------------------------------------------------------
     if 'master' in steps:

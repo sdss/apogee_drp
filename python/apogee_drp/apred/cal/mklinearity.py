@@ -70,7 +70,7 @@ def mklinearity(frameid, apred='daily', telescope='apo25m', darkid=None, bpmid=N
     load = apload.ApLoad(apred=apred,telescope=telescope)
     
     # Character frameid
-    cframeid = '{:08d}'.format(frameid)
+    cframeid = '{:08d}'.format(int(frameid))
 
     # Get calibration file names for this MJD
     cmjd = load.cmjd(frameid)
