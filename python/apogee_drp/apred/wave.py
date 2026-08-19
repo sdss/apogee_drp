@@ -104,6 +104,9 @@ def getarcpairs(frameinfo,linestr):
     if len(toremlinestr)>0:
         print('Removing '+str(len(toremlinestr))+' linestr from these exposures')
         linestr = np.delete(linestr,toremlinestr)
+
+    if len(frameinfo) == 0:
+        return frameinfo, linestr[:0]
         
     # Groups must start with 0 and have no gaps,
     # reassign group names
@@ -117,7 +120,8 @@ def getarcpairs(frameinfo,linestr):
     return frameinfo,linestr
 
 
-def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=False,verbose=False):
+def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=False,
+              verbose=False,dependencies=False):
     """
     Function to run daily that generates a wavelength solution using a week's worth of
     arclamp data simultaneously fit with "apmultiwavecal".
@@ -138,6 +142,10 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
        Overwrite any existing files.
     verbose : boolean, optional
        Verbose output to the screen.
+    dependencies : boolean, optional
+       Find and save missing single-exposure line measurements.  The default
+       is False, which requires them to exist before fitting the daily
+       solution.
 
     Returns
     -------
@@ -214,7 +222,8 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
     if os.path.exists(wfile.replace(load.prefix+'Wave-',load.prefix+'Wave-b-'))==False or clobber:
         # The previously measured lines in the apLines files will be reused if they exist
         pars,arclinestr,frameinfo = wavecal(arcframes,rows=np.arange(300),name=str(mjd),init=init,
-                                            npoly=npoly,inst=instrument,verbose=verbose,vers=apred)
+                                            npoly=npoly,inst=instrument,verbose=verbose,vers=apred,
+                                            dependencies=dependencies)
         # npoly=4 gives lower RMS values
         # Check that it's there
         if os.path.exists(wfile.replace(load.prefix+'Wave-',load.prefix+'Wave-b-')) is False:
@@ -224,7 +233,8 @@ def dailywave(mjd,observatory='apo',apred='daily',npoly=4,init=False,clobber=Fal
 
 
 def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npoly=4,reject=3,
-            plot=False,hard=True,verbose=False,clobber=False,init=False,nofit=False,test=False,nosave=False):
+            plot=False,hard=True,verbose=False,clobber=False,init=False,nofit=False,test=False,
+            nosave=False,dependencies=False):
     """ 
     APOGEE wavelength calibration
 
@@ -261,6 +271,10 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     nosave : boolean, optional
        Do not save the results to a file, only return them.  Useful when doing multi-frame fits
          and using wavecal() on the first group to get an initial guess.  Default is False.
+    dependencies : boolean, optional
+       For a combined solution, find and save missing single-exposure line
+       measurements.  Default is False.  This does not affect a normal
+       single solution, which always measures its own lines when necessary.
 
     Returns
     -------
@@ -283,14 +297,19 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     telescope = {'apogee-n':'apo25m','apogee-s':'lco25m'}[inst]
     load = apload.ApLoad(apred=vers,instrument=inst,telescope=telescope)
 
-    #if nums[0]==42550003 and len(nums)==61:
-    #    print('TRIMMING OFF FIRST ONE!!!!')
-    #    nums = nums[1:]
-
-    
     nums = np.array(nums)
     if name is None : name = nums[0]
     if test : name = int(name/10000)*10000+9999
+
+    # A normal single solution can contain a UNe/ThAr exposure pair, so the
+    # number of input frames alone does not identify a combined solution.  A
+    # daily/multi solution has an output name (typically an MJD) that is not
+    # one of its input exposure IDs.
+    try:
+        combined_solution = int(name) not in nums.astype(int)
+    except (TypeError, ValueError):
+        combined_solution = str(name) not in np.asarray(nums).astype(str)
+    
     mjd = (nums[0]-nums[0]%10000)/10000 + 55562
     # Initial guess for wavelengths, used to find lines
     coef0 = {}
@@ -353,11 +372,17 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     frameinfo['group'] = -1
     for inum,num in enumerate(nums) :
         print(str(inum+1)+'/'+str(len(nums))+' '+str(num))
+        out = load.filename('Wave',num=num,chips=True)
+        linesfile = out.replace('Wave','Lines')
+        if (combined_solution and not dependencies and
+                not os.path.exists(linesfile)):
+            if verbose:
+                print('Skipping exposure with missing Lines file: '+linesfile)
+            continue
         frame = load.ap1D(num)
         if frame==0:
             print(load.filename('1D',num=num,chips=True)+' NOT FOUND')
             continue
-        out = load.filename('Wave',num=num,chips=True)
         # We have a decent frame to use
         if frame is not None and frame != 0:
             # Get correct arclines list
@@ -475,9 +500,16 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
         gdframe, = np.where(frameinfo['okay']==True)        
         frameinfo = frameinfo[gdframe]
 
-    # Make sure we only have pairs of exposures for each grouop group
-    if len(np.unique(frameinfo['group'])) > 1:
+    # Combined solutions require complete UNe/ThAr pairs. Missing members are
+    # allowed; remove the incomplete group and continue with the other pairs.
+    if combined_solution or len(np.unique(frameinfo['group'])) > 1:
         frameinfo,linestr = getarcpairs(frameinfo,linestr)
+        if len(frameinfo) == 0:
+            raise ValueError(
+                'No complete UNe/ThAr exposure pairs remain for the '
+                'combined wavelength solution'
+            )
+        maxgroup = len(np.unique(frameinfo['group']))
     
     # Do the wavecal fit
     # initial parameter guess for first row, subsequent rows will use guess from previous row
@@ -637,8 +669,9 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             group0, = np.where(np.array(frameinfo['group'])==np.min(groups))
             num0 = frameinfo['num'][group0]
             print('Running wavecal for first group only: ', num0,maxgroup,ngroup,' row: ',row)
-            pars0,linestr1,frameinfo1 = wavecal(nums=num0,name=None,vers=vers,inst=inst,rows=[row],npoly=npoly,
-                                                reject=reject,init=init,verbose=verbose,nosave=True)
+            pars0,linestr1,frameinfo1 = wavecal(nums=num0,name=None,vers=vers,inst=inst,rows=[row],
+                                                npoly=npoly,reject=reject,init=init,verbose=verbose,
+                                                nosave=True)
             pars[:npoly] = pars0[:npoly]
             for igroup in range(ngroup): pars[npoly+igroup*3:npoly+(igroup+1)*3] = pars0[npoly:npoly+3]
         else :
