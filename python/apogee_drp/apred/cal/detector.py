@@ -9,6 +9,8 @@ measurement therefore has no Dark, BPM, or Detector prerequisites.
 from __future__ import annotations
 
 import os
+import time
+from datetime import datetime
 from pathlib import Path
 from typing import Callable, Sequence
 
@@ -187,10 +189,15 @@ def _detector_constants(telescope: str) -> tuple[float, Sequence[float]]:
 def build_detector(detid: int, *, linid: int | None = None,
                    apred: str = "daily", telescope: str = "apo25m",
                    unlock: bool = False, clobber: bool = False,
-                   verbose: bool = False,
+                   verbose: bool = True,
                    linearity_function: Callable[..., np.ndarray] = measure_linearity,
                    ) -> list[str]:
     """Create the three Detector FITS products and return their filenames."""
+    now = datetime.now()
+    start = time.time()
+    if verbose:
+        print("Start: "+now.strftime("%Y-%m-%d %H:%M:%S"))
+    
     load = _make_load(apred=apred, telescope=telescope)
     template = load.filename("Detector", num=detid, chips=True)
     outputs = [template.replace("Detector-", f"Detector-{chip}-")
@@ -220,6 +227,12 @@ def build_detector(detid: int, *, linid: int | None = None,
                 fits.ImageHDU(gain, name="GAIN"),
                 fits.ImageHDU(linearity, name="LINEARITY CORRECTION"),
             ]).writeto(output, overwrite=True)
+            if verbose:
+                print('Writing '+output)
+        if verbose:
+            now = datetime.now()
+            print("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
+            print("elapsed: %0.1f sec." % (time.time()-start))
         return outputs
     finally:
         if locked:
