@@ -39,6 +39,7 @@ if __name__ == '__main__' :
     parser.add_argument("--clobber", help='Redo line finding?', action="store_true")
     parser.add_argument("--verbose", help='Verbose output?', action="store_true")
     parser.add_argument("--init", help='Use initial quadratic guess?', action="store_true")
+    parser.add_argument("--dependencies", help='Make dependencies', action="store_true")
     args=parser.parse_args()
 
     mjd = args.mjd
@@ -49,7 +50,8 @@ if __name__ == '__main__' :
     start = time.time()
     print ("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
     wave.dailywave(mjd,apred=args.apred,observatory=args.observatory,npoly=args.npoly,
-                   verbose=args.verbose,clobber=args.clobber,init=args.init)
+                   verbose=args.verbose,clobber=args.clobber,init=args.init,
+                   dependencies=args.dependencies)
     now = datetime.datetime.now()
     print ("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
     print("elapsed: ",time.time()-start)
