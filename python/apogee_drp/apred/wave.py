@@ -382,9 +382,15 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
                     print(num,' has problems')
                     continue
                 print('Finding lines: {:08d}'.format(num))
-                flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1,plot=plot)
-                Table(flinestr).write(linesfile,overwrite=True)
-
+                try:
+                    flinestr = findlines(frame,rows,waves,arclines,verbose=verbose,estsig=1,plot=plot)
+                    Table(flinestr).write(linesfile,overwrite=True)
+                except KeyboardInterrupt: 
+                    raise
+                except:
+                    traceback.print_exc()
+                    flinestr = []
+                
             # Add information for this exposure to the frameinfo table
             frameinfo['num'][fcnt] = num
             frameinfo['okay'][fcnt] = True                
