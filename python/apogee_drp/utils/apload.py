@@ -763,19 +763,40 @@ class ApLoad:
             hd.close()
             return data, header
 
-    def filename(self,root,
-                 location=None,obj=None,plate=None,mjd=None,num=None,fiber=None,chip=None,
-                 field=None,configid=None,fps=None):
+    def filename(self, root,
+             location=None, obj=None, plate=None, mjd=None, num=None,
+             fiber=None, chip=None, field=None, configid=None, fps=None):
+        """Return one or more APOGEE product filenames.
 
-        return self.allfile(root,
-                            location=location,obj=obj,plate=plate,mjd=mjd,num=num,fiber=fiber,
-                            chip=chip,field=field,configid=configid,fps=fps,download=False)
+        Parameters
+        ----------
+        root : str
+            APOGEE product type.
+        chip : str, sequence of str, or None, optional
+            Detector chip. A single chip returns one filename. A sequence
+            returns a dictionary keyed by chip. If None, return the
+            chip-independent pathname.
+        
+        Returns
+        -------
+        str or dict
+            A single pathname, or a dictionary of pathnames keyed by chip.
+        """
+        if isinstance(chip, (list, tuple, np.ndarray)):
+            return { ch: self.filename(root,location=location,obj=obj,
+                                       plate=plate,mjd=mjd,num=num,fiber=fiber,chip=ch,
+                                       field=field,configid=configid,fps=fps) for ch in chip
+            }
 
-    def filenames(self, root, *, chips=("a", "b", "c"), **kwargs):
-        return {
-            chip: self.filename(root, chip=chip, **kwargs)
-            for chip in chips
-        }
+        if chip is not None and chip not in ("a", "b", "c"):
+            raise ValueError(
+                f"Invalid chip {chip!r}; expected 'a', 'b', 'c', or None"
+            )
+
+        return self.allfile(root, location=location, obj=obj, plate=plate,
+                            mjd=mjd, num=num, fiber=fiber, chip=chip,
+                            field=field, configid=configid, fps=fps,
+                            download=False)
     
     def exists(self,root,num=None,**kwargs):
         """ Check whether a certain APOGEE file exists."""
