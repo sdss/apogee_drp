@@ -205,3 +205,91 @@ def test_product_exists_when_every_file_is_complete(load, monkeypatch):
     monkeypatch.setattr(products, "file_is_complete", lambda *args, **kwargs: True)
     assert products.product_exists(load, "detector", 12345678)
 
+def test_delete_product_removes_all_files(load, tmp_path, monkeypatch):
+    filenames = [
+        tmp_path / "apDark-a-123.fits",
+        tmp_path / "apDark-b-123.fits",
+        tmp_path / "apDark-c-123.fits",
+        tmp_path / "apDark-123.tab",
+    ]
+
+    for filename in filenames:
+        filename.write_bytes(b"data")
+
+    monkeypatch.setattr(
+        products,
+        "product_files",
+        lambda *args, **kwargs: [str(path) for path in filenames],
+    )
+
+    deleted = products.delete_product(load, "dark", 123)
+
+    assert deleted == [str(path) for path in filenames]
+    assert all(not path.exists() for path in filenames)
+
+
+def test_delete_product_ignores_missing_files(load, tmp_path, monkeypatch):
+    missing = tmp_path / "missing.fits"
+
+    monkeypatch.setattr(
+        products,
+        "product_files",
+        lambda *args, **kwargs: [str(missing)],
+    )
+
+    assert products.delete_product(load, "dark", 123) == []
+
+
+def test_delete_product_can_require_files(load, tmp_path, monkeypatch):
+    missing = tmp_path / "missing.fits"
+
+    monkeypatch.setattr(
+        products,
+        "product_files",
+        lambda *args, **kwargs: [str(missing)],
+    )
+
+    with pytest.raises(FileNotFoundError):
+        products.delete_product(
+            load,
+            "dark",
+            123,
+            missing_ok=False,
+        )
+
+
+def test_delete_product_dry_run(load, tmp_path, monkeypatch):
+    filename = tmp_path / "product.fits"
+    filename.write_bytes(b"data")
+
+    monkeypatch.setattr(
+        products,
+        "product_files",
+        lambda *args, **kwargs: [str(filename)],
+    )
+
+    deleted = products.delete_product(
+        load,
+        "dark",
+        123,
+        dry_run=True,
+    )
+
+    assert deleted == [str(filename)]
+    assert filename.exists()
+
+
+def test_delete_product_refuses_directory(load, tmp_path, monkeypatch):
+    directory = tmp_path / "product.fits"
+    directory.mkdir()
+
+    monkeypatch.setattr(
+        products,
+        "product_files",
+        lambda *args, **kwargs: [str(directory)],
+    )
+
+    with pytest.raises(IsADirectoryError):
+        products.delete_product(load, "dark", 123)
+
+    assert directory.exists()

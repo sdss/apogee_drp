@@ -798,56 +798,107 @@ class ApLoad:
                             mjd=mjd, num=num, fiber=fiber, chip=chip,
                             field=field, configid=configid, fps=fps,
                             download=False)
-    
-    def exists(self,root,num=None,**kwargs):
-        """ Check whether a certain APOGEE file exists."""
 
-        chips = ['a','b','c']
-        lroot = root.lower()        
-        if 'mjd' in kwargs.keys():
-            mjd = kwargs.pop('mjd')
+
+    def exists(self, root, num=None, chip=None, **kwargs):
+        """Return whether one or more APOGEE files exist.
+        If ``chip`` is a sequence, all requested chip files must exist.
+        """
+        filenames = self.filename(root,num=num,chip=chip,**kwargs)
+        if isinstance(filenames, dict):
+            filenames = filenames.values()
         else:
-            if lroot=='psfmodel':
-                # psfmodel is sparseid-psfid
-                mjd = int(self.cmjd(int(str(num).split('-')[0])))
-            else:
-                mjd = int(self.cmjd(int(num)))
-                
-        if lroot=='r' or lroot=='2d' or lroot=='1d' or lroot=='bpm' or lroot=='lsf':
-            prefix = lroot.upper()
-        elif lroot=='detector':
-            prefix = 'Detector'
-        elif lroot=='flux':
-            prefix = 'Flux'
-        elif lroot=='arc' or lroot=='wave':
-            prefix = 'Wave'
-        elif lroot=='fpi':
-            prefix = 'WaveFPI'
-        elif lroot=='psf':
-            # also check EPSF and Trace files
-            prefix = ['PSF','EPSF','ETrace']
+            filenames = [filenames]
+            return all(
+                os.path.isfile(filename) and os.path.getsize(filename) > 0
+                for filename in filenames
+            )
+
+    def exists(self, root, num=None, chip=None, **kwargs):
+        """Return whether the requested physical file or files are complete."""
+        from ..datamodel.products import file_is_complete
+        filenames = self.filename(root, num=num, chip=chip, **kwargs)
+        if isinstance(filenames, dict):
+            filenames = filenames.values()
         else:
-            prefix = root
-        # Loop over prefixes and make the chip-level filenames
-        outfiles = []
-        if type(prefix) is str:
-            prefix = [prefix]
-        for p in prefix:
-            if lroot == "sparse":
-                outfiles.append(self.filename(p, num=num, **kwargs))
-            else:
-                files = self.filename(p, num=num, mjd=mjd, chip=chips, **kwargs)
-                outfiles.extend(files.values())
-        # Only chip b for Littrow
-        if lroot=='littrow':
-            outfiles = [outfiles[1]]
-        # Check that all of the necesary files exist
-        files_exists = [os.path.exists(o) for o in outfiles]
-        if np.sum(files_exists)==len(files_exists):
-            exists = True
-        else:
-            exists = False
-        return exists
+            filenames = [filenames]
+        return all(file_is_complete(filename) for filename in filenames)
+
+    def product_files(self, product, name, *, mjd=None):
+        """Return all physical files comprising a logical APOGEE product."""
+        from ..datamodel.products import product_files
+        return product_files(self, product, name, mjd=mjd)
+
+    def product_status(self, product, name, *, mjd=None):
+        """Return completeness status for every file in a logical product."""
+        from ..datamodel.products import product_status
+        return product_status(self, product, name, mjd=mjd)
+
+    def product_exists(self, product, name, *, mjd=None):
+        """Return whether a complete logical APOGEE product exists."""
+        from ..datamodel.products import product_exists
+        return product_exists(self, product, name, mjd=mjd)
+
+    def product_delete(self, product, name, *, mjd=None,
+                       missing_ok=True, dry_run=False, verbose=None):
+        """Delete every physical file belonging to a logical product."""
+        from ..datamodel.products import delete_product
+        if verbose is None:
+            verbose = self.verbose
+        return delete_product(self, product, name, mjd=mjd,
+                              missing_ok=missing_ok, dry_run=dry_run,
+                              verbose=verbose)
+    
+        
+    #def exists(self,root,num=None,**kwargs):
+    #    """ Check whether a certain APOGEE file exists."""
+    #
+    #    chips = ['a','b','c']
+    #    lroot = root.lower()        
+    #    if 'mjd' in kwargs.keys():
+    #        mjd = kwargs.pop('mjd')
+    #    else:
+    #        if lroot=='psfmodel':
+    #            # psfmodel is sparseid-psfid
+    #            mjd = int(self.cmjd(int(str(num).split('-')[0])))
+    #        else:
+    #            mjd = int(self.cmjd(int(num)))
+    #           
+    #    if lroot=='r' or lroot=='2d' or lroot=='1d' or lroot=='bpm' or lroot=='lsf':
+    #        prefix = lroot.upper()
+    #    elif lroot=='detector':
+    #        prefix = 'Detector'
+    #    elif lroot=='flux':
+    #        prefix = 'Flux'
+    #    elif lroot=='arc' or lroot=='wave':
+    #        prefix = 'Wave'
+    #    elif lroot=='fpi':
+    #        prefix = 'WaveFPI'
+    #    elif lroot=='psf':
+    #        # also check EPSF and Trace files
+    #        prefix = ['PSF','EPSF','ETrace']
+    #    else:
+    #        prefix = root
+    #    # Loop over prefixes and make the chip-level filenames
+    #    outfiles = []
+    #    if type(prefix) is str:
+    #        prefix = [prefix]
+    #    for p in prefix:
+    #        if lroot == "sparse":
+    #            outfiles.append(self.filename(p, num=num, **kwargs))
+    #        else:
+    #            files = self.filename(p, num=num, mjd=mjd, chip=chips, **kwargs)
+    #            outfiles.extend(files.values())
+    #    # Only chip b for Littrow
+    #    if lroot=='littrow':
+    #        outfiles = [outfiles[1]]
+    #    # Check that all of the necesary files exist
+    #    files_exists = [os.path.exists(o) for o in outfiles]
+    #    if np.sum(files_exists)==len(files_exists):
+    #        exists = True
+    #    else:
+    #        exists = False
+    #    return exists
     
     def allfile(self,root,
                 location=None,obj=None,reduction=None,plate=None,mjd=None,num=None,

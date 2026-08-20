@@ -7,6 +7,7 @@ logical calibration product.
 
 from __future__ import annotations
 
+import os
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Callable, Literal
@@ -178,9 +179,86 @@ def product_exists(load, product: str, name, *, mjd=None) -> bool:
     """Return whether all physical files for a logical product are complete."""
     return all(product_status(load, product, name, mjd=mjd).values())
 
+def delete_product(load, product, name, *, mjd=None, missing_ok=True,
+                   dry_run=False, verbose=False):
+    """Delete every physical file belonging to a logical APOGEE product.
+
+    Parameters
+    ----------
+    load : ApLoad
+        APOGEE file loader.
+    product : str
+        Logical product name, such as ``"dark"`` or ``"psf"``.
+    name
+        Product identifier.
+    mjd : int, optional
+        Explicit product MJD. If omitted, it is resolved from the product
+        specification.
+    missing_ok : bool, optional
+        If True, silently ignore files that do not exist.
+    dry_run : bool, optional
+        If True, report which existing files would be deleted without
+        removing them.
+    verbose : bool, optional
+        Print each deleted or missing filename.
+
+    Returns
+    -------
+    list of str
+        Files deleted, or files that would be deleted when ``dry_run=True``.
+
+    Raises
+    ------
+    FileNotFoundError
+        If a required file is missing and ``missing_ok=False``.
+    IsADirectoryError
+        If a resolved product path is unexpectedly a directory.
+    """
+    # Preserve order while protecting against accidental duplicate entries.
+    filenames = list(dict.fromkeys(
+        product_files(load, product, name, mjd=mjd)
+    ))
+
+    # Validate all targets before deleting anything.
+    for filename in filenames:
+        path = Path(filename)
+
+        # A symlink can safely be unlinked even if it points to a directory.
+        if path.exists() and path.is_dir() and not path.is_symlink():
+            raise IsADirectoryError(
+                f"Refusing to delete product directory: {path}"
+            )
+
+        if not os.path.lexists(path) and not missing_ok:
+            raise FileNotFoundError(
+                f"Required product file does not exist: {path}"
+            )
+
+    deleted = []
+
+    for filename in filenames:
+        path = Path(filename)
+
+        if not os.path.lexists(path):
+            if verbose:
+                print(f"Product file does not exist: {path}")
+            continue
+
+        if dry_run:
+            if verbose:
+                print(f"Would delete: {path}")
+        else:
+            path.unlink()
+            if verbose:
+                print(f"Deleted: {path}")
+
+        deleted.append(str(path))
+
+    return deleted
+
 
 __all__ = [
     "APOGEE_CHIPS", "FileComponent", "PRODUCTS", "ProductSpec",
     "file_is_complete", "product_exists", "product_files", "product_mjd",
-    "product_spec", "product_status",
+    "product_spec", "product_status", "product_delete",
 ]
