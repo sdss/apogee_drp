@@ -780,7 +780,8 @@ class ApLoad:
         Returns
         -------
         str or dict
-            A single pathname, or a dictionary of pathnames keyed by chip.
+            A single pathname, or a dictionary mapping detector chips to
+            pathnames when ``chip`` is a sequence.
         """
         if isinstance(chip, (list, tuple, np.ndarray)):
             return { ch: self.filename(root,location=location,obj=obj,
@@ -832,11 +833,11 @@ class ApLoad:
         if type(prefix) is str:
             prefix = [prefix]
         for p in prefix:
-            if lroot=='sparse':
-                outfiles = [self.filename(p,num=num,**kwargs)]
+            if lroot == "sparse":
+                outfiles.append(self.filename(p, num=num, **kwargs))
             else:
-                outfile = self.filename(p,num=num,mjd=mjd,chips=True,**kwargs)
-                outfiles += [outfile.replace(p+'-',p+'-'+ch+'-') for ch in chips]
+                files = self.filename(p, num=num, mjd=mjd, chip=chips, **kwargs)
+                outfiles.extend(files.values())
         # Only chip b for Littrow
         if lroot=='littrow':
             outfiles = [outfiles[1]]
