@@ -1259,6 +1259,7 @@ def load_raw_ramp(
     *,
     max_read=None,
     temporary_directory=None,
+    keep_temporary=False,
     unlock=False,
     verbose=False,
 ):
@@ -1272,6 +1273,8 @@ def load_raw_ramp(
         Maximum number of reads to load.
     temporary_directory : str or Path, optional
         Directory used for APZ decompression.
+    keep_temporary : bool, optional
+        Keep the unpacked fits file. Default is False.
     unlock : bool, optional
         Clear an existing decompression lock.
     verbose : bool, optional
@@ -1330,7 +1333,7 @@ def load_raw_ramp(
         )
 
     finally:
-        if temporary_file is not None and temporary_file.exists():
+        if temporary_file is not None and temporary_file.exists() and not keep_temporary:
             temporary_file.unlink()
 
             
