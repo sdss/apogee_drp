@@ -10,18 +10,16 @@ from __future__ import annotations
 
 import os
 import time
-from datetime import datetime
-from pathlib import Path
-from typing import Callable, Sequence
-
 import numpy as np
 from astropy.io import fits
-
+from datetime import datetime
+from pathlib import Path
+from typing import Callable
 from .aplincorr import aplincorr
 from .getrn import fowler_sample, getrn, rnhtml
 from .noise import noise
 from ...utils import apload, apzip, lock, utils
-from .utils import calibration_lock
+from .utils import calibration_lock, product_build_lock
 
 __all__ = ["LINEARITY_DTYPE", "aplincorr", "build_detector",
            "fit_linearity", "fowler_sample", "getrn", "measure_linearity",
@@ -145,12 +143,14 @@ def measure_linearity(frameid: int, *, apred: str = "daily",
     filename = os.path.join(directory, f"{load.prefix}Linearity-{int(frameid):08d}.dat")
 
     # use existing linearity file
-    if filename.exists() and filename.stat().st_size and not clobber:
+    if os.path.isfile(filename) and os.path.getsize(filename) and not clobber:
         if verbose:
             print(f"Linearity measurements {filename} already exist; reusing them")
         measurements = np.atleast_1d(
             np.genfromtxt(filename, dtype=LINEARITY_DTYPE)
-        )
+        )            
+        return fit_linearity(measurements, telescope=telescope,
+                             minread=minread, order=order)
     
     with calibration_lock(filename, unlock=unlock):
         if verbose:
@@ -161,8 +161,7 @@ def measure_linearity(frameid: int, *, apred: str = "daily",
         for index in chip_indices:
             if index not in (0, 1, 2):
                 raise ValueError("chip must be 0, 1, or 2")
-            raw = load.filename("R", num=frameid, chips=True)
-            raw = raw.replace("R-", f"R-{'abc'[index]}-")
+            raw = load.filename("R", num=frameid, chip=CHIPS[index])
             cube = reader(raw, apred=apred, nread=nread, unlock=unlock)
             pieces.append(sample_linearity(cube, index, nskip=nskip))
         measurements = (np.concatenate(pieces) if pieces
@@ -175,8 +174,8 @@ def measure_linearity(frameid: int, *, apred: str = "daily",
                    fmt="%3d %3d %5d %5d %12.4f %12.7f %12.7f",
                    header="read chip ix iy counts rate instantaneous_rate")
             
-    return fit_linearity(measurements, telescope=telescope,
-                         minread=minread, order=order)
+        return fit_linearity(measurements, telescope=telescope,
+                             minread=minread, order=order)
 
 
 def build_detector(detid: int, *, linid: int | None = None,
@@ -200,9 +199,17 @@ def build_detector(detid: int, *, linid: int | None = None,
     
     directory = load.filename("Detector", num=0, directory=True)
     os.makedirs(directory,exist_ok=True)
-    outputs = load.filename("detector", detid, chip=CHIPS)
+    outputs = load.filename("Detector", num=detid, chip=CHIPS)
 
-    with calibration_lock(outputs["a"], unlock=unlock):
+    with product_build_lock(load,"detector", detid, clobber=clobber,
+                            unlock=unlock, verbose=verbose) as (build, output_files):
+        if not build:
+            if verbose:
+                print(f"Detector {int(detid):08d} already exists")
+            return
+
+        outputs = dict(zip(CHIPS, output_files))
+                   
         # Delete any existing files
         load.product_delete("detector", detid, verbose=verbose)
         # linearity
