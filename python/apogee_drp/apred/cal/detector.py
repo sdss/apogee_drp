@@ -200,17 +200,17 @@ def build_detector(detid: int, *, linid: int | None = None,
     
     load = _make_load(apred=apred, telescope=telescope)
     template = load.filename("Detector", num=detid, chips=True)
-    outputs = [template.replace("Detector-", f"Detector-{chip}-")
-               for chip in "abc"]
+    outputs = load.product_files("detector", detid)
     lock.lock(template, waittime=10, unlock=unlock)
     locked = False
     try:
-        if load.exists('Detector',num=detid) and not clobber:
+        if load.product_exists('Detector',detid) and not clobber:
             if verbose:
                 print(f"Detector {int(detid):08d} already exists")
             return outputs
         lock.lock(template, lock=True)
         locked = True
+        load.product_delete("detector", detid, verbose=verbose)
         coefficients = np.array([1.0, 0.0, 0.0])
         if linid is not None and int(linid) > 0:
             coefficients = np.asarray(linearity_function(

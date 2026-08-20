@@ -45,17 +45,15 @@ from .detector import build_detector
 from .dark import build_dark
 from .flat import build_flat
 from .bpm import build_bpm
-from .psfcal import (
-    build_fiber, build_modelpsf, build_psf, build_sparse,
-    modelpsf_product_files, product_files as psf_product_files,
-)
+from .psfcal import build_fiber, build_modelpsf, build_psf, build_sparse
+from .lsf import build_lsf
+from .telluric import build_telluric
 from .littrow import build_littrow
 from .fpi import build_fpi
-from .lsf import build_lsf, product_files as lsf_product_files
 from .wavecal import build_dailywave, build_multiwave, build_wave
 from .persistence import build_persist
 from .fluxcal import build_flux, build_response
-from .telluric import build_telluric, product_files as telluric_product_files
+
 
 __all__ = [
     "BUILDERS", "BuilderSpec", "CalibrationContext",
@@ -63,31 +61,30 @@ __all__ = [
 ]
 
 BuilderFunction = Callable[[str, "CalibrationContext"], None]
-ExistsFunction = Callable[["CalibrationContext", str], bool]
 
 
 @dataclass(frozen=True)
 class BuilderSpec:
     """Registered implementation and data-model root for one product type."""
-
     caltype: str
-    root: str
     function: BuilderFunction
-    exists: ExistsFunction | None = None
 
 
 BUILDERS: dict[str, BuilderSpec] = {}
 
 
-def calibration_builder(caltype: str, root: str, *, exists=None):
+def calibration_builder(caltype: str):
     """Register a function that builds one calibration product."""
-
     kind = caltype.lower()
 
     def register(function: BuilderFunction) -> BuilderFunction:
         if kind in BUILDERS:
             raise ValueError(f"A builder is already registered for {kind!r}")
-        BUILDERS[kind] = BuilderSpec(kind, root, function, exists)
+
+        BUILDERS[kind] = BuilderSpec(
+            caltype=kind,
+            function=function,
+        )
         return function
 
     return register
@@ -250,38 +247,19 @@ def _context_from_arguments(apred, telescope, options) -> CalibrationContext:
 
 
 def _product_exists(context: CalibrationContext, node) -> bool:
-    spec = BUILDERS.get(node.caltype)
-    if spec is None:
-        raise ValueError(f"No builder is registered for {node.caltype!r}")
-    if spec.exists is not None:
-        return bool(spec.exists(context, node.name))
-    return bool(context.load.exists(spec.root, num=node.name))
+    """Return whether the complete logical calibration product exists."""
+    return context.load.product_exists(
+        node.caltype,
+        node.name,
+    )
 
-
-def _all_psf_files(kind):
-    """Return a product-specific completeness predicate for a builder."""
-
-    def exists(context, name):
-        return all(
-            os.path.isfile(filename) and os.path.getsize(filename) > 0
-            for filename in psf_product_files(context.load, kind, name)
+def _report_existing(context, node):
+    if context.verbose:
+        filenames = context.load.product_files(node.caltype, node.name)
+        print(
+            f" {node.caltype} product already made: "
+            f"{len(filenames)} files"
         )
-    return exists
-
-
-def _report_existing(context: CalibrationContext, node) -> None:
-    """Report an existing product in the style of the IDL ``makecal``."""
-
-    if not context.verbose:
-        return
-    kind = node.caltype
-    spec = BUILDERS[kind]
-    try:
-        filename = context.load.filename(spec.root, num=node.name, chips=True)
-    except (AttributeError, KeyError, TypeError, ValueError):
-        filename = f"{spec.root}:{node.name}"
-    print(f" {kind} file: {filename} already made")
-
 
 def _run_calibration_graph(
     name, caltype: str, context: CalibrationContext
@@ -363,7 +341,7 @@ def makecal(caltype, name, apred=None, telescope=None, **options):
     return graph if context.return_graph else None
 
 
-@calibration_builder("detector", "Detector")
+@calibration_builder("detector")
 def detector(name: str, context: CalibrationContext) -> None:
     row = context.row("det", name)
     build_detector(
@@ -373,7 +351,7 @@ def detector(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("dark", "Dark")
+@calibration_builder("dark")
 def dark(name: str, context: CalibrationContext) -> None:
     build_dark(
         context.frames("dark", name), apred=context.apred,
@@ -382,7 +360,7 @@ def dark(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("flat", "Flat")
+@calibration_builder("flat")
 def flat(name: str, context: CalibrationContext) -> None:
     row = context.row("flat", name)
     frames = context.frames("flat", name)
@@ -395,7 +373,7 @@ def flat(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("bpm", "BPM")
+@calibration_builder("bpm")
 def bpm(name: str, context: CalibrationContext) -> None:
     row = context.row("bpm", name)
     build_bpm(
@@ -406,7 +384,7 @@ def bpm(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("fiber", "Fiber", exists=_all_psf_files("fiber"))
+@calibration_builder("fiber")
 def fiber(name: str, context: CalibrationContext) -> None:
     calibrations = context.calibrations(context.mjd(name))
     build_fiber(
@@ -418,7 +396,7 @@ def fiber(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("sparse", "Sparse", exists=_all_psf_files("sparse"))
+@calibration_builder("sparse")
 def sparse(name: str, context: CalibrationContext) -> None:
     row = context.row("sparse", name)
     frames = context.frames("sparse", name)
@@ -438,7 +416,7 @@ def sparse(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("littrow", "Littrow")
+@calibration_builder("littrow")
 def littrow(name: str, context: CalibrationContext) -> None:
     cmjd = context.load.cmjd(int(name))
     calibrations = context.calibrations(int(cmjd))
@@ -453,7 +431,7 @@ def littrow(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("psf", "PSF", exists=_all_psf_files("psf"))
+@calibration_builder("psf")
 def psf(name: str, context: CalibrationContext) -> None:
     calibrations = context.calibrations(context.mjd(name))
     build_psf(
@@ -469,13 +447,7 @@ def psf(name: str, context: CalibrationContext) -> None:
     )
 
     
-@calibration_builder(
-    "modelpsf", "PSFModel",
-    exists=lambda context, name: all(
-        os.path.isfile(filename) and os.path.getsize(filename) > 0
-        for filename in modelpsf_product_files(context.load, name)
-    ),
-)
+@calibration_builder("modelpsf")
 def modelpsf(name: str, context: CalibrationContext) -> None:
     row = context.row("modelpsf", name)
     build_modelpsf(
@@ -497,7 +469,7 @@ def _selected_psf(context: CalibrationContext, calibrations):
     return None, model
 
 
-@calibration_builder("fpi", "WaveFPI")
+@calibration_builder("fpi")
 def fpi(name: str, context: CalibrationContext) -> None:
     calibrations = context.calibrations(context.mjd(name))
     psfid, model = _selected_psf(context, calibrations)
@@ -511,7 +483,7 @@ def fpi(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("persist", "Persist")
+@calibration_builder("persist")
 def persist(name: str, context: CalibrationContext) -> None:
     row = context.row("persist", name)
     cmjd = context.load.cmjd(int(name))
@@ -527,13 +499,13 @@ def persist(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("persistmodel", "PersistModel")
+@calibration_builder("persistmodel")
 def persistmodel(name: str, context: CalibrationContext) -> None:
     context.row("persistmodel", name)
     _routine("mkpersistmodel")(name)
 
 
-@calibration_builder("flux", "Flux")
+@calibration_builder("flux")
 def flux(name: str, context: CalibrationContext) -> None:
     calibrations = context.calibrations(context.mjd(name))
     psfid, model = _selected_psf(context, calibrations)
@@ -549,7 +521,7 @@ def flux(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("response", "Response")
+@calibration_builder("response")
 def response(name: str, context: CalibrationContext) -> None:
     row = context.row("response", name)
     calibrations = context.calibrations(context.mjd(name))
@@ -561,7 +533,7 @@ def response(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("wave", "Wave")
+@calibration_builder("wave")
 def wave(name: str, context: CalibrationContext) -> None:
     row = context.row("wave", name, required=False)
     if row is None:
@@ -584,7 +556,7 @@ def wave(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("multiwave", "Wave")
+@calibration_builder("multiwave")
 def multiwave(name: str, context: CalibrationContext) -> None:
     build_multiwave(
         context.frames("multiwave", name), name=name,
@@ -594,7 +566,7 @@ def multiwave(name: str, context: CalibrationContext) -> None:
     )
 
 
-@calibration_builder("dailywave", "Wave")
+@calibration_builder("dailywave")
 def dailywave(name: str, context: CalibrationContext) -> None:
     mjd = int(name)
     calibrations = context.calibrations(mjd)
@@ -610,13 +582,7 @@ def dailywave(name: str, context: CalibrationContext) -> None:
     )
 
     
-@calibration_builder(
-    "telluric", "Telluric",
-    exists=lambda context, name: all(
-        os.path.isfile(filename) and os.path.getsize(filename) > 0
-        for filename in telluric_product_files(context.load, name)
-    ),
-)
+@calibration_builder("telluric")
 def telluric(name: str, context: CalibrationContext) -> None:
     build_telluric(
         name, apred=context.apred, telescope=context.telescope,
@@ -625,13 +591,7 @@ def telluric(name: str, context: CalibrationContext) -> None:
     )
 
     
-@calibration_builder(
-    "lsf", "LSF",
-    exists=lambda context, name: all(
-        os.path.isfile(filename) and os.path.getsize(filename) > 0
-        for filename in lsf_product_files(context.load, name, diagnostics=True)
-    ),
-)
+@calibration_builder("lsf")
 def lsf(name: str, context: CalibrationContext) -> None:
     row = context.row("lsf", name)
     frames = context.frames("lsf", name)
