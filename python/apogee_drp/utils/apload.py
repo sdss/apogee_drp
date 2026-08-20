@@ -763,78 +763,13 @@ class ApLoad:
             hd.close()
             return data, header
 
-    def filename_template(self, root, **kwargs):
-        """Return the chip-independent filename for an APOGEE product.
-        
-        For a three-chip product such as::
-
-            apDark-a-123.fits
-            apDark-b-123.fits
-            apDark-c-123.fits
-
-        this returns::
-
-            apDark-123.fits
-
-        Parameters
-        ----------
-        root : str
-            APOGEE product type.
-        **kwargs
-            Arguments accepted by :meth:`filename`, excluding ``chip``.
-
-        Returns
-        -------
-        str
-            Chip-independent filename template.
-
-        Raises
-        ------
-        ValueError
-            If the generated filename does not contain the expected chip token.
-        """
-        if "chip" in kwargs:
-            raise ValueError(
-                "filename_template() does not accept 'chip'; "
-                "use filename() for a specific chip"
-            )
-
-        path = self.filename(root, chip="a", **kwargs)
-        directory, basename = os.path.split(path)
-
-        chip_token = "-a-"
-        if chip_token not in basename:
-            raise ValueError(
-                f"Product {root!r} does not have a chip-dependent filename: {path}"
-            )
-
-        basename = basename.replace(chip_token, "-", 1)
-        return os.path.join(directory, basename)
-        
     def filename(self,root,
-                 location=None,obj=None,plate=None,mjd=None,num=None,fiber=None,chip=None,chips=None,
-                 field=None,configid=None,fps=None) :
-        if chip is not None and chips not in (None, False):
-            raise ValueError("Use either chip= or chips=, not both")
-        
-        if isinstance(chips, str):
-            warnings.warn(
-                "chips='a' is deprecated; use chip='a'",
-                DeprecationWarning,
-            )
-            chip = chips
+                 location=None,obj=None,plate=None,mjd=None,num=None,fiber=None,chip=None,
+                 field=None,configid=None,fps=None):
 
-        elif chips is True:
-            warnings.warn(
-                "filename(..., chips=True) is deprecated; "
-                "use filenames() or filename_template()",
-                DeprecationWarning,
-            )
-            
         return self.allfile(root,
                             location=location,obj=obj,plate=plate,mjd=mjd,num=num,fiber=fiber,
-                            chip=chip,chips=chips,field=field,
-                            configid=configid,fps=fps,download=False)
+                            chip=chip,field=field,configid=configid,fps=fps,download=False)
 
     def filenames(self, root, *, chips=("a", "b", "c"), **kwargs):
         return {
@@ -894,7 +829,7 @@ class ApLoad:
     
     def allfile(self,root,
                 location=None,obj=None,reduction=None,plate=None,mjd=None,num=None,
-                fiber=None,chip=None,chips=None,field=None,
+                fiber=None,chip=None,field=None,
                 healpix=None,configid=None,fps=None,download=False,fz=False):
         '''
         Uses sdss_access to create filenames
@@ -977,56 +912,6 @@ class ApLoad:
             self.http_access.get(sdssroot, **path_kwargs)
 
         return file_path
-
-
-            
-        #if chips == False :
-        #    # First make sure the file doesn't exist locally
-        #    #print(sdssroot,apred,apstar,aspcap,results,location,obj,self.telescope,field,prefix)
-        #
-        #    # apStar, calculate HEALPix
-        #    if root=='Star':
-        #        healpix = obj2healpix(obj)
-        #    else:
-        #        healpix = None
-        #
-        #    filePath = self.sdss_path.full(sdssroot,
-        #                                   apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
-        #                                   field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
-        #                                   telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument,
-        #                                   healpix=healpix,configid=configid,obs=self.observatory)
-        #    if self.verbose: print('filePath',filePath)
-        #    if os.path.exists(filePath) is False and download: 
-        #        downloadPath = self.sdss_path.url(sdssroot,
-        #                              apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
-        #                              field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
-        #                              telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument,
-        #                                          healpix=healpix,configid=configid,obs=self.observatory)
-        #        if self.verbose: print('downloadPath',downloadPath)
-        #        self.http_access.get(sdssroot,
-        #                        apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
-        #                        field=field,location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
-        #                        telescope=self.telescope,fiber=fiber,prefix=prefix,instrument=self.instrument,
-        #                             healpix=healpix,configid=configid,obs=self.observatory)
-        #    return filePath
-        #else :
-        #    for chip in ['a','b','c'] :
-        #        #print(chip,root,num,mjd,prefix)
-        #        filePath = self.sdss_path.full(sdssroot,
-        #                        apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
-        #                        field=field, location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
-        #                        telescope=self.telescope,fiber=fiber,
-        #                        chip=chip,prefix=prefix,instrument=self.instrument)+suffix
-        #        if self.verbose : print('filePath: ', filePath, os.path.exists(filePath))
-        #        if os.path.exists(filePath) is False and download : 
-        #          try:
-        #            self.http_access.get(sdssroot,
-        #                        apred=self.apred,apstar=self.apstar,aspcap=self.aspcap,results=self.results,
-        #                        field=field, location=location,obj=obj,reduction=reduction,plate=plate,mjd=mjd,num=num,
-        #                        telescope=self.telescope,fiber=fiber,
-        #                        chip=chip,prefix=prefix,instrument=self.instrument)
-        #          except: pdb.set_trace()
-        #    return filePath.replace('-c','')
 
     def apread(self,root,
                 location=None,obj=None,reduction=None,plate=None,mjd=None,num=None,fiber=None,chips=False,field=None,
