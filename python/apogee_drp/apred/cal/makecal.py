@@ -46,14 +46,15 @@ from .dark import build_dark
 from .flat import build_flat
 from .bpm import build_bpm
 from .psfcal import (
-    build_fiber, build_psf, build_sparse, product_files as psf_product_files,
+    build_fiber, build_modelpsf, build_psf, build_sparse,
+    modelpsf_product_files, product_files as psf_product_files,
 )
 from .littrow import build_littrow
 from .fpi import build_fpi
 from .lsf import build_lsf, product_files as lsf_product_files
 from .wavecal import build_dailywave, build_multiwave, build_wave
 from .persistence import build_persist
-from .fluxcal import build_flux
+from .fluxcal import build_flux, build_response
 from .telluric import build_telluric, product_files as telluric_product_files
 
 __all__ = [
@@ -467,13 +468,21 @@ def psf(name: str, context: CalibrationContext) -> None:
         verbose=context.verbose,
     )
 
-
-@calibration_builder("modelpsf", "PSFModel")
+    
+@calibration_builder(
+    "modelpsf", "PSFModel",
+    exists=lambda context, name: all(
+        os.path.isfile(filename) and os.path.getsize(filename) > 0
+        for filename in modelpsf_product_files(context.load, name)
+    ),
+)
 def modelpsf(name: str, context: CalibrationContext) -> None:
     row = context.row("modelpsf", name)
-    _routine("mkmodelpsf")(
+    build_modelpsf(
         name, sparseid=row["sparse"], psfid=row["psf"],
+        apred=context.apred, telescope=context.telescope,
         clobber=context.clobber, unlock=context.unlock,
+        verbose=context.verbose,
     )
 
 
@@ -544,14 +553,9 @@ def flux(name: str, context: CalibrationContext) -> None:
 def response(name: str, context: CalibrationContext) -> None:
     row = context.row("response", name)
     calibrations = context.calibrations(context.mjd(name))
-    build_flux(
-        [int(name)], apred=context.apred, telescope=context.telescope,
-        cmjd=context.load.cmjd(int(name)),
-        darkid=calibrations.get("darkid"),
-        flatid=calibrations.get("flatid"), psfid=row["psf"],
-        littrowid=calibrations.get("littrowid"),
-        waveid=calibrations.get("waveid"),
-        persistid=calibrations.get("persistid"), temp=row["temp"],
+    build_response(
+        int(name), waveid=calibrations.get("waveid"), temp=row["temp"],
+        apred=context.apred, telescope=context.telescope,
         clobber=context.clobber, unlock=context.unlock,
         verbose=context.verbose,
     )

@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from astropy.io import fits
 
-from apogee_drp.apred.cal import fluxcal as fluxcal
+from apogee_drp.apred.cal import fluxcal
 from apogee_drp.apred.cal import makecal
 
 

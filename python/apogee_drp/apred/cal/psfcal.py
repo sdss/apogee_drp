@@ -1,6 +1,6 @@
-"""Build APOGEE Fiber, Sparse, and PSF calibration products.
+"""Build APOGEE Fiber, Sparse, PSF, and ModelPSF calibration products.
 
-The three products share tracing and empirical-PSF algorithms but expose
+The four products share tracing and empirical-PSF algorithms but expose
 separate builders and product contracts. Arrays use NumPy/FITS ``(y, x)``
 ordering; trace images use ``(fiber, x)``.
 """
@@ -26,7 +26,8 @@ CHIPS = ("a", "b", "c")
 
 __all__ = [
     "CHIPS", "TraceSolution", "build_empirical_psf", "build_fiber",
-    "build_psf", "build_sparse", "find_traces", "product_files",
+    "build_modelpsf", "build_psf", "build_sparse", "find_traces",
+    "modelpsf_product_files", "product_files",
 ]
 
 
@@ -68,6 +69,16 @@ def product_files(load, caltype, number):
             for product in ("PSF", "EPSF", "ETrace") for chip in CHIPS
         ]
     raise ValueError(f"Unsupported PSF calibration type {caltype!r}")
+
+
+def modelpsf_product_files(load, name):
+    """Return ModelPSF filenames while preserving compound names."""
+    value = str(name).strip()
+    if not value:
+        raise ValueError("ModelPSF name cannot be empty")
+    template = load.filename("PSFModel", num=value, chips=True)
+    return [template.replace("PSFModel-", f"PSFModel-{chip}-", 1)
+            for chip in CHIPS]
 
 
 def _quadratic_peak(profile, index):
@@ -514,6 +525,106 @@ def build_psf(frameid, *, apred="daily", telescope="apo25m", darkid=None,
             _write_psf(psf_file, frame, solution, profiles)
             _write_epsf(epsf_file, profiles, frame["header"])
             _write_trace(trace_file, solution, frame["header"])
+        return outputs
+    finally:
+        lock.lock(target, clear=True)
+
+
+def _make_profile_grid(epsf_file, sparse_file, *, nfbin, ncbin, verbose):
+    from ..psf import makeprofilegrid
+    _, mean_x, mean_y, profiles, offsets, _ = makeprofilegrid(
+        epsf_file, sparse_file, nfbin=int(nfbin), ncbin=int(ncbin),
+        verbose=verbose)
+    return profiles, np.stack((mean_x, mean_y)), offsets
+
+
+def _validate_model_grid(profiles, labels, offsets):
+    profiles = np.asarray(profiles, dtype=float)
+    labels = np.asarray(labels, dtype=float)
+    offsets = np.asarray(offsets, dtype=float)
+    if profiles.ndim != 3 or profiles.shape[:2] != labels.shape[1:]:
+        raise ValueError("profiles and labels have incompatible grid dimensions")
+    if labels.shape[0] != 2 or offsets.ndim != 1:
+        raise ValueError("labels must contain X/Y grids and offsets must be 1-D")
+    if profiles.shape[2] != offsets.size:
+        raise ValueError("profile length must match the offset grid")
+    if not np.all(np.isfinite(profiles)) or not np.all(np.isfinite(labels)):
+        raise ValueError("ModelPSF grid contains nonfinite values")
+    if np.any(profiles < 0):
+        raise ValueError("ModelPSF profiles cannot be negative")
+    normalization = np.trapezoid(profiles, offsets, axis=2)
+    if np.any(normalization <= 0):
+        raise ValueError("ModelPSF contains an empty profile")
+    normalized = profiles / normalization[:, :, None]
+    return (normalized.astype(np.float32), labels.astype(np.float32),
+            offsets.astype(np.float32))
+
+
+def _write_model_grid(filename, profiles, labels, offsets, *, apred,
+                      sparseid, psfid, nfbin, ncbin):
+    profiles, labels, offsets = _validate_model_grid(
+        profiles, labels, offsets)
+    primary = fits.PrimaryHDU(profiles)
+    primary.header["TYPE"] = "grid"
+    primary.header["LOG"] = False
+    primary.header["EXTNAME"] = "DATA"
+    primary.header["APRED"] = str(apred)
+    primary.header["SPARSEID"] = str(sparseid)
+    primary.header["PSFID"] = str(psfid)
+    primary.header["NFBIN"] = int(nfbin)
+    primary.header["NCBIN"] = int(ncbin)
+    Path(filename).parent.mkdir(parents=True, exist_ok=True)
+    fits.HDUList([
+        primary, fits.ImageHDU(labels, name="LABELS"),
+        fits.ImageHDU(offsets, name="X"),
+    ]).writeto(filename, overwrite=True)
+
+
+def build_modelpsf(name, *, sparseid, psfid, apred="daily",
+                   telescope="apo25m", nfbin=5, ncbin=200,
+                   clobber=False, unlock=False, verbose=False):
+    """Build three detector-wide ModelPSF profile grids synchronously."""
+    if sparseid is None or int(sparseid) <= 0:
+        raise ValueError("sparseid is required")
+    if psfid is None or int(psfid) <= 0:
+        raise ValueError("psfid is required")
+    if int(nfbin) <= 0 or int(ncbin) <= 0:
+        raise ValueError("nfbin and ncbin must be positive")
+    load = _make_load(apred=apred, telescope=telescope)
+    outputs = modelpsf_product_files(load, name)
+    target = outputs[0].replace("PSFModel-a-", "PSFModel-")
+    lock.lock(target, waittime=10, unlock=unlock)
+    if all(Path(filename).is_file() and Path(filename).stat().st_size > 0
+           for filename in outputs) and not clobber:
+        if verbose:
+            print(f" ModelPSF file: {target} already made")
+        return outputs
+    sparse_file = load.filename("Sparse", num=int(sparseid), chips=True)
+    epsf_files = [_chip_filename(load, "EPSF", psfid, chip) for chip in CHIPS]
+    missing = [filename for filename in [sparse_file, *epsf_files]
+               if not Path(filename).is_file() or Path(filename).stat().st_size == 0]
+    if missing:
+        raise FileNotFoundError("Missing ModelPSF inputs: " + ", ".join(missing))
+    lock.lock(target, lock=True)
+    try:
+        for filename in outputs:
+            path = Path(filename)
+            if path.exists():
+                path.unlink()
+            path.parent.mkdir(parents=True, exist_ok=True)
+        for chip, epsf_file, output in zip(CHIPS, epsf_files, outputs):
+            profiles, labels, offsets = _make_profile_grid(
+                epsf_file, sparse_file, nfbin=nfbin, ncbin=ncbin,
+                verbose=verbose)
+            _write_model_grid(
+                output, profiles, labels, offsets, apred=apred,
+                sparseid=sparseid, psfid=psfid, nfbin=nfbin, ncbin=ncbin)
+            if verbose:
+                print(f" writing ModelPSF chip {chip}: {output}")
+        if not all(Path(filename).is_file() and Path(filename).stat().st_size > 0
+                   for filename in outputs):
+            raise RuntimeError(f"ModelPSF {name} did not create all chip files")
+        Path(target).with_suffix(".dat").touch()
         return outputs
     finally:
         lock.lock(target, clear=True)

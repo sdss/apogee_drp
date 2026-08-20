@@ -346,15 +346,37 @@ def build_response(number, *, waveid, temp, load=None, apred="daily",
         if verbose:
             print(f" response file: {target} already made")
         return outputs
+    flux_files = product_files(load, number)
+    wave_files = [_chip_filename(load, "Wave", waveid, chip) for chip in CHIPS]
+    missing = [filename for filename in flux_files + wave_files
+               if not Path(filename).is_file() or Path(filename).stat().st_size == 0]
+    if missing:
+        raise FileNotFoundError(
+            "Missing Response dependency files: " + ", ".join(missing))
     lock.lock(target, lock=True)
     try:
+        for filename in outputs:
+            path = Path(filename)
+            if path.exists():
+                path.unlink()
+            path.parent.mkdir(parents=True, exist_ok=True)
         references = [np.asarray(fits.getdata(name, 3), float)
-                      for name in product_files(load, number)]
+                      for name in flux_files]
         waves = [_load_wavelength(load, waveid, chip) for chip in CHIPS]
         center = len(references[1]) // 2
+        if (any(reference.ndim != 1 for reference in references) or
+                any(wave.shape != reference.shape
+                    for wave, reference in zip(waves, references))):
+            raise ValueError(
+                "Flux reference spectra and Wave arrays must be matching 1-D arrays")
+        if not np.isfinite(references[1][center]) or references[1][center] == 0:
+            raise ValueError("central Flux reference value must be finite and nonzero")
         normalization = references[1][center] / planck(waves[1][center], temp)
         for filename, reference, wave in zip(outputs, references, waves):
-            response = planck(wave, temp) * normalization / reference
+            with np.errstate(divide="ignore", invalid="ignore"):
+                response = planck(wave, temp) * normalization / reference
+            if not np.all(np.isfinite(response)):
+                raise ValueError("Response contains nonfinite values")
             header = fits.Header({"APRED": str(apred), "BBTEMP": float(temp),
                                   "WAVEID": str(waveid)})
             Path(filename).parent.mkdir(parents=True, exist_ok=True)
