@@ -1,4 +1,4 @@
-"""Build APOGEE calibration products, optionally including dependencies.
+"""Build APOGEE calibration products, optionally including dependencies (v9).
 
 ``makecal`` is the orchestration layer. Dependency discovery lives in
 ``dependencies.py`` and each registered builder below creates exactly one
@@ -42,6 +42,19 @@ from .dependencies import (
     CalibrationGraph,
 )
 from .detector import build_detector
+from .dark import build_dark
+from .flat import build_flat
+from .bpm import build_bpm
+from .psfcal import (
+    build_fiber, build_psf, build_sparse, product_files as psf_product_files,
+)
+from .littrow import build_littrow
+from .fpi import build_fpi
+from .lsf import build_lsf, product_files as lsf_product_files
+from .wavecal import build_dailywave, build_multiwave, build_wave
+from .persistence import build_persist
+from .fluxcal import build_flux
+from .telluric import build_telluric, product_files as telluric_product_files
 
 __all__ = [
     "BUILDERS", "BuilderSpec", "CalibrationContext",
@@ -49,6 +62,7 @@ __all__ = [
 ]
 
 BuilderFunction = Callable[[str, "CalibrationContext"], None]
+ExistsFunction = Callable[["CalibrationContext", str], bool]
 
 
 @dataclass(frozen=True)
@@ -58,12 +72,13 @@ class BuilderSpec:
     caltype: str
     root: str
     function: BuilderFunction
+    exists: ExistsFunction | None = None
 
 
 BUILDERS: dict[str, BuilderSpec] = {}
 
 
-def calibration_builder(caltype: str, root: str):
+def calibration_builder(caltype: str, root: str, *, exists=None):
     """Register a function that builds one calibration product."""
 
     kind = caltype.lower()
@@ -71,7 +86,7 @@ def calibration_builder(caltype: str, root: str):
     def register(function: BuilderFunction) -> BuilderFunction:
         if kind in BUILDERS:
             raise ValueError(f"A builder is already registered for {kind!r}")
-        BUILDERS[kind] = BuilderSpec(kind, root, function)
+        BUILDERS[kind] = BuilderSpec(kind, root, function, exists)
         return function
 
     return register
@@ -174,6 +189,7 @@ class CalibrationContext:
 
 def _routine(name: str) -> Callable:
     """Load a translated calibration routine only when its builder runs."""
+
     module_name = f"{__package__}.{name}"
     try:
         module = import_module(module_name)
@@ -236,19 +252,34 @@ def _product_exists(context: CalibrationContext, node) -> bool:
     spec = BUILDERS.get(node.caltype)
     if spec is None:
         raise ValueError(f"No builder is registered for {node.caltype!r}")
+    if spec.exists is not None:
+        return bool(spec.exists(context, node.name))
     return bool(context.load.exists(spec.root, num=node.name))
+
+
+def _all_psf_files(kind):
+    """Return a product-specific completeness predicate for a builder."""
+
+    def exists(context, name):
+        return all(
+            os.path.isfile(filename) and os.path.getsize(filename) > 0
+            for filename in psf_product_files(context.load, kind, name)
+        )
+    return exists
 
 
 def _report_existing(context: CalibrationContext, node) -> None:
     """Report an existing product in the style of the IDL ``makecal``."""
+
     if not context.verbose:
         return
-    spec = BUILDERS[node.caltype]
+    kind = node.caltype
+    spec = BUILDERS[kind]
     try:
         filename = context.load.filename(spec.root, num=node.name, chips=True)
     except (AttributeError, KeyError, TypeError, ValueError):
         filename = f"{spec.root}:{node.name}"
-    print(f" {node.caltype} file: {filename} already made")
+    print(f" {kind} file: {filename} already made")
 
 
 def _run_calibration_graph(
@@ -274,11 +305,13 @@ def _run_calibration_graph(
 
 def _run_node(node, context: CalibrationContext) -> None:
     """Dispatch one resolved node to its registered builder."""
-    spec = BUILDERS.get(node.caltype)
+
+    kind = node.caltype
+    spec = BUILDERS.get(kind)
     if spec is None:
         raise ValueError(f"No builder is registered for {node.caltype!r}")
     if context.verbose:
-        print(f"makecal {node.caltype}: {node.name}")
+        print(f"makecal {kind}: {node.name}")
     spec.function(node.name, context)
 
 
@@ -337,11 +370,11 @@ def detector(name: str, context: CalibrationContext) -> None:
         telescope=context.telescope, clobber=context.clobber,
         unlock=context.unlock, verbose=context.verbose,
     )
-    
+
 
 @calibration_builder("dark", "Dark")
 def dark(name: str, context: CalibrationContext) -> None:
-    _routine("mkdark")(
+    build_dark(
         context.frames("dark", name), apred=context.apred,
         telescope=context.telescope, clobber=context.clobber,
         unlock=context.unlock, verbose=context.verbose,
@@ -353,7 +386,7 @@ def flat(name: str, context: CalibrationContext) -> None:
     row = context.row("flat", name)
     frames = context.frames("flat", name)
     calibrations = context.calibrations(context.mjd(frames[0]))
-    _routine("mkflat")(
+    build_flat(
         frames, apred=context.apred, telescope=context.telescope,
         darkid=calibrations.get("darkid"), nrep=row["nrep"],
         dithered=bool(row["dithered"]), clobber=context.clobber,
@@ -364,24 +397,27 @@ def flat(name: str, context: CalibrationContext) -> None:
 @calibration_builder("bpm", "BPM")
 def bpm(name: str, context: CalibrationContext) -> None:
     row = context.row("bpm", name)
-    _routine("mkbpm")(
+    build_bpm(
         name, apred=context.apred, telescope=context.telescope,
         darkid=row["darkid"], flatid=row["flatid"],
         clobber=context.clobber, unlock=context.unlock,
+        verbose=context.verbose,
     )
 
 
-@calibration_builder("fiber", "Fiber")
+@calibration_builder("fiber", "Fiber", exists=_all_psf_files("fiber"))
 def fiber(name: str, context: CalibrationContext) -> None:
     calibrations = context.calibrations(context.mjd(name))
-    _routine("mkfiber")(
+    build_fiber(
         name, darkid=calibrations.get("darkid"),
-        flatid=calibrations.get("flatid"), clobber=context.clobber,
-        unlock=context.unlock,
+        flatid=calibrations.get("flatid"), bpmid=calibrations.get("bpmid"),
+        apred=context.apred, telescope=context.telescope,
+        clobber=context.clobber, unlock=context.unlock,
+        verbose=context.verbose,
     )
 
 
-@calibration_builder("sparse", "Sparse")
+@calibration_builder("sparse", "Sparse", exists=_all_psf_files("sparse"))
 def sparse(name: str, context: CalibrationContext) -> None:
     row = context.row("sparse", name)
     frames = context.frames("sparse", name)
@@ -389,13 +425,15 @@ def sparse(name: str, context: CalibrationContext) -> None:
     maxread = getnums(str(row["maxread"]))
     if len(maxread) != 3:
         raise ValueError(f"sparse:{name} maxread must contain three values")
-    _routine("mkepsf")(
+    build_sparse(
         frames, darkid=calibrations.get("darkid"),
         flatid=calibrations.get("flatid"),
+        bpmid=calibrations.get("bpmid"),
         fiberid=calibrations.get("fiberid"),
-        darkims=getnums(str(row["darkframes"])), dmax=row["dmax"],
-        maxread=maxread, clobber=context.clobber, filter=True,
-        thresh=0.2, scat=2, unlock=context.unlock,
+        darkframes=getnums(str(row["darkframes"])), dmax=row["dmax"],
+        maxread=maxread, apred=context.apred, telescope=context.telescope,
+        clobber=context.clobber, threshold=0.2, unlock=context.unlock,
+        verbose=context.verbose,
     )
 
 
@@ -403,26 +441,30 @@ def sparse(name: str, context: CalibrationContext) -> None:
 def littrow(name: str, context: CalibrationContext) -> None:
     cmjd = context.load.cmjd(int(name))
     calibrations = context.calibrations(int(cmjd))
-    _routine("mklittrow")(
-        name, cmjd=cmjd, darkid=calibrations.get("darkid"),
+    build_littrow(
+        name, darkid=calibrations.get("darkid"),
         flatid=calibrations.get("flatid"),
+        bpmid=calibrations.get("bpmid"),
         sparseid=calibrations.get("sparseid"),
-        fiberid=calibrations.get("fiberid"), clobber=context.clobber,
-        unlock=context.unlock,
+        fiberid=calibrations.get("fiberid"), apred=context.apred,
+        telescope=context.telescope, clobber=context.clobber,
+        unlock=context.unlock, verbose=context.verbose,
     )
 
 
-@calibration_builder("psf", "PSF")
+@calibration_builder("psf", "PSF", exists=_all_psf_files("psf"))
 def psf(name: str, context: CalibrationContext) -> None:
     calibrations = context.calibrations(context.mjd(name))
-    _routine("mkpsf")(
+    build_psf(
         name, bpmid=calibrations.get("bpmid"),
         darkid=calibrations.get("darkid"),
         flatid=calibrations.get("flatid"),
         sparseid=calibrations.get("sparseid"),
         fiberid=calibrations.get("fiberid"),
         littrowid=calibrations.get("littrowid"),
+        apred=context.apred, telescope=context.telescope,
         clobber=context.clobber, unlock=context.unlock,
+        verbose=context.verbose,
     )
 
 
@@ -450,12 +492,13 @@ def _selected_psf(context: CalibrationContext, calibrations):
 def fpi(name: str, context: CalibrationContext) -> None:
     calibrations = context.calibrations(context.mjd(name))
     psfid, model = _selected_psf(context, calibrations)
-    _routine("mkfpi")(
+    build_fpi(
         name, name=name, darkid=calibrations.get("darkid"),
         flatid=calibrations.get("flatid"), psfid=psfid,
         modelpsf=model, fiberid=calibrations.get("fiberid"),
+        apred=context.apred, telescope=context.telescope,
         clobber=context.clobber, unlock=context.unlock,
-        psflibrary=context.librarypsf,
+        librarypsf=context.librarypsf, verbose=context.verbose,
     )
 
 
@@ -464,14 +507,14 @@ def persist(name: str, context: CalibrationContext) -> None:
     row = context.row("persist", name)
     cmjd = context.load.cmjd(int(name))
     calibrations = context.calibrations(int(cmjd))
-    _routine("mkpersist")(
+    build_persist(
         name, row["darkid"], row["flatid"], apred=context.apred,
         telescope=context.telescope, thresh=row["thresh"], cmjd=cmjd,
         darkid=calibrations.get("darkid"),
         flatid=calibrations.get("flatid"),
         sparseid=calibrations.get("sparseid"),
         fiberid=calibrations.get("fiberid"), clobber=context.clobber,
-        unlock=context.unlock,
+        unlock=context.unlock, verbose=context.verbose,
     )
 
 
@@ -485,13 +528,15 @@ def persistmodel(name: str, context: CalibrationContext) -> None:
 def flux(name: str, context: CalibrationContext) -> None:
     calibrations = context.calibrations(context.mjd(name))
     psfid, model = _selected_psf(context, calibrations)
-    _routine("mkflux")(
-        [int(name)], cmjd=context.load.cmjd(int(name)),
+    build_flux(
+        [int(name)], apred=context.apred, telescope=context.telescope,
+        cmjd=context.load.cmjd(int(name)),
         darkid=calibrations.get("darkid"),
         flatid=calibrations.get("flatid"), psfid=psfid,
         modelpsf=model, littrowid=calibrations.get("littrowid"),
-        waveid=calibrations.get("waveid"), clobber=context.clobber,
-        unlock=context.unlock,
+        waveid=calibrations.get("waveid"),
+        persistid=calibrations.get("persistid"), clobber=context.clobber,
+        unlock=context.unlock, verbose=context.verbose,
     )
 
 
@@ -499,13 +544,16 @@ def flux(name: str, context: CalibrationContext) -> None:
 def response(name: str, context: CalibrationContext) -> None:
     row = context.row("response", name)
     calibrations = context.calibrations(context.mjd(name))
-    _routine("mkflux")(
-        [int(name)], cmjd=context.load.cmjd(int(name)),
+    build_flux(
+        [int(name)], apred=context.apred, telescope=context.telescope,
+        cmjd=context.load.cmjd(int(name)),
         darkid=calibrations.get("darkid"),
         flatid=calibrations.get("flatid"), psfid=row["psf"],
         littrowid=calibrations.get("littrowid"),
-        waveid=calibrations.get("waveid"), temp=row["temp"],
+        waveid=calibrations.get("waveid"),
+        persistid=calibrations.get("persistid"), temp=row["temp"],
         clobber=context.clobber, unlock=context.unlock,
+        verbose=context.verbose,
     )
 
 
@@ -522,22 +570,23 @@ def wave(name: str, context: CalibrationContext) -> None:
         psfid, model = row_psfid, None
     else:
         psfid, model = _selected_psf(context, calibrations)
-    _routine("mkwave")(
+    build_wave(
         frames, apred=context.apred, telescope=context.telescope,
         name=output_name, darkid=calibrations.get("darkid"),
         flatid=calibrations.get("flatid"), psfid=psfid,
         modelpsf=model, fiberid=calibrations.get("fiberid"),
         clobber=context.clobber, nofit=context.nofit,
-        unlock=context.unlock, plot=context.doplot,
+        unlock=context.unlock, plot=context.doplot, verbose=context.verbose,
     )
 
 
 @calibration_builder("multiwave", "Wave")
 def multiwave(name: str, context: CalibrationContext) -> None:
-    _routine("mkmultiwave")(
+    build_multiwave(
         context.frames("multiwave", name), name=name,
-        calfile=context.calfile, clobber=context.clobber,
-        unlock=context.unlock, psflibrary=context.librarypsf,
+        apred=context.apred, telescope=context.telescope,
+        clobber=context.clobber, unlock=context.unlock,
+        dependencies=False, verbose=context.verbose,
     )
 
 
@@ -546,32 +595,49 @@ def dailywave(name: str, context: CalibrationContext) -> None:
     mjd = int(name)
     calibrations = context.calibrations(mjd)
     psfid, model = _selected_psf(context, calibrations)
-    _routine("mkdailywave")(
+    build_dailywave(
         mjd, darkid=calibrations.get("darkid"),
         flatid=calibrations.get("flatid"), psfid=psfid,
         modelpsf=model, fiberid=calibrations.get("fiberid"),
         clobber=context.clobber, nofit=context.nofit,
-        unlock=context.unlock, psflibrary=context.librarypsf,
+        unlock=context.unlock, librarypsf=context.librarypsf,
+        dependencies=context.dependencies, apred=context.apred,
+        telescope=context.telescope, verbose=context.verbose,
     )
 
-
-@calibration_builder("telluric", "Telluric")
+    
+@calibration_builder(
+    "telluric", "Telluric",
+    exists=lambda context, name: all(
+        os.path.isfile(filename) and os.path.getsize(filename) > 0
+        for filename in telluric_product_files(context.load, name)
+    ),
+)
 def telluric(name: str, context: CalibrationContext) -> None:
-    _routine("mktelluric")(
-        name, clobber=context.clobber, unlock=context.unlock,
+    build_telluric(
+        name, apred=context.apred, telescope=context.telescope,
+        clobber=context.clobber, unlock=context.unlock,
+        verbose=context.verbose,
     )
 
-
-@calibration_builder("lsf", "LSF")
+    
+@calibration_builder(
+    "lsf", "LSF",
+    exists=lambda context, name: all(
+        os.path.isfile(filename) and os.path.getsize(filename) > 0
+        for filename in lsf_product_files(context.load, name, diagnostics=True)
+    ),
+)
 def lsf(name: str, context: CalibrationContext) -> None:
     row = context.row("lsf", name)
     frames = context.frames("lsf", name)
     calibrations = context.calibrations(context.mjd(frames[0]))
-    _routine("mklsf")(
+    build_lsf(
         frames, context.calid(calibrations, "multiwaveid", "waveid"),
         darkid=calibrations.get("darkid"),
         flatid=calibrations.get("flatid"), psfid=row["psfid"],
         fiberid=calibrations.get("fiberid"), full=context.full,
         newwave=context.newwave, clobber=context.clobber,
-        pl=context.doplot, unlock=context.unlock,
+        plot=context.doplot, unlock=context.unlock, apred=context.apred,
+        telescope=context.telescope, verbose=context.verbose,
     )
