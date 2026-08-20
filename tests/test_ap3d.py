@@ -30,6 +30,9 @@ from astropy.io import fits
 
 from apogee_drp.apred import ap3d
 
+from unittest.mock import MagicMock
+
+
 def _linear_cube(nread=6, ny=2, nx=3, intercept=100.0, signal=None):
     """Return a small exactly linear test ramp."""
 
@@ -858,7 +861,133 @@ class TestRampIO:
         with pytest.raises(ValueError, match="fewer than two"):
             ap3d.read_ramp(filename)
 
+            
+class TestLoadRawRamp:
+    """Tests for load_raw_ramp()."""
 
+    def test_preserves_preexisting_file(self, tmp_path, monkeypatch):
+        apz = tmp_path / "apR-a-123.apz"
+        apz.touch()
+
+        fitsfile = tmp_path / "apR-a-123.fits"
+        fitsfile.write_bytes(b"existing")
+
+        read_ramp = MagicMock(
+            return_value=(
+                np.zeros((2, 2, 2)),
+                fits.Header(),
+            )
+        )
+        monkeypatch.setattr(ap3d, "read_ramp", read_ramp)
+
+        unzip = MagicMock()
+        monkeypatch.setattr(ap3d.apzip, "unzip", unzip)
+
+        ap3d.load_raw_ramp(
+            apz,
+            temporary_directory=tmp_path,
+        )
+
+        unzip.assert_not_called()
+        read_ramp.assert_called_once_with(
+            fitsfile,
+            max_read=None,
+            verbose=False,
+        )
+        assert fitsfile.exists()
+
+    def test_decompresses_and_removes_temporary_file(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        apz = tmp_path / "apR-a-123.apz"
+        apz.touch()
+        fitsfile = tmp_path / "apR-a-123.fits"
+
+        def fake_unzip(*args, **kwargs):
+            fitsfile.write_bytes(b"temporary")
+
+        monkeypatch.setattr(ap3d.apzip, "unzip", fake_unzip)
+        monkeypatch.setattr(
+            ap3d,
+            "read_ramp",
+            MagicMock(
+                return_value=(
+                    np.zeros((2, 2, 2)),
+                    fits.Header(),
+                )
+            ),
+        )
+
+        ap3d.load_raw_ramp(
+            apz,
+            temporary_directory=tmp_path,
+        )
+
+        assert not fitsfile.exists()
+
+    def test_keep_temporary(self, tmp_path, monkeypatch):
+        apz = tmp_path / "apR-a-123.apz"
+        apz.touch()
+        fitsfile = tmp_path / "apR-a-123.fits"
+
+        def fake_unzip(*args, **kwargs):
+            fitsfile.write_bytes(b"temporary")
+
+        monkeypatch.setattr(ap3d.apzip, "unzip", fake_unzip)
+        monkeypatch.setattr(
+            ap3d,
+            "read_ramp",
+            MagicMock(
+                return_value=(
+                    np.zeros((2, 2, 2)),
+                    fits.Header(),
+                )
+            ),
+        )
+
+        ap3d.load_raw_ramp(
+            apz,
+            temporary_directory=tmp_path,
+            keep_temporary=True,
+        )
+
+        assert fitsfile.exists()
+
+    def test_direct_fits_does_not_decompress(
+        self,
+        tmp_path,
+        monkeypatch,
+    ):
+        fitsfile = tmp_path / "apR-a-123.fits"
+        fitsfile.write_bytes(b"fits")
+
+        unzip = MagicMock()
+        monkeypatch.setattr(ap3d.apzip, "unzip", unzip)
+
+        read_ramp = MagicMock(
+            return_value=(
+                np.zeros((2, 2, 2)),
+                fits.Header(),
+            )
+        )
+        monkeypatch.setattr(ap3d, "read_ramp", read_ramp)
+
+        ap3d.load_raw_ramp(
+            fitsfile,
+            max_read=10,
+        )
+
+        unzip.assert_not_called()
+        read_ramp.assert_called_once_with(
+            fitsfile,
+            max_read=10,
+            verbose=False,
+        )
+        assert fitsfile.exists()
+    
+    
 class TestCalibrationIO:
     """Tests for calibration-product loading."""
 
@@ -1372,3 +1501,4 @@ def test_real_apogee_reduction(tmp_path):
             f"robust sigma={robust_sigma:.6g}, "
             f"relative RMS={relative_rms:.6g}"
         )
+
