@@ -1289,6 +1289,7 @@ def load_raw_ramp(
     """
     input_file = Path(filename)
     temporary_file = None
+    created_temporary = False
 
     try:
         if input_file.suffix.lower() == ".apz":
@@ -1308,6 +1309,7 @@ def load_raw_ramp(
             )
 
             if not temporary_file.exists():
+                created_temporary = True
                 apzip.unzip(
                     str(input_file),
                     fitsdir=str(temporary_directory),
@@ -1333,7 +1335,8 @@ def load_raw_ramp(
         )
 
     finally:
-        if temporary_file is not None and temporary_file.exists() and not keep_temporary:
+        if (created_temporary and temporary_file is not None
+            and temporary_file.exists() and not keep_temporary):
             temporary_file.unlink()
 
             
