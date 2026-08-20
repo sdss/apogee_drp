@@ -21,10 +21,13 @@ from .aplincorr import aplincorr
 from .getrn import fowler_sample, getrn, rnhtml
 from .noise import noise
 from ...utils import apload, apzip, lock, utils
+from .utils import calibration_lock
 
 __all__ = ["LINEARITY_DTYPE", "aplincorr", "build_detector",
            "fit_linearity", "fowler_sample", "getrn", "measure_linearity",
            "noise", "rnhtml", "sample_linearity"]
+
+CHIPS = ['a','b','c']
 
 LINEARITY_DTYPE = np.dtype([
     ("read", np.int32), ("chip", np.int16), ("ix", np.int16),
@@ -32,10 +35,9 @@ LINEARITY_DTYPE = np.dtype([
     ("instantaneous_rate", np.float64),
 ])
 
-def _make_load(*, apred: str, telescope: str):
-    """Construct ``ApLoad`` without importing its large dependency tree here."""
-    from ...utils.apload import ApLoad
-    return ApLoad(apred=apred, telescope=telescope)
+
+DETECTOR_CONSTANTS = {"apo": (1.9, {"a":13.0, "b":11.0, "c":10.0}),
+                      "lco": (3.0, {"a":7.0, "b":8.0, "c":4.0})}
 
 def sample_linearity(cube: np.ndarray, chip: int, *, nskip: int = 4,
                      reference_counts: float = 3000.0) -> np.ndarray:
@@ -137,53 +139,44 @@ def measure_linearity(frameid: int, *, apred: str = "daily",
     Existing measurement files are read and refit unless ``clobber`` is set.
     ``ramp_reader`` is injectable for tests and alternate storage backends.
     """
-    load = _make_load(apred=apred, telescope=telescope)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
     directory = load.filename("Detector", num=0, directory=True)
     os.makedirs(directory, exist_ok=True)
-    filename = directory / f"{load.prefix}Linearity-{int(frameid):08d}.dat"
-    lock.lock(str(filename), waittime=10, unlock=unlock)
-    locked = False
-    try:
-        if filename.exists() and filename.stat().st_size and not clobber:
-            if verbose:
-                print(f"Linearity measurements {filename} already exist; reusing them")
-                measurements = np.atleast_1d(
-                    np.genfromtxt(filename, dtype=LINEARITY_DTYPE)
-                )
-        else:
-            if verbose:
-                print(f"Measuring linearity from exposure {frameid}")
-            lock.lock(str(filename), lock=True)
-            locked = True
-            reader = ramp_reader or _read_and_correct_ramp
-            chip_indices = [chip] if chip is not None else [0, 1, 2]
-            pieces = []
-            for index in chip_indices:
-                if index not in (0, 1, 2):
-                    raise ValueError("chip must be 0, 1, or 2")
-                raw = load.filename("R", num=frameid, chips=True)
-                raw = raw.replace("R-", f"R-{'abc'[index]}-")
-                cube = reader(raw, apred=apred, nread=nread, unlock=unlock)
-                pieces.append(sample_linearity(cube, index, nskip=nskip))
-            measurements = (np.concatenate(pieces) if pieces
-                            else np.empty(0, dtype=LINEARITY_DTYPE))
-            # Writing measurements
-            values = np.column_stack(
-                [measurements[field] for field in LINEARITY_DTYPE.names]
-            )
-            np.savetxt(filename,values,
-                       fmt="%3d %3d %5d %5d %12.4f %12.7f %12.7f",
-                       header="read chip ix iy counts rate instantaneous_rate")
-        return fit_linearity(measurements, telescope=telescope,
-                             minread=minread, order=order)
-    finally:
-        if locked:
-            lock.lock(str(filename), clear=True)
+    filename = os.path.join(directory, f"{load.prefix}Linearity-{int(frameid):08d}.dat")
 
-
-def _detector_constants(telescope: str) -> tuple[float, Sequence[float]]:
-    return ((1.9, (13.0, 11.0, 10.0)) if telescope.startswith("apo")
-            else (3.0, (7.0, 8.0, 4.0)))
+    # use existing linearity file
+    if filename.exists() and filename.stat().st_size and not clobber:
+        if verbose:
+            print(f"Linearity measurements {filename} already exist; reusing them")
+        measurements = np.atleast_1d(
+            np.genfromtxt(filename, dtype=LINEARITY_DTYPE)
+        )
+    
+    with calibration_lock(filename, unlock=unlock):
+        if verbose:
+            print(f"Measuring linearity from exposure {frameid}")
+        reader = ramp_reader or _read_and_correct_ramp
+        chip_indices = [chip] if chip is not None else [0, 1, 2]
+        pieces = []
+        for index in chip_indices:
+            if index not in (0, 1, 2):
+                raise ValueError("chip must be 0, 1, or 2")
+            raw = load.filename("R", num=frameid, chips=True)
+            raw = raw.replace("R-", f"R-{'abc'[index]}-")
+            cube = reader(raw, apred=apred, nread=nread, unlock=unlock)
+            pieces.append(sample_linearity(cube, index, nskip=nskip))
+        measurements = (np.concatenate(pieces) if pieces
+                        else np.empty(0, dtype=LINEARITY_DTYPE))
+        # Writing measurements
+        values = np.column_stack(
+            [measurements[field] for field in LINEARITY_DTYPE.names]
+        )
+        np.savetxt(filename,values,
+                   fmt="%3d %3d %5d %5d %12.4f %12.7f %12.7f",
+                   header="read chip ix iy counts rate instantaneous_rate")
+            
+    return fit_linearity(measurements, telescope=telescope,
+                         minread=minread, order=order)
 
 
 def build_detector(detid: int, *, linid: int | None = None,
@@ -198,30 +191,35 @@ def build_detector(detid: int, *, linid: int | None = None,
     if verbose:
         print("Start: "+now.strftime("%Y-%m-%d %H:%M:%S"))
     
-    load = _make_load(apred=apred, telescope=telescope)
-    template = load.filename("Detector", num=detid, chips=True)
-    outputs = load.product_files("detector", detid)
-    lock.lock(template, waittime=10, unlock=unlock)
-    locked = False
-    try:
-        if load.product_exists('Detector',detid) and not clobber:
-            if verbose:
-                print(f"Detector {int(detid):08d} already exists")
-            return outputs
-        lock.lock(template, lock=True)
-        locked = True
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+
+    if load.product_exists('detector',detid) and not clobber:
+        if verbose:
+            print(f"Detector {int(detid):08d} already exists")
+        return
+    
+    directory = load.filename("Detector", num=0, directory=True)
+    os.makedirs(directory,exist_ok=True)
+    outputs = load.filename("detector", detid, chip=CHIPS)
+
+    with calibration_lock(outputs["a"], unlock=unlock):
+        # Delete any existing files
         load.product_delete("detector", detid, verbose=verbose)
+        # linearity
         coefficients = np.array([1.0, 0.0, 0.0])
         if linid is not None and int(linid) > 0:
             coefficients = np.asarray(linearity_function(
                 int(linid), apred=apred, telescope=telescope, unlock=unlock,
                 clobber=clobber, verbose=verbose), dtype=float)
         linearity = np.tile(coefficients, (4, 1))
-        gain_value, read_noise_dn = _detector_constants(telescope)
-        for chip_index, output in enumerate(outputs):
-            Path(output).parent.mkdir(parents=True, exist_ok=True)
+        
+        gain_value, read_noise_dn = DETECTOR_CONSTANTS[telescope[:3]]
+        # chip loop
+        for chip_index, chip_name in enumerate(outputs):
+            output = outputs[chip_name]
             gain = np.full(4, gain_value)
-            read_noise = np.full(4, read_noise_dn[chip_index] * gain_value)
+            read_noise = np.full(4, read_noise_dn[chip_name] * gain_value)
+            
             fits.HDUList([
                 fits.PrimaryHDU(), fits.ImageHDU(read_noise, name="READNOISE"),
                 fits.ImageHDU(gain, name="GAIN"),
@@ -229,11 +227,10 @@ def build_detector(detid: int, *, linid: int | None = None,
             ]).writeto(output, overwrite=True)
             if verbose:
                 print('Writing '+output)
+                
         if verbose:
             now = datetime.now()
             print("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
             print("elapsed: %0.1f sec." % (time.time()-start))
-        return outputs
-    finally:
-        if locked:
-            lock.lock(template, clear=True)
+
+        return
