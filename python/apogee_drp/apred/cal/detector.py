@@ -138,8 +138,8 @@ def measure_linearity(frameid: int, *, apred: str = "daily",
     ``ramp_reader`` is injectable for tests and alternate storage backends.
     """
     load = _make_load(apred=apred, telescope=telescope)
-    directory = Path(load.filename("Detector", num=0, chips=True)).parent
-    directory.mkdir(parents=True, exist_ok=True)
+    directory = load.filename("Detector", num=0, directory=True)
+    os.makedirs(directory, exist_ok=True)
     filename = directory / f"{load.prefix}Linearity-{int(frameid):08d}.dat"
     lock.lock(str(filename), waittime=10, unlock=unlock)
     locked = False
