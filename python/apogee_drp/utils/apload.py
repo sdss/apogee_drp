@@ -777,6 +777,8 @@ class ApLoad:
             Detector chip. A single chip returns one filename. A sequence
             returns a dictionary keyed by chip. If None, return the
             chip-independent pathname.
+        directory : bool, optional
+            Only return the directory.
         
         Returns
         -------
@@ -795,7 +797,7 @@ class ApLoad:
                                     **filename_kwargs, )
             return os.path.dirname(filename)
 
-        # Multple chips requested
+        # Multiple chips requested
         if isinstance(chip, (list, tuple, np.ndarray)):
             if len(chip) == 0:
                 raise ValueError("chip sequence cannot be empty")
@@ -847,56 +849,6 @@ class ApLoad:
                               verbose=verbose)
     
         
-    #def exists(self,root,num=None,**kwargs):
-    #    """ Check whether a certain APOGEE file exists."""
-    #
-    #    chips = ['a','b','c']
-    #    lroot = root.lower()        
-    #    if 'mjd' in kwargs.keys():
-    #        mjd = kwargs.pop('mjd')
-    #    else:
-    #        if lroot=='psfmodel':
-    #            # psfmodel is sparseid-psfid
-    #            mjd = int(self.cmjd(int(str(num).split('-')[0])))
-    #        else:
-    #            mjd = int(self.cmjd(int(num)))
-    #           
-    #    if lroot=='r' or lroot=='2d' or lroot=='1d' or lroot=='bpm' or lroot=='lsf':
-    #        prefix = lroot.upper()
-    #    elif lroot=='detector':
-    #        prefix = 'Detector'
-    #    elif lroot=='flux':
-    #        prefix = 'Flux'
-    #    elif lroot=='arc' or lroot=='wave':
-    #        prefix = 'Wave'
-    #    elif lroot=='fpi':
-    #        prefix = 'WaveFPI'
-    #    elif lroot=='psf':
-    #        # also check EPSF and Trace files
-    #        prefix = ['PSF','EPSF','ETrace']
-    #    else:
-    #        prefix = root
-    #    # Loop over prefixes and make the chip-level filenames
-    #    outfiles = []
-    #    if type(prefix) is str:
-    #        prefix = [prefix]
-    #    for p in prefix:
-    #        if lroot == "sparse":
-    #            outfiles.append(self.filename(p, num=num, **kwargs))
-    #        else:
-    #            files = self.filename(p, num=num, mjd=mjd, chip=chips, **kwargs)
-    #            outfiles.extend(files.values())
-    #    # Only chip b for Littrow
-    #    if lroot=='littrow':
-    #        outfiles = [outfiles[1]]
-    #    # Check that all of the necesary files exist
-    #    files_exists = [os.path.exists(o) for o in outfiles]
-    #    if np.sum(files_exists)==len(files_exists):
-    #        exists = True
-    #    else:
-    #        exists = False
-    #    return exists
-    
     def allfile(self,root,
                 location=None,obj=None,reduction=None,plate=None,mjd=None,num=None,
                 fiber=None,chip=None,field=None,
