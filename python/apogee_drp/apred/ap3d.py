@@ -67,14 +67,13 @@ __all__ = [
     "process_array",
     "process_cube",
     "read_ramp",
+    "load_raw_ramp",
     "read_calibrations",
     "write_ap2d",
     "process_file",
     "ap3d",
 ]
 
-
-AP3D_VERSION = "v25"
 NUMBA_AVAILABLE = njit is not None
 PIXMASK = PixelBitMask()
 BAD_VARIANCE = np.float32(99_999_999.0)
@@ -1255,6 +1254,86 @@ def read_ramp(
     return cube, header
 
 
+def load_raw_ramp(
+    filename,
+    *,
+    max_read=None,
+    temporary_directory=None,
+    unlock=False,
+    verbose=False,
+):
+    """Load an APOGEE raw ramp, decompressing APZ input when necessary.
+
+    Parameters
+    ----------
+    filename : str or Path
+        Raw FITS or APZ ramp.
+    max_read : int, optional
+        Maximum number of reads to load.
+    temporary_directory : str or Path, optional
+        Directory used for APZ decompression.
+    unlock : bool, optional
+        Clear an existing decompression lock.
+    verbose : bool, optional
+        Print decompression information.
+
+    Returns
+    -------
+    cube : ndarray
+        Raw ramp with shape ``(nread, ny, nx)``.
+    header : fits.Header
+        Raw ramp header.
+    """
+    input_file = Path(filename)
+    temporary_file = None
+
+    try:
+        if input_file.suffix.lower() == ".apz":
+            if temporary_directory is None:
+                temporary_directory = Path(utils.localdir()) / "ap3d"
+            else:
+                temporary_directory = Path(temporary_directory)
+
+            temporary_directory.mkdir(
+                parents=True,
+                exist_ok=True,
+            )
+
+            temporary_file = (
+                temporary_directory
+                / f"{input_file.stem}.fits"
+            )
+
+            if not temporary_file.exists():
+                apzip.unzip(
+                    str(input_file),
+                    fitsdir=str(temporary_directory),
+                    unlock=unlock,
+                    silent=not verbose,
+                )
+
+            if not temporary_file.exists():
+                raise RuntimeError(
+                    "APZ decompression did not create "
+                    f"{temporary_file}"
+                )
+
+            ramp_file = temporary_file
+
+        else:
+            ramp_file = input_file
+
+        return read_ramp(
+            ramp_file,
+            max_read=max_read,
+            verbose=verbose,
+        )
+
+    finally:
+        if temporary_file is not None and temporary_file.exists():
+            temporary_file.unlink()
+
+            
 def process_cube(
     filename: str | Path,
     *,

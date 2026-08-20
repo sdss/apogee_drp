@@ -1,13 +1,19 @@
 """Small numerical helpers shared by calibration builders."""
 
+from contextlib import contextmanager
 from pathlib import Path
+
+from ...utils import lock
 from .flatsmooth import flatsmooth
 from .robust_slope import robust_slope
-from contextlib import contextmanager
-from ...utils import lock
 
-__all__ = ["flatsmooth", "robust_slope",
-           "calibration_lock", "file_build_lock", "product_build_lock"]
+__all__ = [
+    "calibration_lock",
+    "file_build_lock",
+    "flatsmooth",
+    "product_build_lock",
+    "robust_slope",
+]
 
 @contextmanager
 def calibration_lock(filename, *, waittime=10, unlock=False):
@@ -58,6 +64,10 @@ def file_build_lock(filename, *, clobber=False, unlock=False,
             yield False
             return
 
+        # Remove an incomplete file or a file being clobbered.
+        if path.exists() or path.is_symlink():
+            path.unlink()
+        
         yield True
         
 @contextmanager
@@ -86,10 +96,9 @@ def product_build_lock(load, product, name, *, clobber=False,
 
     lockfile = filenames[0]
     Path(lockfile).parent.mkdir(parents=True, exist_ok=True)
-    lock.lock(lockfile, waittime=waittime, unlock=unlock)
-    lock.lock(lockfile, lock=True)
 
-    try:
+    with calibration_lock(lockfile, waittime=waittime, unlock=unlock):
+
         # The product may have been created while waiting.
         if load.product_exists(product, name) and not clobber:
             report_existing()
@@ -98,7 +107,5 @@ def product_build_lock(load, product, name, *, clobber=False,
 
         # Remove an old complete product or partial leftovers.
         load.product_delete(product, name, verbose=verbose)
+        
         yield True, filenames
-
-    finally:
-        lock.lock(lockfile, clear=True)

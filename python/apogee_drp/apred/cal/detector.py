@@ -103,23 +103,13 @@ def fit_linearity(measurements: np.ndarray, *, telescope: str = "apo25m",
     return np.polynomial.polynomial.polyfit(
         data["counts"][selected], data["rate"][selected], order)
 
-def _read_and_correct_ramp(filename: str, *, apred: str,
-                           nread: int | None,
-                           unlock: bool = False) -> np.ndarray:
-    """Unpack, read, and reference-correct one raw APOGEE ramp."""
-    from ..ap3d import reference_correct
 
-    local = Path(utils.localdir())
-    root = local if local.is_dir() else Path(".")
-    outdir = root / apred
-    outdir.mkdir(parents=True, exist_ok=True)
-    unpacked = outdir / f"{Path(filename).stem}.fits"
-    if not unpacked.exists():
-        apzip.unzip(filename, fitsdir=str(outdir), unlock=unlock)
-    with fits.open(unpacked, memmap=False) as hdul:
-        count = min(nread or len(hdul) - 1, len(hdul) - 1)
-        header = hdul[0].header.copy()
-        cube = np.stack([hdul[index].data for index in range(1, count + 1)])
+def _read_and_correct_ramp( filename, *, apred, nread, unlock=False, ):
+    """Load and reference-correct a raw ramp for linearity measurement."""
+    from ..ap3d import load_raw_ramp, reference_correct
+    temporary_directory = Path(utils.localdir()) / apred
+    cube, header = load_raw_ramp(filename, max_read=nread,
+                                 temporary_directory=temporary_directory, unlock=unlock)
     corrected, _, _, _ = reference_correct(cube, header, indiv=0, cds=True)
     return corrected
 
@@ -138,12 +128,14 @@ def measure_linearity(frameid: int, *, apred: str = "daily",
     ``ramp_reader`` is injectable for tests and alternate storage backends.
     """
     load = apload.ApLoad(apred=apred, telescope=telescope)
-    directory = load.filename("Detector", num=0, directory=True)
+    directory = load.filename("Detector", num=frameid, directory=True)
     filename = os.path.join(directory, f"{load.prefix}Linearity-{int(frameid):08d}.dat")
 
     with file_build_lock(filename, clobber=clobber, unlock=unlock,
                          verbose=verbose) as build:
         if build:
+            if verbose:
+                print(f"Measuring linearity from exposure {frameid}")
             reader = ramp_reader or _read_and_correct_ramp
             chip_indices = [chip] if chip is not None else [0, 1, 2]
             pieces = []
@@ -177,7 +169,7 @@ def build_detector(detid: int, *, linid: int | None = None,
                    verbose: bool = True,
                    linearity_function: Callable[..., np.ndarray] = measure_linearity,
                    ) -> None:
-    """Create the three Detector FITS products and return their filenames."""
+    """Create the three Detector FITS products."""
     now = datetime.now()
     start = time.time()
     if verbose:
