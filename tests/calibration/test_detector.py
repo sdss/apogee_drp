@@ -1,6 +1,7 @@
 """Focused tests for detector linearity and product construction."""
 
 from pathlib import Path
+from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
@@ -10,22 +11,57 @@ from apogee_drp.apred.cal import detector
 
 
 class FakeLoad:
-    """Small ApLoad stand-in that writes every product below ``root``."""
+    """Small ApLoad stand-in that keeps products below ``root``."""
 
     prefix = "ap"
 
     def __init__(self, root):
         self.root = Path(root)
 
-    def filename(self, kind, num=None, chips=False):
-        return str(self.root / f"ap{kind}-{int(num):08d}.fits")
+    def filename(self, kind, num=None, chip=None, directory=False, **kwargs):
+        if directory:
+            return str(self.root)
+        if isinstance(chip, (list, tuple, np.ndarray)):
+            return {
+                value: self.filename(kind, num=num, chip=value)
+                for value in chip
+            }
+        chip_text = f"-{chip}" if chip is not None else ""
+        return str(
+            self.root / f"ap{kind}{chip_text}-{int(num):08d}.fits"
+        )
+
+    def product_files(self, product, name, *, mjd=None):
+        if product != "detector":
+            raise ValueError(f"Unsupported fake product {product!r}")
+        return [
+            self.filename("Detector", num=name, chip=chip)
+            for chip in detector.CHIPS
+        ]
+
+    def product_exists(self, product, name, *, mjd=None):
+        return all(
+            path.is_file() and path.stat().st_size > 0
+            for path in map(Path, self.product_files(product, name, mjd=mjd))
+        )
+
+    def product_delete(
+        self, product, name, *, mjd=None, verbose=False, **kwargs
+    ):
+        deleted = []
+        for filename in self.product_files(product, name, mjd=mjd):
+            path = Path(filename)
+            if path.exists():
+                path.unlink()
+                deleted.append(str(path))
+        return deleted
 
 
 @pytest.fixture
 def detector_environment(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
     lock_calls = []
-    monkeypatch.setattr(detector, "_make_load", lambda **kwargs: load)
+    monkeypatch.setattr(detector.apload, "ApLoad", lambda **kwargs: load)
     monkeypatch.setattr(
         detector.lock, "lock",
         lambda filename, **kwargs: lock_calls.append((Path(filename), kwargs)),
@@ -176,7 +212,12 @@ def test_measure_linearity_reads_all_chips_and_forwards_options(
     assert len(reader_calls) == 3
     assert [Path(call[0]).name for call in reader_calls] == [
         "apR-a-00000123.fits", "apR-b-00000123.fits", "apR-c-00000123.fits"]
-    assert all(call[1] == {"apred": "daily", "nread": 9} for call in reader_calls)
+    assert all(
+        call[1] == {
+            "apred": "daily", "nread": 9, "unlock": False
+        }
+        for call in reader_calls
+    )
     assert sampled_chips == [(0, {"nskip": 3}), (1, {"nskip": 3}),
                              (2, {"nskip": 3})]
     np.testing.assert_allclose(result, [1, -2e-6, 3e-11], rtol=1e-8)
@@ -258,29 +299,39 @@ def test_measure_linearity_clears_lock_when_reader_fails(detector_environment):
     assert lock_calls[-1][1] == {"clear": True}
 
 
-def test_read_and_correct_ramp_limits_reads(monkeypatch, tmp_path):
-    outdir = tmp_path / "daily"
-    outdir.mkdir()
-    unpacked = outdir / "apR-a-00000001.fits"
-    fits.HDUList([fits.PrimaryHDU(header=fits.Header({"TEST": 42}))] + [
-        fits.ImageHDU(np.full((3, 4), value)) for value in range(5)
-    ]).writeto(unpacked)
+def test_read_and_correct_ramp_uses_ap3d_loader(monkeypatch, tmp_path):
+    import apogee_drp.apred.ap3d as ap3d
+
+    cube = np.arange(3 * 3 * 4).reshape(3, 3, 4)
+    header = fits.Header({"TEST": 42})
+    load_raw_ramp = MagicMock(return_value=(cube, header))
+    reference_correct = MagicMock(
+        return_value=(cube + 1, None, None, None)
+    )
+    monkeypatch.setattr(ap3d, "load_raw_ramp", load_raw_ramp)
+    monkeypatch.setattr(ap3d, "reference_correct", reference_correct)
     monkeypatch.setattr(detector.utils, "localdir", lambda: str(tmp_path))
 
-    import apogee_drp.apred.ap3d as ap3d
-    calls = []
-
-    def reference_correct(cube, header, **kwargs):
-        calls.append((cube.copy(), header, kwargs))
-        return cube + 1, None, None, None
-
-    monkeypatch.setattr(ap3d, "reference_correct", reference_correct)
     result = detector._read_and_correct_ramp(
-        "/raw/apR-a-00000001.fits", apred="daily", nread=3)
-    assert result.shape == (3, 3, 4)
-    np.testing.assert_array_equal(result[:, 0, 0], [1, 2, 3])
-    assert calls[0][1]["TEST"] == 42
-    assert calls[0][2] == {"indiv": 0, "cds": True}
+        "/raw/apR-a-00000001.apz",
+        apred="daily",
+        nread=3,
+        unlock=True,
+    )
+
+    load_raw_ramp.assert_called_once_with(
+        "/raw/apR-a-00000001.apz",
+        max_read=3,
+        temporary_directory=tmp_path / "daily",
+        unlock=True,
+    )
+    reference_correct.assert_called_once_with(
+        cube,
+        header,
+        indiv=0,
+        cds=True,
+    )
+    np.testing.assert_array_equal(result, cube + 1)
 
 
 @pytest.mark.parametrize(
@@ -292,7 +343,7 @@ def test_read_and_correct_ramp_limits_reads(monkeypatch, tmp_path):
 )
 def test_build_detector_fits_contract(detector_environment, telescope, gain,
                                       read_noise):
-    _, lock_calls = detector_environment
+    load, lock_calls = detector_environment
     coefficients = np.array([1.0, -2e-6, 3e-11])
     linearity_calls = []
 
@@ -300,9 +351,11 @@ def test_build_detector_fits_contract(detector_environment, telescope, gain,
         linearity_calls.append((frameid, kwargs))
         return coefficients
 
-    outputs = detector.build_detector(
+    result = detector.build_detector(
         13390003, linid=13390001, telescope=telescope,
         linearity_function=linearity, verbose=True)
+    assert result is None
+    outputs = load.product_files("detector", 13390003)
     assert [Path(path).name for path in outputs] == [
         "apDetector-a-13390003.fits", "apDetector-b-13390003.fits",
         "apDetector-c-13390003.fits"]
@@ -322,11 +375,14 @@ def test_build_detector_fits_contract(detector_environment, telescope, gain,
 @pytest.mark.parametrize("linid", [None, 0])
 def test_build_detector_identity_linearity_without_exposure(
         detector_environment, linid):
+    load, _ = detector_environment
     def should_not_run(*args, **kwargs):
         raise AssertionError("linearity measurement should not run")
 
-    outputs = detector.build_detector(
+    result = detector.build_detector(
         200, linid=linid, linearity_function=should_not_run)
+    assert result is None
+    outputs = load.product_files("detector", 200)
     with fits.open(outputs[0]) as hdul:
         np.testing.assert_array_equal(
             hdul[3].data, np.tile([1.0, 0.0, 0.0], (4, 1)))
@@ -337,14 +393,14 @@ def test_build_detector_existing_products_are_reused(
     load, lock_calls = detector_environment
     outputs = [load.root / f"apDetector-{chip}-00000201.fits" for chip in "abc"]
     for output in outputs:
-        output.touch()
+        output.write_bytes(b"existing")
 
     def should_not_run(*args, **kwargs):
         raise AssertionError("existing products should skip linearity")
 
     actual = detector.build_detector(
         201, linid=99, linearity_function=should_not_run, verbose=True)
-    assert list(map(Path, actual)) == outputs
+    assert actual is None
     assert "already exists" in capsys.readouterr().out
     assert not any(options.get("lock") for _, options in lock_calls)
 
@@ -353,7 +409,9 @@ def test_build_detector_partial_products_are_rebuilt(detector_environment):
     load, _ = detector_environment
     old = load.root / "apDetector-a-00000202.fits"
     old.write_bytes(b"old")
-    outputs = detector.build_detector(202)
+    result = detector.build_detector(202)
+    assert result is None
+    outputs = load.product_files("detector", 202)
     assert all(Path(path).stat().st_size > 3 for path in outputs)
     with fits.open(old) as hdul:
         assert hdul[1].name == "READNOISE"
@@ -361,12 +419,13 @@ def test_build_detector_partial_products_are_rebuilt(detector_environment):
 
 def test_build_detector_clobber_rewrites_complete_product_set(
         detector_environment):
-    first = detector.build_detector(203)
-    for output in first:
+    load, _ = detector_environment
+    assert detector.build_detector(203) is None
+    outputs = load.product_files("detector", 203)
+    for output in outputs:
         Path(output).write_bytes(b"old")
-    second = detector.build_detector(203, clobber=True)
-    assert second == first
-    for output in second:
+    assert detector.build_detector(203, clobber=True) is None
+    for output in outputs:
         with fits.open(output) as hdul:
             assert len(hdul) == 4
 
