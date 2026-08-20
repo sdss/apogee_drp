@@ -19,13 +19,13 @@ from .aplincorr import aplincorr
 from .getrn import fowler_sample, getrn, rnhtml
 from .noise import noise
 from ...utils import apload, apzip, lock, utils
-from .utils import calibration_lock, product_build_lock
+from .utils import file_build_lock, product_build_lock
 
 __all__ = ["LINEARITY_DTYPE", "aplincorr", "build_detector",
            "fit_linearity", "fowler_sample", "getrn", "measure_linearity",
            "noise", "rnhtml", "sample_linearity"]
 
-CHIPS = ['a','b','c']
+CHIPS = ("a", "b", "c")
 
 LINEARITY_DTYPE = np.dtype([
     ("read", np.int32), ("chip", np.int16), ("ix", np.int16),
@@ -139,43 +139,36 @@ def measure_linearity(frameid: int, *, apred: str = "daily",
     """
     load = apload.ApLoad(apred=apred, telescope=telescope)
     directory = load.filename("Detector", num=0, directory=True)
-    os.makedirs(directory, exist_ok=True)
     filename = os.path.join(directory, f"{load.prefix}Linearity-{int(frameid):08d}.dat")
 
-    # use existing linearity file
-    if os.path.isfile(filename) and os.path.getsize(filename) and not clobber:
-        if verbose:
-            print(f"Linearity measurements {filename} already exist; reusing them")
-        measurements = np.atleast_1d(
-            np.genfromtxt(filename, dtype=LINEARITY_DTYPE)
-        )            
-        return fit_linearity(measurements, telescope=telescope,
-                             minread=minread, order=order)
-    
-    with calibration_lock(filename, unlock=unlock):
-        if verbose:
-            print(f"Measuring linearity from exposure {frameid}")
-        reader = ramp_reader or _read_and_correct_ramp
-        chip_indices = [chip] if chip is not None else [0, 1, 2]
-        pieces = []
-        for index in chip_indices:
-            if index not in (0, 1, 2):
-                raise ValueError("chip must be 0, 1, or 2")
-            raw = load.filename("R", num=frameid, chip=CHIPS[index])
-            cube = reader(raw, apred=apred, nread=nread, unlock=unlock)
-            pieces.append(sample_linearity(cube, index, nskip=nskip))
-        measurements = (np.concatenate(pieces) if pieces
-                        else np.empty(0, dtype=LINEARITY_DTYPE))
-        # Writing measurements
-        values = np.column_stack(
-            [measurements[field] for field in LINEARITY_DTYPE.names]
-        )
-        np.savetxt(filename,values,
-                   fmt="%3d %3d %5d %5d %12.4f %12.7f %12.7f",
-                   header="read chip ix iy counts rate instantaneous_rate")
+    with file_build_lock(filename, clobber=clobber, unlock=unlock,
+                         verbose=verbose) as build:
+        if build:
+            reader = ramp_reader or _read_and_correct_ramp
+            chip_indices = [chip] if chip is not None else [0, 1, 2]
+            pieces = []
+            for index in chip_indices:
+                if index not in (0, 1, 2):
+                    raise ValueError("chip must be 0, 1, or 2")
+                raw = load.filename("R", num=frameid, chip=CHIPS[index])
+                cube = reader(raw, apred=apred, nread=nread, unlock=unlock)
+                pieces.append(sample_linearity(cube, index, nskip=nskip))
+            measurements = (np.concatenate(pieces) if pieces
+                            else np.empty(0, dtype=LINEARITY_DTYPE))
+            # Writing measurements
+            values = np.column_stack(
+                [measurements[field] for field in LINEARITY_DTYPE.names]
+            )
+            np.savetxt(filename,values,
+                       fmt="%3d %3d %5d %5d %12.4f %12.7f %12.7f",
+                       header="read chip ix iy counts rate instantaneous_rate")
+        else:
+            measurements = np.atleast_1d(
+                np.genfromtxt(filename, dtype=LINEARITY_DTYPE)
+            )            
             
-        return fit_linearity(measurements, telescope=telescope,
-                             minread=minread, order=order)
+    return fit_linearity(measurements, telescope=telescope,
+                         minread=minread, order=order)
 
 
 def build_detector(detid: int, *, linid: int | None = None,
@@ -183,7 +176,7 @@ def build_detector(detid: int, *, linid: int | None = None,
                    unlock: bool = False, clobber: bool = False,
                    verbose: bool = True,
                    linearity_function: Callable[..., np.ndarray] = measure_linearity,
-                   ) -> list[str]:
+                   ) -> None:
     """Create the three Detector FITS products and return their filenames."""
     now = datetime.now()
     start = time.time()
@@ -192,26 +185,13 @@ def build_detector(detid: int, *, linid: int | None = None,
     
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
-    if load.product_exists('detector',detid) and not clobber:
-        if verbose:
-            print(f"Detector {int(detid):08d} already exists")
-        return
-    
-    directory = load.filename("Detector", num=0, directory=True)
-    os.makedirs(directory,exist_ok=True)
-    outputs = load.filename("Detector", num=detid, chip=CHIPS)
-
-    with product_build_lock(load,"detector", detid, clobber=clobber,
+    with product_build_lock(load, "detector", detid, clobber=clobber,
                             unlock=unlock, verbose=verbose) as (build, output_files):
         if not build:
-            if verbose:
-                print(f"Detector {int(detid):08d} already exists")
             return
 
         outputs = dict(zip(CHIPS, output_files))
-                   
-        # Delete any existing files
-        load.product_delete("detector", detid, verbose=verbose)
+
         # linearity
         coefficients = np.array([1.0, 0.0, 0.0])
         if linid is not None and int(linid) > 0:
@@ -222,8 +202,7 @@ def build_detector(detid: int, *, linid: int | None = None,
         
         gain_value, read_noise_dn = DETECTOR_CONSTANTS[telescope[:3]]
         # chip loop
-        for chip_index, chip_name in enumerate(outputs):
-            output = outputs[chip_name]
+        for chip_name, output in outputs.items():
             gain = np.full(4, gain_value)
             read_noise = np.full(4, read_noise_dn[chip_name] * gain_value)
             
