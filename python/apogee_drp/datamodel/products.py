@@ -179,7 +179,7 @@ def product_exists(load, product: str, name, *, mjd=None) -> bool:
     """Return whether all physical files for a logical product are complete."""
     return all(product_status(load, product, name, mjd=mjd).values())
 
-def delete_product(load, product, name, *, mjd=None, missing_ok=True,
+def product_delete(load, product, name, *, mjd=None, missing_ok=True,
                    dry_run=False, verbose=False):
     """Delete every physical file belonging to a logical APOGEE product.
 

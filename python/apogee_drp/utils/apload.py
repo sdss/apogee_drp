@@ -841,10 +841,10 @@ class ApLoad:
     def product_delete(self, product, name, *, mjd=None,
                        missing_ok=True, dry_run=False, verbose=None):
         """Delete every physical file belonging to a logical product."""
-        from ..datamodel.products import delete_product
+        from ..datamodel.products import product_delete
         if verbose is None:
             verbose = self.verbose
-        return delete_product(self, product, name, mjd=mjd,
+        return product_delete(self, product, name, mjd=mjd,
                               missing_ok=missing_ok, dry_run=dry_run,
                               verbose=verbose)
     
