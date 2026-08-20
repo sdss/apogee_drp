@@ -764,8 +764,9 @@ class ApLoad:
             return data, header
 
     def filename(self, root,
-             location=None, obj=None, plate=None, mjd=None, num=None,
-             fiber=None, chip=None, field=None, configid=None, fps=None):
+                 location=None, obj=None, plate=None, mjd=None, num=None,
+                 fiber=None, chip=None, field=None, configid=None, fps=None,
+                 directory=False):
         """Return one or more APOGEE product filenames.
 
         Parameters
@@ -783,37 +784,33 @@ class ApLoad:
             A single pathname, or a dictionary mapping detector chips to
             pathnames when ``chip`` is a sequence.
         """
+        filename_kwargs = {"location":location, "obj":obj, "plate":plate,
+                           "mjd":mjd, "num":num, "fiber":fiber, "field":field,
+                           "configid":configid, "fps":fps}
+
+        # A product's chip files live in the same directory. Generate the
+        # chip-independent pathname and return its parent directory.
+        if directory:
+            filename = self.allfile(root,chip=None,download=False,
+                                    **filename_kwargs, )
+            return os.path.dirname(filename)
+
+        # Multple chips requested
         if isinstance(chip, (list, tuple, np.ndarray)):
-            return { ch: self.filename(root,location=location,obj=obj,
-                                       plate=plate,mjd=mjd,num=num,fiber=fiber,chip=ch,
-                                       field=field,configid=configid,fps=fps) for ch in chip
-            }
+            if len(chip) == 0:
+                raise ValueError("chip sequence cannot be empty")
+            return { ch: self.filename( root, chip=ch,
+                                        **filename_kwargs, ) for ch in chip }
 
         if chip is not None and chip not in ("a", "b", "c"):
             raise ValueError(
                 f"Invalid chip {chip!r}; expected 'a', 'b', 'c', or None"
             )
 
-        return self.allfile(root, location=location, obj=obj, plate=plate,
-                            mjd=mjd, num=num, fiber=fiber, chip=chip,
-                            field=field, configid=configid, fps=fps,
-                            download=False)
+        return self.allfile(root, chip=chip, download=False,
+                            **filename_kwargs, )
 
-
-    def exists(self, root, num=None, chip=None, **kwargs):
-        """Return whether one or more APOGEE files exist.
-        If ``chip`` is a sequence, all requested chip files must exist.
-        """
-        filenames = self.filename(root,num=num,chip=chip,**kwargs)
-        if isinstance(filenames, dict):
-            filenames = filenames.values()
-        else:
-            filenames = [filenames]
-            return all(
-                os.path.isfile(filename) and os.path.getsize(filename) > 0
-                for filename in filenames
-            )
-
+    
     def exists(self, root, num=None, chip=None, **kwargs):
         """Return whether the requested physical file or files are complete."""
         from ..datamodel.products import file_is_complete
