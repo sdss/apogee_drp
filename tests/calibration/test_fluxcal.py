@@ -64,6 +64,14 @@ def test_obsolete_product_filename_and_load_helpers_are_removed():
     assert not hasattr(fluxcal, "_make_load")
 
 
+def test_running_nanmedian_supports_numpy_before_120(monkeypatch):
+    monkeypatch.delattr(
+        np.lib.stride_tricks, "sliding_window_view", raising=False)
+    values = np.array([[1.0], [np.nan], [5.0]])
+    result = fluxcal._running_nanmedian(values, 3)
+    np.testing.assert_allclose(result[:, 0], [1.0, 3.0, 5.0])
+
+
 def test_planck_shape_and_temperature_dependence():
     wave = np.array([12000.0, 16000.0])
     cool = fluxcal.planck(wave, 3000)
@@ -402,3 +410,4 @@ def test_makecal_response_dispatches_current_builder(monkeypatch, tmp_path):
     assert calls[0][1]["temp"] == 4000
     assert calls[0][1]["clobber"] is True
     assert calls[0][1]["unlock"] is True
+

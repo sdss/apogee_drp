@@ -78,12 +78,21 @@ def _lsf_files(load, name, mjd):
 
 
 def _telluric_files(load, name, mjd):
-    # Telluric currently has a custom directory layout that is not yet in
-    # sdss-tree. Keep that temporary knowledge in its builder until the tree
-    # product exists.
-    from ..apred.cal.telluric import product_files
-
-    return [str(filename) for filename in product_files(load, name)]
+    """Resolve the temporary compound-ID Telluric filename layout."""
+    identifier = str(name).strip()
+    parts = identifier.split("-")
+    if len(parts) != 2 or not all(part.isdigit() for part in parts):
+        raise ValueError(
+            f"Telluric ID must be '<waveid>-<lsfid>', got {name!r}")
+    if any(int(part) <= 0 for part in parts):
+        raise ValueError("Telluric waveid and lsfid must be positive")
+    directory = Path(load.filename("Telluric", num=0, directory=True))
+    prefix = getattr(
+        load, "prefix", "ap" if "apo" in load.telescope else "as")
+    return [
+        str(directory / f"{prefix}Telluric-{chip}-{identifier}.fits")
+        for chip in APOGEE_CHIPS
+    ]
 
 
 PRODUCTS: dict[str, ProductSpec] = {
@@ -262,3 +271,4 @@ __all__ = [
     "file_is_complete", "product_exists", "product_files", "product_mjd",
     "product_spec", "product_status", "product_delete",
 ]
+

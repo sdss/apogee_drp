@@ -8,6 +8,7 @@ from astropy.io import fits
 
 from apogee_drp.apred.cal import makecal
 from apogee_drp.apred.cal import telluric
+from apogee_drp.apred.cal import utils as cal_utils
 
 
 class FakeLoad:
@@ -17,9 +18,44 @@ class FakeLoad:
 
     def __init__(self, root):
         self.root = Path(root)
+        self.delete_calls = []
 
-    def filename(self, kind, num=None, chips=False, **kwargs):
-        return str(self.root / kind.lower() / f"ap{kind}-{num}.fits")
+    def filename(self, kind, num=None, chip=None, directory=False, **kwargs):
+        root = self.root / kind.lower()
+        if directory:
+            return str(root)
+        infix = f"-{chip}" if chip is not None else ""
+        return str(root / f"ap{kind}{infix}-{num}.fits")
+
+    def product_files(self, product, name):
+        if product == "telluric":
+            return [str(self.root / "telluric" /
+                        f"apTelluric-{chip}-{name}.fits") for chip in "abc"]
+        if product == "wave":
+            return [self.filename("Wave", num=name, chip=chip)
+                    for chip in "abc"]
+        if product == "lsf":
+            files = [self.filename("LSF", num=name, chip=chip)
+                     for chip in "abc"]
+            files.append(str(self.root / "lsf" /
+                             f"apLSF-{name}-diagnostics.fits"))
+            return files
+        raise AssertionError(product)
+
+    def product_status(self, product, name):
+        return {filename: Path(filename).is_file() and
+                Path(filename).stat().st_size > 0
+                for filename in self.product_files(product, name)}
+
+    def product_exists(self, product, name):
+        return all(self.product_status(product, name).values())
+
+    def product_delete(self, product, name, **kwargs):
+        self.delete_calls.append((product, name, kwargs))
+        for filename in self.product_files(product, name):
+            path = Path(filename)
+            if path.exists() or path.is_symlink():
+                path.unlink()
 
 
 @pytest.mark.parametrize(
@@ -36,10 +72,17 @@ def test_parse_telluric_id_rejects_invalid_names(value):
 
 
 def test_product_files_preserve_compound_id(tmp_path):
-    files = telluric.product_files(FakeLoad(tmp_path), "12-19601")
+    files = FakeLoad(tmp_path).product_files("telluric", "12-19601")
     assert [Path(filename).name for filename in files] == [
         "apTelluric-a-12-19601.fits", "apTelluric-b-12-19601.fits",
         "apTelluric-c-12-19601.fits"]
+
+
+def test_obsolete_product_filename_and_load_helpers_are_removed():
+    assert not hasattr(telluric, "product_files")
+    assert not hasattr(telluric, "_input_files")
+    assert not hasattr(telluric, "_telluric_directory")
+    assert not hasattr(telluric, "_make_load")
 
 
 def test_load_repository_models():
@@ -150,13 +193,13 @@ def test_write_telluric_has_idl_compatible_layout(tmp_path):
 
 def patch_builder(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
-    monkeypatch.setattr(telluric, "_make_load", lambda **kwargs: load)
+    monkeypatch.setattr(telluric.apload, "ApLoad", lambda **kwargs: load)
     locks = []
     monkeypatch.setattr(
-        telluric.lock, "lock",
+        cal_utils.lock, "lock",
         lambda *args, **kwargs: locks.append((args, kwargs)))
-    for kind, number in (("Wave", 12), ("LSF", 34)):
-        for filename in telluric._input_files(load, kind, number):
+    for product, number in (("wave", 12), ("lsf", 34)):
+        for filename in load.product_files(product, number):
             Path(filename).parent.mkdir(parents=True, exist_ok=True)
             Path(filename).write_bytes(b"dependency")
     monkeypatch.setattr(
@@ -180,23 +223,23 @@ def patch_builder(monkeypatch, tmp_path):
 
 def test_build_telluric_writes_three_chips(monkeypatch, tmp_path, capsys):
     load, locks = patch_builder(monkeypatch, tmp_path)
-    outputs = telluric.build_telluric("12-34", verbose=True)
-    assert outputs == telluric.product_files(load, "12-34")
+    assert telluric.build_telluric("12-34", verbose=True) is None
+    outputs = load.product_files("telluric", "12-34")
     assert all(Path(filename).stat().st_size > 0 for filename in outputs)
-    assert Path(outputs[0].replace("Telluric-a-", "Telluric-")).with_suffix(".dat").is_file()
+    assert (tmp_path / "telluric" / "apTelluric-12-34.dat").is_file()
     assert "writing Telluric chip c" in capsys.readouterr().out
     assert locks[-1][1] == {"clear": True}
 
 
 def test_build_telluric_existing_short_circuit(monkeypatch, tmp_path, capsys):
     load, locks = patch_builder(monkeypatch, tmp_path)
-    outputs = telluric.product_files(load, "12-34")
+    outputs = load.product_files("telluric", "12-34")
     for filename in outputs:
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
         Path(filename).write_bytes(b"existing")
-    assert telluric.build_telluric("12-34", verbose=True) == outputs
-    assert "already made" in capsys.readouterr().out
-    assert all(kwargs != {"lock": True} for _, kwargs in locks)
+    assert telluric.build_telluric("12-34", verbose=True) is None
+    assert "telluric product 12-34 already exists" in capsys.readouterr().out
+    assert not locks
 
 
 def test_build_telluric_nowait_uses_zero_wait(monkeypatch, tmp_path):
@@ -207,10 +250,14 @@ def test_build_telluric_nowait_uses_zero_wait(monkeypatch, tmp_path):
 
 def test_build_telluric_reports_missing_dependencies(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
-    monkeypatch.setattr(telluric, "_make_load", lambda **kwargs: load)
-    monkeypatch.setattr(telluric.lock, "lock", lambda *args, **kwargs: None)
+    monkeypatch.setattr(telluric.apload, "ApLoad", lambda **kwargs: load)
+    lock_calls = []
+    monkeypatch.setattr(
+        cal_utils.lock, "lock",
+        lambda *args, **kwargs: lock_calls.append((args, kwargs)))
     with pytest.raises(FileNotFoundError, match="Missing Telluric dependency"):
         telluric.build_telluric("12-34")
+    assert lock_calls[-1][1] == {"clear": True}
 
 
 def test_build_telluric_clears_lock_on_failure(monkeypatch, tmp_path):
@@ -223,26 +270,16 @@ def test_build_telluric_clears_lock_on_failure(monkeypatch, tmp_path):
     assert locks[-1][1] == {"clear": True}
 
 
-def test_makecal_telluric_dispatches_numbered_builder(monkeypatch, tmp_path):
+def test_makecal_telluric_dispatches_current_builder(monkeypatch, tmp_path):
     calls = []
     monkeypatch.setattr(
-        makecal_v10, "build_telluric",
+        makecal, "build_telluric",
         lambda *args, **kwargs: calls.append((args, kwargs)))
-    context = makecal_v10.CalibrationContext(
+    context = makecal.CalibrationContext(
         load=FakeLoad(tmp_path), calfile="cal.par", allcaldict={},
         clobber=True, unlock=True, verbose=True)
-    makecal_v10.telluric("12-34", context)
+    makecal.telluric("12-34", context)
     assert calls == [(('12-34',), {
         "apred": "daily", "telescope": "apo25m", "clobber": True,
         "unlock": True, "verbose": True})]
 
-
-def test_legacy_mktelluric_wrapper(monkeypatch):
-    from apogee_drp.apred.cal import mktelluric
-    calls = []
-    monkeypatch.setattr(
-        mktelluric, "build_telluric",
-        lambda *args, **kwargs: calls.append((args, kwargs)) or ["done"])
-    assert mktelluric.mktelluric("12-34", clobber=True) == ["done"]
-    assert calls[0][0] == ("12-34",)
-    assert calls[0][1]["clobber"] is True

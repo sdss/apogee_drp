@@ -10,20 +10,16 @@ from astropy.io import fits
 from scipy.interpolate import interp1d
 from scipy.ndimage import gaussian_filter1d
 
-from ...utils import lock
+from ...utils import apload
+from .utils import product_build_lock
 
 CHIPS = ("a", "b", "c")
 SPECIES = ("CH4", "CO2", "H2O")
 
 __all__ = [
     "build_telluric", "convolve_telluric_models", "load_telluric_models",
-    "oversampled_wavelength", "parse_telluric_id", "product_files",
+    "oversampled_wavelength", "parse_telluric_id",
 ]
-
-
-def _make_load(*, apred, telescope):
-    from ...utils.apload import ApLoad
-    return ApLoad(apred=apred, telescope=telescope)
 
 
 def parse_telluric_id(tellid):
@@ -37,27 +33,6 @@ def parse_telluric_id(tellid):
     if waveid <= 0 or lsfid <= 0:
         raise ValueError("waveid and lsfid must be positive")
     return waveid, lsfid
-
-
-def _telluric_directory(load):
-    template = Path(load.filename("Telluric", num=0, chips=True))
-    return template.parent
-
-
-def product_files(load, tellid):
-    """Return three chip filenames without coercing the compound ID to int."""
-    name = str(tellid).strip()
-    parse_telluric_id(name)
-    directory = _telluric_directory(load)
-    prefix = getattr(load, "prefix", "ap" if "apo" in load.telescope else "as")
-    return [str(directory / f"{prefix}Telluric-{chip}-{name}.fits")
-            for chip in CHIPS]
-
-
-def _input_files(load, kind, number):
-    template = load.filename(kind, num=number, chips=True)
-    return [template.replace(f"{kind}-", f"{kind}-{chip}-", 1)
-            for chip in CHIPS]
 
 
 def _default_model_directory():
@@ -226,28 +201,26 @@ def build_telluric(tellid, *, apred="daily", telescope="apo25m",
     """Build three ``Telluric-WAVEID-LSFID`` calibration files."""
     waveid, lsfid = parse_telluric_id(tellid)
     name = f"{waveid}-{lsfid}"
-    load = _make_load(apred=apred, telescope=telescope)
-    outputs = product_files(load, name)
-    target = outputs[0].replace("Telluric-a-", "Telluric-")
-    lock.lock(target, waittime=(0 if nowait else 10), unlock=unlock)
-    if all(Path(filename).is_file() and Path(filename).stat().st_size > 0
-           for filename in outputs) and not clobber:
-        if verbose:
-            print(f" Telluric file: {target} already made")
-        return outputs
-    wavefiles = _input_files(load, "Wave", waveid)
-    lsffiles = _input_files(load, "LSF", lsfid)
-    missing = [name for name in wavefiles + lsffiles
-               if not Path(name).is_file() or Path(name).stat().st_size == 0]
-    if missing:
-        raise FileNotFoundError("Missing Telluric dependency files: " + ", ".join(missing))
-    lock.lock(target, lock=True)
-    try:
-        for filename in outputs:
-            path = Path(filename)
-            if path.exists():
-                path.unlink()
-            path.parent.mkdir(parents=True, exist_ok=True)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    with product_build_lock(
+        load, "telluric", name, clobber=clobber, unlock=unlock,
+        waittime=(0 if nowait else 10), verbose=verbose,
+    ) as (build, outputs):
+        if not build:
+            return
+        if len(outputs) != len(CHIPS):
+            raise RuntimeError(
+                f"Telluric product {name} resolved to {len(outputs)} files; "
+                f"expected {len(CHIPS)}")
+        wave_status = load.product_status("wave", waveid)
+        lsf_status = load.product_status("lsf", lsfid)
+        missing = [filename for filename, complete in
+                   {**wave_status, **lsf_status}.items() if not complete]
+        if missing:
+            raise FileNotFoundError(
+                "Missing Telluric dependency files: " + ", ".join(missing))
+        wavefiles = load.product_files("wave", waveid)
+        lsffiles = load.product_files("lsf", lsfid)[:len(CHIPS)]
         model_wave, models, metadata = load_telluric_models(model_directory)
         for chip, wavefile, lsffile, output in zip(
                 CHIPS, wavefiles, lsffiles, outputs):
@@ -264,10 +237,9 @@ def build_telluric(tellid, *, apred="daily", telescope="apo25m",
                 waveid=waveid, lsfid=lsfid)
             if verbose:
                 print(f" writing Telluric chip {chip}: {output}")
-        if not all(Path(filename).is_file() and Path(filename).stat().st_size > 0
-                   for filename in outputs):
+        if not load.product_exists("telluric", name):
             raise RuntimeError(f"Telluric {name} did not create all chip files")
-        Path(target).with_suffix(".dat").touch()
-        return outputs
-    finally:
-        lock.lock(target, clear=True)
+        directory = Path(load.filename("Telluric", num=0, directory=True))
+        prefix = getattr(
+            load, "prefix", "ap" if "apo" in load.telescope else "as")
+        (directory / f"{prefix}Telluric-{name}.dat").touch()

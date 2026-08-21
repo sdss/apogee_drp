@@ -8,6 +8,7 @@ from astropy.io import fits
 
 from apogee_drp.apred.cal import lsf as lv
 from apogee_drp.apred.cal import makecal
+from apogee_drp.apred.cal import utils as cal_utils
 
 
 class FakeLoad:
@@ -16,12 +17,38 @@ class FakeLoad:
 
     def __init__(self, root):
         self.root = Path(root)
+        self.delete_calls = []
 
-    def filename(self, kind, num=None, chips=False, **kwargs):
-        return str(self.root / kind / f"ap{kind}-{int(num):08d}.fits")
+    def filename(self, kind, num=None, chip=None, directory=False, **kwargs):
+        root = self.root / kind
+        if directory:
+            return str(root)
+        infix = f"-{chip}" if chip is not None else ""
+        return str(root / f"ap{kind}{infix}-{int(num):08d}.fits")
 
     def cmjd(self, number):
         return 60000
+
+    def product_files(self, product, name):
+        assert product == "lsf"
+        files = [self.filename("LSF", num=name, chip=chip)
+                 for chip in "abc"]
+        template = Path(self.filename("LSF", num=name))
+        files.append(str(template.with_name(
+            f"{template.stem}-diagnostics{template.suffix}")))
+        return files
+
+    def product_exists(self, product, name):
+        return all(Path(filename).is_file() and
+                   Path(filename).stat().st_size > 0
+                   for filename in self.product_files(product, name))
+
+    def product_delete(self, product, name, **kwargs):
+        self.delete_calls.append((product, name, kwargs))
+        for filename in self.product_files(product, name):
+            path = Path(filename)
+            if path.exists() or path.is_symlink():
+                path.unlink()
 
 
 def synthetic_frame(nfiber=4, npix=100, sigma=1.5, dither=0.0):
@@ -38,11 +65,17 @@ def synthetic_frame(nfiber=4, npix=100, sigma=1.5, dither=0.0):
 
 
 def test_product_files_include_portable_diagnostics(tmp_path):
-    files = lv.product_files(FakeLoad(tmp_path), 123, diagnostics=True)
+    files = FakeLoad(tmp_path).product_files("lsf", 123)
     assert len(files) == 4
     assert files[0].endswith("apLSF-a-00000123.fits")
     assert files[2].endswith("apLSF-c-00000123.fits")
     assert files[3].endswith("apLSF-00000123-diagnostics.fits")
+
+
+def test_obsolete_product_filename_and_load_helpers_are_removed():
+    assert not hasattr(lv, "product_files")
+    assert not hasattr(lv, "_chip_filename")
+    assert not hasattr(lv, "_make_load")
 
 
 def test_sanitize_frame_replaces_invalid_values():
@@ -166,9 +199,9 @@ def test_fit_lsf_chip_interpolates_unselected_fibers():
 
 def patch_builder(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
-    monkeypatch.setattr(lv, "_make_load", lambda **kwargs: load)
+    monkeypatch.setattr(lv.apload, "ApLoad", lambda **kwargs: load)
     lock_calls = []
-    monkeypatch.setattr(lv.lock, "lock",
+    monkeypatch.setattr(cal_utils.lock, "lock",
                         lambda *args, **kwargs: lock_calls.append((args, kwargs)))
     process_calls = []
     monkeypatch.setattr(lv, "_process_frames",
@@ -179,9 +212,10 @@ def patch_builder(monkeypatch, tmp_path):
 
 def test_build_lsf_writes_three_chips_and_diagnostics(monkeypatch, tmp_path):
     load, lock_calls, process_calls = patch_builder(monkeypatch, tmp_path)
-    outputs = lv.build_lsf(
-        [123], 60000, psfid=50, continuum_width=11, verbose=True)
-    assert outputs == lv.product_files(load, 123, diagnostics=True)
+    assert lv.build_lsf(
+        [123], 60000, psfid=50, continuum_width=11,
+        verbose=True) is None
+    outputs = load.product_files("lsf", 123)
     assert all(Path(filename).is_file() for filename in outputs)
     assert process_calls[0][1]["waveid"] == 60000
     assert process_calls[0][1]["psfid"] == 50
@@ -192,19 +226,20 @@ def test_build_lsf_writes_three_chips_and_diagnostics(monkeypatch, tmp_path):
 
 
 def test_build_lsf_existing_short_circuit(monkeypatch, tmp_path, capsys):
-    load, _, process_calls = patch_builder(monkeypatch, tmp_path)
-    outputs = lv.product_files(load, 123, diagnostics=True)
+    load, lock_calls, process_calls = patch_builder(monkeypatch, tmp_path)
+    outputs = load.product_files("lsf", 123)
     for filename in outputs:
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
         Path(filename).write_bytes(b"existing")
-    assert lv.build_lsf(123, 60000, psfid=50, verbose=True) == outputs
+    assert lv.build_lsf(123, 60000, psfid=50, verbose=True) is None
     assert not process_calls
-    assert "already made" in capsys.readouterr().out
+    assert not lock_calls
+    assert "lsf product 123 already exists" in capsys.readouterr().out
 
 
 def test_build_lsf_partial_product_is_rebuilt(monkeypatch, tmp_path):
     load, _, process_calls = patch_builder(monkeypatch, tmp_path)
-    outputs = lv.product_files(load, 123, diagnostics=True)
+    outputs = load.product_files("lsf", 123)
     Path(outputs[0]).parent.mkdir(parents=True)
     Path(outputs[0]).write_bytes(b"partial")
     lv.build_lsf(123, 60000, psfid=50, continuum_width=11)
@@ -221,23 +256,30 @@ def test_build_lsf_clears_lock_on_failure(monkeypatch, tmp_path):
     assert lock_calls[-1][1] == {"clear": True}
 
 
+def test_build_lsf_nowait_uses_zero_wait(monkeypatch, tmp_path):
+    _, lock_calls, _ = patch_builder(monkeypatch, tmp_path)
+    lv.build_lsf(
+        123, 60000, psfid=50, continuum_width=11, nowait=True)
+    assert lock_calls[0][1]["waittime"] == 0
+
+
 def test_build_lsf_rejects_unvalidated_full_fit(monkeypatch, tmp_path):
     patch_builder(monkeypatch, tmp_path)
     with pytest.raises(NotImplementedError, match="Gauss-Hermite"):
         lv.build_lsf(123, 60000, psfid=50, full=True)
 
 
-def test_makecal_lsf_dispatches_numbered_builder(monkeypatch, tmp_path):
+def test_makecal_lsf_dispatches_current_builder(monkeypatch, tmp_path):
     calls = []
-    monkeypatch.setattr(makecal_v7, "build_lsf",
+    monkeypatch.setattr(makecal, "build_lsf",
                         lambda *args, **kwargs: calls.append((args, kwargs)))
-    context = makecal_v7.CalibrationContext(
+    context = makecal.CalibrationContext(
         load=FakeLoad(tmp_path), calfile="cal.par", allcaldict={}, verbose=True)
     monkeypatch.setattr(context, "frames", lambda *args: [123])
     monkeypatch.setattr(context, "row", lambda *args: {"psfid": 50})
     monkeypatch.setattr(context, "calibrations", lambda mjd: {
         "darkid": 1, "flatid": 2, "fiberid": 3, "multiwaveid": 60000})
-    makecal_v7.lsf("123", context)
+    makecal.lsf("123", context)
     assert calls[0][0] == ([123], 60000)
     assert calls[0][1]["psfid"] == 50
     assert calls[0][1]["apred"] == "daily"

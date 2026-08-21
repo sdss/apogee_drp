@@ -48,8 +48,15 @@ def _running_nanmedian(values, width):
     width = int(width)
     before, after = width // 2, width - 1 - width // 2
     padded = np.pad(data, ((before, after), (0, 0)), mode="edge")
-    windows = np.lib.stride_tricks.sliding_window_view(
-        padded, width, axis=0)
+    # sliding_window_view requires NumPy >= 1.20, while the APOGEE
+    # production environment still supports older NumPy releases. Construct
+    # the same read-only view with the long-standing as_strided API.
+    windows = np.lib.stride_tricks.as_strided(
+        padded,
+        shape=(data.shape[0], data.shape[1], width),
+        strides=(padded.strides[0], padded.strides[1], padded.strides[0]),
+        writeable=False,
+    )
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", RuntimeWarning)
         return np.nanmedian(windows, axis=-1)
@@ -364,3 +371,4 @@ def build_response(number, *, waveid, temp, load=None, apred="daily",
             Path(filename).parent.mkdir(parents=True, exist_ok=True)
             fits.PrimaryHDU(response.astype(np.float32), header).writeto(
                 filename, overwrite=True)
+

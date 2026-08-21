@@ -12,8 +12,13 @@ from apogee_drp.datamodel import products
 def load():
     obj = MagicMock()
     obj.cmjd.side_effect = lambda number: str(number)[:5]
+    obj.prefix = "ap"
+    obj.telescope = "apo25m"
 
-    def filename(root, *, num=None, mjd=None, chip=None, **kwargs):
+    def filename(root, *, num=None, mjd=None, chip=None, directory=False,
+                 **kwargs):
+        if directory:
+            return "/cal"
         stem = f"ap{root}"
         if isinstance(chip, (list, tuple)):
             return {
@@ -134,6 +139,20 @@ def test_lsf_includes_diagnostics(load):
     assert len(files) == 4
 
 
+def test_telluric_preserves_compound_identifier(load):
+    assert products.product_files(load, "telluric", "12-19601") == [
+        "/cal/apTelluric-a-12-19601.fits",
+        "/cal/apTelluric-b-12-19601.fits",
+        "/cal/apTelluric-c-12-19601.fits",
+    ]
+
+
+@pytest.mark.parametrize("name", ["12", "12-13-14", "a-13", "0-2"])
+def test_telluric_rejects_invalid_identifier(load, name):
+    with pytest.raises(ValueError, match="Telluric|positive"):
+        products.product_files(load, "telluric", name)
+
+
 def test_explicit_mjd_bypasses_cmjd(load):
     products.product_files(load, "dark", 12345678, mjd=60001)
     load.cmjd.assert_not_called()
@@ -205,7 +224,7 @@ def test_product_exists_when_every_file_is_complete(load, monkeypatch):
     monkeypatch.setattr(products, "file_is_complete", lambda *args, **kwargs: True)
     assert products.product_exists(load, "detector", 12345678)
 
-def test_delete_product_removes_all_files(load, tmp_path, monkeypatch):
+def test_product_delete_removes_all_files(load, tmp_path, monkeypatch):
     filenames = [
         tmp_path / "apDark-a-123.fits",
         tmp_path / "apDark-b-123.fits",
@@ -222,13 +241,13 @@ def test_delete_product_removes_all_files(load, tmp_path, monkeypatch):
         lambda *args, **kwargs: [str(path) for path in filenames],
     )
 
-    deleted = products.delete_product(load, "dark", 123)
+    deleted = products.product_delete(load, "dark", 123)
 
     assert deleted == [str(path) for path in filenames]
     assert all(not path.exists() for path in filenames)
 
 
-def test_delete_product_ignores_missing_files(load, tmp_path, monkeypatch):
+def test_product_delete_ignores_missing_files(load, tmp_path, monkeypatch):
     missing = tmp_path / "missing.fits"
 
     monkeypatch.setattr(
@@ -237,10 +256,10 @@ def test_delete_product_ignores_missing_files(load, tmp_path, monkeypatch):
         lambda *args, **kwargs: [str(missing)],
     )
 
-    assert products.delete_product(load, "dark", 123) == []
+    assert products.product_delete(load, "dark", 123) == []
 
 
-def test_delete_product_can_require_files(load, tmp_path, monkeypatch):
+def test_product_delete_can_require_files(load, tmp_path, monkeypatch):
     missing = tmp_path / "missing.fits"
 
     monkeypatch.setattr(
@@ -250,7 +269,7 @@ def test_delete_product_can_require_files(load, tmp_path, monkeypatch):
     )
 
     with pytest.raises(FileNotFoundError):
-        products.delete_product(
+        products.product_delete(
             load,
             "dark",
             123,
@@ -258,7 +277,7 @@ def test_delete_product_can_require_files(load, tmp_path, monkeypatch):
         )
 
 
-def test_delete_product_dry_run(load, tmp_path, monkeypatch):
+def test_product_delete_dry_run(load, tmp_path, monkeypatch):
     filename = tmp_path / "product.fits"
     filename.write_bytes(b"data")
 
@@ -268,7 +287,7 @@ def test_delete_product_dry_run(load, tmp_path, monkeypatch):
         lambda *args, **kwargs: [str(filename)],
     )
 
-    deleted = products.delete_product(
+    deleted = products.product_delete(
         load,
         "dark",
         123,
@@ -279,7 +298,7 @@ def test_delete_product_dry_run(load, tmp_path, monkeypatch):
     assert filename.exists()
 
 
-def test_delete_product_refuses_directory(load, tmp_path, monkeypatch):
+def test_product_delete_refuses_directory(load, tmp_path, monkeypatch):
     directory = tmp_path / "product.fits"
     directory.mkdir()
 
@@ -290,6 +309,7 @@ def test_delete_product_refuses_directory(load, tmp_path, monkeypatch):
     )
 
     with pytest.raises(IsADirectoryError):
-        products.delete_product(load, "dark", 123)
+        products.product_delete(load, "dark", 123)
 
     assert directory.exists()
+

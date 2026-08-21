@@ -18,33 +18,16 @@ from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 from scipy.stats import theilslopes
 
-from ...utils import lock
+from ...utils import apload
+from .utils import product_build_lock
 
 CHIPS = ("a", "b", "c")
 BADERR = 1.0e10
 
 __all__ = [
     "CHIPS", "build_lsf", "fit_sigma_model", "gaussian_lsf_array",
-    "measure_line_widths", "product_files",
+    "measure_line_widths",
 ]
-
-
-def _make_load(*, apred, telescope):
-    from ...utils.apload import ApLoad
-    return ApLoad(apred=apred, telescope=telescope)
-
-
-def _chip_filename(load, kind, number, chip):
-    template = load.filename(kind, num=int(number), chips=True)
-    return template.replace(f"{kind}-", f"{kind}-{chip}-")
-
-
-def product_files(load, number, *, diagnostics=False):
-    files = [_chip_filename(load, "LSF", number, chip) for chip in CHIPS]
-    if diagnostics:
-        files.append(files[0].replace("LSF-a-", "LSF-").replace(
-            ".fits", "-diagnostics.fits"))
-    return files
 
 
 def _sanitize_frame(frame):
@@ -237,7 +220,7 @@ def fit_lsf_chip(frame, *, fibers=None, threshold_sigma=10.0,
 
 
 def _load_1d(load, exposure, chip):
-    filename = _chip_filename(load, "1D", exposure, chip)
+    filename = load.filename("1D", num=int(exposure), chip=chip)
     with fits.open(filename) as hdus:
         return {"header": hdus[0].header.copy(),
                 "flux": np.asarray(hdus[1].data),
@@ -285,22 +268,17 @@ def build_lsf(lsfid, waveid, *, apred="daily", telescope="apo25m",
         raise NotImplementedError(
             "Full Gauss-Hermite LSF fitting is not yet scientifically validated; "
             "use the default Gaussian fit")
-    load = _make_load(apred=apred, telescope=telescope)
-    outputs = product_files(load, frames[0], diagnostics=True)
-    target = outputs[0].replace("LSF-a-", "LSF-")
-    lock.lock(target, waittime=(0 if nowait else 10), unlock=unlock)
-    if all(Path(filename).is_file() and Path(filename).stat().st_size > 0
-           for filename in outputs) and not clobber:
-        if verbose:
-            print(f" LSF file: {target} already made")
-        return outputs
-    lock.lock(target, lock=True)
-    try:
-        for filename in outputs:
-            path = Path(filename)
-            if path.exists():
-                path.unlink()
-            path.parent.mkdir(parents=True, exist_ok=True)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    with product_build_lock(
+        load, "lsf", frames[0], clobber=clobber, unlock=unlock,
+        waittime=(0 if nowait else 10), verbose=verbose,
+    ) as (build, outputs):
+        if not build:
+            return
+        if len(outputs) != len(CHIPS) + 1:
+            raise RuntimeError(
+                f"LSF product {frames[0]} resolved to {len(outputs)} files; "
+                f"expected {len(CHIPS) + 1}")
         _process_frames(
             frames, load=load, darkid=darkid, flatid=flatid,
             psfid=int(psfid), waveid=waveid, clobber=clobber,
@@ -324,6 +302,6 @@ def build_lsf(lsfid, waveid, *, apred="daily", telescope="apo25m",
             diagnostic_hdus.append(fits.table_to_hdu(table))
             diagnostic_hdus[-1].header["EXTNAME"] = f"LINES-{table['chip'][0]}"
         fits.HDUList(diagnostic_hdus).writeto(outputs[3], overwrite=True)
-        return outputs
-    finally:
-        lock.lock(target, clear=True)
+        if not load.product_exists("lsf", frames[0]):
+            raise RuntimeError(
+                f"LSF {frames[0]} did not create all registered files")
