@@ -219,25 +219,6 @@ def fit_lsf_chip(frame, *, fibers=None, threshold_sigma=10.0,
     return parameters, arrays, np.asarray(diagnostics, dtype=dtype)
 
 
-def _load_1d(load, exposure, chip):
-    filename = load.filename("1D", num=int(exposure), chip=chip)
-    with fits.open(filename) as hdus:
-        return {"header": hdus[0].header.copy(),
-                "flux": np.asarray(hdus[1].data),
-                "err": np.asarray(hdus[2].data),
-                "mask": np.asarray(hdus[3].data)}
-
-
-def _process_frames(frames, *, load, darkid, flatid, psfid, waveid,
-                    clobber, unlock, verbose):
-    from ..process import process
-    return process(
-        frames, load=load, darkid=darkid, flatid=flatid, psfid=psfid,
-        waveid=waveid, fluxid=None, doproc=True, skywave=True,
-        clobber=clobber, onedclobber=clobber, unlock=unlock,
-        verbose=verbose)
-
-
 def _write_chip(filename, parameters, array, header, *, apred, frameid):
     primary = fits.PrimaryHDU(parameters.T.astype(np.float32), header=header.copy())
     primary.header["EXTNAME"] = "LSFPARS"
@@ -279,14 +260,38 @@ def build_lsf(lsfid, waveid, *, apred="daily", telescope="apo25m",
             raise RuntimeError(
                 f"LSF product {frames[0]} resolved to {len(outputs)} files; "
                 f"expected {len(CHIPS) + 1}")
-        _process_frames(
-            frames, load=load, darkid=darkid, flatid=flatid,
-            psfid=int(psfid), waveid=waveid, clobber=clobber,
-            unlock=unlock, verbose=verbose)
+        from ..process import process
+        process(
+            frames,
+            load=load,
+            darkid=darkid,
+            flatid=flatid,
+            psfid=int(psfid),
+            waveid=waveid,
+            fluxid=None,
+            doproc=True,
+            skywave=True,
+            clobber=clobber,
+            onedclobber=clobber,
+            unlock=unlock,
+            verbose=verbose,
+        )
+
+        spectra = [load.spectrum(frame) for frame in frames]
         all_diagnostics = []
         for chip, output in zip(CHIPS, outputs[:3]):
-            combined = combine_frames([_load_1d(load, frame, chip)
-                                       for frame in frames])
+            # ApLoad uses [pixel, fiber], while the LSF fitter uses
+            # [fiber, pixel].
+            chip_frames = [
+                {
+                    "header": spectrum[chip]["header"],
+                    "flux": spectrum[chip]["flux"].T,
+                    "err": spectrum[chip]["err"].T,
+                    "mask": spectrum[chip]["mask"].T,
+                }
+                for spectrum in spectra
+            ]
+            combined = combine_frames(chip_frames)
             parameters, array, diagnostics = fit_lsf_chip(
                 combined, fibers=fibers, threshold_sigma=threshold_sigma,
                 continuum_width=continuum_width,

@@ -6,6 +6,7 @@ import numpy as np
 import pytest
 from astropy.io import fits
 
+from apogee_drp.apred import process as process_module
 from apogee_drp.apred.cal import lsf as lv
 from apogee_drp.apred.cal import makecal
 from apogee_drp.apred.cal import utils as cal_utils
@@ -18,6 +19,7 @@ class FakeLoad:
     def __init__(self, root):
         self.root = Path(root)
         self.delete_calls = []
+        self.spectrum_calls = []
 
     def filename(self, kind, num=None, chip=None, directory=False, **kwargs):
         root = self.root / kind
@@ -50,6 +52,20 @@ class FakeLoad:
             if path.exists() or path.is_symlink():
                 path.unlink()
 
+    def spectrum(self, number, chip=None):
+        self.spectrum_calls.append((int(number), chip))
+        spectra = {}
+        chips = ("a", "b", "c") if chip is None else (chip,)
+        for current_chip in chips:
+            frame = synthetic_frame()
+            spectra[current_chip] = {
+                "header": frame["header"].copy(),
+                "flux": frame["flux"].T.copy(),
+                "err": frame["err"].T.copy(),
+                "mask": frame["mask"].T.copy(),
+            }
+        return spectra if chip is None else spectra[chip]
+
 
 def synthetic_frame(nfiber=4, npix=100, sigma=1.5, dither=0.0):
     x = np.arange(npix)
@@ -76,6 +92,8 @@ def test_obsolete_product_filename_and_load_helpers_are_removed():
     assert not hasattr(lv, "product_files")
     assert not hasattr(lv, "_chip_filename")
     assert not hasattr(lv, "_make_load")
+    assert not hasattr(lv, "_load_1d")
+    assert not hasattr(lv, "_process_frames")
 
 
 def test_sanitize_frame_replaces_invalid_values():
@@ -204,9 +222,11 @@ def patch_builder(monkeypatch, tmp_path):
     monkeypatch.setattr(cal_utils.lock, "lock",
                         lambda *args, **kwargs: lock_calls.append((args, kwargs)))
     process_calls = []
-    monkeypatch.setattr(lv, "_process_frames",
-                        lambda *args, **kwargs: process_calls.append((args, kwargs)))
-    monkeypatch.setattr(lv, "_load_1d", lambda *args: synthetic_frame())
+    monkeypatch.setattr(
+        process_module,
+        "process",
+        lambda *args, **kwargs: process_calls.append((args, kwargs)),
+    )
     return load, lock_calls, process_calls
 
 
@@ -217,8 +237,14 @@ def test_build_lsf_writes_three_chips_and_diagnostics(monkeypatch, tmp_path):
         verbose=True) is None
     outputs = load.product_files("lsf", 123)
     assert all(Path(filename).is_file() for filename in outputs)
+    assert process_calls[0][0] == ([123],)
+    assert process_calls[0][1]["load"] is load
     assert process_calls[0][1]["waveid"] == 60000
     assert process_calls[0][1]["psfid"] == 50
+    assert process_calls[0][1]["fluxid"] is None
+    assert process_calls[0][1]["doproc"] is True
+    assert process_calls[0][1]["skywave"] is True
+    assert load.spectrum_calls == [(123, None)]
     assert fits.getdata(outputs[0], 0).shape == (6, 4)
     assert fits.getdata(outputs[0], 1).shape[1:] == (4, 100)
     assert len(fits.open(outputs[3])) == 4
@@ -233,6 +259,7 @@ def test_build_lsf_existing_short_circuit(monkeypatch, tmp_path, capsys):
         Path(filename).write_bytes(b"existing")
     assert lv.build_lsf(123, 60000, psfid=50, verbose=True) is None
     assert not process_calls
+    assert not load.spectrum_calls
     assert not lock_calls
     assert "lsf product 123 already exists" in capsys.readouterr().out
 
