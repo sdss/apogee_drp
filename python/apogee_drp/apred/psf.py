@@ -5,6 +5,7 @@ import numpy as np
 import os
 import shutil
 import time
+from pathlib import Path
 from dlnpyutils import utils as dln, bindata
 from astropy.io import fits
 from scipy.interpolate import interp1d
@@ -1296,54 +1297,121 @@ def loadframe(infile):
     frame = {'flux':flux, 'err':err, 'mask':mask, 'header':head}
     return frame
 
-def saveepsf(filename,epsf,compress=True):
-    """
-    Save Empirical PSF data
+def saveepsf(filename, epsf, *, header=None, compress=True):
+    """Write empirical PSF profiles to a FITS file.
 
     Parameters
     ----------
-    filename : str
-       Filename to save the EPSF information to.
-    epsf : list
-       Empirical PSF information.
+    filename : str or pathlib.Path
+        Output FITS filename.
+    epsf : sequence of dict
+        Empirical profiles. Each profile must contain ``fiber``, ``lo``,
+        ``hi``, and ``img``. The optional ``cent`` entry contains the
+        trace center in each detector column.
+    header : astropy.io.fits.Header, optional
+        Header cards to copy into the primary HDU.
     compress : bool, optional
-       Fpack compress the EPSF file.  Default is True.
-
-    Results
-    -------
-    The empirical PSF information is saved to disk.
-    Nothing is returned.
-
-    Example
-    -------
-
-    saveepsf('apEPSFmodel-30330011.fits',epsf))
-
+        Compress the completed file using ``fpack``. Default is True for
+        backward compatibility.
     """
+    filename = str(filename)
+    output_header = fits.Header() if header is None else header.copy()
+    output_header["NTRACE"] = len(epsf)
 
-    hdu = fits.HDUList()
-    hdu.append(fits.PrimaryHDU())
-    hdu[0].header['ntrace'] = len(epsf)
-    for i in range(len(epsf)):
-        if 'cent' in epsf[i].keys():
-            dt = [('fiber',int),('cent',float,len(epsf[i]['cent'])),('lo',int),('hi',int),('img',float,epsf[i]['img'].shape)]
-        else:
-            dt = [('fiber',int),('lo',int),('hi',int),('img',float,epsf[i]['img'].shape)]            
-        data = np.zeros(1,dtype=np.dtype(dt))
-        data['fiber'] = epsf[i]['fiber']
-        if 'cent' in epsf[i].keys():
-            data['cent'] = epsf[i]['cent']
-        data['lo'] = epsf[i]['lo']
-        data['hi'] = epsf[i]['hi']
-        data['img'] = epsf[i]['img']
-        hdu.append(fits.table_to_hdu(Table(data)))
-        hdu[i+1].header['EXTNAME'] = 'EPSF'+str(epsf[i]['fiber'])
-    hdu.writeto(filename,overwrite=True)
-    hdu.close()
+    hdus = [fits.PrimaryHDU(header=output_header)]
+
+    for profile in epsf:
+        image = np.asarray(profile["img"])
+        fields = [
+            ("fiber", np.int32),
+        ]
+
+        if "cent" in profile:
+            center = np.asarray(profile["cent"], dtype=np.float64)
+            fields.append(("cent", np.float64, center.shape))
+
+        fields.extend([
+            ("lo", np.int32),
+            ("hi", np.int32),
+            ("img", np.float64, image.shape),
+        ])
+
+        row = np.zeros(1, dtype=np.dtype(fields))
+        row["fiber"] = int(profile["fiber"])
+        row["lo"] = int(profile["lo"])
+        row["hi"] = int(profile["hi"])
+        row["img"] = image
+
+        if "cent" in profile:
+            row["cent"] = center
+
+        hdu = fits.table_to_hdu(Table(row))
+        hdu.header["EXTNAME"] = f"EPSF{int(profile['fiber'])}"
+        hdus.append(hdu)
+
+    Path(filename).parent.mkdir(parents=True, exist_ok=True)
+    fits.HDUList(hdus).writeto(filename, overwrite=True)
 
     if compress:
-        if os.path.exists(filename+'.fz'): os.remove(filename+'.fz')
-        sout = subprocess.run(['fpack','-D','-Y',filename],shell=False)
+        compressed = filename + ".fz"
+        if os.path.exists(compressed):
+            os.remove(compressed)
+
+        result = subprocess.run(
+            ["fpack", "-D", "-Y", filename],
+            check=False,
+        )
+        if result.returncode != 0:
+            raise RuntimeError(f"fpack failed for {filename}")
+
+#def saveepsf(filename,epsf,compress=True):
+#    """
+#    Save Empirical PSF data
+#
+#    Parameters
+#    ----------
+#    filename : str
+#       Filename to save the EPSF information to.
+#    epsf : list
+#       Empirical PSF information.
+#    compress : bool, optional
+#       Fpack compress the EPSF file.  Default is True.
+#
+#    Results
+#    -------
+#    The empirical PSF information is saved to disk.
+#    Nothing is returned.
+#
+#    Example
+#    -------
+#
+#    saveepsf('apEPSFmodel-30330011.fits',epsf))
+#
+#    """
+#
+#    hdu = fits.HDUList()
+#    hdu.append(fits.PrimaryHDU())
+#    hdu[0].header['ntrace'] = len(epsf)
+#    for i in range(len(epsf)):
+#        if 'cent' in epsf[i].keys():
+#            dt = [('fiber',int),('cent',float,len(epsf[i]['cent'])),('lo',int),('hi',int),('img',float,epsf[i]['img'].shape)]
+#        else:
+#            dt = [('fiber',int),('lo',int),('hi',int),('img',float,epsf[i]['img'].shape)]            
+#        data = np.zeros(1,dtype=np.dtype(dt))
+#        data['fiber'] = epsf[i]['fiber']
+#        if 'cent' in epsf[i].keys():
+#            data['cent'] = epsf[i]['cent']
+#        data['lo'] = epsf[i]['lo']
+#        data['hi'] = epsf[i]['hi']
+#        data['img'] = epsf[i]['img']
+#        hdu.append(fits.table_to_hdu(Table(data)))
+#        hdu[i+1].header['EXTNAME'] = 'EPSF'+str(epsf[i]['fiber'])
+#    hdu.writeto(filename,overwrite=True)
+#    hdu.close()
+#
+#    if compress:
+#        if os.path.exists(filename+'.fz'): os.remove(filename+'.fz')
+#        sout = subprocess.run(['fpack','-D','-Y',filename],shell=False)
         
     # from apmkpsf_epsf.pro
     # file = apogee_filename('EPSF',chip=chip[ichip],num=im)
@@ -1363,40 +1431,94 @@ def saveepsf(filename,epsf,compress=True):
     #   endif else print,'not halted, but bad PSF at: ',k
     # endfor
 
-def loadepsf(infile):
-    """
-    Load Empirical PSF data
-    this takes a while
+def loadepsf(filename):
+    """Load empirical PSF profiles from a FITS file.
 
     Parameters
     ----------
-    infile : str
-       Filename of apEPSF file.
+    filename : str or pathlib.Path
+        EPSF FITS filename.
 
     Returns
     -------
-    epsf : list
-       List of dictionaries with information on each trace.
-
-    Example
-    -------
-
-    epsf = loadepsf(infile)
- 
+    epsf : list of dict
+        Empirical PSF profiles. Each dictionary contains ``fiber``,
+        ``lo``, ``hi``, and ``img`` and includes ``cent`` when present.
     """
-    phead = fits.getheader(infile,0)
-    ntrace = phead.get('ntrace')
-    if ntrace is None:
-        print('No NTRACE in header')
-        return []
-    epsf = []
-    hdu = fits.open(infile)
-    for itrace in range(ntrace):
-        ptmp = hdu[itrace+1].data
-        data = {'fiber': ptmp['FIBER'][0], 'lo': ptmp['LO'][0], 'hi': ptmp['HI'][0], 'img': ptmp['IMG'][0]}
-        epsf.append(data)
-    hdu.close()
+    filename = str(filename)
+
+    with fits.open(filename, memmap=False) as hdus:
+        ntrace = int(hdus[0].header.get("NTRACE", len(hdus) - 1))
+
+        if ntrace > len(hdus) - 1:
+            raise ValueError(
+                f"NTRACE={ntrace} but {filename} contains only "
+                f"{len(hdus) - 1} profile extensions"
+            )
+
+        epsf = []
+        for hdu in hdus[1:ntrace + 1]:
+            if hdu.data is None or len(hdu.data) == 0:
+                raise ValueError(f"Empty EPSF extension in {filename}")
+            names = {name.upper(): name for name in hdu.data.names}
+            required = {"FIBER", "LO", "HI", "IMG"}
+            missing = required - set(names)
+            if missing:
+                raise ValueError(
+                    f"EPSF extension in {filename} is missing columns: "
+                    f"{', '.join(sorted(missing))}"
+                )
+
+            row = hdu.data[0]
+            profile = {
+                "fiber": int(row[names["FIBER"]]),
+                "lo": int(row[names["LO"]]),
+                "hi": int(row[names["HI"]]),
+                "img": np.asarray(row[names["IMG"]]).copy(),
+            }
+
+            if "CENT" in names:
+                profile["cent"] = np.asarray(row[names["CENT"]]).copy()
+
+            epsf.append(profile)
+
     return epsf
+
+    
+#def loadepsf(infile):
+#    """
+#    Load Empirical PSF data
+#    this takes a while
+#
+#    Parameters
+#    ----------
+#    infile : str
+#       Filename of apEPSF file.
+#
+#    Returns
+#    -------
+#    epsf : list
+#       List of dictionaries with information on each trace.
+#
+#    Example
+#    -------
+#
+#    epsf = loadepsf(infile)
+# 
+#    """
+#    phead = fits.getheader(infile,0)
+#    ntrace = phead.get('ntrace')
+#    if ntrace is None:
+#        print('No NTRACE in header')
+#        return []
+#    epsf = []
+#    hdu = fits.open(infile)
+#    for itrace in range(ntrace):
+#        ptmp = hdu[itrace+1].data
+#        data = {'fiber': ptmp['FIBER'][0], 'lo': ptmp['LO'][0], 'hi': ptmp['HI'][0], 'img': ptmp['IMG'][0]}
+#        epsf.append(data)
+#    hdu.close()
+#    return epsf
 
 def scat_remove(a,scat=None,mask=None):
     """
