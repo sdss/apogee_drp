@@ -152,6 +152,16 @@ def test_convolution_shape_and_constant_preservation():
     np.testing.assert_allclose(result, 1)
 
 
+def test_convolution_accepts_distinct_fiber_wavelength_grids():
+    wave = np.linspace(15000, 15100, 100)
+    models = np.ones((3, 1, 1, wave.size))
+    target = np.vstack((wave[10:30], wave[11:31]))
+    result = telluric.convolve_telluric_models(
+        wave, models, target, gaussian_lsf(nfiber=2), oversample=1)
+    assert result.shape == (1, 1, 3, 2, 20)
+    np.testing.assert_allclose(result, 1)
+
+
 def test_convolution_smooths_narrow_absorption():
     wave = np.linspace(15000, 15100, 101)
     models = np.ones((3, 1, 1, 101))
@@ -173,6 +183,57 @@ def test_convolution_does_not_modify_inputs():
     np.testing.assert_array_equal(lsf, original[1])
 
 
+def gh_parameters(nfiber=2):
+    # binsize, xoffset, Horder, Porder[0:6], GH coefficients,
+    # Wproftype, nWpar, WPorder[0:2], wing coefficients.
+    vector = np.array([
+        1, -1024, 5, 0, 0, 0, 0, 0, 0,
+        1.1, 0, 0, 0, 0, 0, 1, 2, 0, 0, 0.03, 3.5,
+    ], dtype=float)
+    return np.broadcast_to(vector, (nfiber, vector.size)).copy()
+
+
+def test_normalize_lsf_parameters_accepts_fits_orientation():
+    parameters = gh_parameters(3)
+    np.testing.assert_array_equal(
+        telluric._normalize_lsf_parameters(parameters.T), parameters)
+
+
+def test_position_dependent_convolution_uses_each_profile():
+    spectra = np.zeros((1, 7))
+    spectra[0, 3] = 1
+    profiles = np.zeros((7, 3))
+    profiles[:, 1] = 1
+    profiles[2] = [0, 0, 1]
+    result = telluric._apply_position_dependent_lsf(spectra, profiles)
+    assert result[0, 3] == 1
+    assert result[0, 2] == 1
+
+
+def test_gauss_hermite_convolution_uses_full_evaluator(monkeypatch):
+    from apogee_drp.apred.cal import lsf
+
+    calls = []
+
+    def evaluator(parameters, centers, offsets, **kwargs):
+        calls.append((parameters.copy(), centers.copy(), offsets.copy(), kwargs))
+        profile = np.exp(-0.5 * (offsets / 1.2) ** 2)
+        profile /= profile.sum()
+        return np.broadcast_to(profile, (len(centers), len(offsets))).copy()
+
+    monkeypatch.setattr(lsf, "evaluate_gauss_hermite_lsf", evaluator)
+    wave = np.linspace(15000, 15100, 31)
+    models = np.ones((3, 1, 1, wave.size))
+    result = telluric.convolve_gauss_hermite_models(
+        wave, models, wave, np.arange(wave.size) / 2,
+        gh_parameters(2), oversample=2, kernel_half_width=4)
+    assert result.shape == (1, 1, 3, 2, wave.size)
+    np.testing.assert_allclose(result, 1, atol=1e-6)
+    assert len(calls) == 2
+    np.testing.assert_allclose(calls[0][2], np.arange(-8, 9) / 2)
+    assert calls[0][3] == {"positive": True, "normalize": True}
+
+
 def test_write_telluric_has_idl_compatible_layout(tmp_path):
     filename = tmp_path / "tell.fits"
     metadata = {"air0": 1.0, "dair": 0.25, "scale0": 0.5,
@@ -180,11 +241,12 @@ def test_write_telluric_has_idl_compatible_layout(tmp_path):
     data = np.ones((2, 2, 3, 4, 10), dtype=np.float32)
     telluric._write_telluric(
         filename, np.arange(10), data, metadata, apred="daily",
-        waveid=12, lsfid=34)
+        waveid=12, lsfid=34, lsf_method="GAUSS-HERMITE")
     with fits.open(filename) as hdus:
         assert len(hdus) == 3
         assert hdus[0].data.shape == (4, 10)
         assert hdus[0].header["NSPECIES"] == 3
+        assert hdus[0].header["LSFMETH"] == "GAUSS-HERMITE"
         assert hdus[1].data.shape == (2, 3, 4, 10)
         assert hdus[1].header["AIRMASS"] == 1
         assert hdus[2].header["AIRMASS"] == 1.25
@@ -212,13 +274,39 @@ def patch_builder(monkeypatch, tmp_path):
         telluric, "_load_wave_grid",
         lambda filename: np.broadcast_to(np.linspace(15010, 15090, 8), (4, 8)))
     monkeypatch.setattr(
-        telluric, "_load_lsf_array",
-        lambda filename: gaussian_lsf(nfiber=4, npix=8))
+        telluric, "_load_lsf",
+        lambda filename: (
+            gh_parameters(4), gaussian_lsf(nfiber=4, npix=8), "GAUSSIAN"))
     monkeypatch.setattr(
         telluric, "convolve_telluric_models",
         lambda model_wave, models, target_wave, lsf_array, **kwargs:
-        np.ones((2, 2, 3, 4, len(target_wave)), dtype=np.float32))
+        np.ones((2, 2, 3, 4, target_wave.shape[-1]), dtype=np.float32))
     return load, locks
+
+
+def test_build_telluric_dispatches_full_gh_convolution(
+        monkeypatch, tmp_path):
+    load, _ = patch_builder(monkeypatch, tmp_path)
+    monkeypatch.setattr(
+        telluric, "_load_lsf",
+        lambda filename: (
+            gh_parameters(4), gaussian_lsf(nfiber=4, npix=8),
+            "GAUSS-HERMITE"))
+    calls = []
+
+    def convolve(model_wave, models, target_wave, fine_pixel, parameters,
+                 **kwargs):
+        calls.append((fine_pixel.copy(), parameters.copy(), kwargs))
+        return np.ones((2, 2, 3, 4, target_wave.shape[-1]), dtype=np.float32)
+
+    monkeypatch.setattr(telluric, "convolve_gauss_hermite_models", convolve)
+    telluric.build_telluric(
+        "12-34", oversample=2, kernel_half_width=9)
+    assert len(calls) == 3
+    assert calls[0][1].shape == (4, gh_parameters().shape[1])
+    assert calls[0][2] == {"oversample": 2, "kernel_half_width": 9}
+    with fits.open(load.product_files("telluric", "12-34")[0]) as hdus:
+        assert hdus[0].header["LSFMETH"] == "GAUSS-HERMITE"
 
 
 def test_build_telluric_writes_three_chips(monkeypatch, tmp_path, capsys):
@@ -282,4 +370,3 @@ def test_makecal_telluric_dispatches_current_builder(monkeypatch, tmp_path):
     assert calls == [(('12-34',), {
         "apred": "daily", "telescope": "apo25m", "clobber": True,
         "unlock": True, "verbose": True})]
-

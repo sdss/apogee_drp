@@ -185,6 +185,97 @@ def test_gaussian_lsf_array_is_normalized_and_odd():
     np.testing.assert_allclose(result[:, 10], result[::-1, 10])
 
 
+def test_pack_ghlsf_parameters_round_trips_through_doppler():
+    from doppler.lsf import unpack_ghlsf_params
+
+    parameters = lv.pack_ghlsf_parameters(
+        1.0,
+        -50.0,
+        porder=(1, 0),
+        ghcoefs=np.array([[1.5, 0.001], [0.02, 0.0]]),
+        wporder=(0, 0),
+        wcoefs=np.array([[0.03], [3.5]]),
+    )
+    unpacked = unpack_ghlsf_params(parameters)
+
+    assert unpacked["binsize"] == 1.0
+    assert unpacked["Xoffset"] == -50.0
+    assert unpacked["Horder"] == 1
+    np.testing.assert_array_equal(unpacked["Porder"], [1, 0])
+    np.testing.assert_allclose(
+        unpacked["GHcoefs"][:, :2],
+        [[1.5, 0.001], [0.02, 0.0]],
+    )
+    assert unpacked["Wproftype"] == 1
+    np.testing.assert_array_equal(unpacked["WPorder"], [0, 0])
+    np.testing.assert_allclose(unpacked["Wcoefs"][:, 0], [0.03, 3.5])
+
+
+def test_pack_ghlsf_parameters_validates_coefficient_count():
+    with pytest.raises(ValueError, match="expected"):
+        lv.pack_ghlsf_parameters(
+            1.0, 0.0, porder=(1, 0), ghcoefs=[1.5],
+            wporder=(0, 0), wcoefs=[0.03, 3.5])
+
+
+def test_pack_ghlsf_parameters_requires_doppler_wing_block():
+    with pytest.raises(ValueError, match="two wing parameters"):
+        lv.pack_ghlsf_parameters(
+            1.0, 0.0, porder=(0,), ghcoefs=[1.5],
+            wporder=(), wcoefs=())
+
+
+def test_evaluate_gauss_hermite_lsf_is_normalized():
+    parameters = lv.pack_ghlsf_parameters(
+        1.0,
+        -50.0,
+        porder=(1, 0),
+        ghcoefs=np.array([[1.5, 0.001], [0.02, 0.0]]),
+        wporder=(0, 0),
+        wcoefs=np.array([[0.03], [3.5]]),
+    )
+    centers = np.array([10.0, 50.0, 90.0])
+    offsets = np.arange(-15.0, 16.0)
+
+    profiles = lv.evaluate_gauss_hermite_lsf(
+        parameters, centers, offsets, positive=True, normalize=True)
+
+    assert profiles.shape == (3, 31)
+    np.testing.assert_allclose(profiles.sum(axis=1), 1.0)
+    assert np.all(profiles >= 0)
+    assert not np.allclose(profiles[0], profiles[-1])
+
+
+def test_fit_gauss_hermite_chip_produces_doppler_parameters():
+    from doppler.lsf import unpack_ghlsf_params
+
+    data = synthetic_frame(nfiber=2, npix=160)
+    pixel = np.arange(160)
+    for center in (110, 140):
+        data["flux"] += (
+            100 * np.exp(-0.5 * ((pixel - center) / 1.5) ** 2)
+        )
+
+    parameters, array, diagnostics = lv.fit_gauss_hermite_chip(
+        data,
+        fibers=[0],
+        continuum_width=11,
+        porder=(0, 0),
+        wporder=(0, 0),
+        nlsfpix=31,
+        max_nfev=500,
+    )
+
+    assert parameters.shape[0] == 2
+    assert array.shape == (31, 2, 160)
+    assert len(diagnostics) >= 5
+    np.testing.assert_allclose(array.sum(axis=0), 1.0, atol=1e-6)
+    unpacked = unpack_ghlsf_params(parameters[0])
+    assert unpacked["Horder"] == 1
+    assert unpacked["GHcoefs"][0, 0] > 0
+    assert unpacked["Wcoefs"][0, 0] >= 0
+
+
 def test_fit_lsf_chip_outputs_compatible_shapes():
     parameters, array, diagnostics = lv.fit_lsf_chip(
         synthetic_frame(), continuum_width=11)
@@ -290,10 +381,31 @@ def test_build_lsf_nowait_uses_zero_wait(monkeypatch, tmp_path):
     assert lock_calls[0][1]["waittime"] == 0
 
 
-def test_build_lsf_rejects_unvalidated_full_fit(monkeypatch, tmp_path):
-    patch_builder(monkeypatch, tmp_path)
-    with pytest.raises(NotImplementedError, match="Gauss-Hermite"):
-        lv.build_lsf(123, 60000, psfid=50, full=True)
+def test_build_lsf_full_uses_gauss_hermite_fitter(monkeypatch, tmp_path):
+    load, _, _ = patch_builder(monkeypatch, tmp_path)
+    calls = []
+
+    def fit(frame, **kwargs):
+        calls.append((frame, kwargs))
+        parameters = np.zeros((4, 12), dtype=float)
+        array = np.ones((21, 4, 100), dtype=np.float32) / 21
+        dtype = [
+            ("fiber", np.int16), ("center", np.float32),
+            ("sigma", np.float32), ("height", np.float32),
+            ("flux", np.float32), ("accepted", bool),
+        ]
+        return parameters, array, np.empty(0, dtype=dtype)
+
+    monkeypatch.setattr(lv, "fit_gauss_hermite_chip", fit)
+    lv.build_lsf(
+        123, 60000, psfid=50, full=True,
+        porder=(1, 0), wporder=(0, 0))
+
+    assert len(calls) == 3
+    assert calls[0][1]["porder"] == (1, 0)
+    assert calls[0][1]["wporder"] == (0, 0)
+    for filename in load.product_files("lsf", 123)[:3]:
+        assert fits.getheader(filename)["LSFMETH"] == "GAUSS-HERMITE"
 
 
 def test_makecal_lsf_dispatches_current_builder(monkeypatch, tmp_path):
