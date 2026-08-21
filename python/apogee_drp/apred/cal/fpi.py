@@ -50,18 +50,17 @@ def _select_library_psf(number, *, mjd, telescope, unlock=False):
 def _process_exposures(exposures, *, load, darkid, flatid, psfid,
                        modelpsf, clobber, unlock, verbose):
     from ..process import process
-    return process(
-        exposures, load=load, darkid=darkid, flatid=flatid,
-        psfid=psfid, modelpsf=modelpsf, fluxid=None, doproc=True,
-        clobber=clobber, onedclobber=clobber, unlock=unlock,
-        verbose=verbose)
+    return process(exposures, load=load, darkid=darkid,
+                   flatid=flatid, psfid=psfid, modelpsf=modelpsf, fluxid=None,
+                   doproc=True, clobber=clobber, onedclobber=clobber,
+                   unlock=unlock, verbose=verbose)
 
 
 def _run_fpi_solution(mjd, *, observatory, apred, number, clobber, verbose):
     from .. import fpi
-    return fpi.dailyfpiwave(
-        int(mjd), observatory=observatory, apred=apred, num=str(int(number)),
-        clobber=clobber, verbose=verbose, dependencies=False)
+    return fpi.dailyfpiwave(int(mjd), observatory=observatory,
+                            apred=apred, num=str(int(number)), clobber=clobber,
+                            verbose=verbose, dependencies=False)
 
 
 def build_fpi(fpiid, *, name=None, apred="daily", telescope="apo25m",
