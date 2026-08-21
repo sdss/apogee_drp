@@ -254,75 +254,7 @@ def test_add_provenance_handles_no_dark(monkeypatch):
 
 def test_obsolete_calibration_filename_helper_is_removed():
     assert not hasattr(flat_module, "_calibration_filename")
-
-
-def test_process_flat_frames_forwards_calibrations(monkeypatch, tmp_path):
-    load = FakeLoad(tmp_path)
-    calls = []
-    monkeypatch.setattr(
-        flat_module.ap3d, "process_file",
-        lambda *args, **kwargs: calls.append((args, kwargs)),
-    )
-    flat_module._process_flat_frames(
-        load, [10, 11], detid=20, darkid=30, clobber=True, verbose=True)
-    assert len(calls) == 6
-    args, options = calls[0]
-    assert Path(args[0]).name == "apR-a-00000010.fits"
-    assert Path(args[1]).name == "ap2D-a-00000010.fits"
-    assert Path(options["detector"]).name == "apDetector-a-00000020.fits"
-    assert Path(options["dark"]).name == "apDark-a-00000030.fits"
-    assert options["detect_cosmic_rays"] is False
-    assert options["nfowler"] == 1
-
-
-@pytest.mark.parametrize(
-    "detid,darkid",
-    [
-        (None, None),
-        (0, 0),
-        (None, 30),
-        (20, None),
-    ],
-)
-def test_process_flat_frames_handles_optional_calibrations(
-        monkeypatch, tmp_path, detid, darkid):
-    """Optional calibration IDs are converted to filenames only when valid."""
-    load = FakeLoad(tmp_path)
-    calls = []
-    monkeypatch.setattr(
-        flat_module.ap3d, "process_file",
-        lambda *args, **kwargs: calls.append((args, kwargs)),
-    )
-
-    flat_module._process_flat_frames(
-        load, [10], detid=detid, darkid=darkid)
-
-    assert len(calls) == 3
-    for chip, (_, options) in zip(flat_module.CHIPS, calls):
-        if detid is None or int(detid) <= 0:
-            assert options["detector"] is None
-        else:
-            assert Path(options["detector"]).name == (
-                f"apDetector-{chip}-{int(detid):08d}.fits"
-            )
-
-        if darkid is None or int(darkid) <= 0:
-            assert options["dark"] is None
-        else:
-            assert Path(options["dark"]).name == (
-                f"apDark-{chip}-{int(darkid):08d}.fits"
-            )
-
-
-def test_process_flat_frames_reuses_existing_2d(monkeypatch, tmp_path):
-    load = FakeLoad(tmp_path)
-    for chip in flat_module.CHIPS:
-        Path(load.filename("2D", num=10, chip=chip)).touch()
-    monkeypatch.setattr(
-        flat_module.ap3d, "process_file",
-        lambda *args, **kwargs: pytest.fail("existing ap2D should be reused"),
-    )
-    flat_module._process_flat_frames(load, [10])
+    assert not hasattr(flat_module, "_process_flat_frames")
 
 
 def write_2d(load, number, chip, value, mask=0):
@@ -357,12 +289,18 @@ def test_combine_flat_frames_rejects_no_frames(monkeypatch, tmp_path):
 def flat_environment(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
     lock_calls, plot_calls, html_calls = [], [], []
+    load.process_calls = []
     monkeypatch.setattr(flat_module.apload, "ApLoad", lambda **kwargs: load)
     monkeypatch.setattr(
         cal_utils.lock, "lock",
         lambda filename, **kwargs: lock_calls.append((Path(filename), kwargs)),
     )
-    monkeypatch.setattr(flat_module, "_process_flat_frames", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        flat_module.ap3d,
+        "process_exposures",
+        lambda *args, **kwargs:
+        load.process_calls.append((args, kwargs)),
+    )
     monkeypatch.setattr(
         flat_module, "combine_flat_frames",
         lambda *args, **kwargs: (
@@ -406,6 +344,18 @@ def test_build_flat_writes_complete_product_set(flat_environment):
     assert len(plot_calls) == 3
     assert len(html_calls) == 1
     assert lock_calls[-1][1] == {"clear": True}
+    args, options = load.process_calls[0]
+    np.testing.assert_array_equal(args[0], [12345678, 12345679])
+    assert options == {
+        "load": load,
+        "detectorid": 20,
+        "darkid": 30,
+        "overwrite": False,
+        "verbose": True,
+        "detect_cosmic_rays": False,
+        "up_the_ramp": False,
+        "nfowler": 1,
+    }
 
 
 def test_build_flat_reuses_complete_products(flat_environment, capsys,
@@ -417,7 +367,7 @@ def test_build_flat_reuses_complete_products(flat_environment, capsys,
         output.write_bytes(b"existing")
     (load.root / "apFlat-00000200.tab").write_bytes(b"existing")
     monkeypatch.setattr(
-        flat_module, "_process_flat_frames",
+        flat_module.ap3d, "process_exposures",
         lambda *args, **kwargs: pytest.fail("complete products must be reused"),
     )
     assert flat_module.build_flat([200], verbose=True) is None

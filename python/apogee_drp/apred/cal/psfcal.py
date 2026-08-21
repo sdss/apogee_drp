@@ -197,32 +197,6 @@ def _reference_positions(load, chip_index, *, fiberid=None, yshift=0.0):
     return np.asarray(fits.getdata(filename))[chip_index] + float(yshift)
 
 
-def _reduce(load, exposures, *, darkid=None, flatid=None, bpmid=None,
-            littrowid=None, maxread=None, clobber=False, verbose=False):
-    for chip_index, chip in enumerate(CHIPS):
-        limits = np.asarray(maxread) if maxread is not None else np.asarray(None)
-        limit = (limits[chip_index] if limits.ndim > 0 else maxread)
-        calibrations = {
-            "dark": load.filename("Dark", num=darkid, chip=chip)
-                    if darkid and int(darkid) > 0 else None,
-            "flat": load.filename("Flat", num=flatid, chip=chip)
-                    if flatid and int(flatid) > 0 else None,
-            "bpm": load.filename("BPM", num=bpmid, chip=chip)
-                   if bpmid and int(bpmid) > 0 else None,
-            "littrow": load.filename("Littrow", num=littrowid, chip=chip)
-                       if littrowid and int(littrowid) > 0 else None,
-        }
-        for exposure in exposures:
-            raw = load.filename("R", num=exposure, chip=chip)
-            output = load.filename("2D", num=exposure, chip=chip)
-            if Path(output).exists() and not clobber:
-                continue
-            ap3d.process_file(
-                raw, output, overwrite=clobber, max_read=limit,
-                detect_cosmic_rays=False, up_the_ramp=False, nfowler=1,
-                verbose=verbose, **calibrations)
-
-
 def _write_trace(filename, solution, header):
     hdr = header.copy()
     hdr["NTRACE"] = len(solution.fibers)
@@ -309,8 +283,10 @@ def build_fiber(frameid, *, apred="daily", telescope="apo25m", darkid=None,
             return
 
         shifts = np.broadcast_to(0.0 if yshift is None else yshift, (3,))
-        _reduce(load, [frameid], darkid=darkid, flatid=flatid, bpmid=bpmid,
-                clobber=clobber, verbose=verbose)
+        ap3d.process_exposures(
+            [frameid], load=load, darkid=darkid, flatid=flatid,
+            bpmid=bpmid, overwrite=clobber, verbose=verbose,
+            detect_cosmic_rays=False, up_the_ramp=False, nfowler=1)
         frames = load.frame(frameid)
         for index, chip in enumerate(CHIPS):
             frame = frames[chip]
@@ -336,15 +312,20 @@ def build_sparse(frames, *, apred="daily", telescope="apo25m", darkid=None,
         if not build:
             return
 
-        _reduce(load, exposures, darkid=darkid, flatid=flatid, bpmid=bpmid,
-                maxread=maxread, clobber=clobber, verbose=verbose)
+        ap3d.process_exposures(
+            exposures, load=load, darkid=darkid, flatid=flatid,
+            bpmid=bpmid, maxread=maxread, overwrite=clobber,
+            verbose=verbose, detect_cosmic_rays=False,
+            up_the_ramp=False, nfowler=1)
         dark_exposures = ([] if darkframes is None else [
             value for value in np.atleast_1d(darkframes).astype(int).tolist()
             if value > 0
         ])
         if dark_exposures:
-            _reduce(load, dark_exposures, darkid=darkid, bpmid=bpmid,
-                    maxread=maxread, clobber=clobber, verbose=verbose)
+            ap3d.process_exposures(
+                dark_exposures, load=load, darkid=darkid, bpmid=bpmid,
+                maxread=maxread, overwrite=clobber, verbose=verbose,
+                detect_cosmic_rays=False, up_the_ramp=False, nfowler=1)
         frames_by_exposure = {
             exposure: load.frame(exposure) for exposure in exposures
         }
@@ -389,8 +370,11 @@ def build_psf(frameid, *, apred="daily", telescope="apo25m", darkid=None,
         psf_files = outputs[0:3]
         epsf_files = outputs[3:6]
         trace_files = outputs[6:9]
-        _reduce(load, [frameid], darkid=darkid, flatid=flatid, bpmid=bpmid,
-                littrowid=littrowid, clobber=clobber, verbose=verbose)
+        ap3d.process_exposures(
+            [frameid], load=load, darkid=darkid, flatid=flatid,
+            bpmid=bpmid, littrowid=littrowid, overwrite=clobber,
+            verbose=verbose, detect_cosmic_rays=False,
+            up_the_ramp=False, nfowler=1)
         frames = load.frame(frameid)
         for index, chip in enumerate(CHIPS):
             frame = frames[chip]

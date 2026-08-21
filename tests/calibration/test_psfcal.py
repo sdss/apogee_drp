@@ -77,6 +77,7 @@ def test_obsolete_product_filename_helpers_are_removed():
     assert not hasattr(psfcal, "_write_epsf")
     assert not hasattr(psfcal, "_load_epsf")
     assert not hasattr(psfcal, "_make_profile_grid")
+    assert not hasattr(psfcal, "_reduce")
 
 
 @pytest.mark.parametrize(
@@ -103,13 +104,108 @@ def test_existing_registered_products_skip_build(
         lock_calls.append((call_args, options)),
     )
     monkeypatch.setattr(
-        psfcal, "_reduce",
+        psfcal.ap3d, "process_exposures",
         lambda *call_args, **options:
         pytest.fail("an existing product must not be rebuilt"),
     )
 
     assert builder(*args, **kwargs) is None
     assert lock_calls == []
+
+
+@pytest.mark.parametrize(
+    "builder,args,kwargs,expected_exposures,expected_options",
+    [
+        (
+            psfcal.build_fiber,
+            (12,),
+            {"darkid": 1, "flatid": 2, "bpmid": 3,
+             "clobber": True, "verbose": True},
+            [12],
+            {"darkid": 1, "flatid": 2, "bpmid": 3},
+        ),
+        (
+            psfcal.build_sparse,
+            ([12, 13],),
+            {"darkid": 1, "flatid": 2, "bpmid": 3,
+             "maxread": [4, 5, 6], "clobber": True,
+             "verbose": True},
+            [12, 13],
+            {"darkid": 1, "flatid": 2, "bpmid": 3,
+             "maxread": [4, 5, 6]},
+        ),
+        (
+            psfcal.build_psf,
+            (12,),
+            {"darkid": 1, "flatid": 2, "bpmid": 3,
+             "littrowid": 4, "sparseid": 9,
+             "clobber": True, "verbose": True},
+            [12],
+            {"darkid": 1, "flatid": 2, "bpmid": 3,
+             "littrowid": 4},
+        ),
+    ],
+)
+def test_builders_dispatch_ap3d_process_exposures(
+    monkeypatch, tmp_path, builder, args, kwargs,
+    expected_exposures, expected_options,
+):
+    load = FakeLoad(tmp_path)
+    calls = []
+    monkeypatch.setattr(psfcal.apload, "ApLoad", lambda **options: load)
+    monkeypatch.setattr(cal_utils.lock, "lock", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        psfcal.ap3d,
+        "process_exposures",
+        lambda *args, **options: calls.append((args, options)),
+    )
+    load.frame = lambda *args, **kwargs: (_ for _ in ()).throw(
+        RuntimeError("stop after ap3d dispatch")
+    )
+
+    with pytest.raises(RuntimeError, match="stop after ap3d dispatch"):
+        builder(*args, **kwargs)
+
+    assert len(calls) == 1
+    actual_args, actual_options = calls[0]
+    assert list(actual_args[0]) == expected_exposures
+    for key, value in expected_options.items():
+        assert actual_options[key] == value
+    assert actual_options["load"] is load
+    assert actual_options["overwrite"] is True
+    assert actual_options["verbose"] is True
+    assert actual_options["detect_cosmic_rays"] is False
+    assert actual_options["up_the_ramp"] is False
+    assert actual_options["nfowler"] == 1
+
+
+def test_sparse_dispatches_dark_exposures_separately(
+    monkeypatch, tmp_path
+):
+    load = FakeLoad(tmp_path)
+    calls = []
+    monkeypatch.setattr(psfcal.apload, "ApLoad", lambda **options: load)
+    monkeypatch.setattr(cal_utils.lock, "lock", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        psfcal.ap3d,
+        "process_exposures",
+        lambda *args, **options: calls.append((args, options)),
+    )
+    load.frame = lambda *args, **kwargs: (_ for _ in ()).throw(
+        RuntimeError("stop after ap3d dispatch")
+    )
+
+    with pytest.raises(RuntimeError, match="stop after ap3d dispatch"):
+        psfcal.build_sparse(
+            [12], darkframes=[20, 0, 21], darkid=1, bpmid=2,
+            maxread=5)
+
+    assert [list(call[0][0]) for call in calls] == [[12], [20, 21]]
+    dark_options = calls[1][1]
+    assert dark_options["darkid"] == 1
+    assert dark_options["bpmid"] == 2
+    assert dark_options["maxread"] == 5
+    assert "flatid" not in dark_options
 
 
 def test_validate_model_grid_normalizes_profiles():

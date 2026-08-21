@@ -168,29 +168,6 @@ def make_flat_chip(flat,flatmask,dithered=False,kludge=False,bad_pixel_bits=None
     return flat, spectral_flat, mask
 
 
-def _process_flat_frames(load, images, detid=None, darkid=None, clobber=False, verbose=False):
-    """Reduce all requested raw flat ramps to ap2D products."""
-    for chip in CHIPS:
-        detector = (
-            load.filename("Detector", num=detid, chip=chip)
-            if detid is not None and int(detid) > 0
-            else None
-        )
-        dark = (
-            load.filename("Dark", num=darkid, chip=chip)
-            if darkid is not None and int(darkid) > 0
-            else None
-        )
-        for number in images:
-            rawfile = load.filename("R", num=int(number), chip=chip)
-            outfile = load.filename("2D", num=int(number), chip=chip)
-            if os.path.exists(outfile) and not clobber:
-                continue
-            ap3d.process_file(rawfile,outfile,detector=detector,dark=dark,
-                              overwrite=clobber,detect_cosmic_rays=False,
-                              up_the_ramp=False,nfowler=1,verbose=verbose)
-
-
 def combine_flat_frames(load, images, nrep):
     """Median groups of ap2D frames and sum the resulting groups."""
     flatsum = np.zeros(DETECTOR_SHAPE + (3,), dtype=np.float64)
@@ -271,8 +248,17 @@ def build_flat(images, apred="daily", telescope="apo25m", detid=None,
         summary_file = files[3]
         flatdir = load.filename("Flat", num=flatid, directory=True)
 
-        _process_flat_frames(load,images,detid=detid,darkid=darkid,
-                             clobber=clobber,verbose=verbose)
+        ap3d.process_exposures(
+            images,
+            load=load,
+            detectorid=detid,
+            darkid=darkid,
+            overwrite=clobber,
+            verbose=verbose,
+            detect_cosmic_rays=False,
+            up_the_ramp=False,
+            nfowler=1,
+        )
         flatsum, flatmasks, header = combine_flat_frames(load, images, nrep)
         flatsum = normalize_flat_chips(flatsum)
 
