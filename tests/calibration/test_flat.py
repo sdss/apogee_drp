@@ -6,7 +6,8 @@ import numpy as np
 import pytest
 from astropy.io import fits
 
-from apogee_drp.apred.cal import flat
+from apogee_drp.apred.cal import flat as flat_module
+from apogee_drp.apred.cal import utils as cal_utils
 
 
 def test_make_flat_chip_does_not_modify_input():
@@ -203,8 +204,26 @@ class FakeLoad:
     def __init__(self, root):
         self.root = Path(root)
 
-    def filename(self, kind, num=None, chip=None, **kwargs):
+    def filename(self, kind, num=None, chip=None, directory=False, **kwargs):
+        if directory:
+            return str(self.root)
         return str(self.root / f"ap{kind}-{chip}-{int(num):08d}.fits")
+
+    def product_files(self, product, name):
+        assert product == "flat"
+        files = [self.filename("Flat", num=name, chip=chip)
+                 for chip in flat_module.CHIPS]
+        return files + [str(self.root / f"apFlat-{int(name):08d}.tab")]
+
+    def product_exists(self, product, name):
+        return all(Path(filename).is_file() and Path(filename).stat().st_size > 0
+                   for filename in self.product_files(product, name))
+
+    def product_delete(self, product, name, **kwargs):
+        for filename in self.product_files(product, name):
+            path = Path(filename)
+            if path.exists() or path.is_symlink():
+                path.unlink()
 
 
 def test_add_provenance_records_dark_and_versions(monkeypatch):
@@ -231,12 +250,8 @@ def test_add_provenance_handles_no_dark(monkeypatch):
     assert header["DARKFILE"] == "NONE"
 
 
-def test_calibration_filename_handles_missing_ids(tmp_path):
-    load = FakeLoad(tmp_path)
-    assert flat_module._calibration_filename(load, "Dark", None, "a") is None
-    assert flat_module._calibration_filename(load, "Dark", 0, "a") is None
-    assert Path(flat_module._calibration_filename(load, "Dark", 12, "a")).name \
-        == "apDark-a-00000012.fits"
+def test_obsolete_calibration_filename_helper_is_removed():
+    assert not hasattr(flat_module, "_calibration_filename")
 
 
 def test_process_flat_frames_forwards_calibrations(monkeypatch, tmp_path):
@@ -256,6 +271,45 @@ def test_process_flat_frames_forwards_calibrations(monkeypatch, tmp_path):
     assert Path(options["dark"]).name == "apDark-a-00000030.fits"
     assert options["detect_cosmic_rays"] is False
     assert options["nfowler"] == 1
+
+
+@pytest.mark.parametrize(
+    "detid,darkid",
+    [
+        (None, None),
+        (0, 0),
+        (None, 30),
+        (20, None),
+    ],
+)
+def test_process_flat_frames_handles_optional_calibrations(
+        monkeypatch, tmp_path, detid, darkid):
+    """Optional calibration IDs are converted to filenames only when valid."""
+    load = FakeLoad(tmp_path)
+    calls = []
+    monkeypatch.setattr(
+        flat_module.ap3d, "process_file",
+        lambda *args, **kwargs: calls.append((args, kwargs)),
+    )
+
+    flat_module._process_flat_frames(
+        load, [10], detid=detid, darkid=darkid)
+
+    assert len(calls) == 3
+    for chip, (_, options) in zip(flat_module.CHIPS, calls):
+        if detid is None or int(detid) <= 0:
+            assert options["detector"] is None
+        else:
+            assert Path(options["detector"]).name == (
+                f"apDetector-{chip}-{int(detid):08d}.fits"
+            )
+
+        if darkid is None or int(darkid) <= 0:
+            assert options["dark"] is None
+        else:
+            assert Path(options["dark"]).name == (
+                f"apDark-{chip}-{int(darkid):08d}.fits"
+            )
 
 
 def test_process_flat_frames_reuses_existing_2d(monkeypatch, tmp_path):
@@ -301,9 +355,9 @@ def test_combine_flat_frames_rejects_no_frames(monkeypatch, tmp_path):
 def flat_environment(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
     lock_calls, plot_calls, html_calls = [], [], []
-    monkeypatch.setattr(flat_module, "_make_load", lambda **kwargs: load)
+    monkeypatch.setattr(flat_module.apload, "ApLoad", lambda **kwargs: load)
     monkeypatch.setattr(
-        flat_module.lock, "lock",
+        cal_utils.lock, "lock",
         lambda filename, **kwargs: lock_calls.append((Path(filename), kwargs)),
     )
     monkeypatch.setattr(flat_module, "_process_flat_frames", lambda *args, **kwargs: None)
@@ -329,8 +383,9 @@ def flat_environment(monkeypatch, tmp_path):
 
 def test_build_flat_writes_complete_product_set(flat_environment):
     load, lock_calls, plot_calls, html_calls = flat_environment
-    outputs = flat_module.build_flat(
-        [12345678, 12345679], detid=20, darkid=30, verbose=True)
+    outputs = load.product_files("flat", 12345678)[:3]
+    assert flat_module.build_flat(
+        [12345678, 12345679], detid=20, darkid=30, verbose=True) is None
     assert [Path(name).name for name in outputs] == [
         "apFlat-a-12345678.fits", "apFlat-b-12345678.fits",
         "apFlat-c-12345678.fits",
@@ -357,15 +412,14 @@ def test_build_flat_reuses_complete_products(flat_environment, capsys,
     outputs = [load.root / f"apFlat-{chip}-00000200.fits"
                for chip in flat_module.CHIPS]
     for output in outputs:
-        output.touch()
-    (load.root / "apFlat-00000200.tab").touch()
+        output.write_bytes(b"existing")
+    (load.root / "apFlat-00000200.tab").write_bytes(b"existing")
     monkeypatch.setattr(
         flat_module, "_process_flat_frames",
         lambda *args, **kwargs: pytest.fail("complete products must be reused"),
     )
-    actual = flat_module.build_flat([200], verbose=True)
-    assert list(map(Path, actual)) == outputs
-    assert "already made" in capsys.readouterr().out
+    assert flat_module.build_flat([200], verbose=True) is None
+    assert "flat product 200 already exists" in capsys.readouterr().out
     assert not any(options.get("lock") for _, options in lock_calls)
 
 
@@ -379,10 +433,12 @@ def test_build_flat_partial_products_are_rebuilt(flat_environment):
 
 
 def test_build_flat_clobber_rewrites_products(flat_environment):
-    outputs = flat_module.build_flat([202])
+    load, _, _, _ = flat_environment
+    flat_module.build_flat([202])
+    outputs = load.product_files("flat", 202)[:3]
     for output in outputs:
         Path(output).write_bytes(b"old")
-    assert flat_module.build_flat([202], clobber=True) == outputs
+    assert flat_module.build_flat([202], clobber=True) is None
     assert all(Path(output).stat().st_size > 3 for output in outputs)
 
 

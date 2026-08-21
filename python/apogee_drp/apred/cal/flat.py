@@ -10,9 +10,10 @@ import numpy as np
 from astropy.io import fits
 from scipy.ndimage import binary_dilation, uniform_filter
 
-from ...utils import lock, utils
+from ...utils import apload, utils
 from ...utils.bitmask import PixelBitMask
 from .. import ap3d
+from .utils import product_build_lock
 from .flathtml import flathtml
 from .flatplot import flatplot
 
@@ -29,13 +30,6 @@ __all__ = [
     "CHIPS", "build_flat", "combine_flat_frames", "make_flat_chip",
     "normalize_flat_chips",
 ]
-
-
-def _make_load(*, apred, telescope):
-    """Construct ``ApLoad`` without importing the full pipeline eagerly."""
-    from ...utils.apload import ApLoad
-
-    return ApLoad(apred=apred, telescope=telescope)
 
 
 def _nan_uniform_filter(array, size):
@@ -210,18 +204,19 @@ def make_flat_chip(flat,flatmask,dithered=False,kludge=False,bad_pixel_bits=None
     return flat, spectral_flat, mask
 
 
-def _calibration_filename(load, kind, number, chip):
-    """Return a chip calibration filename, or None when no ID was supplied."""
-    if number is None or int(number) <= 0:
-        return None
-    return load.filename(kind, num=int(number), chip=chip)
-
-
 def _process_flat_frames(load, images, detid=None, darkid=None, clobber=False, verbose=False):
     """Reduce all requested raw flat ramps to ap2D products."""
     for chip in CHIPS:
-        detector = _calibration_filename(load, "Detector", detid, chip)
-        dark = _calibration_filename(load, "Dark", darkid, chip)
+        detector = (
+            load.filename("Detector", num=detid, chip=chip)
+            if detid is not None and int(detid) > 0
+            else None
+        )
+        dark = (
+            load.filename("Dark", num=darkid, chip=chip)
+            if darkid is not None and int(darkid) > 0
+            else None
+        )
         for number in images:
             rawfile = load.filename("R", num=int(number), chip=chip)
             outfile = load.filename("2D", num=int(number), chip=chip)
@@ -299,26 +294,16 @@ def build_flat(images, apred="daily", telescope="apo25m", detid=None,
         raise ValueError("nrep must be at least 1")
 
     flatid = int(images[0])
-    load = _make_load(apred=apred, telescope=telescope)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
 
-    flatdir = os.path.dirname(load.filename("Flat", num=flatid, chip="a"))
-    os.makedirs(flatdir, exist_ok=True)
+    with product_build_lock(load, "flat", flatid, clobber=clobber,
+                            unlock=unlock, verbose=verbose) as (build, files):
+        if not build:
+            return
 
-    output_files = [load.filename("Flat", num=flatid, chip=chip) for chip in CHIPS]
-    summary_file = os.path.join(flatdir, f"{load.prefix}Flat-{flatid:08d}.tab")
-    allfiles = output_files + [summary_file]
-
-    lock.lock(summary_file, waittime=10, unlock=unlock)
-    if all(os.path.exists(path) for path in allfiles) and not clobber:
-        if verbose:
-            print("Flat file:", summary_file, "already made")
-        return output_files
-
-    lock.lock(summary_file, lock=True)
-    try:
-        for path in allfiles:
-            if os.path.exists(path):
-                os.remove(path)
+        output_files = files[:3]
+        summary_file = files[3]
+        flatdir = load.filename("Flat", num=flatid, directory=True)
 
         _process_flat_frames(load,images,detid=detid,darkid=darkid,
                              clobber=clobber,verbose=verbose)
@@ -336,7 +321,11 @@ def build_flat(images, apred="daily", telescope="apo25m", detid=None,
                                                        dithered=dithered,
                                                        kludge=kludge)
             chip_header = header.copy()
-            darkfile = _calibration_filename(load, "Dark", darkid, chip)
+            darkfile = (
+                load.filename("Dark", num=darkid, chip=chip)
+                if darkid is not None and int(darkid) > 0
+                else None
+            )
             _add_provenance(chip_header,darkfile,flatid)
 
             outfile = output_files[ichip]
@@ -359,7 +348,3 @@ def build_flat(images, apred="daily", telescope="apo25m", detid=None,
 
         fits.BinTableHDU(flatlog, name="FLATLOG").writeto(summary_file, overwrite=True)
         flathtml(flatdir,[{"num": flatid, "nframes": len(images)}])
-    finally:
-        lock.lock(summary_file, clear=True)
-
-    return output_files
