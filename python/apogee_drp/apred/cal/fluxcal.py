@@ -12,77 +12,15 @@ from scipy.ndimage import uniform_filter1d
 
 from ...utils import apload
 from ...utils.bitmask import PixelBitMask
-from .utils import product_build_lock
+from ..process import process
+from .utils import (product_build_lock,robust_polyfit,running_nanmedian,
+                    interpolate_nonfinite,planck)
 
 CHIPS = ("a", "b", "c")
 __all__ = [
     "build_flux", "build_response", "make_flux_calibrations",
-    "make_reference_spectra", "planck",
+    "make_reference_spectra"
 ]
-
-
-def _robust_polyfit(x, y, degree):
-    x, y = np.asarray(x, float).ravel(), np.asarray(y, float).ravel()
-    good = np.isfinite(x) & np.isfinite(y)
-    if good.sum() <= degree:
-        raise ValueError("too few finite points for reference-spectrum fit")
-    for _ in range(5):
-        coefficients = np.polynomial.polynomial.polyfit(x[good], y[good], degree)
-        residual = y - np.polynomial.polynomial.polyval(x, coefficients)
-        center = np.nanmedian(residual[good])
-        scatter = np.nanmedian(np.abs(residual[good] - center))
-        if not np.isfinite(scatter) or scatter == 0:
-            break
-        keep = good & (np.abs(residual - center) <= 5 * scatter)
-        if keep.sum() <= degree or np.array_equal(keep, good):
-            break
-        good = keep
-    return np.polynomial.polynomial.polyfit(x[good], y[good], degree)
-
-
-def _running_nanmedian(values, width):
-    """NaN-aware, edge-replicated running median along the pixel axis."""
-    data = np.asarray(values, float)
-    if width <= 0 or int(width) != width:
-        raise ValueError("median width must be a positive integer")
-    width = int(width)
-    before, after = width // 2, width - 1 - width // 2
-    padded = np.pad(data, ((before, after), (0, 0)), mode="edge")
-    # sliding_window_view requires NumPy >= 1.20, while the APOGEE
-    # production environment still supports older NumPy releases. Construct
-    # the same read-only view with the long-standing as_strided API.
-    windows = np.lib.stride_tricks.as_strided(
-        padded,
-        shape=(data.shape[0], data.shape[1], width),
-        strides=(padded.strides[0], padded.strides[1], padded.strides[0]),
-        writeable=False,
-    )
-    with warnings.catch_warnings():
-        warnings.simplefilter("ignore", RuntimeWarning)
-        return np.nanmedian(windows, axis=-1)
-
-
-def _fill_nonfinite(values):
-    result = np.asarray(values, float).copy()
-    x = np.arange(result.shape[0])
-    for fiber in range(result.shape[1]):
-        good = np.isfinite(result[:, fiber])
-        if good.any():
-            result[:, fiber] = np.interp(
-                x, x[good], result[good, fiber])
-    return result
-
-
-def planck(wavelength, temperature):
-    """Return a Planck spectrum per unit wavelength, normalized arbitrarily."""
-    wavelength = np.asarray(wavelength, float)
-    if temperature <= 0 or np.any(wavelength <= 0):
-        raise ValueError("wavelength and temperature must be positive")
-    meters = wavelength * 1e-10
-    exponent = 1.438776877e-2 / (meters * float(temperature))
-    with np.errstate(over="ignore", divide="ignore", invalid="ignore"):
-        spectrum = 1.0 / (meters ** 5 * np.expm1(exponent))
-    return spectrum
 
 
 def make_reference_spectra(fluxes, masks=None, *, telescope="apo25m",
@@ -123,7 +61,7 @@ def make_reference_spectra(fluxes, masks=None, *, telescope="apo25m",
                 raise ValueError("mask and flux shapes must match")
             work[(np.asarray(mask, dtype=np.uint64) & bits) != 0] = np.nan
         work[:, ~np.isfinite(np.nanmedian(work, axis=0))] = np.nan
-        smooth = _running_nanmedian(work, median_width)
+        smooth = running_nanmedian(work, median_width)
         original[:, chip] = np.nanmedian(smooth, axis=1)
         original[:4, chip] = np.nan
         original[-4:, chip] = np.nan
@@ -134,12 +72,12 @@ def make_reference_spectra(fluxes, masks=None, *, telescope="apo25m",
     if telescope == "lco25m":
         flat_pixel = np.arange(3 * npix).reshape(npix, 3, order="F")
         good &= (flat_pixel < 700) | (flat_pixel > 1900)
-    coefficients = _robust_polyfit(x[good], original[good], 4)
+    coefficients = robust_polyfit(x[good], original[good], 4)
     fitted = np.polynomial.polynomial.polyval(x, coefficients)
     if telescope == "lco25m":
         pixel = np.arange(npix, dtype=float)
         outside = (pixel < 700) | (pixel > 1900)
-        redfit = _robust_polyfit(pixel[outside], original[outside, 0], 2)
+        redfit = robust_polyfit(pixel[outside], original[outside, 0], 2)
         fitted[:, 0] *= original[:, 0] / np.polynomial.polynomial.polyval(
             pixel, redfit)
     return fitted, original
@@ -200,34 +138,18 @@ def make_flux_calibrations(fluxes, masks, reference, *, mjd,
                         pixel[lo:hi][good], ratio[lo:hi, fiber][good], 2)
                     ratio[affected, fiber] = np.polynomial.polynomial.polyval(
                         pixel[affected], coefficients)
-        smoothed = _running_nanmedian(ratio, median_width)
-        fallback = _running_nanmedian(smoothed, fill_width)
+        smoothed = running_nanmedian(ratio, median_width)
+        fallback = running_nanmedian(smoothed, fill_width)
         missing = ~np.isfinite(smoothed)
         smoothed[missing] = fallback[missing]
-        smoothed = _fill_nonfinite(smoothed)
-        smoothed = uniform_filter1d(
-            smoothed, size=int(smooth_width), axis=0, mode="nearest")
+        smoothed = interpolate_nonfinite(smoothed)
+        smoothed = uniform_filter1d(smoothed, size=int(smooth_width),
+                                    axis=0, mode="nearest")
         throughput = np.nanmedian(smoothed, axis=0)
         throughput /= np.nanmedian(throughput)
         results.append(smoothed.astype(np.float32))
         throughputs.append(throughput.astype(np.float32))
     return results, throughputs
-
-
-def _load_1d(load, number, chip):
-    filename = load.filename("1D", num=int(number), chip=chip)
-    with fits.open(filename) as hdus:
-        return {
-            "header": hdus[0].header.copy(),
-            "flux": np.asarray(hdus[1].data).T,
-            "mask": np.asarray(hdus[3].data).T,
-        }
-
-
-def _process(load, frames, **kwargs):
-    from ..process import process
-    return process(frames, load=load, fluxid=0, nocr=True, nfs=1,
-                   doproc=True, **kwargs)
 
 
 def _write_flux(filename, calibration, throughput, reference, original,
@@ -245,6 +167,20 @@ def _write_flux(filename, calibration, throughput, reference, original,
     Path(filename).parent.mkdir(parents=True, exist_ok=True)
     fits.HDUList([primary, flux_hdu, thru_hdu, ref_hdu, med_hdu]).writeto(
         filename, overwrite=True)
+
+        
+def _central_wavelength(wavelength):
+    """Return the central wavelength vector from an apWave array."""
+    wavelength = np.asarray(wavelength, dtype=float)
+    if wavelength.ndim == 1:
+        return wavelength
+    if wavelength.ndim != 2:
+        raise ValueError(
+            "wavelength array must have one or two dimensions"
+        )
+    if wavelength.shape[0] < wavelength.shape[1]:
+        return wavelength[wavelength.shape[0] // 2]
+    return wavelength[:, wavelength.shape[1] // 2]
 
 
 def build_flux(ims: Sequence[int] | int, *, apred="daily", telescope="apo25m",
@@ -279,12 +215,15 @@ def build_flux(ims: Sequence[int] | int, *, apred="daily", telescope="apo25m",
             path = Path(load.filename("1D", num=fluxid, chip=chip))
             if path.exists() or path.is_symlink():
                 path.unlink()
-        _process(
-            load, frames, cmjd=cmjd, darkid=darkid, flatid=flatid,
-            psfid=psfid, modelpsf=modelpsf, waveid=waveid,
-            littrowid=littrowid, persistid=persistid, clobber=clobber,
-            onedclobber=onedclobber, unlock=unlock, verbose=verbose)
-        chips = [_load_1d(load, fluxid, chip) for chip in CHIPS]
+                
+        process(frames, load=load, fluxid=0, nocr=True, nfs=1,
+                doproc=True,cmjd=cmjd, darkid=darkid, flatid=flatid,
+                psfid=psfid, modelpsf=modelpsf, waveid=waveid,
+                littrowid=littrowid, persistid=persistid, clobber=clobber,
+                onedclobber=onedclobber, unlock=unlock, verbose=verbose)
+
+        spectra = load.spectrum(fluxid)
+        chips = [spectra[chip] for chip in CHIPS]
         fluxes = [chip["flux"] for chip in chips]
         masks = [chip["mask"] for chip in chips]
         exptype = chips[0]["header"].get("EXPTYPE", "UNKNOWN")
@@ -292,7 +231,8 @@ def build_flux(ims: Sequence[int] | int, *, apred="daily", telescope="apo25m",
         if str(exptype).strip().upper() == "BLACKBODY":
             if waveid is None:
                 raise ValueError("BLACKBODY calibration requires waveid")
-            wavelengths = [_load_wavelength(load, waveid, chip) for chip in CHIPS]
+
+            wavelengths = [_central_wavelength(waves[chip]["wavelength"]) for chip in CHIPS]
         reference, original = make_reference_spectra(
             fluxes, masks, telescope=telescope, exptype=exptype,
             wavelengths=wavelengths, bbtemp=bbtemp)
@@ -306,16 +246,6 @@ def build_flux(ims: Sequence[int] | int, *, apred="daily", telescope="apo25m",
     if temp is not None:
         build_response(fluxid, waveid=waveid, temp=temp, load=load,
                        clobber=clobber, unlock=unlock, verbose=verbose)
-
-
-def _load_wavelength(load, waveid, chip):
-    filename = load.filename("Wave", num=waveid, chip=chip)
-    data = np.asarray(fits.getdata(filename, 2), float)
-    if data.ndim == 1:
-        return data
-    if data.shape[0] < data.shape[1]:
-        return data[data.shape[0] // 2]
-    return data[:, data.shape[1] // 2]
 
 
 def build_response(number, *, waveid, temp, load=None, apred="daily",
@@ -351,7 +281,7 @@ def build_response(number, *, waveid, temp, load=None, apred="daily",
         flux_files = load.product_files("flux", number)
         references = [np.asarray(fits.getdata(name, 3), float)
                       for name in flux_files]
-        waves = [_load_wavelength(load, waveid, chip) for chip in CHIPS]
+        waves = load.wave(waveid)
         center = len(references[1]) // 2
         if (any(reference.ndim != 1 for reference in references) or
                 any(wave.shape != reference.shape
