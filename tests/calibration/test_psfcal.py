@@ -8,6 +8,7 @@ from astropy.io import fits
 
 from apogee_drp.apred.cal import makecal
 from apogee_drp.apred.cal import psfcal
+from apogee_drp.apred.cal import utils as cal_utils
 
 
 class FakeLoad:
@@ -17,8 +18,38 @@ class FakeLoad:
     def __init__(self, root):
         self.root = Path(root)
 
-    def filename(self, kind, num=None, chips=False, **kwargs):
-        return str(self.root / kind.lower() / f"ap{kind}-{num}.fits")
+    def filename(self, kind, num=None, chip=None, **kwargs):
+        infix = f"-{chip}" if chip is not None else ""
+        return str(self.root / kind.lower() / f"ap{kind}{infix}-{num}.fits")
+
+    def product_files(self, product, name):
+        if product == "fiber":
+            return [self.filename("Fiber", num=name, chip=chip)
+                    for chip in psfcal.CHIPS]
+        if product == "sparse":
+            return [self.filename("Sparse", num=name)] + [
+                self.filename("EPSF", num=name, chip=chip)
+                for chip in psfcal.CHIPS]
+        if product == "psf":
+            return [
+                self.filename(kind, num=name, chip=chip)
+                for kind in ("PSF", "EPSF", "ETrace")
+                for chip in psfcal.CHIPS
+            ]
+        if product == "modelpsf":
+            return [self.filename("PSFModel", num=name, chip=chip)
+                    for chip in psfcal.CHIPS]
+        raise AssertionError(f"unexpected product {product}")
+
+    def product_exists(self, product, name):
+        return all(Path(filename).is_file() and Path(filename).stat().st_size > 0
+                   for filename in self.product_files(product, name))
+
+    def product_delete(self, product, name, **kwargs):
+        for filename in self.product_files(product, name):
+            path = Path(filename)
+            if path.exists() or path.is_symlink():
+                path.unlink()
 
 
 def model_grid(nx=3, ny=4, noffset=31):
@@ -30,16 +61,50 @@ def model_grid(nx=3, ny=4, noffset=31):
     return profiles, np.stack((x, y)), offsets
 
 
-def test_modelpsf_product_files_preserve_name(tmp_path):
-    files = psfcal.modelpsf_product_files(FakeLoad(tmp_path), "12-34")
+def test_registry_modelpsf_files_preserve_compound_name(tmp_path):
+    files = FakeLoad(tmp_path).product_files("modelpsf", "12-34")
     assert [Path(filename).name for filename in files] == [
         "apPSFModel-a-12-34.fits", "apPSFModel-b-12-34.fits",
         "apPSFModel-c-12-34.fits"]
 
 
-def test_modelpsf_product_files_reject_empty_name(tmp_path):
-    with pytest.raises(ValueError, match="cannot be empty"):
-        psfcal.modelpsf_product_files(FakeLoad(tmp_path), " ")
+def test_obsolete_product_filename_helpers_are_removed():
+    assert not hasattr(psfcal, "product_files")
+    assert not hasattr(psfcal, "modelpsf_product_files")
+    assert not hasattr(psfcal, "_chip_filename")
+
+
+@pytest.mark.parametrize(
+    "product,name,builder,args,kwargs",
+    [
+        ("fiber", 12, psfcal.build_fiber, (12,), {}),
+        ("sparse", 12, psfcal.build_sparse, ([12],), {}),
+        ("psf", 12, psfcal.build_psf, (12,), {"sparseid": 9}),
+    ],
+)
+def test_existing_registered_products_skip_build(
+        monkeypatch, tmp_path, product, name, builder, args, kwargs):
+    load = FakeLoad(tmp_path)
+    for filename in load.product_files(product, name):
+        path = Path(filename)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_bytes(b"existing")
+
+    lock_calls = []
+    monkeypatch.setattr(psfcal.apload, "ApLoad", lambda **options: load)
+    monkeypatch.setattr(
+        cal_utils.lock, "lock",
+        lambda *call_args, **options:
+        lock_calls.append((call_args, options)),
+    )
+    monkeypatch.setattr(
+        psfcal, "_reduce",
+        lambda *call_args, **options:
+        pytest.fail("an existing product must not be rebuilt"),
+    )
+
+    assert builder(*args, **kwargs) is None
+    assert lock_calls == []
 
 
 def test_validate_model_grid_normalizes_profiles():
@@ -47,9 +112,11 @@ def test_validate_model_grid_normalizes_profiles():
     normalized, actual_labels, actual_offsets = psfcal._validate_model_grid(
         profiles, labels, offsets)
     np.testing.assert_allclose(
-        np.trapezoid(normalized, actual_offsets, axis=2), 1, rtol=2e-6)
+        np.trapz(normalized, actual_offsets, axis=2), 1, rtol=2e-6)
     np.testing.assert_allclose(actual_labels, labels, rtol=1e-7)
-    assert normalized.dtype == np.float32
+    # The grid remains float64 so every Numba gridinterp branch has the same
+    # return dtype; query labels are converted to float64 by PSF.gridinterp().
+    assert normalized.dtype == np.float64
 
 
 @pytest.mark.parametrize("mutation, message", [
@@ -96,16 +163,16 @@ def test_written_grid_is_readable_by_psf_class(tmp_path):
 
 def patch_builder(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
-    monkeypatch.setattr(psfcal, "_make_load", lambda **kwargs: load)
+    monkeypatch.setattr(psfcal.apload, "ApLoad", lambda **kwargs: load)
     locks, grid_calls = [], []
     monkeypatch.setattr(
-        psfcal.lock, "lock",
+        cal_utils.lock, "lock",
         lambda *args, **kwargs: locks.append((args, kwargs)))
-    sparse = Path(load.filename("Sparse", num=12, chips=True))
+    sparse = Path(load.filename("Sparse", num=12))
     sparse.parent.mkdir(parents=True)
     sparse.write_bytes(b"sparse")
     for chip in "abc":
-        filename = Path(psfcal._chip_filename(load, "EPSF", 34, chip))
+        filename = Path(load.filename("EPSF", num=34, chip=chip))
         filename.parent.mkdir(parents=True, exist_ok=True)
         filename.write_bytes(b"epsf")
 
@@ -119,34 +186,32 @@ def patch_builder(monkeypatch, tmp_path):
 
 def test_build_modelpsf_writes_all_chips(monkeypatch, tmp_path, capsys):
     load, locks, grid_calls = patch_builder(monkeypatch, tmp_path)
-    outputs = psfcal.build_modelpsf(
-        "12-34", sparseid=12, psfid=34, verbose=True)
-    assert outputs == psfcal.modelpsf_product_files(load, "12-34")
+    outputs = load.product_files("modelpsf", "12-34")
+    assert psfcal.build_modelpsf(
+        "12-34", sparseid=12, psfid=34, verbose=True) is None
     assert len(grid_calls) == 3
     assert [Path(call[0]).name for call in grid_calls] == [
         "apEPSF-a-34.fits", "apEPSF-b-34.fits", "apEPSF-c-34.fits"]
     assert all(Path(filename).stat().st_size > 0 for filename in outputs)
-    marker = Path(outputs[0].replace("PSFModel-a-", "PSFModel-")).with_suffix(".dat")
-    assert marker.is_file()
     assert "writing ModelPSF chip c" in capsys.readouterr().out
     assert locks[-1][1] == {"clear": True}
 
 
 def test_build_modelpsf_existing_short_circuit(monkeypatch, tmp_path, capsys):
     load, _, grid_calls = patch_builder(monkeypatch, tmp_path)
-    outputs = psfcal.modelpsf_product_files(load, "12-34")
+    outputs = load.product_files("modelpsf", "12-34")
     for filename in outputs:
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
         Path(filename).write_bytes(b"existing")
     assert psfcal.build_modelpsf(
-        "12-34", sparseid=12, psfid=34, verbose=True) == outputs
+        "12-34", sparseid=12, psfid=34, verbose=True) is None
     assert not grid_calls
-    assert "already made" in capsys.readouterr().out
+    assert "modelpsf product 12-34 already exists" in capsys.readouterr().out
 
 
 def test_build_modelpsf_partial_product_rebuilds(monkeypatch, tmp_path):
     load, _, grid_calls = patch_builder(monkeypatch, tmp_path)
-    outputs = psfcal.modelpsf_product_files(load, "12-34")
+    outputs = load.product_files("modelpsf", "12-34")
     Path(outputs[0]).parent.mkdir(parents=True)
     Path(outputs[0]).write_bytes(b"partial")
     psfcal.build_modelpsf("12-34", sparseid=12, psfid=34)
@@ -166,8 +231,8 @@ def test_build_modelpsf_validates_arguments(kwargs, message):
 
 def test_build_modelpsf_reports_missing_inputs(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
-    monkeypatch.setattr(psfcal, "_make_load", lambda **kwargs: load)
-    monkeypatch.setattr(psfcal.lock, "lock", lambda *args, **kwargs: None)
+    monkeypatch.setattr(psfcal.apload, "ApLoad", lambda **kwargs: load)
+    monkeypatch.setattr(cal_utils.lock, "lock", lambda *args, **kwargs: None)
     with pytest.raises(FileNotFoundError, match="Missing ModelPSF inputs"):
         psfcal.build_modelpsf("12-34", sparseid=12, psfid=34)
 
@@ -182,31 +247,19 @@ def test_build_modelpsf_clears_lock_on_failure(monkeypatch, tmp_path):
     assert locks[-1][1] == {"clear": True}
 
 
-def test_makecal_modelpsf_dispatches_v3_builder(monkeypatch, tmp_path):
+def test_makecal_modelpsf_dispatches_builder(monkeypatch, tmp_path):
     calls = []
     monkeypatch.setattr(
-        makecal_v11, "build_modelpsf",
+        makecal, "build_modelpsf",
         lambda *args, **kwargs: calls.append((args, kwargs)))
-    context = makecal_v11.CalibrationContext(
+    context = makecal.CalibrationContext(
         load=FakeLoad(tmp_path), calfile="cal.par", allcaldict={},
         clobber=True, unlock=True, verbose=True)
     monkeypatch.setattr(
         context, "row",
         lambda *args, **kwargs: {"sparse": 12, "psf": 34})
-    makecal_v11.modelpsf("12-34", context)
+    makecal.modelpsf("12-34", context)
     assert calls == [(('12-34',), {
         "sparseid": 12, "psfid": 34, "apred": "daily",
         "telescope": "apo25m", "clobber": True, "unlock": True,
         "verbose": True})]
-
-
-def test_legacy_mkmodelpsf_wrapper(monkeypatch):
-    from apogee_drp.apred.cal import mkmodelpsf
-    calls = []
-    monkeypatch.setattr(
-        mkmodelpsf, "build_modelpsf",
-        lambda *args, **kwargs: calls.append((args, kwargs)) or ["done"])
-    assert mkmodelpsf.mkmodelpsf(
-        "12-34", sparseid=12, psfid=34, clobber=True) == ["done"]
-    assert calls[0][0] == ("12-34",)
-    assert calls[0][1]["clobber"] is True

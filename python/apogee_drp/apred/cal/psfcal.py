@@ -19,15 +19,15 @@ from scipy.ndimage import uniform_filter1d
 from scipy.signal import find_peaks
 
 from .. import ap3d
-from ...utils import lock
+from ...utils import apload
 from ...utils.bitmask import PixelBitMask
+from .utils import product_build_lock
 
 CHIPS = ("a", "b", "c")
 
 __all__ = [
     "CHIPS", "TraceSolution", "build_empirical_psf", "build_fiber",
     "build_modelpsf", "build_psf", "build_sparse", "find_traces",
-    "modelpsf_product_files", "product_files",
 ]
 
 
@@ -40,45 +40,6 @@ class TraceSolution:
     coefficients: np.ndarray
     peak_positions: np.ndarray
     mean_distance: float
-
-
-def _make_load(*, apred, telescope):
-    from ...utils.apload import ApLoad
-
-    return ApLoad(apred=apred, telescope=telescope)
-
-
-def _chip_filename(load, kind, number, chip):
-    template = load.filename(kind, num=int(number), chips=True)
-    return template.replace(f"{kind}-", f"{kind}-{chip}-")
-
-
-def product_files(load, caltype, number):
-    """Return every file required for a complete calibration product."""
-    kind = str(caltype).lower()
-    if kind == "fiber":
-        return [_chip_filename(load, "Fiber", number, chip) for chip in CHIPS]
-    if kind == "sparse":
-        sparse = load.filename("Sparse", num=int(number), chips=True)
-        return [sparse] + [
-            _chip_filename(load, "EPSF", number, chip) for chip in CHIPS
-        ]
-    if kind == "psf":
-        return [
-            _chip_filename(load, product, number, chip)
-            for product in ("PSF", "EPSF", "ETrace") for chip in CHIPS
-        ]
-    raise ValueError(f"Unsupported PSF calibration type {caltype!r}")
-
-
-def modelpsf_product_files(load, name):
-    """Return ModelPSF filenames while preserving compound names."""
-    value = str(name).strip()
-    if not value:
-        raise ValueError("ModelPSF name cannot be empty")
-    template = load.filename("PSFModel", num=value, chips=True)
-    return [template.replace("PSFModel-", f"PSFModel-{chip}-", 1)
-            for chip in CHIPS]
 
 
 def _quadratic_peak(profile, index):
@@ -226,8 +187,8 @@ def build_empirical_psf(frame, solution, *, half_width=7,
 
 def _reference_positions(load, chip_index, *, fiberid=None, yshift=0.0):
     if fiberid is not None and int(fiberid) > 0:
-        trace = fits.getdata(_chip_filename(load, "Fiber", fiberid,
-                                            CHIPS[chip_index]))
+        trace = fits.getdata(load.filename(
+            "Fiber", num=fiberid, chip=CHIPS[chip_index]))
         return np.asarray(trace)[:, np.asarray(trace).shape[1] // 2]
     root = os.environ.get("APOGEE_DRP_DIR")
     if root is None:
@@ -242,18 +203,18 @@ def _reduce(load, exposures, *, darkid=None, flatid=None, bpmid=None,
         limits = np.asarray(maxread) if maxread is not None else np.asarray(None)
         limit = (limits[chip_index] if limits.ndim > 0 else maxread)
         calibrations = {
-            "dark": _chip_filename(load, "Dark", darkid, chip)
+            "dark": load.filename("Dark", num=darkid, chip=chip)
                     if darkid and int(darkid) > 0 else None,
-            "flat": _chip_filename(load, "Flat", flatid, chip)
+            "flat": load.filename("Flat", num=flatid, chip=chip)
                     if flatid and int(flatid) > 0 else None,
-            "bpm": _chip_filename(load, "BPM", bpmid, chip)
+            "bpm": load.filename("BPM", num=bpmid, chip=chip)
                    if bpmid and int(bpmid) > 0 else None,
-            "littrow": _chip_filename(load, "Littrow", littrowid, chip)
+            "littrow": load.filename("Littrow", num=littrowid, chip=chip)
                        if littrowid and int(littrowid) > 0 else None,
         }
         for exposure in exposures:
-            raw = _chip_filename(load, "R", exposure, chip)
-            output = _chip_filename(load, "2D", exposure, chip)
+            raw = load.filename("R", num=exposure, chip=chip)
+            output = load.filename("2D", num=exposure, chip=chip)
             if Path(output).exists() and not clobber:
                 continue
             ap3d.process_file(
@@ -263,7 +224,7 @@ def _reduce(load, exposures, *, darkid=None, flatid=None, bpmid=None,
 
 
 def _load_frame(load, exposure, chip):
-    filename = _chip_filename(load, "2D", exposure, chip)
+    filename = load.filename("2D", num=exposure, chip=chip)
     return {
         "header": fits.getheader(filename, 0),
         "flux": fits.getdata(filename, 1),
@@ -401,38 +362,18 @@ def _write_psf(filename, frame, solution, profiles):
     ]).writeto(filename, overwrite=True)
 
 
-def _prepare_outputs(load, caltype, number, *, clobber, unlock, verbose):
-    outputs = product_files(load, caltype, number)
-    target = outputs[0]
-    lock.lock(target, waittime=10, unlock=unlock)
-    if all(Path(filename).exists() and Path(filename).stat().st_size > 0
-           for filename in outputs) and not clobber:
-        if verbose:
-            print(f"{caltype.capitalize()} {int(number):08d} already exists")
-        return outputs, False
-    lock.lock(target, lock=True)
-    for filename in outputs:
-        path = Path(filename)
-        if path.exists():
-            path.unlink()
-        path.parent.mkdir(parents=True, exist_ok=True)
-    return outputs, True
-
-
 def build_fiber(frameid, *, apred="daily", telescope="apo25m", darkid=None,
                 flatid=None, bpmid=None, yshift=None, average=50,
                 clobber=False, unlock=False, verbose=False,
                 reference_positions: Mapping[str, np.ndarray] | None = None):
     """Build the three trace-only Fiber calibration files."""
-    load = _make_load(apred=apred, telescope=telescope)
-    outputs, build = _prepare_outputs(
-        load, "fiber", frameid, clobber=clobber, unlock=unlock,
-        verbose=verbose)
-    if not build:
-        return outputs
-    target = outputs[0]
-    shifts = np.broadcast_to(0.0 if yshift is None else yshift, (3,))
-    try:
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    with product_build_lock(load, "fiber", frameid, clobber=clobber,
+                            unlock=unlock, verbose=verbose) as (build, outputs):
+        if not build:
+            return
+
+        shifts = np.broadcast_to(0.0 if yshift is None else yshift, (3,))
         _reduce(load, [frameid], darkid=darkid, flatid=flatid, bpmid=bpmid,
                 clobber=clobber, verbose=verbose)
         for index, chip in enumerate(CHIPS):
@@ -442,9 +383,6 @@ def build_fiber(frameid, *, apred="daily", telescope="apo25m", darkid=None,
                              load, index, yshift=shifts[index]))
             solution = find_traces(frame, reference, average=average)
             _write_trace(outputs[index], solution, frame["header"])
-        return outputs
-    finally:
-        lock.lock(target, clear=True)
 
 
 def build_sparse(frames, *, apred="daily", telescope="apo25m", darkid=None,
@@ -455,15 +393,13 @@ def build_sparse(frames, *, apred="daily", telescope="apo25m", darkid=None,
     exposures = np.atleast_1d(frames).astype(int).tolist()
     if not exposures:
         raise ValueError("frames must contain at least one exposure")
-    load = _make_load(apred=apred, telescope=telescope)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
     outid = exposures[0]
-    outputs, build = _prepare_outputs(
-        load, "sparse", outid, clobber=clobber, unlock=unlock,
-        verbose=verbose)
-    if not build:
-        return outputs
-    target = outputs[0]
-    try:
+    with product_build_lock(load, "sparse", outid, clobber=clobber,
+                            unlock=unlock, verbose=verbose) as (build, outputs):
+        if not build:
+            return
+
         _reduce(load, exposures, darkid=darkid, flatid=flatid, bpmid=bpmid,
                 maxread=maxread, clobber=clobber, verbose=verbose)
         dark_exposures = ([] if darkframes is None else [
@@ -488,9 +424,6 @@ def build_sparse(frames, *, apred="daily", telescope="apo25m", darkid=None,
                 smooth_columns=average)
             _write_epsf(outputs[index + 1], profiles, frame["header"])
         fits.writeto(outputs[0], np.stack(chip_images), overwrite=True)
-        return outputs
-    finally:
-        lock.lock(target, clear=True)
 
 
 def build_psf(frameid, *, apred="daily", telescope="apo25m", darkid=None,
@@ -498,16 +431,17 @@ def build_psf(frameid, *, apred="daily", telescope="apo25m", darkid=None,
               littrowid=None, average=50, clobber=False, unlock=False,
               verbose=False):
     """Build complete PSF, EPSF, and ETrace products for three chips."""
-    load = _make_load(apred=apred, telescope=telescope)
     if sparseid is None or int(sparseid) <= 0:
         raise ValueError("sparseid is required to build a full PSF calibration")
-    outputs, build = _prepare_outputs(
-        load, "psf", frameid, clobber=clobber, unlock=unlock,
-        verbose=verbose)
-    if not build:
-        return outputs
-    target = outputs[0]
-    try:
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    with product_build_lock(load, "psf", frameid, clobber=clobber,
+                            unlock=unlock, verbose=verbose) as (build, outputs):
+        if not build:
+            return
+
+        psf_files = outputs[0:3]
+        epsf_files = outputs[3:6]
+        trace_files = outputs[6:9]
         _reduce(load, [frameid], darkid=darkid, flatid=flatid, bpmid=bpmid,
                 littrowid=littrowid, clobber=clobber, verbose=verbose)
         for index, chip in enumerate(CHIPS):
@@ -517,17 +451,11 @@ def build_psf(frameid, *, apred="daily", telescope="apo25m", darkid=None,
             profiles = build_empirical_psf(
                 frame, solution, half_width=7, smooth_columns=average)
             sparse_profiles = _load_epsf(
-                _chip_filename(load, "EPSF", sparseid, chip))
+                load.filename("EPSF", num=sparseid, chip=chip))
             profiles = _combine_profiles(profiles, sparse_profiles)
-            psf_file = _chip_filename(load, "PSF", frameid, chip)
-            epsf_file = _chip_filename(load, "EPSF", frameid, chip)
-            trace_file = _chip_filename(load, "ETrace", frameid, chip)
-            _write_psf(psf_file, frame, solution, profiles)
-            _write_epsf(epsf_file, profiles, frame["header"])
-            _write_trace(trace_file, solution, frame["header"])
-        return outputs
-    finally:
-        lock.lock(target, clear=True)
+            _write_psf(psf_files[index], frame, solution, profiles)
+            _write_epsf(epsf_files[index], profiles, frame["header"])
+            _write_trace(trace_files[index], solution, frame["header"])
 
 
 def _make_profile_grid(epsf_file, sparse_file, *, nfbin, ncbin, verbose):
@@ -552,11 +480,16 @@ def _validate_model_grid(profiles, labels, offsets):
         raise ValueError("ModelPSF grid contains nonfinite values")
     if np.any(profiles < 0):
         raise ValueError("ModelPSF profiles cannot be negative")
-    normalization = np.trapezoid(profiles, offsets, axis=2)
+    # np.trapezoid was added in NumPy 2.0; the production DRP environment
+    # still uses an older NumPy where np.trapz is the compatible spelling.
+    normalization = np.trapz(profiles, offsets, axis=2)
     if np.any(normalization <= 0):
         raise ValueError("ModelPSF contains an empty profile")
     normalized = profiles / normalization[:, :, None]
-    return (normalized.astype(np.float32), labels.astype(np.float32),
+    # PSF.gridinterp() converts query coordinates to float64.  Keeping the
+    # profile grid float64 ensures that its direct-corner and interpolated
+    # branches return the same dtype, which is required by older Numba.
+    return (normalized.astype(np.float64), labels.astype(np.float32),
             offsets.astype(np.float32))
 
 
@@ -590,28 +523,24 @@ def build_modelpsf(name, *, sparseid, psfid, apred="daily",
         raise ValueError("psfid is required")
     if int(nfbin) <= 0 or int(ncbin) <= 0:
         raise ValueError("nfbin and ncbin must be positive")
-    load = _make_load(apred=apred, telescope=telescope)
-    outputs = modelpsf_product_files(load, name)
-    target = outputs[0].replace("PSFModel-a-", "PSFModel-")
-    lock.lock(target, waittime=10, unlock=unlock)
-    if all(Path(filename).is_file() and Path(filename).stat().st_size > 0
-           for filename in outputs) and not clobber:
-        if verbose:
-            print(f" ModelPSF file: {target} already made")
-        return outputs
-    sparse_file = load.filename("Sparse", num=int(sparseid), chips=True)
-    epsf_files = [_chip_filename(load, "EPSF", psfid, chip) for chip in CHIPS]
-    missing = [filename for filename in [sparse_file, *epsf_files]
-               if not Path(filename).is_file() or Path(filename).stat().st_size == 0]
-    if missing:
-        raise FileNotFoundError("Missing ModelPSF inputs: " + ", ".join(missing))
-    lock.lock(target, lock=True)
-    try:
-        for filename in outputs:
-            path = Path(filename)
-            if path.exists():
-                path.unlink()
-            path.parent.mkdir(parents=True, exist_ok=True)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    with product_build_lock(load, "modelpsf", name, clobber=clobber,
+                            unlock=unlock, verbose=verbose) as (build, outputs):
+        if not build:
+            return
+
+        sparse_file = load.filename("Sparse", num=sparseid)
+        epsf_files = [load.filename("EPSF", num=psfid, chip=chip)
+                      for chip in CHIPS]
+        missing = [
+            filename for filename in [sparse_file, *epsf_files]
+            if (not Path(filename).is_file()
+                or Path(filename).stat().st_size == 0)
+        ]
+        if missing:
+            raise FileNotFoundError(
+                "Missing ModelPSF inputs: " + ", ".join(missing))
+
         for chip, epsf_file, output in zip(CHIPS, epsf_files, outputs):
             profiles, labels, offsets = _make_profile_grid(
                 epsf_file, sparse_file, nfbin=nfbin, ncbin=ncbin,
@@ -624,7 +553,3 @@ def build_modelpsf(name, *, sparseid, psfid, apred="daily",
         if not all(Path(filename).is_file() and Path(filename).stat().st_size > 0
                    for filename in outputs):
             raise RuntimeError(f"ModelPSF {name} did not create all chip files")
-        Path(target).with_suffix(".dat").touch()
-        return outputs
-    finally:
-        lock.lock(target, clear=True)
