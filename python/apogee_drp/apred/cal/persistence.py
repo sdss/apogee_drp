@@ -53,11 +53,9 @@ def _process(load, frames, *, cmjd, darkid, flatid, clobber, unlock,
              verbose):
     from ..process import process
 
-    return process(
-        frames, load=load, cmjd=cmjd, darkid=darkid, flatid=flatid,
-        nfs=1, doap3dproc=True, clobber=clobber, unlock=unlock,
-        verbose=verbose,
-    )
+    return process(frames, load=load, cmjd=cmjd, darkid=darkid,
+                   flatid=flatid, nfs=1, doap3dproc=True, clobber=clobber,
+                   unlock=unlock, verbose=verbose, )
 
 
 def _write_persist(filename, mask, rate, header, *, apred, threshold):
@@ -87,18 +85,14 @@ def build_persist(persistid, dark, flat, *, apred="daily",
     threshold = float(threshold)
 
     load = apload.ApLoad(apred=apred, telescope=telescope)
-    with product_build_lock(
-        load, "persist", persistid, clobber=clobber, unlock=unlock,
-        verbose=verbose,
-    ) as (build, outputs):
+    with product_build_lock(load, "persist", persistid, clobber=clobber,
+                            unlock=unlock, verbose=verbose, ) as (build, outputs):
         if not build:
             return
 
-        _process(
-            load, [dark, flat], cmjd=cmjd, darkid=darkid,
-            flatid=flatid, clobber=clobber, unlock=unlock,
-            verbose=verbose,
-        )
+        _process(load, [dark, flat], cmjd=cmjd, darkid=darkid,
+                 flatid=flatid, clobber=clobber, unlock=unlock,
+                 verbose=verbose, )
         if len(outputs) != len(CHIPS):
             raise RuntimeError(
                 f"Persist product {persistid} resolved to {len(outputs)} "
@@ -110,12 +104,10 @@ def build_persist(persistid, dark, flat, *, apred="daily",
         for chip, output in zip(CHIPS, outputs):
             dark_frame = dark_frames[chip]
             flat_frame = flat_frames[chip]
-            mask, rate = make_persistence_mask(
-                dark_frame["flux"], flat_frame["flux"],
-                dark_frame["mask"], flat_frame["mask"],
-                threshold=threshold,
-            )
-            _write_persist(
-                output, mask, rate, dark_frame["header"], apred=apred,
-                threshold=threshold,
-            )
+            mask, rate = make_persistence_mask(dark_frame["flux"],
+                                               flat_frame["flux"],
+                                               dark_frame["mask"],
+                                               flat_frame["mask"],
+                                               threshold=threshold, )
+            _write_persist(output, mask, rate, dark_frame["header"],
+                           apred=apred, threshold=threshold, )
