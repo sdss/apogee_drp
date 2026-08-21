@@ -6,6 +6,8 @@ import numpy as np
 import pytest
 from astropy.io import fits
 
+from apogee_drp.apred import process as process_module
+from apogee_drp.apred import wave as wave_module
 from apogee_drp.apred.cal import makecal
 from apogee_drp.apred.cal import utils as cal_utils
 from apogee_drp.apred.cal import wavecal as wv
@@ -73,6 +75,9 @@ def test_obsolete_product_filename_and_load_helpers_are_removed():
     assert not hasattr(wv, "_chip_filename")
     assert not hasattr(wv, "_make_load")
     assert not hasattr(wv, "_complete")
+    assert not hasattr(wv, "_process_frames")
+    assert not hasattr(wv, "_run_wavecal")
+    assert not hasattr(wv, "_run_dailywave")
 
 
 @pytest.mark.parametrize("lamp,center,threshold", [
@@ -101,8 +106,11 @@ def patch_common(monkeypatch, tmp_path):
     monkeypatch.setattr(cal_utils.lock, "lock",
                         lambda *args, **kwargs: locks.append((args, kwargs)))
     process_calls = []
-    monkeypatch.setattr(wv, "_process_frames",
-                        lambda *args, **kwargs: process_calls.append((args, kwargs)))
+    monkeypatch.setattr(
+        process_module,
+        "process",
+        lambda *args, **kwargs: process_calls.append((args, kwargs)),
+    )
     monkeypatch.setattr(wv, "_check_arc", lambda load, frame: (True, "okay"))
     return load, locks, process_calls
 
@@ -118,11 +126,19 @@ def test_build_wave_workflow(monkeypatch, tmp_path):
     calls = []
     def run(frames, **kwargs):
         calls.append((frames, kwargs)); write_products(load, kwargs["name"])
-    monkeypatch.setattr(wv, "_run_wavecal", run)
+    monkeypatch.setattr(wave_module, "wavecal", run)
     assert wv.build_wave(
         [123, 124], name=123, psfid=50, verbose=True) is None
     assert process_calls[0][0] == ([123, 124],)
+    assert process_calls[0][1]["load"] is load
+    assert process_calls[0][1]["fluxid"] is None
+    assert process_calls[0][1]["doproc"] is True
+    assert process_calls[0][1]["onedclobber"] is False
     assert calls[0][0] == [123, 124]
+    np.testing.assert_array_equal(calls[0][1]["rows"], np.arange(300))
+    assert calls[0][1]["name"] == 123
+    assert calls[0][1]["inst"] == "apogee-n"
+    assert calls[0][1]["vers"] == "daily"
     assert calls[0][1]["dependencies"] is True
     assert locks[-1][1] == {"clear": True}
 
@@ -132,7 +148,7 @@ def test_build_wave_drops_low_flux_member(monkeypatch, tmp_path):
     monkeypatch.setattr(wv, "_check_arc",
                         lambda load, frame: (frame == 124, str(frame)))
     calls = []
-    monkeypatch.setattr(wv, "_run_wavecal",
+    monkeypatch.setattr(wave_module, "wavecal",
                         lambda frames, **kwargs: (calls.append(frames), write_products(load, 123)))
     wv.build_wave([123, 124], psfid=50)
     assert calls == [[124]]
@@ -145,7 +161,7 @@ def test_build_wave_nofit_verifies_lines(monkeypatch, tmp_path):
             filename = Path(wv._lines_file(load, frame))
             filename.parent.mkdir(parents=True, exist_ok=True)
             filename.write_bytes(b"lines")
-    monkeypatch.setattr(wv, "_run_wavecal", run)
+    monkeypatch.setattr(wave_module, "wavecal", run)
     assert wv.build_wave([123, 124], psfid=50, nofit=True) is None
     assert all(Path(wv._lines_file(load, frame)).is_file()
                for frame in (123, 124))
@@ -160,7 +176,7 @@ def test_build_wave_nofit_does_not_delete_wave_product(monkeypatch, tmp_path):
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(b"lines")
 
-    monkeypatch.setattr(wv, "_run_wavecal", run)
+    monkeypatch.setattr(wave_module, "wavecal", run)
     wv.build_wave(123, psfid=50, nofit=True)
     assert not load.delete_calls
     assert load.product_exists("wave", 123)
@@ -190,7 +206,7 @@ def test_build_wave_requires_good_arc(monkeypatch, tmp_path):
 
 def test_build_wave_clears_lock_on_failure(monkeypatch, tmp_path):
     _, locks, _ = patch_common(monkeypatch, tmp_path)
-    monkeypatch.setattr(wv, "_run_wavecal", lambda *args, **kwargs: None)
+    monkeypatch.setattr(wave_module, "wavecal", lambda *args, **kwargs: None)
     with pytest.raises(RuntimeError, match="all chip"):
         wv.build_wave(123, psfid=50)
     assert locks[-1][1] == {"clear": True}
@@ -203,7 +219,7 @@ def test_build_multiwave_uses_available_lines_without_requiring_all(monkeypatch,
     def run(frames, **kwargs):
         calls.append((frames, kwargs))
         write_products(load, 60000, "multiwave")
-    monkeypatch.setattr(wv, "_run_wavecal", run)
+    monkeypatch.setattr(wave_module, "wavecal", run)
     wv.build_multiwave([123, 124, 125], name=60000)
     assert calls[0][0] == [123, 124, 125]
     assert calls[0][1]["dependencies"] is False
@@ -235,7 +251,7 @@ def test_build_multiwave_explicit_dependencies(monkeypatch, tmp_path):
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(b"x")
     monkeypatch.setattr(wv, "build_wave", single)
-    monkeypatch.setattr(wv, "_run_wavecal",
+    monkeypatch.setattr(wave_module, "wavecal",
                         lambda frames, **kwargs: write_products(
                             load, 60000, "multiwave"))
     wv.build_multiwave([1, 2, 3, 4], name=60000, dependencies=True,
@@ -249,7 +265,7 @@ def test_build_dailywave_forwards_dependency_policy(monkeypatch, tmp_path):
     def run(mjd, **kwargs):
         calls.append((mjd, kwargs))
         write_products(load, mjd, "dailywave")
-    monkeypatch.setattr(wv, "_run_dailywave", run)
+    monkeypatch.setattr(wave_module, "dailywave", run)
     wv.build_dailywave(60000, dependencies=False)
     assert calls[0][1]["dependencies"] is False
     assert calls[0][1]["observatory"] == "apo"
@@ -258,7 +274,7 @@ def test_build_dailywave_forwards_dependency_policy(monkeypatch, tmp_path):
 def test_build_dailywave_dependencies_can_be_enabled(monkeypatch, tmp_path):
     load, _, _ = patch_common(monkeypatch, tmp_path)
     calls = []
-    monkeypatch.setattr(wv, "_run_dailywave",
+    monkeypatch.setattr(wave_module, "dailywave",
                         lambda mjd, **kwargs: (
                             calls.append(kwargs),
                             write_products(load, mjd, "dailywave")))
@@ -277,7 +293,7 @@ def test_build_dailywave_existing_short_circuits(monkeypatch, tmp_path,
 
 def test_build_dailywave_clears_lock_on_failure(monkeypatch, tmp_path):
     _, locks, _ = patch_common(monkeypatch, tmp_path)
-    monkeypatch.setattr(wv, "_run_dailywave", lambda *args, **kwargs: None)
+    monkeypatch.setattr(wave_module, "dailywave", lambda *args, **kwargs: None)
     with pytest.raises(RuntimeError, match="all chip"):
         wv.build_dailywave(60000)
     assert locks[-1][1] == {"clear": True}
