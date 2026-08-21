@@ -8,6 +8,7 @@ from astropy.io import fits
 
 from apogee_drp.apred.cal import fluxcal
 from apogee_drp.apred.cal import makecal
+from apogee_drp.apred.cal import utils as cal_utils
 
 
 class FakeLoad:
@@ -17,20 +18,50 @@ class FakeLoad:
 
     def __init__(self, root):
         self.root = Path(root)
+        self.delete_calls = []
 
     def cmjd(self, number):
         return "60000"
 
-    def filename(self, kind, num=None, chips=False, **kwargs):
-        directory = self.root / ("exp" if kind == "1D" else "cal")
-        return str(directory / f"ap{kind}-{int(num):08d}.fits")
+    def filename(self, kind, num=None, chip=None, directory=False, **kwargs):
+        root = self.root / ("exp" if kind == "1D" else "cal")
+        if directory:
+            return str(root)
+        infix = f"-{chip}" if chip is not None else ""
+        return str(root / f"ap{kind}{infix}-{int(num):08d}.fits")
+
+    def product_files(self, product, name):
+        kind = {"flux": "Flux", "response": "Response", "wave": "Wave"}[product]
+        return [self.filename(kind, num=name, chip=chip) for chip in "abc"]
+
+    def product_status(self, product, name):
+        return {
+            filename: Path(filename).is_file() and Path(filename).stat().st_size > 0
+            for filename in self.product_files(product, name)
+        }
+
+    def product_exists(self, product, name):
+        return all(self.product_status(product, name).values())
+
+    def product_delete(self, product, name, **kwargs):
+        self.delete_calls.append((product, name, kwargs))
+        for filename in self.product_files(product, name):
+            path = Path(filename)
+            if path.exists() or path.is_symlink():
+                path.unlink()
 
 
 def test_product_files_are_three_chips(tmp_path):
-    names = fluxcal.product_files(FakeLoad(tmp_path), 123)
+    names = FakeLoad(tmp_path).product_files("flux", 123)
     assert [Path(name).name for name in names] == [
         "apFlux-a-00000123.fits", "apFlux-b-00000123.fits",
         "apFlux-c-00000123.fits"]
+
+
+def test_obsolete_product_filename_and_load_helpers_are_removed():
+    assert not hasattr(fluxcal, "product_files")
+    assert not hasattr(fluxcal, "_chip_filename")
+    assert not hasattr(fluxcal, "_make_load")
 
 
 def test_planck_shape_and_temperature_dependence():
@@ -161,7 +192,7 @@ def test_flux_calibration_validates_inputs():
 
 def test_load_1d_transposes_fits_arrays(tmp_path):
     load = FakeLoad(tmp_path)
-    filename = Path(fluxcal._chip_filename(load, "1D", 12, "a"))
+    filename = Path(load.filename("1D", num=12, chip="a"))
     filename.parent.mkdir(parents=True)
     fits.HDUList([
         fits.PrimaryHDU(header=fits.Header({"EXPTYPE": "DOMEFLAT"})),
@@ -176,10 +207,10 @@ def test_load_1d_transposes_fits_arrays(tmp_path):
 
 def patch_builder(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
-    monkeypatch.setattr(fluxcal, "_make_load", lambda **kwargs: load)
+    monkeypatch.setattr(fluxcal.apload, "ApLoad", lambda **kwargs: load)
     locks, processes = [], []
     monkeypatch.setattr(
-        fluxcal.lock, "lock",
+        cal_utils.lock, "lock",
         lambda *args, **kwargs: locks.append((args, kwargs)))
     monkeypatch.setattr(
         fluxcal, "_process",
@@ -204,10 +235,11 @@ def patch_builder(monkeypatch, tmp_path):
 
 def test_build_flux_processes_and_writes_data_model(monkeypatch, tmp_path):
     load, locks, processes = patch_builder(monkeypatch, tmp_path)
-    outputs = fluxcal.build_flux(
+    result = fluxcal.build_flux(
         [12, 13], darkid=1, flatid=2, psfid=3, waveid=4,
         littrowid=5, persistid=6, verbose=True)
-    assert outputs == fluxcal.product_files(load, 12)
+    assert result is None
+    outputs = load.product_files("flux", 12)
     assert processes[0][0][1] == [12, 13]
     assert processes[0][1]["darkid"] == 1
     assert processes[0][1]["persistid"] == 6
@@ -224,19 +256,34 @@ def test_build_flux_processes_and_writes_data_model(monkeypatch, tmp_path):
 
 
 def test_build_flux_existing_short_circuit(monkeypatch, tmp_path, capsys):
-    load, _, processes = patch_builder(monkeypatch, tmp_path)
-    outputs = fluxcal.product_files(load, 12)
+    load, locks, processes = patch_builder(monkeypatch, tmp_path)
+    outputs = load.product_files("flux", 12)
     for filename in outputs:
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
         Path(filename).write_bytes(b"existing")
-    assert fluxcal.build_flux(12, verbose=True) == outputs
+    assert fluxcal.build_flux(12, verbose=True) is None
     assert not processes
-    assert "already made" in capsys.readouterr().out
+    assert not locks
+    assert "flux product 12 already exists" in capsys.readouterr().out
+
+
+def test_existing_flux_still_builds_requested_response(monkeypatch, tmp_path):
+    load, _, _ = patch_builder(monkeypatch, tmp_path)
+    for filename in load.product_files("flux", 12):
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
+        Path(filename).write_bytes(b"existing")
+    calls = []
+    monkeypatch.setattr(
+        fluxcal, "build_response",
+        lambda *args, **kwargs: calls.append((args, kwargs)))
+    fluxcal.build_flux(12, waveid=99, temp=4000)
+    assert calls[0][0] == (12,)
+    assert calls[0][1]["load"] is load
 
 
 def test_build_flux_partial_product_is_rebuilt(monkeypatch, tmp_path):
     load, _, processes = patch_builder(monkeypatch, tmp_path)
-    outputs = fluxcal.product_files(load, 12)
+    outputs = load.product_files("flux", 12)
     Path(outputs[0]).parent.mkdir(parents=True)
     Path(outputs[0]).write_bytes(b"partial")
     fluxcal.build_flux(12)
@@ -261,18 +308,22 @@ def test_build_flux_rejects_obsolete_holtz_branch():
 
 def test_build_response_writes_three_vectors(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
-    monkeypatch.setattr(fluxcal.lock, "lock", lambda *args, **kwargs: None)
-    for filename in fluxcal.product_files(load, 12):
+    monkeypatch.setattr(cal_utils.lock, "lock", lambda *args, **kwargs: None)
+    for filename in load.product_files("flux", 12):
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
         fits.HDUList([
             fits.PrimaryHDU(), fits.ImageHDU(), fits.ImageHDU(),
             fits.ImageHDU(np.ones(20)),
         ]).writeto(filename)
+    for filename in load.product_files("wave", 99):
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
+        Path(filename).write_bytes(b"wave")
     monkeypatch.setattr(
         fluxcal, "_load_wavelength",
         lambda load, waveid, chip: np.linspace(12000, 17000, 20))
-    outputs = fluxcal.build_response(
-        12, waveid=99, temp=4000, load=load)
+    result = fluxcal.build_response(12, waveid=99, temp=4000, load=load)
+    assert result is None
+    outputs = load.product_files("response", 12)
     assert len(outputs) == 3
     for filename in outputs:
         data = fits.getdata(filename)
@@ -280,35 +331,74 @@ def test_build_response_writes_three_vectors(monkeypatch, tmp_path):
         assert np.all(np.isfinite(data))
 
 
+def test_build_response_existing_short_circuits_without_lock(
+        monkeypatch, tmp_path, capsys):
+    load = FakeLoad(tmp_path)
+    lock_calls = []
+    monkeypatch.setattr(
+        cal_utils.lock, "lock",
+        lambda *args, **kwargs: lock_calls.append((args, kwargs)))
+    for filename in load.product_files("response", 12):
+        Path(filename).parent.mkdir(parents=True, exist_ok=True)
+        Path(filename).write_bytes(b"existing")
+    assert fluxcal.build_response(
+        12, waveid=99, temp=4000, load=load, verbose=True) is None
+    assert not lock_calls
+    assert "response product 12 already exists" in capsys.readouterr().out
+
+
+def test_build_response_reports_missing_registry_dependencies(
+        monkeypatch, tmp_path):
+    load = FakeLoad(tmp_path)
+    lock_calls = []
+    monkeypatch.setattr(
+        cal_utils.lock, "lock",
+        lambda *args, **kwargs: lock_calls.append((args, kwargs)))
+    with pytest.raises(
+            FileNotFoundError, match="Missing Response dependency") as error:
+        fluxcal.build_response(12, waveid=99, temp=4000, load=load)
+    assert "apFlux-a-00000012.fits" in str(error.value)
+    assert lock_calls[-1][1] == {"clear": True}
+
+
 def test_response_requires_wave_and_temperature():
     with pytest.raises(ValueError, match="waveid and temp"):
         fluxcal.build_response(12, waveid=None, temp=4000)
 
 
-def test_makecal_flux_dispatches_v2_builder(monkeypatch, tmp_path):
+def test_makecal_flux_dispatches_current_builder(monkeypatch, tmp_path):
     calls = []
     monkeypatch.setattr(
-        makecal_v9, "build_flux",
+        makecal, "build_flux",
         lambda *args, **kwargs: calls.append((args, kwargs)))
-    context = makecal_v9.CalibrationContext(
+    context = makecal.CalibrationContext(
         load=FakeLoad(tmp_path), calfile="cal.par", allcaldict={},
         modelpsf="40-50", verbose=True)
     monkeypatch.setattr(context, "calibrations", lambda mjd: {
         "darkid": 1, "flatid": 2, "waveid": 3,
         "littrowid": 4, "persistid": 5})
-    makecal_v9.flux("12", context)
+    makecal.flux("12", context)
     assert calls[0][0] == ([12],)
     assert calls[0][1]["modelpsf"] == "40-50"
     assert calls[0][1]["persistid"] == 5
     assert calls[0][1]["verbose"] is True
 
 
-def test_legacy_mkflux_wrapper(monkeypatch):
-    from apogee_drp.apred.cal import mkflux
+def test_makecal_response_dispatches_current_builder(monkeypatch, tmp_path):
     calls = []
     monkeypatch.setattr(
-        mkflux, "build_flux",
-        lambda *args, **kwargs: calls.append((args, kwargs)) or ["done"])
-    assert mkflux.mkflux(12, clobber=True) == ["done"]
+        makecal, "build_response",
+        lambda *args, **kwargs: calls.append((args, kwargs)))
+    context = makecal.CalibrationContext(
+        load=FakeLoad(tmp_path), calfile="cal.par", allcaldict={},
+        clobber=True, unlock=True, verbose=True)
+    monkeypatch.setattr(
+        context, "row", lambda *args, **kwargs: {"temp": 4000})
+    monkeypatch.setattr(
+        context, "calibrations", lambda mjd: {"waveid": 99})
+    makecal.response("12", context)
     assert calls[0][0] == (12,)
+    assert calls[0][1]["waveid"] == 99
+    assert calls[0][1]["temp"] == 4000
     assert calls[0][1]["clobber"] is True
+    assert calls[0][1]["unlock"] is True

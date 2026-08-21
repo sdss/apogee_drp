@@ -8,38 +8,25 @@ import numpy as np
 from astropy.io import fits
 from scipy.ndimage import median_filter
 
-from ...utils import lock
+from ...utils import apload
+from .utils import calibration_lock, product_build_lock
 
 CHIPS = ("a", "b", "c")
 
 __all__ = [
     "arc_flux_metric", "build_dailywave", "build_multiwave", "build_wave",
-    "product_files",
 ]
 
 
-def _make_load(*, apred, telescope):
-    from ...utils.apload import ApLoad
-    return ApLoad(apred=apred, telescope=telescope)
-
-
-def _chip_filename(load, kind, number, chip):
-    template = load.filename(kind, num=number, chips=True)
-    return template.replace(f"{kind}-", f"{kind}-{chip}-")
-
-
-def product_files(load, number):
-    return [_chip_filename(load, "Wave", number, chip) for chip in CHIPS]
-
-
 def _marker_file(load, number, suffix=".dat"):
-    template = load.filename("Wave", num=number, chips=True)
+    template = load.filename("Wave", num=number)
     return str(Path(template).with_suffix(suffix))
 
 
 def _lines_file(load, number):
-    return load.filename("Wave", num=int(number), chips=True).replace(
-        "Wave-", "Lines-")
+    template = Path(load.filename("Wave", num=int(number)))
+    return str(template.with_name(
+        template.name.replace("Wave-", "Lines-", 1)))
 
 
 def arc_flux_metric(image, header, *, spatial_bin=8, smooth_width=7):
@@ -73,7 +60,7 @@ def arc_flux_metric(image, header, *, spatial_bin=8, smooth_width=7):
 
 
 def _check_arc(load, number):
-    filename = _chip_filename(load, "2D", int(number), "b")
+    filename = load.filename("2D", num=int(number), chip="b")
     if not Path(filename).is_file():
         return False, f"{filename} NOT FOUND"
     with fits.open(filename) as hdus:
@@ -105,11 +92,6 @@ def _run_wavecal(frames, *, name, load, npoly, nofit, plot, clobber,
         dependencies=dependencies)
 
 
-def _complete(files):
-    return all(Path(filename).is_file() and Path(filename).stat().st_size > 0
-               for filename in files)
-
-
 def build_wave(waveid, *, name=None, apred="daily", telescope="apo25m",
                darkid=None, flatid=None, psfid=None, modelpsf=None,
                fiberid=None, npoly=4, clobber=False, nowait=False,
@@ -120,22 +102,23 @@ def build_wave(waveid, *, name=None, apred="daily", telescope="apo25m",
     if not frames:
         raise ValueError("waveid must contain at least one exposure")
     output_name = frames[0] if name is None else name
-    load = _make_load(apred=apred, telescope=telescope)
-    outputs = product_files(load, output_name)
-    target = outputs[0].replace("Wave-a-", "Wave-")
-    lock.lock(target, waittime=(0 if nowait else 10), unlock=unlock)
-    if not nofit and _complete(outputs) and not clobber:
-        if verbose:
-            print(f" Wavecal file: {target} already made")
-        return outputs
-    lock.lock(target, lock=True)
-    try:
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    waittime = 0 if nowait else 10
+    if nofit:
+        lockfile = Path(load.filename("Wave", num=output_name))
+        lockfile.parent.mkdir(parents=True, exist_ok=True)
+        lock_context = calibration_lock(
+            lockfile, waittime=waittime, unlock=unlock)
+    else:
+        lock_context = product_build_lock(
+            load, "wave", output_name, clobber=clobber, unlock=unlock,
+            waittime=waittime, verbose=verbose)
+
+    with lock_context as state:
         if not nofit:
-            for filename in outputs:
-                path = Path(filename)
-                if path.exists():
-                    path.unlink()
-                path.parent.mkdir(parents=True, exist_ok=True)
+            build, _ = state
+            if not build:
+                return
         if psfid is None and modelpsf is None:
             raise ValueError("psfid or modelpsf is required to process arc exposures")
         _process_frames(
@@ -151,7 +134,7 @@ def build_wave(waveid, *, name=None, apred="daily", telescope="apo25m",
                 usable.append(frame)
         if not usable:
             raise ValueError("No input arc exposure passed the flux check")
-        result = _run_wavecal(
+        _run_wavecal(
             usable, name=output_name, load=load, npoly=npoly, nofit=nofit,
             plot=plot, clobber=clobber, verbose=verbose, init=False,
             dependencies=True)
@@ -161,13 +144,10 @@ def build_wave(waveid, *, name=None, apred="daily", telescope="apo25m",
             if missing:
                 raise RuntimeError("Line measurement failed for: " +
                                    ", ".join(map(str, missing)))
-            return [_lines_file(load, frame) for frame in usable]
-        if not _complete(outputs):
+            return
+        if not load.product_exists("wave", output_name):
             raise RuntimeError("Wavelength solver did not create all chip products")
         Path(_marker_file(load, output_name)).touch()
-        return outputs
-    finally:
-        lock.lock(target, clear=True)
 
 
 def build_multiwave(waveid, *, name=None, apred="daily", telescope="apo25m",
@@ -179,21 +159,13 @@ def build_multiwave(waveid, *, name=None, apred="daily", telescope="apo25m",
     if not frames:
         raise ValueError("waveid must contain at least one exposure")
     output_name = frames[0] if name is None else name
-    load = _make_load(apred=apred, telescope=telescope)
-    outputs = product_files(load, output_name)
-    target = outputs[0].replace("Wave-a-", "Wave-")
-    lock.lock(target, waittime=(0 if nowait else 10), unlock=unlock)
-    if _complete(outputs) and not clobber:
-        if verbose:
-            print(f" Multiwave file: {target} already made")
-        return outputs
-    lock.lock(target, lock=True)
-    try:
-        for filename in outputs:
-            path = Path(filename)
-            if path.exists():
-                path.unlink()
-            path.parent.mkdir(parents=True, exist_ok=True)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    with product_build_lock(
+        load, "multiwave", output_name, clobber=clobber, unlock=unlock,
+        waittime=(0 if nowait else 10), verbose=verbose,
+    ) as (build, _):
+        if not build:
+            return
         if dependencies:
             options = dict(single_builder_options or {})
             for index in range(0, len(frames), 2):
@@ -209,12 +181,9 @@ def build_multiwave(waveid, *, name=None, apred="daily", telescope="apo25m",
             frames, name=output_name, load=load, npoly=npoly, nofit=False,
             plot=plot, clobber=clobber, verbose=verbose, init=False,
             dependencies=False)
-        if not _complete(outputs):
+        if not load.product_exists("multiwave", output_name):
             raise RuntimeError("Multiwave solver did not create all chip products")
         Path(_marker_file(load, output_name, suffix=".multidat")).touch()
-        return outputs
-    finally:
-        lock.lock(target, clear=True)
 
 
 def _run_dailywave(mjd, *, observatory, apred, npoly, clobber, verbose,
@@ -240,28 +209,17 @@ def build_dailywave(mjd, *, apred="daily", telescope="apo25m", darkid=None,
     if nofit:
         raise ValueError("nofit is meaningful for individual wave solutions only")
     mjd = int(mjd)
-    load = _make_load(apred=apred, telescope=telescope)
-    outputs = product_files(load, mjd)
-    target = outputs[0].replace("Wave-a-", "Wave-")
-    lock.lock(target, waittime=(0 if nowait else 10), unlock=unlock)
-    if _complete(outputs) and not clobber:
-        if verbose:
-            print(f" Dailywave file: {target} already made")
-        return outputs
-    lock.lock(target, lock=True)
-    try:
-        for filename in outputs:
-            path = Path(filename)
-            if path.exists():
-                path.unlink()
-            path.parent.mkdir(parents=True, exist_ok=True)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    with product_build_lock(
+        load, "dailywave", mjd, clobber=clobber, unlock=unlock,
+        waittime=(0 if nowait else 10), verbose=verbose,
+    ) as (build, _):
+        if not build:
+            return
         _run_dailywave(
             mjd, observatory=telescope[:3].lower(), apred=apred, npoly=npoly,
             clobber=clobber, verbose=verbose, init=False,
             dependencies=dependencies)
-        if not _complete(outputs):
+        if not load.product_exists("dailywave", mjd):
             raise RuntimeError("Daily wavelength solver did not create all chip products")
         Path(_marker_file(load, mjd)).touch()
-        return outputs
-    finally:
-        lock.lock(target, clear=True)

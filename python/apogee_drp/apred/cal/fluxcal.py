@@ -10,29 +10,15 @@ import numpy as np
 from astropy.io import fits
 from scipy.ndimage import uniform_filter1d
 
-from ...utils import lock
+from ...utils import apload
 from ...utils.bitmask import PixelBitMask
+from .utils import product_build_lock
 
 CHIPS = ("a", "b", "c")
 __all__ = [
     "build_flux", "build_response", "make_flux_calibrations",
-    "make_reference_spectra", "planck", "product_files",
+    "make_reference_spectra", "planck",
 ]
-
-
-def _make_load(*, apred, telescope):
-    from ...utils.apload import ApLoad
-    return ApLoad(apred=apred, telescope=telescope)
-
-
-def _chip_filename(load, kind, number, chip):
-    template = load.filename(kind, num=int(number), chips=True)
-    return template.replace(f"{kind}-", f"{kind}-{chip}-", 1)
-
-
-def product_files(load, number, kind="Flux"):
-    """Return the three chip-level product filenames."""
-    return [_chip_filename(load, kind, number, chip) for chip in CHIPS]
 
 
 def _robust_polyfit(x, y, degree):
@@ -222,7 +208,7 @@ def make_flux_calibrations(fluxes, masks, reference, *, mjd,
 
 
 def _load_1d(load, number, chip):
-    filename = _chip_filename(load, "1D", number, chip)
+    filename = load.filename("1D", num=int(number), chip=chip)
     with fits.open(filename) as hdus:
         return {
             "header": hdus[0].header.copy(),
@@ -267,28 +253,24 @@ def build_flux(ims: Sequence[int] | int, *, apred="daily", telescope="apo25m",
     if not frames:
         raise ValueError("ims must contain at least one exposure")
     fluxid = frames[0]
-    load = _make_load(apred=apred, telescope=telescope)
-    outputs = product_files(load, fluxid)
-    target = outputs[2]
-    lock.lock(target, waittime=10, unlock=unlock)
-    exists = all(Path(name).is_file() and Path(name).stat().st_size > 0
-                 for name in outputs)
-    if exists and not clobber:
-        if verbose:
-            print(f" flux file: {target} already made")
-        return (build_response(fluxid, waveid=waveid, temp=temp, load=load,
-                               clobber=clobber, unlock=unlock, verbose=verbose)
-                if temp is not None else outputs)
-    lock.lock(target, lock=True)
-    try:
-        for filename in outputs:
-            path = Path(filename)
-            if path.exists():
-                path.unlink()
-            path.parent.mkdir(parents=True, exist_ok=True)
-        for filename in product_files(load, fluxid, "1D"):
-            path = Path(filename)
-            if path.exists():
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    with product_build_lock(
+        load, "flux", fluxid, clobber=clobber, unlock=unlock,
+        verbose=verbose,
+    ) as (build, outputs):
+        if not build:
+            if temp is not None:
+                build_response(
+                    fluxid, waveid=waveid, temp=temp, load=load,
+                    clobber=clobber, unlock=unlock, verbose=verbose)
+            return
+        if len(outputs) != len(CHIPS):
+            raise RuntimeError(
+                f"Flux product {fluxid} resolved to {len(outputs)} files; "
+                f"expected {len(CHIPS)}")
+        for chip in CHIPS:
+            path = Path(load.filename("1D", num=fluxid, chip=chip))
+            if path.exists() or path.is_symlink():
                 path.unlink()
         _process(
             load, frames, cmjd=cmjd, darkid=darkid, flatid=flatid,
@@ -314,20 +296,19 @@ def build_flux(ims: Sequence[int] | int, *, apred="daily", telescope="apo25m",
             _write_flux(filename, calibrations[index], throughputs[index],
                         reference[:, index], original[:, index],
                         chips[0]["header"], apred=apred, exptype=exptype)
-    finally:
-        lock.lock(target, clear=True)
     if temp is not None:
-        return build_response(fluxid, waveid=waveid, temp=temp, load=load,
-                              clobber=clobber, unlock=unlock, verbose=verbose)
-    return outputs
+        build_response(fluxid, waveid=waveid, temp=temp, load=load,
+                       clobber=clobber, unlock=unlock, verbose=verbose)
 
 
 def _load_wavelength(load, waveid, chip):
-    filename = _chip_filename(load, "Wave", waveid, chip)
+    filename = load.filename("Wave", num=waveid, chip=chip)
     data = np.asarray(fits.getdata(filename, 2), float)
     if data.ndim == 1:
         return data
-    return data[data.shape[0] // 2] if data.shape[0] < data.shape[1] else data[:, data.shape[1] // 2]
+    if data.shape[0] < data.shape[1]:
+        return data[data.shape[0] // 2]
+    return data[:, data.shape[1] // 2]
 
 
 def build_response(number, *, waveid, temp, load=None, apred="daily",
@@ -337,29 +318,30 @@ def build_response(number, *, waveid, temp, load=None, apred="daily",
     if waveid is None or temp is None:
         raise ValueError("response calibration requires waveid and temp")
     if load is None:
-        load = _make_load(apred=apred, telescope=telescope)
-    outputs = product_files(load, number, "Response")
-    target = outputs[2]
-    lock.lock(target, waittime=10, unlock=unlock)
-    if all(Path(name).is_file() and Path(name).stat().st_size > 0
-           for name in outputs) and not clobber:
-        if verbose:
-            print(f" response file: {target} already made")
-        return outputs
-    flux_files = product_files(load, number)
-    wave_files = [_chip_filename(load, "Wave", waveid, chip) for chip in CHIPS]
-    missing = [filename for filename in flux_files + wave_files
-               if not Path(filename).is_file() or Path(filename).stat().st_size == 0]
-    if missing:
-        raise FileNotFoundError(
-            "Missing Response dependency files: " + ", ".join(missing))
-    lock.lock(target, lock=True)
-    try:
-        for filename in outputs:
-            path = Path(filename)
-            if path.exists():
-                path.unlink()
-            path.parent.mkdir(parents=True, exist_ok=True)
+        load = apload.ApLoad(apred=apred, telescope=telescope)
+    else:
+        apred = load.apred
+    with product_build_lock(
+        load, "response", number, clobber=clobber, unlock=unlock,
+        verbose=verbose,
+    ) as (build, outputs):
+        if not build:
+            return
+        if len(outputs) != len(CHIPS):
+            raise RuntimeError(
+                f"Response product {number} resolved to {len(outputs)} "
+                f"files; expected {len(CHIPS)}")
+        flux_status = load.product_status("flux", number)
+        wave_status = load.product_status("wave", waveid)
+        missing = [
+            filename
+            for filename, complete in {**flux_status, **wave_status}.items()
+            if not complete
+        ]
+        if missing:
+            raise FileNotFoundError(
+                "Missing Response dependency files: " + ", ".join(missing))
+        flux_files = load.product_files("flux", number)
         references = [np.asarray(fits.getdata(name, 3), float)
                       for name in flux_files]
         waves = [_load_wavelength(load, waveid, chip) for chip in CHIPS]
@@ -382,6 +364,3 @@ def build_response(number, *, waveid, temp, load=None, apred="daily",
             Path(filename).parent.mkdir(parents=True, exist_ok=True)
             fits.PrimaryHDU(response.astype(np.float32), header).writeto(
                 filename, overwrite=True)
-        return outputs
-    finally:
-        lock.lock(target, clear=True)
