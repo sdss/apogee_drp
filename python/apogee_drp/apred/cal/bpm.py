@@ -9,19 +9,13 @@ import getpass
 import platform
 from datetime import datetime
 
-from apogee_drp.utils import lock, utils
-from apogee_drp.utils.bitmask import PixelBitMask
+from ...utils import apload, utils
+from ...utils.bitmask import PixelBitMask
+from .utils import product_build_lock
 
 CHIPS = ("a", "b", "c")
 
 __all__ = ["CHIPS", "build_bpm", "combine_bpm_masks"]
-
-
-def _make_load(*, apred, telescope):
-    """Construct ``ApLoad`` without importing the full pipeline eagerly."""
-    from apogee_drp.utils.apload import ApLoad
-
-    return ApLoad(apred=apred, telescope=telescope)
 
 
 def combine_bpm_masks(darkmask, flatmask=None, badrows=None, pixmask=None):
@@ -153,39 +147,23 @@ def build_bpm(bpmid, apred="daily", telescope="apo25m", darkid=None,
     if darkid is None:
         raise ValueError("darkid must be supplied")
 
-    load = _make_load(apred=apred, telescope=telescope)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
 
-    bpmid_string = f"{bpmid:08d}"
+    with product_build_lock(load, "bpm", bpmid, clobber=clobber,
+                            unlock=unlock, verbose=verbose) as (build, output_files):
+        if not build:
+            return
 
-    representative_file = load.filename("BPM",num=bpmid,chips=True)
-    lock.lock(representative_file, waittime=10, unlock=unlock)
-
-    output_files = [
-        representative_file.replace("BPM-", f"BPM-{chip}-") for chip in CHIPS
-    ]
-
-    if (all(os.path.exists(path) for path in output_files) and not clobber):
         if verbose:
-            print(f"BPM file {representative_file} already made")
-        return output_files
+            print(f"Making BPM: {int(bpmid):08d}")
 
-    for path in output_files:
-        if os.path.exists(path):
-            os.remove(path)
-
-    if verbose:
-        print(f"Making BPM: {bpmid_string}")
-    lock.lock(representative_file, lock=True)
-    
-    pixmask = PixelBitMask()
-
-    try:
+        pixmask = PixelBitMask()
         for ichip, chip in enumerate(CHIPS):
-            darkfile = load.filename("Dark",chips=True,num=darkid).replace('Dark-',f'Dark-{chip}-')
+            darkfile = load.filename("Dark", num=darkid, chip=chip)
             darkmask = fits.getdata(darkfile,ext=3)
 
             if flatid is not None and int(flatid) > 0:
-                flatfile = load.filename("Flat",chips=True,num=flatid).replace('Flat-',f'Flat-{chip}-')
+                flatfile = load.filename("Flat", num=flatid, chip=chip)
                 flatmask = fits.getdata(flatfile,ext=3)
             else:
                 flatfile = None
@@ -198,18 +176,11 @@ def build_bpm(bpmid, apred="daily", telescope="apo25m", darkid=None,
             )
             mask = mask.astype(np.int16)
             
-            outfile = output_files[ichip]
-            os.makedirs(os.path.dirname(outfile),exist_ok=True)
-
             primary = fits.PrimaryHDU(mask)
             primary.header["EXTNAME"] = "BPM"
 
             _add_provenance(primary.header, darkfile, flatfile)
             
-            fits.HDUList([primary]).writeto(outfile,overwrite=True)
-
-    finally:
-        # Always clear the lock, including when reading or writing fails.
-        lock.lock(representative_file, clear=True)
-        
-    return output_files
+            fits.HDUList([primary]).writeto(
+                output_files[ichip], overwrite=True
+            )

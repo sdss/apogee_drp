@@ -7,6 +7,7 @@ import numpy as np
 import pytest
 
 from apogee_drp.apred.cal import bpm
+from apogee_drp.apred.cal import utils as cal_utils
 
 
 BPMID = 12345678
@@ -25,12 +26,29 @@ def environment(monkeypatch, tmp_path):
     class FakeLoad:
         prefix = "ap"
 
-        def filename(self, kind, num=None, chip=None, chips=False, **kwargs):
+        def filename(self, kind, num=None, chip=None, **kwargs):
             directory = tmp_path / kind.lower()
             directory.mkdir(parents=True, exist_ok=True)
             if chip is not None:
                 return str(directory / f"ap{kind}-{chip}-{int(num):08d}.fits")
             return str(directory / f"ap{kind}-{int(num):08d}.fits")
+
+        def product_files(self, product, name):
+            assert product == "bpm"
+            return [self.filename("BPM", num=name, chip=chip)
+                    for chip in bpm.CHIPS]
+
+        def product_exists(self, product, name):
+            return all(
+                Path(filename).is_file() and Path(filename).stat().st_size > 0
+                for filename in self.product_files(product, name)
+            )
+
+        def product_delete(self, product, name, **kwargs):
+            for filename in self.product_files(product, name):
+                path = Path(filename)
+                if path.exists() or path.is_symlink():
+                    path.unlink()
 
     load = FakeLoad()
     apload_calls, lock_calls, read_calls = [], [], []
@@ -44,10 +62,14 @@ def environment(monkeypatch, tmp_path):
         return (darkmasks if "Dark" in path.name else flatmasks)[chip].copy()
 
     monkeypatch.setattr(
-        bpm, "_make_load",
+        bpm.apload, "ApLoad",
         lambda **kwargs: apload_calls.append(kwargs) or load,
     )
-    monkeypatch.setattr(bpm.lock, "lock", lambda filename, **kwargs: lock_calls.append((Path(filename), kwargs)))
+    monkeypatch.setattr(
+        cal_utils.lock, "lock",
+        lambda filename, **kwargs:
+        lock_calls.append((Path(filename), kwargs)),
+    )
     monkeypatch.setattr(bpm, "PixelBitMask", FakePixelBitMask)
     monkeypatch.setattr(bpm.fits, "getdata", getdata)
     monkeypatch.setattr(bpm.utils, "software_version", lambda: "git-test")
@@ -58,12 +80,12 @@ def environment(monkeypatch, tmp_path):
 
 
 def output_files(env, bpmid=BPMID):
-    representative = env.load.filename("BPM", num=bpmid, chips=True)
-    return [Path(representative.replace("BPM-", f"BPM-{chip}-")) for chip in "abc"]
+    return [Path(filename)
+            for filename in env.load.product_files("bpm", bpmid)]
 
 
 def lockfile(env, bpmid=BPMID):
-    return Path(env.load.filename("BPM", num=bpmid, chips=True))
+    return output_files(env, bpmid)[0]
 
 
 def assert_lock_cleared(env):
@@ -188,7 +210,7 @@ class TestChipBadrows:
 class TestMkbpmWorkflow:
     def test_requires_darkid_before_constructing_apload(self, monkeypatch):
         monkeypatch.setattr(
-            bpm, "_make_load",
+            bpm.apload, "ApLoad",
             lambda **kwargs: pytest.fail("ApLoad should not be called"),
         )
         with pytest.raises(ValueError, match="darkid"):
@@ -199,18 +221,18 @@ class TestMkbpmWorkflow:
             BPMID, apred="test", telescope="lco25m", darkid=DARKID,
             flatid=FLATID, unlock=True, verbose=True)
         assert environment.apload_calls == [{"apred": "test", "telescope": "lco25m"}]
-        assert environment.lock_calls[0] == (lockfile(environment), {"waittime": 10, "unlock": True})
+        assert environment.lock_calls[0] == (
+            lockfile(environment), {"waittime": 10, "unlock": True})
 
     def test_existing_complete_product_returns_without_reading_inputs(
             self, environment, capsys):
         for filename in output_files(environment):
-            filename.touch()
-        returned = bpm.build_bpm(
-            BPMID, darkid=DARKID, flatid=FLATID, verbose=True)
-        assert returned == [str(filename) for filename in output_files(environment)]
+            filename.write_bytes(b"existing")
+        assert bpm.build_bpm(
+            BPMID, darkid=DARKID, flatid=FLATID, verbose=True) is None
         assert environment.read_calls == []
         assert not any(kwargs.get("lock") for _, kwargs in environment.lock_calls)
-        assert "already made" in capsys.readouterr().out
+        assert f"bpm product {BPMID} already exists" in capsys.readouterr().out
 
     def test_clobber_rebuilds_existing_products(self, environment):
         for filename in output_files(environment):
@@ -220,8 +242,7 @@ class TestMkbpmWorkflow:
 
     def test_partial_products_are_removed_and_all_chips_built(self, environment):
         output_files(environment)[0].write_text("stale")
-        returned = bpm.build_bpm(BPMID, darkid=DARKID, flatid=FLATID)
-        assert returned == [str(filename) for filename in output_files(environment)]
+        assert bpm.build_bpm(BPMID, darkid=DARKID, flatid=FLATID) is None
         assert all(filename.exists() for filename in output_files(environment))
         assert_lock_cleared(environment)
 
@@ -270,8 +291,7 @@ class TestMkbpmWorkflow:
             assert any("tester on host" in line for line in header["HISTORY"])
 
     def test_flat_is_optional_and_header_records_no_flat(self, environment):
-        returned = bpm.build_bpm(BPMID, darkid=DARKID, flatid=None)
-        assert returned == [str(filename) for filename in output_files(environment)]
+        assert bpm.build_bpm(BPMID, darkid=DARKID, flatid=None) is None
         assert len(environment.read_calls) == 3
         with bpm.fits.open(output_files(environment)[0]) as hdus:
             assert hdus[0].header["FLATFILE"] in ("", "None", "NONE")
