@@ -8,6 +8,7 @@ import numpy as np
 from scipy.ndimage import median_filter
 
 from ...utils import apload
+from .. import wave
 from .utils import calibration_lock, product_build_lock
 
 CHIPS = ("a", "b", "c")
@@ -98,20 +99,10 @@ def build_wave(waveid, *, name=None, apred="daily", telescope="apo25m",
         if psfid is None and modelpsf is None:
             raise ValueError("psfid or modelpsf is required to process arc exposures")
         from ..process import process
-        process(
-            frames,
-            load=load,
-            darkid=darkid,
-            flatid=flatid,
-            psfid=psfid,
-            modelpsf=modelpsf,
-            fluxid=None,
-            doproc=True,
-            clobber=clobber,
-            onedclobber=clobber,
-            unlock=unlock,
-            verbose=verbose,
-        )
+        process(frames, load=load, darkid=darkid, flatid=flatid,
+                psfid=psfid, modelpsf=modelpsf, fluxid=None, doproc=True,
+                clobber=clobber, onedclobber=clobber, unlock=unlock,
+                verbose=verbose)
         usable = []
         for frame in frames:
             okay, message = _check_arc(load, frame)
@@ -121,22 +112,10 @@ def build_wave(waveid, *, name=None, apred="daily", telescope="apo25m",
                 usable.append(frame)
         if not usable:
             raise ValueError("No input arc exposure passed the flux check")
-        from .. import wave
-        wave.wavecal(
-            usable,
-            rows=np.arange(300),
-            name=output_name,
-            npoly=int(npoly),
-            inst=load.instrument,
-            plot=plot,
-            hard=plot,
-            nofit=nofit,
-            verbose=verbose,
-            clobber=clobber,
-            init=False,
-            vers=load.apred,
-            dependencies=True,
-        )
+        wave.wavecal(usable, rows=np.arange(300), name=output_name,
+                     npoly=int(npoly), inst=load.instrument, plot=plot,
+                     hard=plot, nofit=nofit, verbose=verbose, clobber=clobber,
+                     init=False, vers=load.apred, dependencies=True)
         if nofit:
             missing = [frame for frame in usable
                        if not Path(_lines_file(load, frame)).is_file()]
@@ -177,21 +156,10 @@ def build_multiwave(waveid, *, name=None, apred="daily", telescope="apo25m",
         if not available:
             raise ValueError("No individual arc-line measurements are available")
         from .. import wave
-        wave.wavecal(
-            frames,
-            rows=np.arange(300),
-            name=output_name,
-            npoly=int(npoly),
-            inst=load.instrument,
-            plot=plot,
-            hard=plot,
-            nofit=False,
-            verbose=verbose,
-            clobber=clobber,
-            init=False,
-            vers=load.apred,
-            dependencies=False,
-        )
+        wave.wavecal(frames, rows=np.arange(300), name=output_name,
+                     npoly=int(npoly), inst=load.instrument, plot=plot,
+                     hard=plot, nofit=False, verbose=verbose, clobber=clobber,
+                     init=False, vers=load.apred, dependencies=False)
         if not load.product_exists("multiwave", output_name):
             raise RuntimeError("Multiwave solver did not create all chip products")
         Path(_marker_file(load, output_name, suffix=".multidat")).touch()
@@ -218,17 +186,10 @@ def build_dailywave(mjd, *, apred="daily", telescope="apo25m", darkid=None,
     ) as (build, _):
         if not build:
             return
-        from .. import wave
-        wave.dailywave(
-            mjd,
-            observatory=telescope[:3].lower(),
-            apred=apred,
-            npoly=int(npoly),
-            init=False,
-            clobber=clobber,
-            verbose=verbose,
-            dependencies=dependencies,
-        )
+        wave.dailywave(mjd, observatory=telescope[:3].lower(),
+                       apred=apred, npoly=int(npoly), init=False,
+                       clobber=clobber, verbose=verbose,
+                       dependencies=dependencies)
         if not load.product_exists("dailywave", mjd):
             raise RuntimeError("Daily wavelength solver did not create all chip products")
         Path(_marker_file(load, mjd)).touch()
