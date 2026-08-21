@@ -88,19 +88,6 @@ def test_build_flat_validates_empty_input_before_io():
         flat_module.build_flat([])
 
 
-def test_safe_divide_marks_invalid_values():
-    result = flat_module._safe_divide([2, 2, np.nan], [2, 0, 1])
-    assert result[0] == 1
-    assert np.isnan(result[1:]).all()
-
-
-def test_nan_uniform_filter_ignores_bad_pixels():
-    image = np.ones((9, 9))
-    image[4, 4] = np.nan
-    smoothed = flat_module._nan_uniform_filter(image, 3)
-    np.testing.assert_allclose(smoothed, 1)
-
-
 def test_normalize_flat_chips_uses_python_y_x_regions(monkeypatch):
     monkeypatch.setattr(flat_module, "DETECTOR_SHAPE", (6, 8))
     monkeypatch.setattr(flat_module, "NORM_SLICE", (slice(2, 4), slice(2, 6)))
@@ -156,13 +143,13 @@ def test_make_flat_chip_requires_two_dimensions():
 
 def test_dithered_spectral_smoothing_runs_along_x(monkeypatch):
     calls = []
-    original = flat_module._nan_uniform_filter
+    original = flat_module.nan_uniform_filter
 
     def record(array, size):
         calls.append(size)
         return original(array, size)
 
-    monkeypatch.setattr(flat_module, "_nan_uniform_filter", record)
+    monkeypatch.setattr(flat_module, "nan_uniform_filter", fake_filter)
     flat_module.make_flat_chip(
         np.ones((40, 60)), np.zeros((40, 60), np.uint32),
         dithered=True, bad_pixel_bits=0)

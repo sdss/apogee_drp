@@ -389,3 +389,16 @@ class TestProductBuildLock:
         load.product_files.assert_called_once_with(
             "detector", "12345678-87654321"
         )
+
+
+def test_nan_uniform_filter_ignores_bad_pixels():
+    image = np.ones((9, 9))
+    image[4, 4] = np.nan
+    smoothed = cal_utils.nan_uniform_filter(image, 3)
+    np.testing.assert_allclose(smoothed, 1)
+
+
+def test_safe_divide_marks_invalid_values():
+    result = cal_utils.safe_divide([2, 2, np.nan], [2, 0, 1])
+    assert result[0] == 1
+    assert np.isnan(result[1:]).all()

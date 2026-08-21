@@ -8,12 +8,12 @@ from datetime import datetime
 
 import numpy as np
 from astropy.io import fits
-from scipy.ndimage import binary_dilation, uniform_filter
+from scipy.ndimage import binary_dilation
 
 from ...utils import apload, utils
 from ...utils.bitmask import PixelBitMask
 from .. import ap3d
-from .utils import product_build_lock
+from .utils import product_build_lock,nan_uniform_filter,safe_divide
 from .flathtml import flathtml
 from .flatplot import flatplot
 
@@ -31,44 +31,8 @@ __all__ = [
     "normalize_flat_chips",
 ]
 
-
-def _nan_uniform_filter(array, size):
-    """Boxcar-smooth an array while ignoring nonfinite pixels."""
-    array = np.asarray(array, dtype=float)
-    finite = np.isfinite(array)
-    values = uniform_filter(
-        np.where(finite, array, 0.0),
-        size=size,
-        mode="nearest",
-    )
-    weights = uniform_filter(
-        finite.astype(float),
-        size=size,
-        mode="nearest",
-    )
-    output = np.full(array.shape, np.nan, dtype=float)
-    np.divide(values, weights, out=output, where=weights > 0)
-    return output
-
-
-def _safe_divide(numerator, denominator):
-    """Divide finite, nonzero values and return NaN elsewhere."""
-    numerator, denominator = np.broadcast_arrays(
-        np.asarray(numerator, dtype=float),
-        np.asarray(denominator, dtype=float),
-    )
-    output = np.full(numerator.shape, np.nan, dtype=float)
-    good = (
-        np.isfinite(numerator)
-        & np.isfinite(denominator)
-        & (denominator != 0)
-    )
-    np.divide(numerator, denominator, out=output, where=good)
-    return output
-
-
-def _finite_median(array, region, label):
-    """Return a usable normalization median or raise a clear error."""
+def _normalization_median(array, region, label):
+    """Return a valid normalization median."""
     value = np.nanmedian(np.asarray(array)[region])
     if not np.isfinite(value) or value == 0:
         raise ValueError(f"Invalid {label} normalization: {value}")
@@ -84,28 +48,28 @@ def normalize_flat_chips(flatsum):
             f"received {flatsum.shape}"
         )
 
-    middle_norm = _finite_median(
+    middle_norm = _normalization_median(
         flatsum[:, :, 1], NORM_SLICE, "middle-chip"
     )
     flatsum[:, :, 1] /= middle_norm
 
     # IDL images are indexed (x, y), whereas Python/FITS arrays are (y, x).
-    a_outer = _finite_median(
+    a_outer = _normalization_median(
         flatsum[:, :, 0],
         A_OUTER_SLICE,
         "chip-a outer edge",
     )
-    b_left = _finite_median(
+    b_left = _normalization_median(
         flatsum[:, :, 1],
         B_LEFT_SLICE,
         "chip-b left edge",
     )
-    c_inner = _finite_median(
+    c_inner = _normalization_median(
         flatsum[:, :, 2],
         C_INNER_SLICE,
         "chip-c inner edge",
     )
-    b_right = _finite_median(
+    b_right = _normalization_median(
         flatsum[:, :, 1],
         B_RIGHT_SLICE,
         "chip-b right edge",
@@ -140,8 +104,8 @@ def make_flat_chip(flat,flatmask,dithered=False,kludge=False,bad_pixel_bits=None
     # IDL used ZAP(flat, [100, 10]) as a local reference image.  A
     # NaN-aware boxcar gives the same intended large-scale comparison
     # without the enormous cost of a 100x10 running median.
-    reference = _nan_uniform_filter(flat, size=(100, 10))
-    localflat = _safe_divide(flat, reference)
+    reference = nan_uniform_filter(flat, size=(100, 10))
+    localflat = safe_divide(flat, reference)
 
     rejected = (
         (localflat < 0.85)
@@ -165,13 +129,13 @@ def make_flat_chip(flat,flatmask,dithered=False,kludge=False,bad_pixel_bits=None
     flat[zero] = np.nan
 
     if dithered:
-        smooth = _nan_uniform_filter(flat, size=100)
+        smooth = nan_uniform_filter(flat, size=100)
         row_level = np.nanmean(smooth, axis=1)[:, None]
         column_level = np.nanmean(smooth, axis=0)[None, :]
 
-        spectral_flat = _nan_uniform_filter(flat, size=(1, 50))
-        flat = _safe_divide(flat, spectral_flat)
-        flat *= _safe_divide(
+        spectral_flat = nan_uniform_filter(flat, size=(1, 50))
+        flat = safe_divide(flat, spectral_flat)
+        flat *= safe_divide(
             smooth,
             row_level * column_level,
         )

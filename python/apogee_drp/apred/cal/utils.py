@@ -2,6 +2,8 @@
 
 from contextlib import contextmanager
 from pathlib import Path
+import numpy as np
+from scipy.ndimage import uniform_filter
 
 from ...utils import lock
 from .flatsmooth import flatsmooth
@@ -13,6 +15,8 @@ __all__ = [
     "flatsmooth",
     "product_build_lock",
     "robust_slope",
+    "nan_uniform_filter",
+    "safe_divide"
 ]
 
 @contextmanager
@@ -109,3 +113,41 @@ def product_build_lock(load, product, name, *, clobber=False,
         load.product_delete(product, name, verbose=verbose)
         
         yield True, filenames
+
+
+def nan_uniform_filter(array, size):
+    """Boxcar-smooth an array while ignoring nonfinite pixels."""
+    array = np.asarray(array, dtype=float)
+    finite = np.isfinite(array)
+
+    values = uniform_filter(
+        np.where(finite, array, 0.0),
+        size=size,
+        mode="nearest",
+    )
+    weights = uniform_filter(
+        finite.astype(float),
+        size=size,
+        mode="nearest",
+    )
+
+    output = np.full(array.shape, np.nan, dtype=float)
+    np.divide(values, weights, out=output, where=weights > 0)
+    return output
+
+
+def safe_divide(numerator, denominator):
+    """Divide finite values, returning NaN for invalid divisions."""
+    numerator, denominator = np.broadcast_arrays(
+        np.asarray(numerator, dtype=float),
+        np.asarray(denominator, dtype=float),
+    )
+
+    output = np.full(numerator.shape, np.nan, dtype=float)
+    valid = (
+        np.isfinite(numerator)
+        & np.isfinite(denominator)
+        & (denominator != 0)
+    )
+    np.divide(numerator, denominator, out=output, where=valid)
+    return output
