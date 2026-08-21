@@ -17,21 +17,12 @@ import numpy as np
 from astropy.io import fits
 from scipy.ndimage import distance_transform_edt, median_filter
 
-from ...utils import lock
+from ...utils import apload
 from ...utils.bitmask import PixelBitMask
 from .psfcal import build_psf
+from .utils import product_build_lock
 
 __all__ = ["build_littrow", "make_littrow_mask", "subtract_scattered_light"]
-
-
-def _make_load(*, apred, telescope):
-    from ...utils.apload import ApLoad
-    return ApLoad(apred=apred, telescope=telescope)
-
-
-def _chip_filename(load, kind, number, chip="b"):
-    template = load.filename(kind, num=int(number), chips=True)
-    return template.replace(f"{kind}-", f"{kind}-{chip}-")
 
 
 def subtract_scattered_light(image, *, x_range=(100, 1948),
@@ -120,9 +111,9 @@ def _load_reduced_frame(filename):
 def _run_empirical_extraction(load, frameid, *, unlock=False, verbose=False):
     from .. import ap2d
 
-    twod = _chip_filename(load, "2D", frameid)
-    psf = _chip_filename(load, "PSF", frameid)
-    oned = _chip_filename(load, "1D", frameid)
+    twod = load.filename("2D", num=frameid, chip="b")
+    psf = load.filename("PSF", num=frameid, chip="b")
+    oned = load.filename("1D", num=frameid, chip="b")
     return ap2d.ap2dproc(
         str(Path(twod).parent / f"{int(frameid):08d}"),
         str(Path(psf).parent / f"{int(frameid):08d}"),
@@ -151,8 +142,9 @@ def _move_auxiliary_files(load, frameid, destination,
     destination.mkdir(parents=True, exist_ok=True)
     candidates = []
     for kind in ("PSF", "EPSF", "ETrace", "1D", "2Dmodel"):
-        template = Path(load.filename(kind, num=int(frameid), chips=True))
-        candidates.extend(template.parent.glob(
+        directory = Path(load.filename(
+            kind, num=frameid, directory=True))
+        candidates.extend(directory.glob(
             f"*{kind}*{int(frameid):08d}*.fits"))
     candidates.extend(Path(filename) for filename in extra_files)
     moved = []
@@ -174,18 +166,13 @@ def build_littrow(frameid, *, apred="daily", telescope="apo25m",
                    keep_auxiliary=True):
     """Build the chip-b Littrow ghost mask from one calibration exposure."""
     frameid = int(frameid)
-    load = _make_load(apred=apred, telescope=telescope)
-    output = _chip_filename(load, "Littrow", frameid)
-    lock.lock(output, waittime=10, unlock=unlock)
-    if Path(output).is_file() and Path(output).stat().st_size > 0 and not clobber:
-        if verbose:
-            print(f" littrow file: {output} already made")
-        return output
-    Path(output).parent.mkdir(parents=True, exist_ok=True)
-    if Path(output).exists():
-        Path(output).unlink()
-    lock.lock(output, lock=True)
-    try:
+    load = apload.ApLoad(apred=apred, telescope=telescope)
+    with product_build_lock(load, "littrow", frameid, clobber=clobber,
+                            unlock=unlock, verbose=verbose) as (build, outputs):
+        if not build:
+            return
+
+        output = outputs[0]
         build_psf(
             frameid, apred=apred, telescope=telescope, darkid=darkid,
             flatid=flatid, bpmid=bpmid, sparseid=sparseid,
@@ -193,11 +180,13 @@ def build_littrow(frameid, *, apred="daily", telescope="apo25m",
             verbose=verbose)
         _, models = _run_empirical_extraction(
             load, frameid, unlock=unlock, verbose=verbose)
-        reduced = _load_reduced_frame(_chip_filename(load, "2D", frameid))
+        reduced = _load_reduced_frame(
+            load.filename("2D", num=frameid, chip="b"))
         image, scatter_level = subtract_scattered_light(reduced["flux"])
         model = None if models is None else models.get(1)
         if model is None:
-            model = fits.getdata(_chip_filename(load, "2Dmodel", frameid), 0)
+            model = fits.getdata(
+                load.filename("2Dmodel", num=frameid, chip="b"), 0)
         littrow = make_littrow_mask(
             image, model, reduced["mask"], threshold=threshold,
             median_width=median_width)
@@ -205,6 +194,3 @@ def build_littrow(frameid, *, apred="daily", telescope="apo25m",
                        scatter_level=scatter_level)
         if keep_auxiliary:
             _move_auxiliary_files(load, frameid, Path(output).parent)
-        return output
-    finally:
-        lock.lock(output, clear=True)

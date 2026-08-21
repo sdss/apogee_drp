@@ -8,6 +8,7 @@ from astropy.io import fits
 
 from apogee_drp.apred.cal import littrow as lit
 from apogee_drp.apred.cal import makecal
+from apogee_drp.apred.cal import utils as cal_utils
 
 
 class FakeLoad:
@@ -17,17 +18,38 @@ class FakeLoad:
     def __init__(self, root):
         self.root = Path(root)
 
-    def filename(self, kind, num, chips=True):
-        directory = self.root / kind
-        return str(directory / f"ap{kind}-{int(num):08d}.fits")
+    def filename(self, kind, num, chip=None, directory=False, **kwargs):
+        root = self.root / kind
+        if directory:
+            return str(root)
+        infix = f"-{chip}" if chip is not None else ""
+        return str(root / f"ap{kind}{infix}-{int(num):08d}.fits")
+
+    def product_files(self, product, name):
+        assert product == "littrow"
+        return [self.filename("Littrow", num=name, chip="b")]
+
+    def product_exists(self, product, name):
+        path = Path(self.product_files(product, name)[0])
+        return path.is_file() and path.stat().st_size > 0
+
+    def product_delete(self, product, name, **kwargs):
+        path = Path(self.product_files(product, name)[0])
+        if path.exists() or path.is_symlink():
+            path.unlink()
 
     def cmjd(self, number):
         return 60000
 
 
-def test_chip_filename_inserts_b(tmp_path):
-    result = lit._chip_filename(FakeLoad(tmp_path), "Littrow", 123)
+def test_registry_littrow_file_uses_chip_b(tmp_path):
+    result = FakeLoad(tmp_path).product_files("littrow", 123)[0]
     assert result.endswith("apLittrow-b-00000123.fits")
+
+
+def test_obsolete_filename_and_load_helpers_are_removed():
+    assert not hasattr(lit, "_chip_filename")
+    assert not hasattr(lit, "_make_load")
 
 
 def test_subtract_scattered_light_uses_detector_edges():
@@ -144,9 +166,8 @@ def test_write_littrow_data_model(tmp_path):
 
 def test_move_auxiliary_files(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
-    source = Path(load.filename("PSF", num=44, chips=True))
+    source = Path(load.filename("PSF", num=44, chip="b"))
     source.parent.mkdir(parents=True)
-    source = source.with_name("apPSF-b-00000044.fits")
     source.write_bytes(b"psf")
     destination = tmp_path / "Littrow"
     moved = lit._move_auxiliary_files(load, 44, destination)
@@ -157,9 +178,9 @@ def test_move_auxiliary_files(monkeypatch, tmp_path):
 
 def patch_builder(monkeypatch, tmp_path, *, model_in_return=True):
     load = FakeLoad(tmp_path)
-    monkeypatch.setattr(lit, "_make_load", lambda **kwargs: load)
+    monkeypatch.setattr(lit.apload, "ApLoad", lambda **kwargs: load)
     lock_calls = []
-    monkeypatch.setattr(lit.lock, "lock",
+    monkeypatch.setattr(cal_utils.lock, "lock",
                         lambda *args, **kwargs: lock_calls.append((args, kwargs)))
     psf_calls = []
     monkeypatch.setattr(lit, "build_psf",
@@ -182,9 +203,11 @@ def patch_builder(monkeypatch, tmp_path, *, model_in_return=True):
 
 
 def test_build_littrow_workflow(monkeypatch, tmp_path):
-    _, lock_calls, psf_calls = patch_builder(monkeypatch, tmp_path)
-    output = lit.build_littrow(
-        123, darkid=1, flatid=2, bpmid=3, sparseid=4, fiberid=5)
+    load, lock_calls, psf_calls = patch_builder(monkeypatch, tmp_path)
+    output = load.product_files("littrow", 123)[0]
+    assert lit.build_littrow(
+        123, darkid=1, flatid=2, bpmid=3, sparseid=4,
+        fiberid=5) is None
     assert Path(output).is_file()
     assert fits.getdata(output).shape == (2048, 2048)
     assert psf_calls[0][1]["average"] == 200
@@ -195,12 +218,12 @@ def test_build_littrow_workflow(monkeypatch, tmp_path):
 
 def test_build_littrow_existing_short_circuit(monkeypatch, tmp_path, capsys):
     load, _, psf_calls = patch_builder(monkeypatch, tmp_path)
-    output = Path(lit._chip_filename(load, "Littrow", 123))
+    output = Path(load.product_files("littrow", 123)[0])
     output.parent.mkdir(parents=True)
     output.write_bytes(b"existing")
-    assert lit.build_littrow(123, verbose=True) == str(output)
+    assert lit.build_littrow(123, verbose=True) is None
     assert not psf_calls
-    assert "already made" in capsys.readouterr().out
+    assert "littrow product 123 already exists" in capsys.readouterr().out
 
 
 def test_build_littrow_clears_lock_after_failure(monkeypatch, tmp_path):
@@ -214,15 +237,15 @@ def test_build_littrow_clears_lock_after_failure(monkeypatch, tmp_path):
 
 def test_makecal_littrow_dispatches_numbered_builder(monkeypatch, tmp_path):
     calls = []
-    monkeypatch.setattr(makecal_v7, "build_littrow",
+    monkeypatch.setattr(makecal, "build_littrow",
                         lambda *args, **kwargs: calls.append((args, kwargs)))
     load = FakeLoad(tmp_path)
-    context = makecal_v7.CalibrationContext(
+    context = makecal.CalibrationContext(
         load=load, calfile="cal.par", allcaldict={}, verbose=True)
     monkeypatch.setattr(context, "calibrations", lambda mjd: {
         "darkid": 1, "flatid": 2, "bpmid": 3,
         "sparseid": 4, "fiberid": 5})
-    makecal_v7.littrow("123", context)
+    makecal.littrow("123", context)
     assert calls[0][0] == ("123",)
     assert calls[0][1]["sparseid"] == 4
     assert calls[0][1]["apred"] == "daily"
