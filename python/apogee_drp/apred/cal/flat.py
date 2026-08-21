@@ -199,17 +199,19 @@ def combine_flat_frames(load, images, nrep):
 
     for start in range(0, len(images), nrep):
         group = images[start : start + nrep]
+        group_frames = {
+            int(number): load.frame(int(number))
+            for number in group
+        }
         for ichip, chip in enumerate(CHIPS):
             samples = []
             for number in group:
-                filename = load.filename("2D", num=int(number), chip=chip)
-                # MASK is commonly unsigned integer data represented with
-                # BZERO/BSCALE, which Astropy cannot scale from a strict memmap.
-                with fits.open(filename, memmap=False) as hdul:
-                    if first_header is None:
-                        first_header = hdul[0].header.copy()
-                    samples.append(np.asarray(hdul[1].data, dtype=np.float32))
-                    flatmasks[:, :, ichip] = hdul[3].data
+                frame = group_frames[int(number)][chip]
+                if first_header is None:
+                    first_header = frame["header"].copy()
+                samples.append(
+                    np.asarray(frame["flux"], dtype=np.float32))
+                flatmasks[:, :, ichip] = frame["mask"]
 
             if len(samples) == 1:
                 flatsum[:, :, ichip] += samples[0]

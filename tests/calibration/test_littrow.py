@@ -41,6 +41,9 @@ class FakeLoad:
     def cmjd(self, number):
         return 60000
 
+    def frame(self, number, chip=None, **kwargs):
+        return self.frames if chip is None else self.frames[chip]
+
 
 def test_registry_littrow_file_uses_chip_b(tmp_path):
     result = FakeLoad(tmp_path).product_files("littrow", 123)[0]
@@ -187,9 +190,10 @@ def patch_builder(monkeypatch, tmp_path, *, model_in_return=True):
                         lambda *args, **kwargs: psf_calls.append((args, kwargs)))
     shape = (2048, 2048)
     reduced = {"flux": np.full(shape, 5.0),
+               "err": np.ones(shape),
                "mask": np.zeros(shape, dtype=np.uint16),
                "header": fits.Header()}
-    monkeypatch.setattr(lit, "_load_reduced_frame", lambda filename: reduced)
+    load.frames = {"a": reduced, "b": reduced, "c": reduced}
     model = np.zeros(shape, dtype=np.float32)
     models = {1: model} if model_in_return else None
     monkeypatch.setattr(lit, "_run_empirical_extraction",

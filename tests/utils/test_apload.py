@@ -5,10 +5,12 @@ logic without requiring an SDSS tree installation, calibration files, or
 network access.
 """
 
+from pathlib import Path
 from unittest.mock import MagicMock
 
 import numpy as np
 import pytest
+from astropy.io import fits
 
 from apogee_drp.utils import apload
 
@@ -33,6 +35,25 @@ def load():
     obj.http_access = MagicMock()
     obj.cmjd = MagicMock(return_value="60000")
     return obj
+
+
+@pytest.fixture
+def frame_load(load, tmp_path, monkeypatch):
+    """Create a lightweight loader backed by synthetic ap2D files."""
+    def filename(kind, num=None, chip=None, **kwargs):
+        assert kind == "2D"
+        return str(tmp_path / f"ap2D-{chip}-{int(num):08d}.fits")
+
+    monkeypatch.setattr(load, "filename", filename)
+    for index, chip in enumerate("abc"):
+        path = Path(filename("2D", num=123, chip=chip))
+        fits.HDUList([
+            fits.PrimaryHDU(header=fits.Header({"CHIP": chip})),
+            fits.ImageHDU(np.full((2, 3), index + 1.0)),
+            fits.ImageHDU(np.full((2, 3), index + 0.1)),
+            fits.ImageHDU(np.full((2, 3), index, dtype=np.uint16)),
+        ]).writeto(path)
+    return load
 
 
 def _fake_full(root, **kwargs):
@@ -292,3 +313,37 @@ def test_allfile_passes_same_arguments_to_path_and_download(load, monkeypatch):
     full_kwargs = load.sdss_path.full.call_args.kwargs
     get_kwargs = load.http_access.get.call_args.kwargs
     assert get_kwargs == full_kwargs
+class TestFrame:
+    def test_loads_all_chips_by_default(self, frame_load):
+        frames = frame_load.frame(123)
+
+        assert set(frames) == {"a", "b", "c"}
+        assert frames["b"]["header"]["CHIP"] == "b"
+        np.testing.assert_array_equal(frames["c"]["flux"], 3)
+        np.testing.assert_array_equal(frames["c"]["err"], 2.1)
+        np.testing.assert_array_equal(frames["c"]["mask"], 2)
+
+    def test_can_load_one_chip(self, frame_load):
+        frame = frame_load.frame(123, chip="b")
+
+        assert set(frame) == {"header", "flux", "err", "mask"}
+        np.testing.assert_array_equal(frame["flux"], 2)
+
+    def test_rejects_invalid_chip(self, frame_load):
+        with pytest.raises(ValueError, match="chip"):
+            frame_load.frame(123, chip="d")
+
+    def test_arrays_remain_available_after_file_closes(self, frame_load):
+        frame = frame_load.frame(123, chip="a")
+
+        assert frame["flux"].flags.owndata
+        np.testing.assert_array_equal(frame["flux"], 1)
+
+    def test_requires_all_extensions(self, frame_load):
+        filename = Path(
+            frame_load.filename("2D", num=124, chip="a")
+        )
+        fits.PrimaryHDU().writeto(filename)
+
+        with pytest.raises(ValueError, match="required extensions"):
+            frame_load.frame(124, chip="a")

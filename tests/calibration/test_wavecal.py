@@ -46,6 +46,21 @@ class FakeLoad:
             if path.exists() or path.is_symlink():
                 path.unlink()
 
+    def frame(self, number, chip=None, **kwargs):
+        chips = ("a", "b", "c") if chip is None else (chip,)
+        frames = {}
+        for current_chip in chips:
+            filename = self.filename(
+                "2D", num=number, chip=current_chip)
+            with fits.open(filename, memmap=False) as hdus:
+                frames[current_chip] = {
+                    "header": hdus[0].header.copy(),
+                    "flux": np.asarray(hdus[1].data).copy(),
+                    "err": np.asarray(hdus[2].data).copy(),
+                    "mask": np.asarray(hdus[3].data).copy(),
+                }
+        return frames if chip is None else frames[chip]
+
 
 def test_product_files(tmp_path):
     files = FakeLoad(tmp_path).product_files("wave", 123)

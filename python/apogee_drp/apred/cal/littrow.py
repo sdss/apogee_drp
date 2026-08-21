@@ -102,12 +102,6 @@ def make_littrow_mask(flux, model, pixel_mask=None, *, threshold=10.0,
     return result
 
 
-def _load_reduced_frame(filename):
-    return {"header": fits.getheader(filename, 0),
-            "flux": fits.getdata(filename, 1),
-            "mask": fits.getdata(filename, 3)}
-
-
 def _run_empirical_extraction(load, frameid, *, unlock=False, verbose=False):
     from .. import ap2d
 
@@ -180,8 +174,7 @@ def build_littrow(frameid, *, apred="daily", telescope="apo25m",
             verbose=verbose)
         _, models = _run_empirical_extraction(
             load, frameid, unlock=unlock, verbose=verbose)
-        reduced = _load_reduced_frame(
-            load.filename("2D", num=frameid, chip="b"))
+        reduced = load.frame(frameid, chip="b")
         image, scatter_level = subtract_scattered_light(reduced["flux"])
         model = None if models is None else models.get(1)
         if model is None:

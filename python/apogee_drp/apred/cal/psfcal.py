@@ -14,14 +14,14 @@ from typing import Mapping, Sequence
 
 import numpy as np
 from astropy.io import fits
-from astropy.table import Table
 from scipy.ndimage import uniform_filter1d
 from scipy.signal import find_peaks
 
 from .. import ap3d
+from ..psf import loadepsf, makeprofilegrid, saveepsf
 from ...utils import apload
 from ...utils.bitmask import PixelBitMask
-from .utils import product_build_lock
+from .utils import average_calibration_frames, product_build_lock
 
 CHIPS = ("a", "b", "c")
 
@@ -223,34 +223,6 @@ def _reduce(load, exposures, *, darkid=None, flatid=None, bpmid=None,
                 verbose=verbose, **calibrations)
 
 
-def _load_frame(load, exposure, chip):
-    filename = load.filename("2D", num=exposure, chip=chip)
-    return {
-        "header": fits.getheader(filename, 0),
-        "flux": fits.getdata(filename, 1),
-        "err": fits.getdata(filename, 2),
-        "mask": fits.getdata(filename, 3),
-    }
-
-
-def _average_frames(load, exposures, chip):
-    frames = [_load_frame(load, exposure, chip) for exposure in exposures]
-    fluxes = []
-    for frame in frames:
-        flux = np.asarray(frame["flux"], float).copy()
-        flux[np.asarray(frame["mask"]) != 0] = np.nan
-        fluxes.append(flux)
-    combined = np.nanmean(np.stack(fluxes), axis=0)
-    return {
-        "flux": combined,
-        "err": np.sqrt(np.nanmean(np.stack([
-            np.asarray(frame["err"], float) ** 2 for frame in frames
-        ]), axis=0)),
-        "mask": np.all(~np.isfinite(np.stack(fluxes)), axis=0).astype(np.uint16),
-        "header": frames[0]["header"].copy(),
-    }
-
-
 def _write_trace(filename, solution, header):
     hdr = header.copy()
     hdr["NTRACE"] = len(solution.fibers)
@@ -259,43 +231,6 @@ def _write_trace(filename, solution, header):
     Path(filename).parent.mkdir(parents=True, exist_ok=True)
     fits.writeto(filename, solution.trace.astype(np.float32), hdr,
                  overwrite=True)
-
-
-def _write_epsf(filename, profiles, header):
-    Path(filename).parent.mkdir(parents=True, exist_ok=True)
-    primary = fits.PrimaryHDU(header=header.copy())
-    primary.header["NTRACE"] = len(profiles)
-    hdus = [primary]
-    for profile in profiles:
-        dtype = [
-            ("fiber", np.int32),
-            ("cent", np.float64, len(profile["cent"])),
-            ("lo", np.int32), ("hi", np.int32),
-            ("img", np.float64, profile["img"].shape),
-        ]
-        row = np.zeros(1, dtype=dtype)
-        for key in ("fiber", "cent", "lo", "hi", "img"):
-            row[key] = profile[key]
-        hdu = fits.table_to_hdu(Table(row))
-        hdu.header["EXTNAME"] = f"EPSF{int(profile['fiber'])}"
-        hdus.append(hdu)
-    fits.HDUList(hdus).writeto(filename, overwrite=True)
-
-
-def _load_epsf(filename):
-    with fits.open(filename) as hdus:
-        ntrace = int(hdus[0].header.get("NTRACE", len(hdus) - 1))
-        profiles = []
-        for hdu in hdus[1:ntrace + 1]:
-            row = hdu.data[0]
-            profile = {
-                "fiber": int(row["FIBER"]), "lo": int(row["LO"]),
-                "hi": int(row["HI"]), "img": np.asarray(row["IMG"]),
-            }
-            if "CENT" in hdu.data.names:
-                profile["cent"] = np.asarray(row["CENT"])
-            profiles.append(profile)
-    return profiles
 
 
 def _combine_profiles(dense_profiles, sparse_profiles):
@@ -376,8 +311,9 @@ def build_fiber(frameid, *, apred="daily", telescope="apo25m", darkid=None,
         shifts = np.broadcast_to(0.0 if yshift is None else yshift, (3,))
         _reduce(load, [frameid], darkid=darkid, flatid=flatid, bpmid=bpmid,
                 clobber=clobber, verbose=verbose)
+        frames = load.frame(frameid)
         for index, chip in enumerate(CHIPS):
-            frame = _load_frame(load, frameid, chip)
+            frame = frames[chip]
             reference = (reference_positions[chip] if reference_positions
                          is not None else _reference_positions(
                              load, index, yshift=shifts[index]))
@@ -409,12 +345,22 @@ def build_sparse(frames, *, apred="daily", telescope="apo25m", darkid=None,
         if dark_exposures:
             _reduce(load, dark_exposures, darkid=darkid, bpmid=bpmid,
                     maxread=maxread, clobber=clobber, verbose=verbose)
+        frames_by_exposure = {
+            exposure: load.frame(exposure) for exposure in exposures
+        }
+        dark_frames_by_exposure = {
+            exposure: load.frame(exposure) for exposure in dark_exposures
+        }
         chip_images = []
         for index, chip in enumerate(CHIPS):
-            frame = _average_frames(load, exposures, chip)
+            frame = average_calibration_frames(
+                frames_by_exposure[exposure][chip]
+                for exposure in exposures)
             if dark_exposures:
-                frame["flux"] -= _average_frames(
-                    load, dark_exposures, chip)["flux"]
+                dark_frame = average_calibration_frames(
+                    dark_frames_by_exposure[exposure][chip]
+                    for exposure in dark_exposures)
+                frame["flux"] -= dark_frame["flux"]
             chip_images.append(frame["flux"].astype(np.float32))
             reference = _reference_positions(load, index, fiberid=fiberid)
             solution = find_traces(
@@ -422,7 +368,8 @@ def build_sparse(frames, *, apred="daily", telescope="apo25m", darkid=None,
             profiles = build_empirical_psf(
                 frame, solution, half_width=int(dmax),
                 smooth_columns=average)
-            _write_epsf(outputs[index + 1], profiles, frame["header"])
+            saveepsf(outputs[index + 1], profiles, header=frame["header"],
+                     compress=False)
         fits.writeto(outputs[0], np.stack(chip_images), overwrite=True)
 
 
@@ -444,26 +391,20 @@ def build_psf(frameid, *, apred="daily", telescope="apo25m", darkid=None,
         trace_files = outputs[6:9]
         _reduce(load, [frameid], darkid=darkid, flatid=flatid, bpmid=bpmid,
                 littrowid=littrowid, clobber=clobber, verbose=verbose)
+        frames = load.frame(frameid)
         for index, chip in enumerate(CHIPS):
-            frame = _load_frame(load, frameid, chip)
+            frame = frames[chip]
             reference = _reference_positions(load, index, fiberid=fiberid)
             solution = find_traces(frame, reference, average=average)
             profiles = build_empirical_psf(
                 frame, solution, half_width=7, smooth_columns=average)
-            sparse_profiles = _load_epsf(
+            sparse_profiles = loadepsf(
                 load.filename("EPSF", num=sparseid, chip=chip))
             profiles = _combine_profiles(profiles, sparse_profiles)
             _write_psf(psf_files[index], frame, solution, profiles)
-            _write_epsf(epsf_files[index], profiles, frame["header"])
+            saveepsf(epsf_files[index], profiles, header=frame["header"],
+                     compress=False)
             _write_trace(trace_files[index], solution, frame["header"])
-
-
-def _make_profile_grid(epsf_file, sparse_file, *, nfbin, ncbin, verbose):
-    from ..psf import makeprofilegrid
-    _, mean_x, mean_y, profiles, offsets, _ = makeprofilegrid(
-        epsf_file, sparse_file, nfbin=int(nfbin), ncbin=int(ncbin),
-        verbose=verbose)
-    return profiles, np.stack((mean_x, mean_y)), offsets
 
 
 def _validate_model_grid(profiles, labels, offsets):
@@ -542,9 +483,10 @@ def build_modelpsf(name, *, sparseid, psfid, apred="daily",
                 "Missing ModelPSF inputs: " + ", ".join(missing))
 
         for chip, epsf_file, output in zip(CHIPS, epsf_files, outputs):
-            profiles, labels, offsets = _make_profile_grid(
+            _, mean_x, mean_y, profiles, offsets, _ = makeprofilegrid(
                 epsf_file, sparse_file, nfbin=nfbin, ncbin=ncbin,
                 verbose=verbose)
+            labels = np.stack((mean_x, mean_y))
             _write_model_grid(
                 output, profiles, labels, offsets, apred=apred,
                 sparseid=sparseid, psfid=psfid, nfbin=nfbin, ncbin=ncbin)

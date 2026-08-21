@@ -49,16 +49,6 @@ def make_persistence_mask(dark_flux, flat_flux, dark_mask=None, flat_mask=None,
     return severity, rate.astype(np.float32)
 
 
-def _load_2d(load, number, chip):
-    """Read the header, flux, and pixel mask from one ap2D chip file."""
-    filename = load.filename("2D", num=int(number), chip=chip)
-    return {
-        "header": fits.getheader(filename, 0),
-        "flux": fits.getdata(filename, 1),
-        "mask": fits.getdata(filename, 3),
-    }
-
-
 def _process(load, frames, *, cmjd, darkid, flatid, clobber, unlock,
              verbose):
     from ..process import process
@@ -115,9 +105,11 @@ def build_persist(persistid, dark, flat, *, apred="daily",
                 f"files; expected {len(CHIPS)}"
             )
 
+        dark_frames = load.frame(dark)
+        flat_frames = load.frame(flat)
         for chip, output in zip(CHIPS, outputs):
-            dark_frame = _load_2d(load, dark, chip)
-            flat_frame = _load_2d(load, flat, chip)
+            dark_frame = dark_frames[chip]
+            flat_frame = flat_frames[chip]
             mask, rate = make_persistence_mask(
                 dark_frame["flux"], flat_frame["flux"],
                 dark_frame["mask"], flat_frame["mask"],

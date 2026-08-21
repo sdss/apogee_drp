@@ -10,6 +10,62 @@ import pytest
 from apogee_drp.apred.cal import utils as cal_utils
 
 
+def calibration_frame(flux, err=None, mask=None, header=None):
+    flux = np.asarray(flux)
+    return {
+        "flux": flux,
+        "err": np.ones_like(flux, dtype=float) if err is None else np.asarray(err),
+        "mask": np.zeros_like(flux, dtype=np.uint16) if mask is None else np.asarray(mask),
+        "header": {} if header is None else header,
+    }
+
+
+class TestAverageCalibrationFrames:
+    def test_averages_flux_and_uses_rms_input_error(self):
+        frames = [
+            calibration_frame([[2.0, 4.0]], err=[[2.0, 3.0]]),
+            calibration_frame([[4.0, 8.0]], err=[[2.0, 4.0]]),
+        ]
+        result = cal_utils.average_calibration_frames(frames)
+        assert np.allclose(result["flux"], [[3.0, 6.0]])
+        assert np.allclose(
+            result["err"], [[2.0, 5.0 / np.sqrt(2.0)]])
+        assert np.array_equal(result["mask"], [[0, 0]])
+
+    def test_excludes_masked_and_nonfinite_flux(self):
+        frames = [
+            calibration_frame(
+                [[2.0, np.nan, 3.0]], err=[[1.0, 1.0, 1.0]],
+                mask=[[0, 0, 1]]),
+            calibration_frame(
+                [[4.0, 8.0, np.inf]], err=[[1.0, 2.0, 1.0]]),
+        ]
+        result = cal_utils.average_calibration_frames(frames)
+        assert np.allclose(result["flux"][:, :2], [[3.0, 8.0]])
+        assert np.isnan(result["flux"][0, 2])
+        assert np.array_equal(result["mask"], [[0, 0, 1]])
+
+    def test_does_not_modify_inputs_and_copies_header(self):
+        header = {"TEST": 1}
+        frame = calibration_frame([[1.0]], header=header)
+        original = frame["flux"].copy()
+        result = cal_utils.average_calibration_frames([frame])
+        assert np.array_equal(frame["flux"], original)
+        assert result["header"] == header
+        assert result["header"] is not header
+
+    def test_rejects_empty_input(self):
+        with pytest.raises(ValueError, match="at least one"):
+            cal_utils.average_calibration_frames([])
+
+    def test_rejects_mismatched_shapes(self):
+        with pytest.raises(ValueError, match="matching shapes"):
+            cal_utils.average_calibration_frames([
+                calibration_frame(np.ones((2, 2))),
+                calibration_frame(np.ones((3, 2))),
+            ])
+
+
 @pytest.fixture
 def mock_lock(monkeypatch):
     mocked = MagicMock()

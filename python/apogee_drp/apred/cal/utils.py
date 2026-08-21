@@ -10,6 +10,7 @@ from .flatsmooth import flatsmooth
 from .robust_slope import robust_slope
 
 __all__ = [
+    "average_calibration_frames",
     "calibration_lock",
     "file_build_lock",
     "flatsmooth",
@@ -18,6 +19,42 @@ __all__ = [
     "nan_uniform_filter",
     "safe_divide"
 ]
+
+
+def average_calibration_frames(frames):
+    """Average compatible calibration frames without modifying the inputs."""
+    frames = list(frames)
+    if not frames:
+        raise ValueError("frames must contain at least one frame")
+
+    shape = np.asarray(frames[0]["flux"]).shape
+    fluxes = []
+    errors = []
+    for frame in frames:
+        flux = np.asarray(frame["flux"], dtype=float)
+        error = np.asarray(frame["err"], dtype=float)
+        mask = np.asarray(frame["mask"])
+        if flux.shape != shape or error.shape != shape or mask.shape != shape:
+            raise ValueError("calibration frames must have matching shapes")
+        valid = np.isfinite(flux) & (mask == 0)
+        fluxes.append(np.where(valid, flux, np.nan))
+        errors.append(error)
+
+    fluxes = np.stack(fluxes)
+    errors = np.stack(errors)
+    nvalid = np.sum(np.isfinite(fluxes), axis=0)
+    flux = np.full(shape, np.nan, dtype=float)
+    np.divide(np.nansum(fluxes, axis=0), nvalid, out=flux,
+              where=nvalid > 0)
+
+    # Preserve the historical calibration-combination convention.
+    error = np.sqrt(np.nanmean(errors**2, axis=0))
+    return {
+        "flux": flux,
+        "err": error,
+        "mask": (nvalid == 0).astype(np.uint16),
+        "header": frames[0]["header"].copy(),
+    }
 
 @contextmanager
 def calibration_lock(filename, *, waittime=10, unlock=False):

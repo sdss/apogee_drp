@@ -72,6 +72,11 @@ def test_obsolete_product_filename_helpers_are_removed():
     assert not hasattr(psfcal, "product_files")
     assert not hasattr(psfcal, "modelpsf_product_files")
     assert not hasattr(psfcal, "_chip_filename")
+    assert not hasattr(psfcal, "_load_frame")
+    assert not hasattr(psfcal, "_average_frames")
+    assert not hasattr(psfcal, "_write_epsf")
+    assert not hasattr(psfcal, "_load_epsf")
+    assert not hasattr(psfcal, "_make_profile_grid")
 
 
 @pytest.mark.parametrize(
@@ -178,9 +183,10 @@ def patch_builder(monkeypatch, tmp_path):
 
     def make_grid(epsf, sparse, **kwargs):
         grid_calls.append((epsf, sparse, kwargs))
-        return model_grid()
+        profiles, labels, offsets = model_grid()
+        return None, labels[0], labels[1], profiles, offsets, None
 
-    monkeypatch.setattr(psfcal, "_make_profile_grid", make_grid)
+    monkeypatch.setattr(psfcal, "makeprofilegrid", make_grid)
     return load, locks, grid_calls
 
 
@@ -240,7 +246,7 @@ def test_build_modelpsf_reports_missing_inputs(monkeypatch, tmp_path):
 def test_build_modelpsf_clears_lock_on_failure(monkeypatch, tmp_path):
     _, locks, _ = patch_builder(monkeypatch, tmp_path)
     monkeypatch.setattr(
-        psfcal, "_make_profile_grid",
+        psfcal, "makeprofilegrid",
         lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("boom")))
     with pytest.raises(RuntimeError, match="boom"):
         psfcal.build_modelpsf("12-34", sparseid=12, psfid=34)

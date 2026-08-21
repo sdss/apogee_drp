@@ -8,8 +8,66 @@ import gc
 
 import numpy as np
 import pytest
+from astropy.io import fits
 
 from apogee_drp.apred import psf
+
+
+def test_epsf_roundtrip_preserves_header_centers_and_profiles(tmp_path):
+    filename = tmp_path / "epsf.fits"
+    profiles = [
+        {
+            "fiber": 17,
+            "cent": np.array([10.5, 10.7]),
+            "lo": 8,
+            "hi": 11,
+            "img": np.arange(8, dtype=float).reshape(2, 4),
+        },
+        {
+            "fiber": 23,
+            "lo": 20,
+            "hi": 22,
+            "img": np.ones((2, 3)),
+        },
+    ]
+
+    psf.saveepsf(
+        filename, profiles, header=fits.Header({"FRAME": 123}),
+        compress=False)
+    loaded = psf.loadepsf(filename)
+
+    assert fits.getheader(filename)["FRAME"] == 123
+    assert fits.getheader(filename)["NTRACE"] == 2
+    assert loaded[0]["fiber"] == 17
+    assert loaded[0]["lo"] == 8
+    assert loaded[0]["hi"] == 11
+    np.testing.assert_array_equal(loaded[0]["cent"], profiles[0]["cent"])
+    np.testing.assert_array_equal(loaded[0]["img"], profiles[0]["img"])
+    assert "cent" not in loaded[1]
+
+
+def test_loadepsf_infers_trace_count_without_ntrace(tmp_path):
+    filename = tmp_path / "epsf.fits"
+    row = np.zeros(1, dtype=[
+        ("fiber", np.int32), ("lo", np.int32), ("hi", np.int32),
+        ("img", np.float64, (2, 3)),
+    ])
+    row["fiber"], row["lo"], row["hi"], row["img"] = 7, 4, 6, 1
+    fits.HDUList([
+        fits.PrimaryHDU(),
+        fits.BinTableHDU(row),
+    ]).writeto(filename)
+
+    loaded = psf.loadepsf(filename)
+    assert len(loaded) == 1
+    assert loaded[0]["fiber"] == 7
+
+
+def test_loadepsf_rejects_inconsistent_ntrace(tmp_path):
+    filename = tmp_path / "epsf.fits"
+    fits.PrimaryHDU(header=fits.Header({"NTRACE": 2})).writeto(filename)
+    with pytest.raises(ValueError, match="NTRACE=2"):
+        psf.loadepsf(filename)
 
 
 def make_planar_grid(nx=3, ny=3, nprofile=7, logscale=False):

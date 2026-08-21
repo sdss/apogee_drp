@@ -5,7 +5,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import numpy as np
-from astropy.io import fits
 from scipy.ndimage import median_filter
 
 from ...utils import apload
@@ -63,12 +62,8 @@ def _check_arc(load, number):
     filename = load.filename("2D", num=int(number), chip="b")
     if not Path(filename).is_file():
         return False, f"{filename} NOT FOUND"
-    with fits.open(filename) as hdus:
-        header = hdus[0].header
-        image = hdus[0].data
-        if image is None and len(hdus) > 1:
-            image = hdus[1].data
-    metric, threshold = arc_flux_metric(image, header)
+    frame = load.frame(int(number), chip="b")
+    metric, threshold = arc_flux_metric(frame["flux"], frame["header"])
     return metric >= threshold, (
         f"{number:08d}: arc flux/read={metric:.1f}, required={threshold:.1f}")
 
