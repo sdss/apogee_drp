@@ -32,7 +32,8 @@ def load():
     obj.sdss_path.url.side_effect = (
         lambda root, **kwargs: "https://example.test/" + _fake_full(root, **kwargs)
     )
-    obj.http_access = MagicMock()
+    # http_access is a read-only property backed by _http_access.
+    obj._http_access = MagicMock()
     obj.cmjd = MagicMock(return_value="60000")
     return obj
 
@@ -109,9 +110,9 @@ def test_filename_chip_subset_preserves_order(load):
 
 
 def test_filename_empty_chip_sequence(load):
-    assert load.filename("Dark", num=123, chip=[]) == {}
-    load.sdss_path.full.assert_not_called()
-
+    with pytest.raises(ValueError, match="chip sequence cannot be empty"):
+        load.filename("Dark", num=123, chip=[])
+    
 
 @pytest.mark.parametrize("chip", ["d", "A", "", 1])
 def test_filename_rejects_invalid_scalar_chip(load, chip):
