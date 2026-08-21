@@ -6,26 +6,12 @@ from pathlib import Path
 
 import numpy as np
 
-from ...utils import lock
+from ...utils import apload
+from .utils import product_build_lock
 
 CHIPS = ("a", "b", "c")
 
-__all__ = ["CHIPS", "build_fpi", "fpi_exposures", "product_files"]
-
-
-def _make_load(*, apred, telescope):
-    from ...utils.apload import ApLoad
-    return ApLoad(apred=apred, telescope=telescope)
-
-
-def _chip_filename(load, kind, number, chip):
-    template = load.filename(kind, num=int(number), chips=True)
-    return template.replace(f"{kind}-", f"{kind}-{chip}-")
-
-
-def product_files(load, number):
-    """Return the three chip-level WaveFPI products."""
-    return [_chip_filename(load, "WaveFPI", number, chip) for chip in CHIPS]
+__all__ = ["CHIPS", "build_fpi", "fpi_exposures"]
 
 
 def fpi_exposures(rows):
@@ -95,25 +81,13 @@ def build_fpi(fpiid, *, name=None, apred="daily", telescope="apo25m",
     output_name = number if name is None else int(name)
     if output_name != number:
         raise ValueError("WaveFPI output name must match the selected FPI exposure")
-    load = _make_load(apred=apred, telescope=telescope)
+    load = apload.ApLoad(apred=apred, telescope=telescope)
     mjd = int(load.cmjd(number))
     observatory = telescope[:3].lower()
-    outputs = product_files(load, output_name)
-    target = outputs[0].replace("WaveFPI-a-", "WaveFPI-")
-
-    lock.lock(target, waittime=10, unlock=unlock)
-    if all(Path(filename).is_file() and Path(filename).stat().st_size > 0
-           for filename in outputs) and not clobber:
-        if verbose:
-            print(f" WaveFPI file: {target} already made")
-        return outputs
-    lock.lock(target, lock=True)
-    try:
-        for filename in outputs:
-            path = Path(filename)
-            if path.exists():
-                path.unlink()
-            path.parent.mkdir(parents=True, exist_ok=True)
+    with product_build_lock(load, "fpi", output_name, clobber=clobber,
+                            unlock=unlock, verbose=verbose) as (build, outputs):
+        if not build:
+            return
 
         exposures = (_discover_exposures(
             observatory=observatory, mjd=mjd, verbose=verbose)
@@ -150,7 +124,3 @@ def build_fpi(fpiid, *, name=None, apred="daily", telescope="apo25m",
         if missing:
             raise RuntimeError(
                 "FPI wavelength solution did not create: " + ", ".join(missing))
-        Path(target).with_suffix(".dat").touch()
-        return outputs
-    finally:
-        lock.lock(target, clear=True)

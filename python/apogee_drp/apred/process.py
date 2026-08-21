@@ -45,15 +45,6 @@ def _id(current: int | None, legacy: int | None, name: str) -> int | None:
     return current if current is not None else legacy
 
 
-def _chip_file(base: str, root: str, chip: str) -> str:
-    """Expand an ``ApLoad.filename(..., chips=True)`` template."""
-
-    marker = f"{root}-"
-    if marker not in base:
-        raise ValueError(f"Cannot insert chip into APOGEE filename {base!r}")
-    return base.replace(marker, f"{root}-{chip}-", 1)
-
-
 def process(
     nums: int | Sequence[int] | np.ndarray,
     *,
@@ -68,7 +59,7 @@ def process(
     flatid: int | None = None,
     traceid: int | None = None,
     psfid: int | None = None,
-    modelpsf: int | None = None,
+    modelpsf: int | str | None = None,
     fluxid: int | None = None,
     waveid: int | None = None,
     littrowid: int | None = None,
@@ -113,13 +104,31 @@ def process(
     process_3d = process_file if process_3d is None else process_3d
     process_2d = ap2dproc if process_2d is None else process_2d
 
+    modelpsf_name = None
+    modelpsf_psfid = None
+    if modelpsf not in (None, 0, ""):
+        modelpsf_name = str(modelpsf).strip()
+        if not modelpsf_name:
+            raise ValueError("modelpsf cannot be empty")
+        try:
+            modelpsf_psfid = int(modelpsf_name.rsplit("-", 1)[-1])
+        except ValueError as error:
+            raise ValueError(
+                f"Cannot determine the dense PSF ID from modelpsf "
+                f"{modelpsf_name!r}"
+            ) from error
+
+    selected_psfid = psfid if psfid is not None else traceid
+    legacy_psf = psf if psf is not None else trace
+    if selected_psfid is None and legacy_psf is None:
+        selected_psfid = modelpsf_psfid
+
     ids = {
         "Detector": _id(detid, detector, "detector"),
         "Dark": _id(darkid, dark, "dark"),
         "Flat": _id(flatid, flat, "flat"),
-        "PSF": _id(psfid if psfid is not None else traceid,
-                   psf if psf is not None else trace, "PSF"),
-        "PSFModel": None if modelpsf in (None, 0) else int(modelpsf),
+        "PSF": _id(selected_psfid, legacy_psf, "PSF"),
+        "PSFModel": modelpsf_name,
         "Flux": _id(fluxid, flux, "flux"),
         "Wave": _id(waveid, wave, "wave"),
         "Littrow": _id(littrowid, littrow, "Littrow"),
@@ -152,13 +161,11 @@ def process(
     onedclobber = bool(onedclobber or clobber)
     for number in numbers:
         mjd = str(cmjd if cmjd is not None else load.cmjd(number))
-        raw_base = load.filename("R", num=number, mjd=mjd, chips=True)
-        two_d_base = load.filename("2D", num=number, mjd=mjd, chips=True)
         if do_3d:
             for chip in chips:
                 started = perf_counter()
-                raw_file = _chip_file(raw_base, "R", chip)
-                output_file = _chip_file(two_d_base, "2D", chip)
+                raw_file = load.filename("R", num=number, mjd=mjd, chip=chip)
+                output_file = load.filename("2D", num=number, mjd=mjd, chip=chip)
                 if outdir is not None:
                     output_file = str(Path(outdir) / Path(output_file).name)
                 if Path(output_file).exists() and not clobber:
@@ -177,8 +184,9 @@ def process(
                         if cal_id is None or (root == "Littrow" and chip != "b"):
                             calibration_files[keyword] = None
                         else:
-                            base = load.filename(root, num=cal_id, chips=True)
-                            calibration_files[keyword] = _chip_file(base, root, chip)
+                            calibration_files[keyword] = load.filename(
+                                root, num=cal_id, chip=chip
+                            )
                     Path(output_file).parent.mkdir(parents=True, exist_ok=True)
                     process_3d(
                         raw_file, output_file, overwrite=clobber,
@@ -193,7 +201,10 @@ def process(
                                              perf_counter() - started))
 
         if do_2d:
-            all_two_d = [_chip_file(two_d_base, "2D", chip) for chip in chip_names]
+            all_two_d = [
+                load.filename("2D", num=number, mjd=mjd, chip=chip)
+                for chip in chip_names
+            ]
             if outdir is not None:
                 all_two_d = [str(Path(outdir) / Path(filename).name)
                              for filename in all_two_d]
@@ -208,21 +219,23 @@ def process(
                 raise ValueError("psfid (or traceid) is required for 2D-to-1D extraction")
             started = perf_counter()
             inpfile = str(Path(all_two_d[0]).parent / f"{number:08d}")
-            psf_dir = Path(load.filename("PSF", num=psf_id, chip="c", dir=True))
+            psf_dir = Path(load.filename("PSF", num=psf_id, directory=True))
             psf_file = str(psf_dir / f"{psf_id:08d}")
             model_file = None
             if ids["PSFModel"] is not None:
                 model_file = str(Path(load.filename("PSFModel", num=ids["PSFModel"],
-                                                    chip="c", dir=True)) /
-                                 f"{ids['PSFModel']:08d}")
+                                                    directory=True)) /
+                                 ids["PSFModel"])
             flux_file = None
             if ids["Flux"] is not None:
-                flux_file = load.filename("Flux", num=ids["Flux"], chips=True)
+                flux_file = load.filename("Flux", num=ids["Flux"])
             wave_file = None
             if ids["Wave"] is not None:
-                wave_file = load.filename("Wave", num=ids["Wave"], chips=True)
+                wave_file = load.filename("Wave", num=ids["Wave"])
             process_2d(
-                inpfile, psf_file, extract_type=4, load=load,
+                inpfile, psf_file,
+                extract_type=(5 if ids["PSFModel"] is not None else 4),
+                load=load,
                 modelpsffile=model_file, fluxcalfile=flux_file,
                 wavefile=wave_file, skywave=skywave,
                 clobber=onedclobber, unlock=unlock, verbose=verbose,
