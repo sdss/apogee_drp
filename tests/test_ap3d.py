@@ -737,7 +737,6 @@ class TestHeader:
         assert header["GAIN"] == 2.0
         assert header["RDNOISE"] == 5.0
         assert header["BUNIT"] == "ADU"
-        assert header["AP3DVER"] == ap3d.AP3D_VERSION
 
     def test_idl_compatible_provenance(self, monkeypatch):
         """Calibration keywords, execution details, and counts are recorded."""
@@ -1704,4 +1703,3 @@ def test_real_apogee_reduction(tmp_path):
             f"robust sigma={robust_sigma:.6g}, "
             f"relative RMS={relative_rms:.6g}"
         )
-

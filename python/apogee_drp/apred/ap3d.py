@@ -59,7 +59,6 @@ except ImportError:  # pragma: no cover - exercised in no-Numba environments
     njit = None
 
 __all__ = [
-    "AP3D_VERSION",
     "NUMBA_AVAILABLE",
     "PIXMASK",
     "CosmicRay",
@@ -1213,7 +1212,6 @@ def _update_header(
 ) -> None:
     """Record sampling, noise, timing, and output-unit metadata in-place."""
 
-    header["AP3DVER"] = (AP3D_VERSION, "Python AP3D implementation version")
     header["GAIN"] = (gain, "Median gain in electron/ADU")
     header["RDNOISE"] = (readnoise, "Median sampled read noise")
     header.add_history("AP3D Python 3-D to 2-D processing")
