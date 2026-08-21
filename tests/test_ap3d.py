@@ -1309,6 +1309,209 @@ class TestOrchestration:
         assert not decompressed_file.exists()
 
         
+class ExposureLoad:
+    """Minimal filename loader for process_exposures tests."""
+
+    def __init__(self, root):
+        self.root = Path(root)
+
+    def filename(self, kind, num=None, chip=None, **kwargs):
+        return str(
+            self.root / kind / f"ap{kind}-{chip}-{int(num):08d}.fits"
+        )
+
+
+class TestProcessExposures:
+    def test_processes_all_exposures_and_chips(
+        self, tmp_path, monkeypatch
+    ):
+        load = ExposureLoad(tmp_path)
+        calls = []
+
+        def process_file(filename, output, **kwargs):
+            calls.append((filename, output, kwargs))
+
+        monkeypatch.setattr(ap3d, "process_file", process_file)
+        records = ap3d.process_exposures(
+            [101, 102],
+            load=load,
+            detectorid=11,
+            darkid=12,
+            flatid=13,
+            bpmid=14,
+            littrowid=15,
+            persistid=16,
+            maxread=[21, 22, 23],
+            overwrite=True,
+            verbose=True,
+            detect_cosmic_rays=False,
+            nfowler=1,
+        )
+
+        assert len(calls) == 6
+        assert len(records) == 6
+        assert all(record.status == "processed" for record in records)
+        assert [(record.exposure, record.chip) for record in records] == [
+            (101, "a"), (101, "b"), (101, "c"),
+            (102, "a"), (102, "b"), (102, "c"),
+        ]
+
+        first = calls[0][2]
+        assert first["detector"].endswith("apDetector-a-00000011.fits")
+        assert first["dark"].endswith("apDark-a-00000012.fits")
+        assert first["flat"].endswith("apFlat-a-00000013.fits")
+        assert first["bpm"].endswith("apBPM-a-00000014.fits")
+        assert first["littrow"] is None
+        assert first["persistence_mask"].endswith(
+            "apPersist-a-00000016.fits"
+        )
+        assert first["max_read"] == 21
+        assert first["overwrite"] is True
+        assert first["verbose"] is True
+        assert first["detect_cosmic_rays"] is False
+        assert first["nfowler"] == 1
+
+        middle = calls[1][2]
+        assert middle["littrow"].endswith(
+            "apLittrow-b-00000015.fits"
+        )
+        assert middle["max_read"] == 22
+        assert calls[2][2]["max_read"] == 23
+
+    def test_skips_existing_output(self, tmp_path, monkeypatch):
+        load = ExposureLoad(tmp_path)
+        output = Path(load.filename("2D", num=101, chip="b"))
+        output.parent.mkdir(parents=True)
+        output.write_bytes(b"existing")
+        calls = []
+        monkeypatch.setattr(
+            ap3d, "process_file",
+            lambda *args, **kwargs: calls.append((args, kwargs)),
+        )
+
+        records = ap3d.process_exposures(
+            101, load=load, chips=("b",))
+
+        assert not calls
+        assert len(records) == 1
+        assert records[0].status == "skipped"
+        assert records[0].output == str(output)
+
+    def test_overwrite_processes_existing_output(
+        self, tmp_path, monkeypatch
+    ):
+        load = ExposureLoad(tmp_path)
+        output = Path(load.filename("2D", num=101, chip="a"))
+        output.parent.mkdir(parents=True)
+        output.write_bytes(b"existing")
+        calls = []
+        monkeypatch.setattr(
+            ap3d, "process_file",
+            lambda *args, **kwargs: calls.append((args, kwargs)),
+        )
+
+        records = ap3d.process_exposures(
+            101, load=load, chips=("a",), overwrite=True)
+
+        assert len(calls) == 1
+        assert calls[0][1]["overwrite"] is True
+        assert records[0].status == "processed"
+
+    @pytest.mark.parametrize(
+        "maxread,expected",
+        [
+            (7, [7, 7, 7]),
+            ([7, 8, 9], [7, 8, 9]),
+            ({"a": 7, "b": 8, "c": 9}, [7, 8, 9]),
+        ],
+    )
+    def test_maxread_forms(
+        self, tmp_path, monkeypatch, maxread, expected
+    ):
+        load = ExposureLoad(tmp_path)
+        actual = []
+        monkeypatch.setattr(
+            ap3d, "process_file",
+            lambda *args, **kwargs: actual.append(kwargs["max_read"]),
+        )
+
+        ap3d.process_exposures(101, load=load, maxread=maxread)
+
+        assert actual == expected
+
+    @pytest.mark.parametrize(
+        "kwargs,message",
+        [
+            ({"exposures": []}, "at least one"),
+            ({"exposures": 1, "chips": ()}, "at least one"),
+            ({"exposures": 1, "chips": ("d",)}, "only"),
+            ({"exposures": 1, "chips": ("a", "a")}, "duplicates"),
+            ({"exposures": 1, "maxread": [1, 2]}, "one value per chip"),
+            (
+                {"exposures": 1, "maxread": {"a": 1, "b": 2}},
+                "missing chip",
+            ),
+        ],
+    )
+    def test_validates_arguments(self, tmp_path, kwargs, message):
+        load = ExposureLoad(tmp_path)
+        exposures = kwargs.pop("exposures")
+        with pytest.raises(ValueError, match=message):
+            ap3d.process_exposures(exposures, load=load, **kwargs)
+
+    def test_omits_nonpositive_calibration_ids(
+        self, tmp_path, monkeypatch
+    ):
+        load = ExposureLoad(tmp_path)
+        calls = []
+        monkeypatch.setattr(
+            ap3d, "process_file",
+            lambda *args, **kwargs: calls.append(kwargs),
+        )
+
+        ap3d.process_exposures(
+            101, load=load, chips=("b",),
+            detectorid=0, darkid=-1, flatid=None,
+            bpmid=0, littrowid=-5, persistid=None,
+        )
+
+        for name in (
+            "detector", "dark", "flat", "bpm", "littrow",
+            "persistence_mask",
+        ):
+            assert calls[0][name] is None
+
+    def test_continue_on_error_records_failure(
+        self, tmp_path, monkeypatch
+    ):
+        load = ExposureLoad(tmp_path)
+
+        def process_file(filename, output, **kwargs):
+            if "-b-" in output:
+                raise RuntimeError("chip failed")
+
+        monkeypatch.setattr(ap3d, "process_file", process_file)
+        records = ap3d.process_exposures(
+            101, load=load, continue_on_error=True)
+
+        assert [record.status for record in records] == [
+            "processed", "failed", "processed"
+        ]
+        assert records[1].error == "chip failed"
+
+    def test_failure_is_raised_by_default(self, tmp_path, monkeypatch):
+        load = ExposureLoad(tmp_path)
+        monkeypatch.setattr(
+            ap3d, "process_file",
+            lambda *args, **kwargs: (_ for _ in ()).throw(
+                RuntimeError("boom")
+            ),
+        )
+
+        with pytest.raises(RuntimeError, match="boom"):
+            ap3d.process_exposures(101, load=load)
+
+
 @pytest.mark.slow
 class TestFullDetectorSynthetic:
     """Synthetic integration tests requiring full APOGEE detector geometry."""

@@ -9,6 +9,11 @@ survey filenames, optionally requests calibration creation, and dispatches
 each exposure/chip to :func:`process_file`. Pipeline locking remains the
 responsibility of the surrounding batch system.
 
+The :func:`process_exposures` helper provides the reusable middle layer for
+non-plan callers: it resolves chip-specific filenames and calibrations, skips
+existing products, and dispatches one or more exposures to
+:func:`process_file`.
+
 The implementation keeps the original algorithmic choices:
 
 * reference-output, vertical-ramp, and horizontal-ramp subtraction;
@@ -59,6 +64,7 @@ __all__ = [
     "PIXMASK",
     "CosmicRay",
     "ProcessResult",
+    "ExposureProcessRecord",
     "PlanProcessRecord",
     "reference_correct",
     "detect_and_fix_cosmic_rays",
@@ -71,6 +77,7 @@ __all__ = [
     "read_calibrations",
     "write_ap2d",
     "process_file",
+    "process_exposures",
     "ap3d",
 ]
 
@@ -146,6 +153,19 @@ class PlanProcessRecord:
     planfile: str
     exposure: int
     flavor: str
+    chip: str
+    input: str
+    output: str
+    status: str
+    elapsed_seconds: float
+    error: str | None = None
+
+
+@dataclass(frozen=True)
+class ExposureProcessRecord:
+    """Outcome for one detector chip processed by :func:`process_exposures`."""
+
+    exposure: int
     chip: str
     input: str
     output: str
@@ -1656,6 +1676,135 @@ def process_file(
     if verbose:
         _log(f"Finished processing {input_file.name}", started)
     return result
+
+
+def _per_chip_values(
+    value: Any,
+    chips: Sequence[str],
+    *,
+    label: str,
+) -> dict[str, Any]:
+    """Normalize a scalar, mapping, or chip-length sequence."""
+    if isinstance(value, Mapping):
+        missing = [chip for chip in chips if chip not in value]
+        if missing:
+            raise ValueError(
+                f"{label} is missing chip(s): {', '.join(missing)}"
+            )
+        return {chip: value[chip] for chip in chips}
+    if value is None or np.ndim(value) == 0:
+        return {chip: value for chip in chips}
+    values = list(value)
+    if len(values) != len(chips):
+        raise ValueError(
+            f"{label} must be scalar or contain one value per chip"
+        )
+    return dict(zip(chips, values))
+
+
+def process_exposures(
+    exposures: int | Sequence[int] | np.ndarray,
+    *,
+    load: Any,
+    detectorid: int | None = None,
+    darkid: int | None = None,
+    flatid: int | None = None,
+    bpmid: int | None = None,
+    littrowid: int | None = None,
+    persistid: int | None = None,
+    chips: Sequence[str] = ("a", "b", "c"),
+    maxread: int | Sequence[int] | Mapping[str, int] | None = None,
+    overwrite: bool = False,
+    verbose: bool = False,
+    continue_on_error: bool = False,
+    **process_options: Any,
+) -> list[ExposureProcessRecord]:
+    """Process one or more APOGEE exposures across detector chips.
+
+    This is the reusable orchestration layer between process_file() and the
+    plan-driven ap3d(). Calibration identifiers are resolved through the
+    supplied ApLoad instance. Existing ap2D files are skipped unless
+    overwrite is true.
+    """
+    numbers = [int(value) for value in np.atleast_1d(exposures)]
+    if not numbers:
+        raise ValueError("exposures must contain at least one exposure")
+
+    chips = tuple(chips)
+    if not chips:
+        raise ValueError("chips must contain at least one detector chip")
+    invalid = [chip for chip in chips if chip not in ("a", "b", "c")]
+    if invalid:
+        raise ValueError("chips must contain only 'a', 'b', and 'c'")
+    if len(set(chips)) != len(chips):
+        raise ValueError("chips cannot contain duplicates")
+
+    maxreads = _per_chip_values(maxread, chips, label="maxread")
+    calibration_ids = {
+        "detector": ("Detector", detectorid),
+        "dark": ("Dark", darkid),
+        "flat": ("Flat", flatid),
+        "bpm": ("BPM", bpmid),
+        "littrow": ("Littrow", littrowid),
+        "persistence_mask": ("Persist", persistid),
+    }
+
+    calibration_files = {}
+    for chip in chips:
+        chip_files = {}
+        for keyword, (root, calibration_id) in calibration_ids.items():
+            if (
+                calibration_id is None
+                or int(calibration_id) <= 0
+                or (keyword == "littrow" and chip != "b")
+            ):
+                chip_files[keyword] = None
+            else:
+                chip_files[keyword] = load.filename(
+                    root, num=int(calibration_id), chip=chip
+                )
+        calibration_files[chip] = chip_files
+
+    records = []
+    for number in numbers:
+        for chip in chips:
+            started = perf_counter()
+            raw_file = str(load.filename("R", num=number, chip=chip))
+            output_file = str(load.filename("2D", num=number, chip=chip))
+
+            if Path(output_file).exists() and not overwrite:
+                records.append(ExposureProcessRecord(
+                    number, chip, raw_file, output_file, "skipped",
+                    perf_counter() - started,
+                ))
+                continue
+
+            Path(output_file).parent.mkdir(parents=True, exist_ok=True)
+            try:
+                process_file(
+                    raw_file,
+                    output_file,
+                    overwrite=overwrite,
+                    max_read=maxreads[chip],
+                    verbose=verbose,
+                    **calibration_files[chip],
+                    **process_options,
+                )
+            except Exception as exc:
+                elapsed = perf_counter() - started
+                if not continue_on_error:
+                    raise
+                records.append(ExposureProcessRecord(
+                    number, chip, raw_file, output_file, "failed",
+                    elapsed, str(exc),
+                ))
+            else:
+                records.append(ExposureProcessRecord(
+                    number, chip, raw_file, output_file, "processed",
+                    perf_counter() - started,
+                ))
+
+    return records
 
 
 def _plan_scalar(value: Any, default: Any = None) -> Any:
