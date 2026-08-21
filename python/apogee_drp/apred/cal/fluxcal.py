@@ -134,7 +134,7 @@ def make_flux_calibrations(fluxes, masks, reference, *, mjd,
                 lo, hi = max(0, affected[0] - 50), min(flux.shape[0], affected[-1] + 51)
                 good = np.isfinite(ratio[lo:hi, fiber])
                 if good.sum() > 2:
-                    coefficients = _robust_polyfit(
+                    coefficients = robust_polyfit(
                         pixel[lo:hi][good], ratio[lo:hi, fiber][good], 2)
                     ratio[affected, fiber] = np.polynomial.polynomial.polyval(
                         pixel[affected], coefficients)
@@ -231,8 +231,9 @@ def build_flux(ims: Sequence[int] | int, *, apred="daily", telescope="apo25m",
         if str(exptype).strip().upper() == "BLACKBODY":
             if waveid is None:
                 raise ValueError("BLACKBODY calibration requires waveid")
-
-            wavelengths = [_central_wavelength(waves[chip]["wavelength"]) for chip in CHIPS]
+            waves = load.wave(waveid)
+            wavelengths = [_central_wavelength(waves[chip]["wavelength"])
+                           for chip in CHIPS]
         reference, original = make_reference_spectra(
             fluxes, masks, telescope=telescope, exptype=exptype,
             wavelengths=wavelengths, bbtemp=bbtemp)
@@ -281,7 +282,9 @@ def build_response(number, *, waveid, temp, load=None, apred="daily",
         flux_files = load.product_files("flux", number)
         references = [np.asarray(fits.getdata(name, 3), float)
                       for name in flux_files]
-        waves = load.wave(waveid)
+        wave_products = load.wave(waveid)
+        waves = [_central_wavelength(wave_products[chip]["wavelength"])
+                 for chip in CHIPS]
         center = len(references[1]) // 2
         if (any(reference.ndim != 1 for reference in references) or
                 any(wave.shape != reference.shape

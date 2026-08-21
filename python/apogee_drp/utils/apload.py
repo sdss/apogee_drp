@@ -812,6 +812,103 @@ class ApLoad:
         return frames if chip is None else frames[chip]
 
 
+    def spectrum(self, num, chip=None, *, download=False):
+        """Load a processed APOGEE 1D exposure.
+
+        Parameters
+        ----------
+        num : int
+            Exposure number.
+        chip : {'a', 'b', 'c'}, optional
+            Return only this chip. By default, return all three chips.
+        download : bool, optional
+            Download missing files when supported.
+        
+        Returns
+        -------
+        spectrum : dict
+            With ``chip=None``, a dictionary keyed by chip. Otherwise, the
+            spectrum dictionary for the requested chip. Spectral arrays use
+            ``(pixel, fiber)`` ordering.
+        """
+        if chip is not None and chip not in ("a", "b", "c"):
+            raise ValueError("chip must be 'a', 'b', 'c', or None")
+
+        chips = ("a", "b", "c") if chip is None else (chip,)
+        spectra = {}
+
+        for current_chip in chips:
+            if download:
+                filename = self.allfile("1D", num=num,
+                                        chip=current_chip, download=True)
+            else:
+                filename = self.filename("1D", num=num, chip=current_chip)
+
+            with fits.open(filename, memmap=False) as hdus:
+                if len(hdus) < 4:
+                    raise ValueError(
+                        "1D spectrum does not contain the required "
+                        f"extensions: {filename}"
+                    ) 
+
+                spectra[current_chip] = {"header": hdus[0].header.copy(),
+                                         "flux": np.asarray(hdus[1].data).T.copy(),
+                                         "err": np.asarray(hdus[2].data).T.copy(),
+                                         "mask": np.asarray(hdus[3].data).T.copy()}
+
+        return spectra if chip is None else spectra[chip]
+
+
+    def wave(self, num, chip=None, *, download=False):
+        """Load an APOGEE wavelength calibration.
+
+        Parameters
+        ----------
+        num : int
+            Wavelength-calibration identifier.
+        chip : {'a', 'b', 'c'}, optional
+            Return only this chip. By default, return all three chips.
+        download : bool, optional
+            Download missing files when supported.
+
+        Returns
+        -------
+        wave : dict
+            With ``chip=None``, a dictionary keyed by chip. Otherwise, the
+            wavelength-calibration dictionary for the requested chip.
+
+        Notes
+        -----
+        The wavelength array is returned in its stored orientation. Selecting
+        a particular fiber or converting its orientation is left to the caller.
+        """
+        if chip is not None and chip not in ("a", "b", "c"):
+            raise ValueError("chip must be 'a', 'b', 'c', or None")
+
+        chips = ("a", "b", "c") if chip is None else (chip,)
+        waves = {}
+
+        for current_chip in chips:
+            if download:
+                filename = self.allfile("Wave", num=num,
+                                        chip=current_chip, download=True)
+            else:
+                filename = self.filename("Wave", num=num,
+                                         chip=current_chip)
+                
+            with fits.open(filename, memmap=False) as hdus:
+                if len(hdus) < 3:
+                    raise ValueError(
+                        "Wave calibration does not contain wavelength "
+                        "extension 2: {}".format(filename)
+                    )
+
+                waves[current_chip] = {"header":hdus[0].header.copy(),
+                                       "wavelength": np.asarray(hdus[2].data, dtype=float).copy()}
+
+        return waves if chip is None else waves[chip]
+
+
     def filename(self, root,
                  location=None, obj=None, plate=None, mjd=None, num=None,
                  fiber=None, chip=None, field=None, configid=None, fps=None,
