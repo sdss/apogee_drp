@@ -763,6 +763,55 @@ class ApLoad:
             hd.close()
             return data, header
 
+    def frame(self, num, chip=None, *, download=False):
+        """Load a processed APOGEE 2D exposure.
+
+        Parameters
+        ----------
+        num : int
+            Exposure number.
+        chip : {'a', 'b', 'c'}, optional
+            Return only this chip. By default, return all three chips.
+        download : bool, optional
+            Download missing files when supported.
+
+        Returns
+        -------
+        frame : dict
+            With ``chip=None``, a dictionary keyed by chip. Otherwise, the
+            frame dictionary for the requested chip.
+        """
+        if chip is not None and chip not in ("a", "b", "c"):
+            raise ValueError("chip must be 'a', 'b', 'c', or None")
+
+        chips = ("a", "b", "c") if chip is None else (chip,)
+        frames = {}
+
+        for current_chip in chips:
+            if download:
+                filename = self.allfile("2D", num=num,
+                                        chip=current_chip, download=True)
+            else:
+                filename = self.filename("2D", num=num,
+                                         chip=current_chip, )
+
+            with fits.open(filename, memmap=False) as hdus:
+                if len(hdus) < 4:
+                    raise ValueError(
+                        f"2D frame does not contain the required extensions: "
+                        f"{filename}"
+                    )
+
+                frames[current_chip] = {
+                    "header": hdus[0].header.copy(),
+                    "flux": np.asarray(hdus[1].data).copy(),
+                    "err": np.asarray(hdus[2].data).copy(),
+                    "mask": np.asarray(hdus[3].data).copy(),
+                }
+                
+        return frames if chip is None else frames[chip]
+
+
     def filename(self, root,
                  location=None, obj=None, plate=None, mjd=None, num=None,
                  fiber=None, chip=None, field=None, configid=None, fps=None,
