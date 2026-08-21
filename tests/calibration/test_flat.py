@@ -149,7 +149,7 @@ def test_dithered_spectral_smoothing_runs_along_x(monkeypatch):
         calls.append(size)
         return original(array, size)
 
-    monkeypatch.setattr(flat_module, "nan_uniform_filter", fake_filter)
+    monkeypatch.setattr(flat_module, "nan_uniform_filter", record)
     flat_module.make_flat_chip(
         np.ones((40, 60)), np.zeros((40, 60), np.uint32),
         dithered=True, bad_pixel_bits=0)
