@@ -459,3 +459,318 @@ def test_safe_divide_marks_invalid_values():
     result = cal_utils.safe_divide([2, 2, np.nan], [2, 0, 1])
     assert result[0] == 1
     assert np.isnan(result[1:]).all()
+
+
+# ---------------------------------------------------------------------------
+# robust_polyfit
+# ---------------------------------------------------------------------------
+
+def test_robust_polyfit_recovers_polynomial_with_outlier():
+    x = np.linspace(-2.0, 2.0, 41)
+    expected = np.array([1.5, -2.0, 0.75])
+    y = np.polynomial.polynomial.polyval(x, expected)
+
+    y[20] += 100.0
+
+    coefficients = cal_utils.robust_polyfit(x, y, degree=2)
+
+    assert np.allclose(coefficients, expected, atol=1e-10)
+
+
+def test_robust_polyfit_ignores_nonfinite_values():
+    x = np.linspace(-2.0, 2.0, 21)
+    expected = np.array([2.0, 3.0])
+    y = np.polynomial.polynomial.polyval(x, expected)
+
+    x[3] = np.nan
+    y[7] = np.nan
+    y[12] = np.inf
+
+    coefficients = cal_utils.robust_polyfit(x, y, degree=1)
+
+    assert np.allclose(coefficients, expected, atol=1e-10)
+
+
+def test_robust_polyfit_does_not_modify_inputs():
+    x = np.linspace(-1.0, 1.0, 11)
+    y = 2.0 + 3.0 * x
+
+    original_x = x.copy()
+    original_y = y.copy()
+
+    cal_utils.robust_polyfit(x, y, degree=1)
+
+    assert np.array_equal(x, original_x)
+    assert np.array_equal(y, original_y)
+
+
+def test_robust_polyfit_returns_increasing_coefficient_order():
+    x = np.linspace(-3.0, 3.0, 31)
+    y = 4.0 - 2.0 * x + 3.0 * x**2
+
+    coefficients = cal_utils.robust_polyfit(x, y, degree=2)
+
+    assert np.allclose(coefficients, [4.0, -2.0, 3.0])
+
+
+def test_robust_polyfit_allows_zero_iterations():
+    x = np.linspace(-1.0, 1.0, 10)
+    y = 1.0 + 2.0 * x
+
+    coefficients = cal_utils.robust_polyfit(x, y, degree=1, maxiter=0)
+
+    assert np.allclose(coefficients, [1.0, 2.0])
+
+
+def test_robust_polyfit_rejects_mismatched_shapes():
+    with pytest.raises(ValueError, match="same shape"):
+        cal_utils.robust_polyfit([1, 2, 3], [1, 2], degree=1)
+
+
+@pytest.mark.parametrize("degree", [-1, 1.5, True])
+def test_robust_polyfit_rejects_invalid_degree(degree):
+    with pytest.raises(ValueError, match="degree"):
+        cal_utils.robust_polyfit([0, 1, 2], [0, 1, 2], degree=degree)
+
+
+@pytest.mark.parametrize("maxiter", [-1, 1.5, True])
+def test_robust_polyfit_rejects_invalid_maxiter(maxiter):
+    with pytest.raises(ValueError, match="maxiter"):
+        cal_utils.robust_polyfit(
+            [0, 1, 2],
+            [0, 1, 2],
+            degree=1,
+            maxiter=maxiter,
+        )
+
+
+@pytest.mark.parametrize("clip", [0, -1, np.nan, np.inf])
+def test_robust_polyfit_rejects_invalid_clip(clip):
+    with pytest.raises(ValueError, match="clip"):
+        cal_utils.robust_polyfit(
+            [0, 1, 2],
+            [0, 1, 2],
+            degree=1,
+            clip=clip,
+        )
+
+
+def test_robust_polyfit_requires_enough_finite_points():
+    x = np.array([0.0, 1.0, np.nan])
+    y = np.array([1.0, 2.0, 3.0])
+
+    with pytest.raises(ValueError, match="too few finite points"):
+        cal_utils.robust_polyfit(x, y, degree=2)
+
+
+# ---------------------------------------------------------------------------
+# running_nanmedian
+# ---------------------------------------------------------------------------
+
+def test_running_nanmedian_one_dimensional():
+    values = np.array([1.0, np.nan, 3.0])
+
+    result = cal_utils.running_nanmedian(values, width=3)
+
+    assert np.allclose(result, [1.0, 2.0, 3.0])
+
+
+def test_running_nanmedian_preserves_shape():
+    values = np.arange(24.0).reshape(2, 3, 4)
+
+    result = cal_utils.running_nanmedian(values, width=3, axis=1)
+
+    assert result.shape == values.shape
+
+
+def test_running_nanmedian_runs_along_axis_zero():
+    values = np.array([
+        [1.0, 10.0],
+        [100.0, 20.0],
+        [3.0, 30.0],
+    ])
+
+    result = cal_utils.running_nanmedian(values, width=3, axis=0)
+
+    expected = np.array([
+        [1.0, 10.0],
+        [3.0, 20.0],
+        [3.0, 30.0],
+    ])
+    assert np.allclose(result, expected)
+
+
+def test_running_nanmedian_runs_along_axis_one():
+    values = np.array([
+        [1.0, 100.0, 3.0],
+        [10.0, 20.0, 30.0],
+    ])
+
+    result = cal_utils.running_nanmedian(values, width=3, axis=1)
+
+    expected = np.array([
+        [1.0, 3.0, 3.0],
+        [10.0, 20.0, 30.0],
+    ])
+    assert np.allclose(result, expected)
+
+
+def test_running_nanmedian_accepts_negative_axis():
+    values = np.array([
+        [1.0, 100.0, 3.0],
+        [10.0, 20.0, 30.0],
+    ])
+
+    positive = cal_utils.running_nanmedian(values, width=3, axis=1)
+    negative = cal_utils.running_nanmedian(values, width=3, axis=-1)
+
+    assert np.array_equal(positive, negative)
+
+
+def test_running_nanmedian_width_one_returns_copy():
+    values = np.array([1.0, np.nan, 3.0])
+
+    result = cal_utils.running_nanmedian(values, width=1)
+
+    assert np.array_equal(result, values, equal_nan=True)
+    assert result is not values
+
+
+def test_running_nanmedian_all_nan_window_remains_nan():
+    values = np.array([np.nan, np.nan, np.nan])
+
+    result = cal_utils.running_nanmedian(values, width=3)
+
+    assert np.all(np.isnan(result))
+
+
+def test_running_nanmedian_does_not_modify_input():
+    values = np.array([1.0, np.nan, 3.0])
+    original = values.copy()
+
+    cal_utils.running_nanmedian(values, width=3)
+
+    assert np.array_equal(values, original, equal_nan=True)
+
+
+@pytest.mark.parametrize("width", [0, -1, 1.5, True])
+def test_running_nanmedian_rejects_invalid_width(width):
+    with pytest.raises(ValueError, match="width"):
+        cal_utils.running_nanmedian([1.0, 2.0, 3.0], width=width)
+
+
+def test_running_nanmedian_rejects_scalar():
+    with pytest.raises(ValueError, match="at least one dimension"):
+        cal_utils.running_nanmedian(1.0, width=3)
+
+
+def test_running_nanmedian_rejects_invalid_axis():
+    with pytest.raises(np.AxisError):
+        cal_utils.running_nanmedian([1.0, 2.0], width=3, axis=1)
+
+
+# ---------------------------------------------------------------------------
+# interpolate_nonfinite
+# ---------------------------------------------------------------------------
+
+def test_interpolate_nonfinite_one_dimensional():
+    values = np.array([np.nan, 1.0, np.nan, 3.0, np.nan])
+
+    result = cal_utils.interpolate_nonfinite(values)
+
+    assert np.allclose(result, [1.0, 1.0, 2.0, 3.0, 3.0])
+
+
+def test_interpolate_nonfinite_replaces_infinities():
+    values = np.array([1.0, np.inf, 3.0, -np.inf, 5.0])
+
+    result = cal_utils.interpolate_nonfinite(values)
+
+    assert np.allclose(result, [1.0, 2.0, 3.0, 4.0, 5.0])
+
+
+def test_interpolate_nonfinite_runs_along_axis_zero():
+    values = np.array([
+        [1.0, np.nan],
+        [np.nan, 2.0],
+        [3.0, np.nan],
+    ])
+
+    result = cal_utils.interpolate_nonfinite(values, axis=0)
+
+    expected = np.array([
+        [1.0, 2.0],
+        [2.0, 2.0],
+        [3.0, 2.0],
+    ])
+    assert np.allclose(result, expected)
+
+
+def test_interpolate_nonfinite_runs_along_axis_one():
+    values = np.array([
+        [1.0, np.nan, 3.0],
+        [np.nan, 5.0, np.nan],
+    ])
+
+    result = cal_utils.interpolate_nonfinite(values, axis=1)
+
+    expected = np.array([
+        [1.0, 2.0, 3.0],
+        [5.0, 5.0, 5.0],
+    ])
+    assert np.allclose(result, expected)
+
+
+def test_interpolate_nonfinite_accepts_negative_axis():
+    values = np.array([
+        [1.0, np.nan, 3.0],
+        [4.0, np.nan, 6.0],
+    ])
+
+    positive = cal_utils.interpolate_nonfinite(values, axis=1)
+    negative = cal_utils.interpolate_nonfinite(values, axis=-1)
+
+    assert np.array_equal(positive, negative)
+
+
+def test_interpolate_nonfinite_leaves_all_nonfinite_vector_unchanged():
+    values = np.array([
+        [1.0, np.nan],
+        [2.0, np.inf],
+        [3.0, -np.inf],
+    ])
+
+    result = cal_utils.interpolate_nonfinite(values, axis=0)
+
+    assert np.allclose(result[:, 0], [1.0, 2.0, 3.0])
+    assert np.isnan(result[0, 1])
+    assert np.isposinf(result[1, 1])
+    assert np.isneginf(result[2, 1])
+
+
+def test_interpolate_nonfinite_does_not_modify_input():
+    values = np.array([1.0, np.nan, 3.0])
+    original = values.copy()
+
+    cal_utils.interpolate_nonfinite(values)
+
+    assert np.array_equal(values, original, equal_nan=True)
+
+
+def test_interpolate_nonfinite_converts_integer_input_to_float():
+    values = np.array([1, 2, 3], dtype=int)
+
+    result = cal_utils.interpolate_nonfinite(values)
+
+    assert result.dtype.kind == "f"
+    assert np.allclose(result, values)
+
+
+def test_interpolate_nonfinite_rejects_scalar():
+    with pytest.raises(ValueError, match="at least one dimension"):
+        cal_utils.interpolate_nonfinite(1.0)
+
+
+def test_interpolate_nonfinite_rejects_invalid_axis():
+    with pytest.raises(np.AxisError):
+        cal_utils.interpolate_nonfinite([1.0, np.nan], axis=1)
