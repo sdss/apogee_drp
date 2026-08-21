@@ -7,6 +7,7 @@ import pytest
 from astropy.io import fits
 
 from apogee_drp.apred.cal import dark
+from apogee_drp.apred.cal import utils as cal_utils
 
 
 def make_ramps(nframe=3, nread=8, ny=16, nx=20, rate=2.0):
@@ -152,77 +153,49 @@ def test_combine_dark_ramps_rejects_invalid_options(kwargs, message):
         dark.combine_dark_ramps(make_ramps(), **kwargs)
 
 
-def test_read_corrected_ramp_subtracts_second_read(monkeypatch, tmp_path):
-    rampfile = tmp_path / "ramp.fits"
-    rampfile.touch()
-    cube = np.arange(5, dtype=float)[:, None, None] + np.zeros((5, 3, 4))
-    header = fits.Header({"TEST": 1})
-    monkeypatch.setattr(
-        dark.ap3d, "read_ramp",
-        lambda filename, **kwargs: (cube.copy(), header.copy()),
-    )
-    monkeypatch.setattr(
-        dark.ap3d, "reference_correct",
-        lambda data, head, **kwargs: (data, None, None, None),
-    )
-    corrected, actual_header = dark._read_corrected_ramp(
-        rampfile, max_read=4, verbose=True)
-    np.testing.assert_array_equal(corrected[:, 0, 0], [0, 0, 1, 2, 3])
-    assert actual_header["TEST"] == 1
-
-
-def test_read_corrected_ramp_decompresses_apz(monkeypatch, tmp_path):
-    source = tmp_path / "apR-a-00000001.apz"
-    source.touch()
-    unpack_calls = []
-
-    def unzip(filename, **kwargs):
-        unpack_calls.append((filename, kwargs))
-        (Path(kwargs["fitsdir"]) / "apR-a-00000001.fits").touch()
-
-    monkeypatch.setattr(dark.apzip, "unzip", unzip)
-    monkeypatch.setattr(
-        dark.ap3d, "read_ramp",
-        lambda *args, **kwargs: (np.arange(4)[:, None, None]
-                                 + np.zeros((4, 2, 2)), fits.Header()),
-    )
-    monkeypatch.setattr(
-        dark.ap3d, "reference_correct",
-        lambda cube, header, **kwargs: (cube, None, None, None),
-    )
-    result, _ = dark._read_corrected_ramp(source)
-    assert result.shape == (4, 2, 2)
-    assert unpack_calls[0][0] == str(source)
-    assert unpack_calls[0][1]["clobber"] is True
-    assert unpack_calls[0][1]["delete"] is False
-
-
 def test_load_ramps_creates_memmap(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
-    calls = []
+    load_calls = []
+    correction_calls = []
 
-    def read(filename, **kwargs):
-        calls.append((filename, kwargs))
-        value = len(calls)
-        return np.full((4, 3, 2), value, np.float32), fits.Header()
+    def load_raw(filename, **kwargs):
+        load_calls.append((filename, kwargs))
+        offset = 10 * len(load_calls)
+        cube = (np.arange(4, dtype=float)[:, None, None]
+                + np.zeros((4, 3, 2)) + offset)
+        return cube, fits.Header({"TEST": len(load_calls)})
 
-    monkeypatch.setattr(dark, "_read_corrected_ramp", read)
-    ramps, _ = dark._load_ramps(
-        load, [11, 12], "b", tmp_path, max_read=7, verbose=True)
+    def correct(cube, header, **kwargs):
+        correction_calls.append(kwargs)
+        return cube, None, None, None
+
+    monkeypatch.setattr(dark.ap3d, "load_raw_ramp", load_raw)
+    monkeypatch.setattr(dark.ap3d, "reference_correct", correct)
+    ramps, header = dark._load_ramps(
+        load, [11, 12], "b", tmp_path, max_read=7, unlock=True,
+        verbose=True)
     assert isinstance(ramps, np.memmap)
     assert ramps.shape == (2, 4, 3, 2)
-    np.testing.assert_array_equal(ramps[:, 0, 0, 0], [1, 2])
-    assert Path(calls[0][0]).name == "apR-b-00000011.fits"
-    assert calls[0][1] == {"max_read": 7, "verbose": True}
+    np.testing.assert_array_equal(ramps[:, :, 0, 0],
+                                  [[10, 0, 1, 2], [20, 0, 1, 2]])
+    assert header["TEST"] == 1
+    assert Path(load_calls[0][0]).name == "apR-b-00000011.fits"
+    assert load_calls[0][1] == {
+        "max_read": 7, "temporary_directory": tmp_path,
+        "unlock": True, "verbose": True,
+    }
+    assert correction_calls == [{"indiv": 3}, {"indiv": 3}]
 
 
 def test_load_ramps_rejects_inconsistent_shapes(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
     shapes = iter([(4, 3, 2), (5, 3, 2)])
-    monkeypatch.setattr(
-        dark, "_read_corrected_ramp",
-        lambda *args, **kwargs: (np.zeros(next(shapes)), fits.Header()),
-    )
+    monkeypatch.setattr(dark.ap3d, "load_raw_ramp",
+                        lambda *args, **kwargs:
+                        (np.zeros(next(shapes)), fits.Header()))
+    monkeypatch.setattr(dark.ap3d, "reference_correct",
+                        lambda cube, header, **kwargs:
+                        (cube, None, None, None))
     with pytest.raises(ValueError, match="same shape"):
         dark._load_ramps(load, [11, 12], "a", tmp_path)
 
@@ -255,9 +228,27 @@ class FakeLoad:
     def __init__(self, root):
         self.root = Path(root)
 
-    def filename(self, kind, num=None, chip=None, **kwargs):
+    def filename(self, kind, num=None, chip=None, directory=False, **kwargs):
+        if directory:
+            return str(self.root)
         infix = f"-{chip}" if chip is not None else ""
         return str(self.root / f"ap{kind}{infix}-{int(num):08d}.fits")
+
+    def product_files(self, product, name):
+        assert product == "dark"
+        files = [self.filename("Dark", num=name, chip=chip)
+                 for chip in dark.CHIPS]
+        return files + [str(self.root / f"apDark-{int(name):08d}.tab")]
+
+    def product_exists(self, product, name):
+        return all(Path(filename).is_file() and Path(filename).stat().st_size > 0
+                   for filename in self.product_files(product, name))
+
+    def product_delete(self, product, name, **kwargs):
+        for filename in self.product_files(product, name):
+            path = Path(filename)
+            if path.exists() or path.is_symlink():
+                path.unlink()
 
 
 @pytest.fixture
@@ -266,9 +257,9 @@ def dark_environment(monkeypatch, tmp_path):
     lock_calls = []
     plot_calls = []
     html_calls = []
-    monkeypatch.setattr(dark, "_make_load", lambda **kwargs: load)
+    monkeypatch.setattr(dark.apload, "ApLoad", lambda **kwargs: load)
     monkeypatch.setattr(
-        dark.lock, "lock",
+        cal_utils.lock, "lock",
         lambda filename, **kwargs: lock_calls.append((Path(filename), kwargs)),
     )
     monkeypatch.setattr(
@@ -291,7 +282,8 @@ def dark_environment(monkeypatch, tmp_path):
 
 def test_build_dark_writes_complete_product_set(dark_environment):
     load, lock_calls, plot_calls, html_calls = dark_environment
-    outputs = dark.build_dark([12345678, 12345679], verbose=True)
+    outputs = load.product_files("dark", 12345678)[:3]
+    assert dark.build_dark([12345678, 12345679], verbose=True) is None
     assert [Path(name).name for name in outputs] == [
         "apDark-a-12345678.fits", "apDark-b-12345678.fits",
         "apDark-c-12345678.fits",
@@ -322,15 +314,14 @@ def test_build_dark_reuses_complete_products(
     load, lock_calls, _, _ = dark_environment
     outputs = [load.root / f"apDark-{chip}-00000200.fits" for chip in dark.CHIPS]
     for output in outputs:
-        output.touch()
-    (load.root / "apDark-00000200.tab").touch()
+        output.write_bytes(b"existing")
+    (load.root / "apDark-00000200.tab").write_bytes(b"existing")
     monkeypatch.setattr(
         dark, "_load_ramps",
         lambda *args, **kwargs: pytest.fail("existing products must be reused"),
     )
-    actual = dark.build_dark([200], verbose=True)
-    assert list(map(Path, actual)) == outputs
-    assert "already made" in capsys.readouterr().out
+    assert dark.build_dark([200], verbose=True) is None
+    assert "dark product 200 already exists" in capsys.readouterr().out
     assert not any(options.get("lock") for _, options in lock_calls)
 
 
@@ -344,12 +335,13 @@ def test_build_dark_partial_product_set_is_rebuilt(dark_environment):
 
 
 def test_build_dark_clobber_rewrites_existing_products(dark_environment):
-    first = dark.build_dark([202])
+    load, _, _, _ = dark_environment
+    dark.build_dark([202])
+    first = load.product_files("dark", 202)[:3]
     for filename in first:
         Path(filename).write_bytes(b"old")
-    second = dark.build_dark([202], clobber=True)
-    assert second == first
-    assert all(Path(filename).stat().st_size > 3 for filename in second)
+    assert dark.build_dark([202], clobber=True) is None
+    assert all(Path(filename).stat().st_size > 3 for filename in first)
 
 
 def test_build_dark_clears_lock_after_failure(dark_environment, monkeypatch):

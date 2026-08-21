@@ -13,8 +13,9 @@ import numpy as np
 from astropy.io import fits
 from scipy.ndimage import binary_dilation, median_filter
 
-from ...utils import apzip, lock, utils
+from ...utils import apload, utils
 from .. import ap3d
+from .utils import product_build_lock
 from .darkhtml import darkhtml
 from .darkplot import darkplot
 
@@ -22,13 +23,6 @@ from .darkplot import darkplot
 CHIPS = ("a", "b", "c")
 
 __all__ = ["CHIPS", "build_dark", "combine_dark_ramps", "dark_variance"]
-
-
-def _make_load(*, apred, telescope):
-    """Construct ``ApLoad`` without importing the full pipeline at import time."""
-    from ...utils.apload import ApLoad
-
-    return ApLoad(apred=apred, telescope=telescope)
 
 
 def dark_variance(data, nread=1, gain=1.9, readnoise=18.0):
@@ -136,30 +130,8 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
     return dark, chi2, mask, rate, statistics
 
 
-def _read_corrected_ramp(filename, max_read=None, verbose=False):
-    """Read an APOGEE ramp, decompressing APZ input when necessary."""
-    filename = Path(filename)
-    temporary_directory = None
-    try:
-        rampfile = filename
-        if filename.suffix.lower() == ".apz":
-            temporary_directory = tempfile.TemporaryDirectory(prefix="mkdark-")
-            apzip.unzip(str(filename), clobber=True, delete=False, silent=not verbose,
-                        fitsdir=temporary_directory.name)
-            rampfile = Path(temporary_directory.name) / f"{filename.stem}.fits"
-            if not rampfile.exists():
-                raise RuntimeError(f"APZ decompression did not create {rampfile}")
-        cube, header = ap3d.read_ramp(rampfile, max_read=max_read, verbose=verbose)
-        corrected, _, _, _ = ap3d.reference_correct(cube, header, indiv=3)
-        baseline = corrected[1].copy()
-        corrected[1:] -= baseline[None, :, :]
-        return corrected.astype(np.float32, copy=False), header
-    finally:
-        if temporary_directory is not None:
-            temporary_directory.cleanup()
-
-
-def _load_ramps(load, images, chip, directory, max_read=None, verbose=False):
+def _load_ramps(load, images, chip, directory, max_read=None, unlock=False,
+                verbose=False):
     """Store corrected ramps in a disk-backed array and return it."""
     ramps = None
     header = None
@@ -168,8 +140,19 @@ def _load_ramps(load, images, chip, directory, max_read=None, verbose=False):
         rawfile = load.filename("R", num=int(number), chip=chip)
         if verbose:
             print(f"{iframe + 1}/{len(images)} {chip} {int(number)}")
-        ramp, current_header = _read_corrected_ramp(rawfile, max_read=max_read,
-                                                     verbose=verbose)
+        cube, current_header = ap3d.load_raw_ramp(
+            rawfile,
+            max_read=max_read,
+            temporary_directory=directory,
+            unlock=unlock,
+            verbose=verbose,
+        )
+        ramp, _, _, _ = ap3d.reference_correct(
+            cube, current_header, indiv=3
+        )
+        baseline = ramp[1].copy()
+        ramp[1:] -= baseline[None, :, :]
+        ramp = ramp.astype(np.float32, copy=False)
         if ramps is None:
             shape = (len(images),) + ramp.shape
             ramps = np.lib.format.open_memmap(filename, mode="w+", dtype=np.float32,
@@ -221,28 +204,31 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
         )
 
     darkid = int(images[0])
-    load = _make_load(apred=apred, telescope=telescope)
-    output_files = [load.filename("Dark", num=darkid, chip=chip) for chip in CHIPS]
-    darkdir = os.path.dirname(output_files[0])
-    os.makedirs(darkdir, exist_ok=True)
-    summary_file = os.path.join(darkdir, f"{load.prefix}Dark-{darkid:08d}.tab")
-    rate_files = [
-        os.path.join(darkdir, f"{load.prefix}DarkRate-{chip}-{darkid:08d}.fits")
-        for chip in CHIPS
-    ]
-    required_files = output_files + [summary_file]
+    load = apload.ApLoad(apred=apred, telescope=telescope)
 
-    lock.lock(summary_file, waittime=10, unlock=unlock)
-    if all(os.path.exists(filename) for filename in required_files) and not clobber:
-        if verbose:
-            print("Dark file:", summary_file, "already made")
-        return output_files
+    with product_build_lock(load, "dark", darkid, clobber=clobber,
+                            unlock=unlock, verbose=verbose) as (build, files):
+        if not build:
+            return
 
-    lock.lock(summary_file, lock=True)
-    try:
-        for filename in required_files + rate_files:
-            if os.path.exists(filename):
-                os.remove(filename)
+        output_files = files[:3]
+        summary_file = files[3]
+        darkdir = load.filename("Dark", num=darkid, directory=True)
+        rate_files = [
+            os.path.join(
+                darkdir, f"{load.prefix}DarkRate-{chip}-{darkid:08d}.fits"
+            )
+            for chip in CHIPS
+        ]
+
+        # DarkRate files are diagnostics rather than registered product
+        # components, so product_build_lock() intentionally does not know
+        # about them. Remove stale copies whenever the Dark is rebuilt.
+        for filename in rate_files:
+            path = Path(filename)
+            if path.exists() or path.is_symlink():
+                path.unlink()
+
         dtype = np.dtype([
             ("num", np.int64), ("chip", "S1"), ("nframes", np.int32),
             ("nreads", np.int32), ("nsat", np.int64), ("nhot", np.int64),
@@ -256,8 +242,10 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
         for ichip, chip in enumerate(CHIPS):
             started = time.time()
             with tempfile.TemporaryDirectory(prefix=f"mkdark-{chip}-") as workdir:
-                ramps, header = _load_ramps(load, images, chip, workdir,
-                                             verbose=verbose)
+                ramps, header = _load_ramps(
+                    load, images, chip, workdir, unlock=unlock,
+                    verbose=verbose,
+                )
                 dark, chi2, mask, rate, stats = combine_dark_ramps(ramps)
                 del ramps
             _add_provenance(header, darkid, load)
@@ -292,6 +280,3 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
                 "nbad": int(row["nbad"]), "nneg": int(row["nneg"]),
             })
         darkhtml(darkdir, html_rows)
-    finally:
-        lock.lock(summary_file, clear=True)
-    return output_files
