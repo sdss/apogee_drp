@@ -57,6 +57,46 @@ def frame_load(load, tmp_path, monkeypatch):
     return load
 
 
+@pytest.fixture
+def spectrum_load(load, tmp_path, monkeypatch):
+    """Create a lightweight loader backed by synthetic ap1D files."""
+    def filename(kind, num=None, chip=None, **kwargs):
+        assert kind == "1D"
+        return str(tmp_path / f"ap1D-{chip}-{int(num):08d}.fits")
+
+    monkeypatch.setattr(load, "filename", filename)
+    for index, chip in enumerate("abc"):
+        path = Path(filename("1D", num=123, chip=chip))
+        fits.HDUList([
+            fits.PrimaryHDU(
+                header=fits.Header({"CHIP": chip, "EXPTYPE": "DOMEFLAT"})
+            ),
+            fits.ImageHDU(np.full((3, 4), index + 1.0)),
+            fits.ImageHDU(np.full((3, 4), index + 0.1)),
+            fits.ImageHDU(np.full((3, 4), index, dtype=np.uint16)),
+        ]).writeto(path)
+    return load
+
+
+@pytest.fixture
+def wave_load(load, tmp_path, monkeypatch):
+    """Create a lightweight loader backed by synthetic apWave files."""
+    def filename(kind, num=None, chip=None, **kwargs):
+        assert kind == "Wave"
+        return str(tmp_path / f"apWave-{chip}-{int(num):08d}.fits")
+
+    monkeypatch.setattr(load, "filename", filename)
+    for index, chip in enumerate("abc"):
+        path = Path(filename("Wave", num=456, chip=chip))
+        wavelength = np.arange(12.0).reshape(3, 4) + 100.0 * index
+        fits.HDUList([
+            fits.PrimaryHDU(header=fits.Header({"CHIP": chip})),
+            fits.ImageHDU(np.full((2, 2), index)),
+            fits.ImageHDU(wavelength),
+        ]).writeto(path)
+    return load
+
+
 def _fake_full(root, **kwargs):
     """Make a recognizable fake path from the arguments passed to Path.full."""
     chip = kwargs.get("chip")
@@ -348,3 +388,103 @@ class TestFrame:
 
         with pytest.raises(ValueError, match="required extensions"):
             frame_load.frame(124, chip="a")
+
+
+
+class TestSpectrum:
+    def test_loads_all_chips_by_default(self, spectrum_load):
+        spectra = spectrum_load.spectrum(123)
+
+        assert set(spectra) == {"a", "b", "c"}
+        assert spectra["b"]["header"]["CHIP"] == "b"
+        assert spectra["b"]["header"]["EXPTYPE"] == "DOMEFLAT"
+        np.testing.assert_array_equal(spectra["c"]["flux"], 3.0)
+        np.testing.assert_array_equal(spectra["c"]["err"], 2.1)
+        np.testing.assert_array_equal(spectra["c"]["mask"], 2)
+
+    def test_can_load_one_chip(self, spectrum_load):
+        spectrum = spectrum_load.spectrum(123, chip="b")
+
+        assert set(spectrum) == {"header", "flux", "err", "mask"}
+        np.testing.assert_array_equal(spectrum["flux"], 2.0)
+
+    def test_transposes_spectral_arrays(self, spectrum_load):
+        spectrum = spectrum_load.spectrum(123, chip="a")
+
+        assert spectrum["flux"].shape == (4, 3)
+        assert spectrum["err"].shape == (4, 3)
+        assert spectrum["mask"].shape == (4, 3)
+
+    def test_rejects_invalid_chip(self, spectrum_load):
+        with pytest.raises(ValueError, match="chip"):
+            spectrum_load.spectrum(123, chip="d")
+
+    def test_arrays_remain_available_after_file_closes(self, spectrum_load):
+        spectrum = spectrum_load.spectrum(123, chip="a")
+
+        assert spectrum["flux"].flags.owndata
+        assert spectrum["err"].flags.owndata
+        assert spectrum["mask"].flags.owndata
+        np.testing.assert_array_equal(spectrum["flux"], 1.0)
+
+    def test_requires_all_extensions(self, spectrum_load):
+        filename = Path(
+            spectrum_load.filename("1D", num=124, chip="a")
+        )
+        fits.PrimaryHDU().writeto(filename)
+
+        with pytest.raises(ValueError, match="required extensions"):
+            spectrum_load.spectrum(124, chip="a")
+
+
+class TestWave:
+    def test_loads_all_chips_by_default(self, wave_load):
+        waves = wave_load.wave(456)
+
+        assert set(waves) == {"a", "b", "c"}
+        assert waves["b"]["header"]["CHIP"] == "b"
+        np.testing.assert_array_equal(
+            waves["c"]["wavelength"],
+            np.arange(12.0).reshape(3, 4) + 200.0,
+        )
+
+    def test_can_load_one_chip(self, wave_load):
+        wave = wave_load.wave(456, chip="b")
+
+        assert set(wave) == {"header", "wavelength"}
+        np.testing.assert_array_equal(
+            wave["wavelength"],
+            np.arange(12.0).reshape(3, 4) + 100.0,
+        )
+
+    def test_preserves_stored_orientation(self, wave_load):
+        wave = wave_load.wave(456, chip="a")
+
+        assert wave["wavelength"].shape == (3, 4)
+        np.testing.assert_array_equal(
+            wave["wavelength"],
+            np.arange(12.0).reshape(3, 4),
+        )
+
+    def test_rejects_invalid_chip(self, wave_load):
+        with pytest.raises(ValueError, match="chip"):
+            wave_load.wave(456, chip="d")
+
+    def test_array_remains_available_after_file_closes(self, wave_load):
+        wave = wave_load.wave(456, chip="a")
+
+        assert wave["wavelength"].flags.owndata
+        np.testing.assert_array_equal(
+            wave["wavelength"],
+            np.arange(12.0).reshape(3, 4),
+        )
+
+    def test_requires_wavelength_extension(self, wave_load):
+        filename = Path(
+            wave_load.filename("Wave", num=457, chip="a")
+        )
+        fits.PrimaryHDU().writeto(filename)
+
+        with pytest.raises(ValueError, match="extension 2"):
+            wave_load.wave(457, chip="a")
+

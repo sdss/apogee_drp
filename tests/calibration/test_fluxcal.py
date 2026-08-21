@@ -19,6 +19,8 @@ class FakeLoad:
     def __init__(self, root):
         self.root = Path(root)
         self.delete_calls = []
+        self.spectra = None
+        self.waves = None
 
     def cmjd(self, number):
         return "60000"
@@ -50,6 +52,16 @@ class FakeLoad:
             if path.exists() or path.is_symlink():
                 path.unlink()
 
+    def spectrum(self, number, chip=None):
+        if self.spectra is None:
+            raise RuntimeError("synthetic spectra have not been configured")
+        return self.spectra if chip is None else self.spectra[chip]
+
+    def wave(self, number, chip=None):
+        if self.waves is None:
+            raise RuntimeError("synthetic wavelengths have not been configured")
+        return self.waves if chip is None else self.waves[chip]
+
 
 def test_product_files_are_three_chips(tmp_path):
     names = FakeLoad(tmp_path).product_files("flux", 123)
@@ -62,14 +74,9 @@ def test_obsolete_product_filename_and_load_helpers_are_removed():
     assert not hasattr(fluxcal, "product_files")
     assert not hasattr(fluxcal, "_chip_filename")
     assert not hasattr(fluxcal, "_make_load")
-
-
-def test_running_nanmedian_supports_numpy_before_120(monkeypatch):
-    monkeypatch.delattr(
-        np.lib.stride_tricks, "sliding_window_view", raising=False)
-    values = np.array([[1.0], [np.nan], [5.0]])
-    result = fluxcal._running_nanmedian(values, 3)
-    np.testing.assert_allclose(result[:, 0], [1.0, 3.0, 5.0])
+    assert not hasattr(fluxcal, "_process")
+    assert not hasattr(fluxcal, "_load_1d")
+    assert not hasattr(fluxcal, "_load_wavelength")
 
 
 def test_planck_shape_and_temperature_dependence():
@@ -198,19 +205,33 @@ def test_flux_calibration_validates_inputs():
             fluxes, masks, np.zeros((4, 3)), mjd=1)
 
 
-def test_load_1d_transposes_fits_arrays(tmp_path):
-    load = FakeLoad(tmp_path)
-    filename = Path(load.filename("1D", num=12, chip="a"))
-    filename.parent.mkdir(parents=True)
-    fits.HDUList([
-        fits.PrimaryHDU(header=fits.Header({"EXPTYPE": "DOMEFLAT"})),
-        fits.ImageHDU(np.arange(12).reshape(3, 4)), fits.ImageHDU(),
-        fits.ImageHDU(np.ones((3, 4), dtype=np.int16)),
-    ]).writeto(filename)
-    frame = fluxcal._load_1d(load, 12, "a")
-    assert frame["flux"].shape == (4, 3)
-    assert frame["mask"].shape == (4, 3)
-    assert frame["header"]["EXPTYPE"] == "DOMEFLAT"
+def test_central_wavelength_accepts_one_dimensional_array():
+    wavelength = np.linspace(12000.0, 17000.0, 20)
+
+    result = fluxcal._central_wavelength(wavelength)
+
+    np.testing.assert_array_equal(result, wavelength)
+
+
+def test_central_wavelength_selects_middle_row():
+    wavelength = np.arange(15.0).reshape(3, 5)
+
+    result = fluxcal._central_wavelength(wavelength)
+
+    np.testing.assert_array_equal(result, wavelength[1])
+
+
+def test_central_wavelength_selects_middle_column():
+    wavelength = np.arange(15.0).reshape(5, 3)
+
+    result = fluxcal._central_wavelength(wavelength)
+
+    np.testing.assert_array_equal(result, wavelength[:, 1])
+
+
+def test_central_wavelength_rejects_invalid_dimensions():
+    with pytest.raises(ValueError, match="one or two dimensions"):
+        fluxcal._central_wavelength(np.zeros((2, 3, 4)))
 
 
 def patch_builder(monkeypatch, tmp_path):
@@ -221,15 +242,18 @@ def patch_builder(monkeypatch, tmp_path):
         cal_utils.lock, "lock",
         lambda *args, **kwargs: locks.append((args, kwargs)))
     monkeypatch.setattr(
-        fluxcal, "_process",
+        fluxcal, "process",
         lambda *args, **kwargs: processes.append((args, kwargs)))
     fluxes, masks = simple_frames(npix=32, nfiber=6)
-    monkeypatch.setattr(
-        fluxcal, "_load_1d",
-        lambda load, number, chip: {
+    load.spectra = {
+        chip: {
             "header": fits.Header({"EXPTYPE": "DOMEFLAT"}),
-            "flux": fluxes["abc".index(chip)],
-            "mask": masks["abc".index(chip)]})
+            "flux": fluxes[index],
+            "err": np.ones_like(fluxes[index]),
+            "mask": masks[index],
+        }
+        for index, chip in enumerate("abc")
+    }
     monkeypatch.setattr(
         fluxcal, "make_reference_spectra",
         lambda *args, **kwargs: (np.ones((32, 3)), np.ones((32, 3))))
@@ -248,7 +272,8 @@ def test_build_flux_processes_and_writes_data_model(monkeypatch, tmp_path):
         littrowid=5, persistid=6, verbose=True)
     assert result is None
     outputs = load.product_files("flux", 12)
-    assert processes[0][0][1] == [12, 13]
+    assert processes[0][0][0] == [12, 13]
+    assert processes[0][1]["load"] is load
     assert processes[0][1]["darkid"] == 1
     assert processes[0][1]["persistid"] == 6
     for index, filename in enumerate(outputs):
@@ -302,7 +327,7 @@ def test_build_flux_partial_product_is_rebuilt(monkeypatch, tmp_path):
 def test_build_flux_clears_lock_after_failure(monkeypatch, tmp_path):
     _, locks, _ = patch_builder(monkeypatch, tmp_path)
     monkeypatch.setattr(
-        fluxcal, "_process",
+        fluxcal, "process",
         lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("boom")))
     with pytest.raises(RuntimeError, match="boom"):
         fluxcal.build_flux(12)
@@ -326,9 +351,13 @@ def test_build_response_writes_three_vectors(monkeypatch, tmp_path):
     for filename in load.product_files("wave", 99):
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
         Path(filename).write_bytes(b"wave")
-    monkeypatch.setattr(
-        fluxcal, "_load_wavelength",
-        lambda load, waveid, chip: np.linspace(12000, 17000, 20))
+    load.waves = {
+        chip: {
+            "header": fits.Header({"CHIP": chip}),
+            "wavelength": np.linspace(12000, 17000, 20),
+        }
+        for chip in "abc"
+    }
     result = fluxcal.build_response(12, waveid=99, temp=4000, load=load)
     assert result is None
     outputs = load.product_files("response", 12)
@@ -410,4 +439,5 @@ def test_makecal_response_dispatches_current_builder(monkeypatch, tmp_path):
     assert calls[0][1]["temp"] == 4000
     assert calls[0][1]["clobber"] is True
     assert calls[0][1]["unlock"] is True
+
 
