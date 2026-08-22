@@ -127,10 +127,15 @@ def test_modelpsf_preserves_compound_identifier(load):
     load.cmjd.assert_called_once_with(12345678)
 
 
-def test_dailywave_uses_name_as_mjd(load):
-    products.product_files(load, "dailywave", 60000)
+def test_dailywave_uses_unpadded_mjd_name(load):
+    files = products.product_files(load, "dailywave", 60000)
     load.cmjd.assert_not_called()
     assert load.filename.call_args.kwargs["mjd"] == 60000
+    assert files == [
+        "/cal/apWave-a-60000.fits",
+        "/cal/apWave-b-60000.fits",
+        "/cal/apWave-c-60000.fits",
+    ]
 
 
 def test_lsf_includes_diagnostics(load):

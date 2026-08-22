@@ -67,6 +67,21 @@ def _summary_files(root: str) -> Resolver:
 
     return resolve
 
+def _dailywave_files(load, name, mjd):
+    """Resolve daily-wave files whose identifier is an unpadded MJD."""
+    identifier = str(int(name))
+    files = _as_list(load.filename("Wave", num=name, mjd=mjd,
+                                   chip=APOGEE_CHIPS))
+    resolved = []
+    for filename in files:
+        path = Path(filename)
+        prefix, separator, _ = path.stem.rpartition("-")
+        if not separator:
+            raise ValueError(
+                f"Cannot replace Wave identifier in filename: {filename}"
+            )
+        resolved.append(str(path.with_name(f"{prefix}-{identifier}{path.suffix}")))
+    return resolved
 
 def _lsf_files(load, name, mjd):
     files = _as_list(load.filename(
@@ -119,8 +134,8 @@ PRODUCTS: Dict[str, ProductSpec] = {
     "response": ProductSpec((FileComponent("Response"),)),
     "wave": ProductSpec((FileComponent("Wave"),)),
     "multiwave": ProductSpec((FileComponent("Wave"),)),
-    "dailywave": ProductSpec(
-        (FileComponent("Wave"),), mjd_mode="mjd"),
+    "dailywave": ProductSpec(mjd_mode="mjd",
+                             resolver=_dailywave_files),
     "telluric": ProductSpec(mjd_mode="none", resolver=_telluric_files),
     "lsf": ProductSpec(resolver=_lsf_files),
 }
