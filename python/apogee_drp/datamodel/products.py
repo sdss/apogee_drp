@@ -10,13 +10,13 @@ from __future__ import annotations
 import os
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Callable, Literal
+from typing import Callable, Dict, List, Literal, Optional, Tuple
 
 
 APOGEE_CHIPS = ("a", "b", "c")
 
 MJDMode = Literal["exposure", "mjd", "none"]
-Resolver = Callable[[object, object, int | None], list[str]]
+Resolver = Callable[[object, object, Optional[int]], List[str]]
 
 
 @dataclass(frozen=True)
@@ -24,27 +24,27 @@ class FileComponent:
     """One sdss-tree product belonging to a logical APOGEE product."""
 
     root: str
-    chips: tuple[str, ...] | None = APOGEE_CHIPS
+    chips: Optional[Tuple[str, ...]] = APOGEE_CHIPS
 
 
 @dataclass(frozen=True)
 class ProductSpec:
     """Definition of the files required for one logical product."""
 
-    components: tuple[FileComponent, ...] = ()
+    components: Tuple[FileComponent, ...] = ()
     mjd_mode: MJDMode = "exposure"
     require_nonempty: bool = True
-    resolver: Resolver | None = None
+    resolver: Optional[Resolver] = None
 
 
-def _as_list(value) -> list[str]:
+def _as_list(value) -> List[str]:
     """Normalize the scalar/dictionary result from ``ApLoad.filename``."""
     if isinstance(value, dict):
         return [str(filename) for filename in value.values()]
     return [str(value)]
 
 
-def _standard_files(load, spec: ProductSpec, name, mjd) -> list[str]:
+def _standard_files(load, spec: ProductSpec, name, mjd) -> List[str]:
     files = []
     for component in spec.components:
         files.extend(_as_list(load.filename(
@@ -95,7 +95,7 @@ def _telluric_files(load, name, mjd):
     ]
 
 
-PRODUCTS: dict[str, ProductSpec] = {
+PRODUCTS: Dict[str, ProductSpec] = {
     "detector": ProductSpec((FileComponent("Detector"),)),
     "dark": ProductSpec(resolver=_summary_files("Dark")),
     "flat": ProductSpec(resolver=_summary_files("Flat")),
@@ -138,7 +138,7 @@ def product_spec(product: str) -> ProductSpec:
         ) from error
 
 
-def product_mjd(load, product: str, name) -> int | None:
+def product_mjd(load, product: str, name) -> Optional[int]:
     """Resolve the directory MJD prescribed by a product specification."""
     mode = product_spec(product).mjd_mode
     if mode == "none":
@@ -151,7 +151,7 @@ def product_mjd(load, product: str, name) -> int | None:
     return int(load.cmjd(int(first_identifier)))
 
 
-def product_files(load, product: str, name, *, mjd=None) -> list[str]:
+def product_files(load, product: str, name, *, mjd=None) -> List[str]:
     """Return every physical file required for a logical product.
 
     The returned order is stable: components follow their registry order and
@@ -174,7 +174,7 @@ def file_is_complete(filename, *, require_nonempty=True) -> bool:
     return path.is_file() and (not require_nonempty or path.stat().st_size > 0)
 
 
-def product_status(load, product: str, name, *, mjd=None) -> dict[str, bool]:
+def product_status(load, product: str, name, *, mjd=None) -> Dict[str, bool]:
     """Return completeness keyed by every required physical filename."""
     spec = product_spec(product)
     return {
@@ -209,7 +209,7 @@ def product_delete(load, product, name, *, mjd=None, missing_ok=True,
         If True, report which existing files would be deleted without
         removing them.
     verbose : bool, optional
-        Print each deleted or missing filename.
+        Print each file that is deleted, or would be deleted in dry-run mode.
 
     Returns
     -------
@@ -249,8 +249,6 @@ def product_delete(load, product, name, *, mjd=None, missing_ok=True,
         path = Path(filename)
 
         if not os.path.lexists(path):
-            if verbose:
-                print(f"Product file does not exist: {path}")
             continue
 
         if dry_run:
@@ -271,4 +269,3 @@ __all__ = [
     "file_is_complete", "product_exists", "product_files", "product_mjd",
     "product_spec", "product_status", "product_delete",
 ]
-
