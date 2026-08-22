@@ -964,11 +964,15 @@ class ApLoad:
     def exists(self, root, num=None, chip=None, **kwargs):
         """Return whether the requested physical file or files are complete."""
         from ..datamodel.products import file_is_complete
-        filenames = self.filename(root, num=num, chip=chip, **kwargs)
-        if isinstance(filenames, dict):
-            filenames = filenames.values()
+        if chip is None:
+            filenames = [self.filename(root, num=num, chip=c,
+                                       **kwargs) for c in ['a', 'b', 'c'] ]
         else:
-            filenames = [filenames]
+            filenames = self.filename(root, num=num, chip=chip, **kwargs)
+            if isinstance(filenames, dict):
+                filenames = filenames.values()
+            else:
+                filenames = [filenames]
         return all(file_is_complete(filename) for filename in filenames)
 
     def product_files(self, product, name, *, mjd=None):
@@ -1061,7 +1065,6 @@ class ApLoad:
             "num": num,
             "telescope": self.telescope,
             "fiber": fiber,
-            "chip": chip,
             "prefix": prefix,
             "instrument": self.instrument,
             "healpix": healpix,
@@ -1069,7 +1072,15 @@ class ApLoad:
             "obs": self.observatory,
         }
 
+        path_chip = "a" if chip is None else chip
+        path_kwargs["chip"] = path_chip
+
         file_path = self.sdss_path.full(sdssroot, **path_kwargs) + suffix
+
+        if chip is None:
+            directory_name, basename = os.path.split(file_path)
+            basename = basename.replace("-a-", "-", 1)
+            file_path = os.path.join(directory_name, basename)
 
         if self.verbose:
             print("filePath:", file_path, os.path.exists(file_path))
