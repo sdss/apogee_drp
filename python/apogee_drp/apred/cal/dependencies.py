@@ -50,36 +50,10 @@ def _canonical_name(value) -> str:
         return text
 
 
-_APLOAD_ROOTS = {
-    "detector": "Detector",
-    "dark": "Dark",
-    "flat": "Flat",
-    "bpm": "BPM",
-    "fiber": "Fiber",
-    "sparse": "Sparse",
-    "littrow": "Littrow",
-    "modelpsf": "PSFModel",
-    "psf": "PSF",
-    "wave": "Wave",
-    "multiwave": "Wave",
-    "lsf": "LSF",
-    "persist": "Persist",
-    "persistmodel": "PersistModel",
-    "flux": "Flux",
-    "response": "Response",
-    "fpi": "WaveFPI",
-    "dailywave": "Wave",
-    "telluric": "Telluric",
-}
-
-
 def apload_exists(load, node: "CalibrationNode") -> bool:
-    """Check a graph node using the corresponding ``ApLoad.exists`` root."""
+    """Check whether every registered file for a graph node exists."""
 
-    root = _APLOAD_ROOTS.get(node.caltype)
-    if root is None:
-        raise ValueError(f"No ApLoad root is defined for {node.caltype!r}")
-    return bool(load.exists(root, num=node.name))
+    return bool(load.product_exists(node.caltype, node.name))
 
 
 def calibration_dependency_tree(

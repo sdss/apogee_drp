@@ -167,6 +167,7 @@ def test_filename_forwards_public_arguments(load):
         "Visit",
         location=42,
         obj="2M00000000+0000000",
+        reduction="red-object",
         plate=1234,
         mjd=60000,
         num=5678,
@@ -180,6 +181,7 @@ def test_filename_forwards_public_arguments(load):
     kwargs = load.sdss_path.full.call_args.kwargs
     assert kwargs["location"] == 42
     assert kwargs["obj"] == "2M00000000+0000000"
+    assert kwargs["reduction"] == "red-object"
     assert kwargs["plate"] == 1234
     assert kwargs["mjd"] == 60000
     assert kwargs["num"] == 5678
@@ -187,6 +189,25 @@ def test_filename_forwards_public_arguments(load):
     assert kwargs["chip"] == "b"
     assert kwargs["field"] == "test-field"
     assert kwargs["configid"] == 321
+
+
+def test_legacy_chip_reader_uses_chipless_template(load, monkeypatch):
+    calls = []
+
+    def allfile(root, num=None, mjd=None):
+        calls.append((root, num, mjd))
+        return f"/redux/ap{root}-{num}.fits"
+
+    monkeypatch.setattr(load, "allfile", allfile)
+    monkeypatch.setattr(
+        load, "_readchip",
+        lambda filename, root, **kwargs: (filename, root, kwargs),
+    )
+
+    result = load.ap1D(123)
+
+    assert calls == [("1D", 123, "60000")]
+    assert result[:2] == ("/redux/ap1D-123.fits", "1D")
 
 
 @pytest.mark.parametrize(
@@ -487,4 +508,3 @@ class TestWave:
 
         with pytest.raises(ValueError, match="extension 2"):
             wave_load.wave(457, chip="a")
-

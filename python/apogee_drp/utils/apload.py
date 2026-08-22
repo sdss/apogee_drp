@@ -282,7 +282,7 @@ class ApLoad:
         else :
             try :
                 file = self.allfile(
-                   'R',num=args[0],mjd=self.cmjd(args[0]),chips=True)
+                   'R',num=args[0],mjd=self.cmjd(args[0]))
                 return self._readchip(file,'R',**kwargs)
             except :
                 self.printerror()
@@ -302,7 +302,7 @@ class ApLoad:
         else :
             try :
                 file = self.allfile(
-                   'Flat',num=args[0],mjd=self.cmjd(args[0]),chips=True)
+                   'Flat',num=args[0],mjd=self.cmjd(args[0]))
                 return self._readchip(file,'Flat',**kwargs)
             except :
                 self.printerror()
@@ -322,7 +322,7 @@ class ApLoad:
         else :
             try :
                 file = self.allfile(
-                   'Flux',num=args[0],mjd=self.cmjd(args[0]),chips=True)
+                   'Flux',num=args[0],mjd=self.cmjd(args[0]))
                 return self._readchip(file,'Flux',**kwargs)
             except :
                 self.printerror()
@@ -342,7 +342,7 @@ class ApLoad:
         else :
             try :
                 file = self.allfile(
-                   'Wave',num=args[0],mjd=self.cmjd(args[0]),chips=True)
+                   'Wave',num=args[0],mjd=self.cmjd(args[0]))
                 return self._readchip(file,'Wave',**kwargs)
             except :
                 self.printerror()
@@ -362,7 +362,7 @@ class ApLoad:
         else :
             try :
                 file = self.allfile(
-                   'LSF',num=args[0],mjd=self.cmjd(args[0]),chips=True)
+                   'LSF',num=args[0],mjd=self.cmjd(args[0]))
                 return self._readchip(file,'LSF',**kwargs)
             except :
                 self.printerror()
@@ -382,7 +382,7 @@ class ApLoad:
         else :
             try :
                 file = self.allfile(
-                   'PSF',num=args[0],mjd=self.cmjd(args[0]),chips=True)
+                   'PSF',num=args[0],mjd=self.cmjd(args[0]))
                 return self._readchip(file,'PSF',**kwargs)
             except :
                 self.printerror()
@@ -402,7 +402,7 @@ class ApLoad:
         else :
             try :
                 file = self.allfile(
-                   'EPSF',num=args[0],mjd=self.cmjd(args[0]),chips=True)
+                   'EPSF',num=args[0],mjd=self.cmjd(args[0]))
                 return self._readchip(file,'EPSF',**kwargs)
             except :
                 self.printerror()
@@ -422,7 +422,7 @@ class ApLoad:
         else :
             try :
                 file = self.allfile(
-                   '1D',num=args[0],mjd=self.cmjd(args[0]),chips=True)
+                   '1D',num=args[0],mjd=self.cmjd(args[0]))
                 return self._readchip(file,'1D',**kwargs)
             except :
                 self.printerror()
@@ -443,7 +443,7 @@ class ApLoad:
         else :
             try :
                 file = self.allfile(
-                   '2D',num=args[0],mjd=self.cmjd(args[0]),chips=True,**kwargs)
+                   '2D',num=args[0],mjd=self.cmjd(args[0]),**kwargs)
                 print('file: ', file)
                 return self._readchip(file,'2D',**kwargs)
             except :
@@ -464,7 +464,7 @@ class ApLoad:
         else :
             try :
                 file = self.allfile(
-                   '2Dmodel',num=args[0],mjd=self.cmjd(args[0]),chips=True,**kwargs)
+                   '2Dmodel',num=args[0],mjd=self.cmjd(args[0]),**kwargs)
                 return self._readchip(file,'2Dmodel',**kwargs)
             except :
                 self.printerror()
@@ -484,7 +484,7 @@ class ApLoad:
         else :
             try :
                 filePath = self.allfile(
-                   'Cframe',field=args[0],plate=args[1],mjd=args[2],num=args[3],chips=True)
+                   'Cframe',field=args[0],plate=args[1],mjd=args[2],num=args[3])
                 return self._readchip(filePath,'Cframe',**kwargs)
             except :
                 self.printerror()
@@ -504,10 +504,10 @@ class ApLoad:
         else:
             try:
                 if kwargs.get('field') is None:
-                    filePath = self.allfile('Plate',plate=args[0],mjd=args[1],chips=True)
+                    filePath = self.allfile('Plate',plate=args[0],mjd=args[1])
                 else:
                     field = kwargs.pop('field')
-                    filePath = self.allfile('Plate',plate=args[0],mjd=args[1],chips=True,field=field)
+                    filePath = self.allfile('Plate',plate=args[0],mjd=args[1],field=field)
                 return self._readchip(filePath,'Plate',**kwargs)
             except :
                 self.printerror()
@@ -910,7 +910,8 @@ class ApLoad:
 
 
     def filename(self, root,
-                 location=None, obj=None, plate=None, mjd=None, num=None,
+                 location=None, obj=None, reduction=None, plate=None,
+                 mjd=None, num=None,
                  fiber=None, chip=None, field=None, configid=None, fps=None,
                  directory=False):
         """Return one or more APOGEE product filenames.
@@ -932,7 +933,8 @@ class ApLoad:
             A single pathname, or a dictionary mapping detector chips to
             pathnames when ``chip`` is a sequence.
         """
-        filename_kwargs = {"location":location, "obj":obj, "plate":plate,
+        filename_kwargs = {"location":location, "obj":obj,
+                           "reduction":reduction, "plate":plate,
                            "mjd":mjd, "num":num, "fiber":fiber, "field":field,
                            "configid":configid, "fps":fps}
 
