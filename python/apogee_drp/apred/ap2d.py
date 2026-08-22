@@ -222,8 +222,8 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         return [],[]
      
     psfframeid = '%08d' % int(psf_base)
-    psffiles = load.filename('PSF', num=psfframeid, chip=chiptag)
-    epsffiles = load.filename('EPSF',num=psfframeid, chip=chiptag)
+    psffiles = list(load.filename('PSF', num=psfframeid, chip=chiptag).values())
+    epsffiles = list(load.filename('EPSF',num=psfframeid, chip=chiptag).values())
     if not load.product_exists('psf', int(psfframeid)):
         if not silent: 
             print('halt: there is a problem with psf files: '+' '.join(psffiles))
@@ -1240,7 +1240,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 sout = subprocess.run(['makecal','--modelpsf',str(planstr['responseid']),
                                        '--vers',load.apred,'--telescope',str(planstr['telescope'])],shell=False)
             print('Using Model PSF: '+str(modelpsf))
-            modelpsffiles = load.filename('PSFModel',num=planstr['modelpsf'],chip=chiptag)
+            modelpsffiles = list(load.filename('PSFModel',num=planstr['modelpsf'],
+                                               chip=chiptag).values())
             modelpsffile = os.path.dirname(modelpsffiles[0])+'/'+str(planstr['modelpsf'])
             modelpsftest = [os.path.exists(t) for t in modelpsffiles]
             exttype = 5
@@ -1313,7 +1314,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 print('psfid=0, using modelpsf='+str(planstr['APEXP']['psfid'][i])+' instead')
             
             # Get trace files
-            tracefiles = load.filename('PSF',num=planstr['APEXP']['psfid'][i],chip=chiptag)
+            tracefiles = list(load.filename('PSF',num=planstr['APEXP']['psfid'][i],
+                                            chip=chiptag).values())
             tracefile = os.path.dirname(tracefiles[0])+'/%08d' % planstr['APEXP']['psfid'][i]
             tracetest = [os.path.exists(t) for t in tracefiles]
             if np.sum(tracetest) != 3:
@@ -1329,7 +1331,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                         print( 'halt: tracefile ', tracefiles[ichip],' does not have 300 traces')
          
             # Make the filenames and check the files
-            rawfiles = load.filename('R',num=planstr['APEXP']['name'][j],chip=chiptag)
+            rawfiles = list(load.filename('R',num=planstr['APEXP']['name'][j],
+                                          chip=chiptag).values())
             framenum = planstr['APEXP']['name'][j]
             #rawinfo = apfileinfo(rawfiles)        # this returns useful info even if the files don't exist
             #framenum = rawinfo[0].fid8       # the frame number the frame number 
@@ -1408,9 +1411,10 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         # Compress 2D files
         nframes = len(planstr['APEXP']) 
         for j in range(nframes): 
-            files = load.filename('2D',num=planstr['APEXP']['name'][j],chip=chiptag)
-            modfiles = load.filename('2Dmodel',num=planstr['APEXP']['name'][j],
-                                     mjd=load.cmjd(planstr['APEXP']['name'][j]),chip=chiptag)
+            files = list(load.filename('2D',num=planstr['APEXP']['name'][j],
+                                       chip=chiptag).values())
+            modfiles = list(load.filename('2Dmodel',num=planstr['APEXP']['name'][j],
+                                          mjd=load.cmjd(planstr['APEXP']['name'][j]),chip=chiptag).values())
             for jj in range(len(files)): 
                 if os.path.exists(files[jj]): 
                     if os.path.exists(files[jj]+'.fz'): os.remove(files[jj]+'.fz')
