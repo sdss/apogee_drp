@@ -118,7 +118,7 @@ def expinfo(observatory=None,mjd5=None,files=None,expnum=None,
         nfiles = len(expnum)
         files = []
         for i in range(nfiles):
-            file1 = load.filename('R',num=expnum[i],chips=True).replace('R-','R-c-')
+            file1 = load.filename('R',num=expnum[i],chip='c')
             files.append(file1)
         files = np.array(files)
         files = files[np.argsort(files)]  # sort        

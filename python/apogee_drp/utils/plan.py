@@ -118,7 +118,7 @@ def load(planfile,verbose=False,np=False,expand=False,plugmapm=False):
         for i in range(len(calkeys)):
             val = plandata.get(calkeys[i])
             if val is not None:
-                calfile = os.path.dirname(load.filename(caltype[i],num=val,chips='a'))+'/'+str(val)
+                calfile = os.path.dirname(load.filename(caltype[i],num=val,chip='a'))+'/'+str(val)
                 plandata[calkeys[i]] = calfile
 
         # Add directores
