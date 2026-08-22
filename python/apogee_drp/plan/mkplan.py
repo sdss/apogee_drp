@@ -341,7 +341,7 @@ def dailycals(waves=None,psf=None,lsfs=None,apred=None,telescope=None):
         raise ValueError('telescope must be input')
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
-    cal_dir = os.path.dirname(os.path.dirname(load.filename('BPM',num=0,chips='a')))+'/'
+    cal_dir = os.path.dirname(os.path.dirname(load.filename('BPM',num=0,chip='a')))+'/'
     if os.path.exists(cal_dir)==False:
         os.makedirs(cal_dir,exist_ok=True)
 
@@ -519,11 +519,11 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     elif extra:
         planfile = load.filename('ExtraPlan',mjd=mjd)
     elif ap3d:
-        planfile = load.filename('2D',num=im1,mjd=mjd,chips=True)
+        planfile = load.filename('2D',num=im1,mjd=mjd)
         planfile = os.path.dirname(planfile)+'/logs/'+os.path.basename(planfile)
         planfile = planfile.replace('2D','3DPlan').replace('.fits','.yaml')
     elif ap2d:
-        planfile = load.filename('2D',num=im1,mjd=mjd,chips=True)
+        planfile = load.filename('2D',num=im1,mjd=mjd)
         planfile = os.path.dirname(planfile)+'/logs/'+os.path.basename(planfile)
         planfile = planfile.replace('2D','2DPlan').replace('.fits','.yaml')
     elif onem:
@@ -720,13 +720,13 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         # Find wavelength calibration file
         if waveid is None:
             # Try daily apWave wave files for this MJD
-            wavefile = os.path.dirname(load.filename('Wave',num=mjd,chips=True))+'/'+load.prefix+'Wave-a-'+str(mjd)+'.fits'
+            wavefile = os.path.dirname(load.filename('Wave',num=mjd))+'/'+load.prefix+'Wave-a-'+str(mjd)+'.fits'
             if os.path.exists(wavefile):
                 waveid = str(mjd)
                 logger.info('Using daily Wave file '+waveid)
             # Try a regular THARNE/UNE pair wavelength solution
             if waveid is None:
-                wavestr = load.filename('Wave',num='????????',chips=True).replace('Wave-','Wave-a-')
+                wavestr = load.filename('Wave',num='????????').replace('Wave-','Wave-a-')
                 wavefile = glob(wavestr)
                 if len(wavefile)>0:
                     waveid = os.path.basename(wavefile[0])[9:-5]
@@ -740,14 +740,14 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             out['psfid'] = psfid
         # Get PSF calibration files
         else:
-            psffile = load.filename('PSF',num=0,mjd=mjd,chips=True)
+            psffile = load.filename('PSF',num=0,mjd=mjd)
             psffile = psffile.replace('PSF-','PSF-b-')
             base = ('%8d' % im1)[0:4]
             psffiles = glob(psffile.replace('-00000000','-'+base+'????'))
             if len(psffiles)>0:
                 psfnum = [os.path.basename(p)[8:16] for p in psffiles]
                 # Make sure all of the necessary files exist
-                psfexists = [load.exists('PSF',num=num) for num in psfnum]
+                psfexists = [load.product_exists('psf', num) for num in psfnum]
                 if np.sum(psfexists)>0:
                     psfnum = np.array(psfnum)[psfexists]
                     si = np.argsort(np.abs(np.array(psfnum).astype(int)-int(im1)))
@@ -773,8 +773,7 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             out['fluxid'] = fluxid
         # Get Flux calibration file
         else:
-            fluxfile = load.filename('Flux',num=0,mjd=mjd,chips=True)
-            fluxfile = fluxfile.replace('Flux-','Flux-b-')
+            fluxfile = load.filename('Flux',num=0,mjd=mjd,chip='b')
             base = ('%8d' % im1)[0:4]
             fluxfiles = glob(fluxfile.replace('-00000000','-'+base+'????'))    
             if len(fluxfiles)>0:
@@ -954,7 +953,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     #        if len(dome) > 0:
     #            psfdome_exist = np.zeros(len(dome),bool)
     #            for j in range(len(dome)):
-    #                psffile = load.filename('PSF',num=dome[j],chips=True)
+    #                psffile = load.filename('PSF',num=dome[j])
     #                psffiles = [psffile.replace(load.prefix+'PSF-',load.prefix+'PSF-'+ch+'-') for ch in chips]
     #                exist = [os.path.exists(pf) for pf in psffiles]
     #                if np.sum(np.array(exist))==3:
@@ -972,7 +971,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     # Which domeflat apPSF files exist
     psfdome_exist = np.zeros(len(dome),bool)
     for j in range(len(dome)):
-        psffile = load.filename('PSF',num=dome[j],chips=True)
+        psffile = load.filename('PSF',num=dome[j])
         psffiles = [psffile.replace(load.prefix+'PSF-',load.prefix+'PSF-'+ch+'-') for ch in chips]
         exist = [os.path.exists(pf) for pf in psffiles]
         if np.sum(np.array(exist))==3:
@@ -987,7 +986,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     # Which quartz apPSF files exist
     psfquartz_exist = np.zeros(len(quartz),bool)
     for j in range(len(quartz)):
-        psffile = load.filename('PSF',num=quartz[j],chips=True)
+        psffile = load.filename('PSF',num=quartz[j])
         psffiles = [psffile.replace(load.prefix+'PSF-',load.prefix+'PSF-'+ch+'-') for ch in chips]
         exist = [os.path.exists(pf) for pf in psffiles]
         if np.sum(np.array(exist))==3:
@@ -1003,7 +1002,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     # Which apFlux files exist
     flux_exist = np.zeros(len(dome),bool)
     for j in range(len(dome)):
-        fluxfile = load.filename('Flux',num=dome[j],chips=True)
+        fluxfile = load.filename('Flux',num=dome[j])
         fluxfiles = [fluxfile.replace(load.prefix+'Flux-',load.prefix+'Flux-'+ch+'-') for ch in chips]
         exist = [os.path.exists(ff) for ff in fluxfiles]
         if np.sum(np.array(exist))==3:
@@ -1029,7 +1028,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
     # Check that the FPI calibration file exists
     fpi_exist = np.zeros(len(fpinum),bool)
     for j in range(len(fpinum)):
-        fpifile = os.path.dirname(load.filename('Wave',num=0,chips=True))+'/'+load.prefix+'WaveFPI-%s-%8d.fits' % (str(mjd),fpinum[j])
+        fpifile = os.path.dirname(load.filename('Wave',num=0))+'/'+load.prefix+'WaveFPI-%s-%8d.fits' % (str(mjd),fpinum[j])
         fpifiles = [fpifile.replace(load.prefix+'WaveFPI-',load.prefix+'WaveFPI-'+ch+'-') for ch in chips]
         exist = [os.path.exists(ff) for ff in fpifiles]
         if np.sum(np.array(exist))==3:
@@ -1043,7 +1042,7 @@ def make_mjd5_yaml(mjd,apred,telescope,clobber=False,logger=None):
         logger.info('No apWaveFPI files exist')
 
     # Check for daily wavelength calibration file
-    dailywave = load.filename('Wave',num=0,chips=True)[0:-13]+str(mjd)+'.fits'
+    dailywave = load.filename('Wave',num=0)[0:-13]+str(mjd)+'.fits'
     allfiles = [dailywave.replace('Wave-','Wave-'+ch+'-') for ch in chips]
     allexists = [os.path.exists(f) for f in allfiles]
     if np.sum(allexists)==3:

@@ -372,7 +372,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     frameinfo['group'] = -1
     for inum,num in enumerate(nums) :
         print(str(inum+1)+'/'+str(len(nums))+' '+str(num))
-        out = load.filename('Wave',num=num,chips=True)
+        out = load.filename('Wave',num=num)
         linesfile = out.replace('Wave','Lines')
         if (combined_solution and not dependencies and
                 not os.path.exists(linesfile)):
@@ -381,7 +381,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
             continue
         frame = load.ap1D(num)
         if frame==0:
-            print(load.filename('1D',num=num,chips=True)+' NOT FOUND')
+            print(load.filename('1D',num=num)+' NOT FOUND')
             continue
         # We have a decent frame to use
         if frame is not None and frame != 0:
@@ -900,7 +900,7 @@ def wavecal(nums=[2420038],name=None,vers='daily',inst='apogee-n',rows=[150],npo
     
     # Save results in apWave files
     if nosave==False:
-        out = load.filename('Wave',num=name,chips=True)   #.replace('Wave','PWave')
+        out = load.filename('Wave',num=name)   #.replace('Wave','PWave')
         if str(name).isnumeric()==False or len(str(name))<6:  # non-ID input
             out = os.path.dirname(out)+'/'+load.prefix+'Wave-'+str(name)+'.fits'
         print('Saving to ',out)
@@ -931,7 +931,7 @@ def plot_apWave(nums,apred='current',inst='apogee-n',out=None,hard=False) :
   for num in nums :
     load=apload.ApLoad(apred=apred,telescope=telescope,instrument=inst)
     wave=load.apWave(num)
-    outname=load.filename('Wave',num=num,chips=True)
+    outname=load.filename('Wave',num=num)
     allpars=wave['a'][6].data
     rms=wave['a'][4].data
     sig=wave['a'][5].data
@@ -2015,12 +2015,12 @@ def skycal(planfile,out=None,inst=None,waveid=None,fpiid=None,group=-1,skyfile='
             allhdu = save_apWave(newpars,npoly=npoly)
 
             # Rewrite out 1D file with adjusted wavelength information
-            outname = load.filename('1D',num=int(name),mjd=load.cmjd(int(name)),chips=True)
+            outname = load.filename('1D',num=int(name),mjd=load.cmjd(int(name)))
             for ichip,chip in enumerate(chips) :
                 if int(waveid) < 100000:
                     chipwavefile = reduxdir+'cal/'+load.instrument+'/wave/'+load.prefix+'Wave-%s-%5d.fits' % (chip,waveid)
                 else:
-                    chipwavefile = load.allfile('Wave',num=waveid,chips=True)
+                    chipwavefile = load.allfile('Wave',num=waveid)
                 hdu = fits.HDUList()
                 frame[chip][0].header['HISTORY'] = 'Added wavelengths from SKYCAL, waveid: {:08d}'.format(waveid)
                 frame[chip][0].header['HISTORY'] = 'Wavelength shift parameters {:12.5e} {:8.3f} {:8.3f} {:8.3f}'.format(w[0],w[1],w[2],w[3])

@@ -14,8 +14,8 @@ def getresp(plate,mjd,apred='r12',telescope='apo25m',plot=False) :
     """
 
     # get apPlate file
-    load=apload.ApLoad(apred=apred,telescope=telescope) 
-    apPlate=load.apPlate(plate,mjd)
+    load = apload.ApLoad(apred=apred,telescope=telescope) 
+    apPlate = load.apPlate(plate,mjd)
 
     # get rows of tellurics
     fibers=apPlate['b'][11].data['FIBERID']
@@ -60,7 +60,7 @@ def getresp(plate,mjd,apred='r12',telescope='apo25m',plot=False) :
         if plot :
             pdb.set_trace()
             plt.clf()
-        file=load.filename('Plate',plate=plate,mjd=mjd,apred=apred,chips=True).replace('Plate-','Plate-'+chip+'-')
+        file = load.filename('Plate', plate=plate, mjd=mjd, chip=chip)
         apPlate[chip].writeto(file,overwrite=True)
     # now do the apVisit files
     for row in np.arange(300) :
@@ -72,7 +72,7 @@ def getresp(plate,mjd,apred='r12',telescope='apo25m',plot=False) :
                 w=apVisit[4].data[ichip,:]
                 resp=norm(w,coef)
                 apVisit[1].data[ichip,:] /= resp
-            file=load.filename('Visit',plate=plate,mjd=mjd,apred=apred,fiber=300-row)
+            file = load.filename('Visit', plate=plate, mjd=mjd, fiber=300-row)
             print(file)
             apVisit.writeto(file,overwrite=True)
             print('done')
@@ -100,5 +100,4 @@ def main(args) :
     parser.add_argument("-t", "--telescope", type=str, required=True, help="telescope")
     args = parser.parse_args()
     getresp(args.plate,args.mjd,apred=args.apred,telescope=args.telescope)
-
 

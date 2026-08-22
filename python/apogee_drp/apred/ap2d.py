@@ -222,11 +222,9 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
         return [],[]
      
     psfframeid = '%08d' % int(psf_base)
-    psffiles = load.filename('PSF',num=psfframeid,chips=True)
-    psffiles = [psffiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
-    epsffiles = load.filename('EPSF',num=psfframeid,chips=True)
-    epsffiles = [epsffiles.replace('EPSF-','EPSF-'+ch+'-') for ch in chiptag]
-    if load.exists('PSF',int(psfframeid))==False:
+    psffiles = load.filename('PSF', num=psfframeid, chip=chiptag)
+    epsffiles = load.filename('EPSF',num=psfframeid, chip=chiptag)
+    if not load.product_exists('psf', int(psfframeid)):
         if not silent: 
             print('halt: there is a problem with psf files: '+' '.join(psffiles))
         #import pdb; pdb.set_trace() 
@@ -705,12 +703,12 @@ def ap2dproc(inpfile,psffile,extract_type=1,apred=None,telescope=None,load=None,
             if modelpsffile is None:
                 raise ValueError('Need Model PSF file for Model PSF Extraction')
             modelpsfid = os.path.basename(modelpsffile)
-            modelpsffile1 = load.filename('PSFModel',num=modelpsfid,chips=True).replace('PSFModel-','PSFModel-'+chiptag[i]+'-')
+            modelpsffile1 = load.filename('PSFModel',num=modelpsfid,chip=chiptag[i])
             head['HISTORY'] = 'Model PSF file: '+modelpsffile1
-            tracefile = load.filename('ETrace',num=int(psfframeid),chips=True).replace('ETrace-','ETrace-'+chiptag[i]+'-')
+            tracefile = load.filename('ETrace',num=int(psfframeid),chip=chiptag[i])
             chstr['header'] = head
             epsffile1 = epsffiles[i]
-            trace2dfile = load.filename('2D',num=int(psfframeid),chips=True).replace('2D','2D-'+chiptag[i])
+            trace2dfile = load.filename('2D',num=int(psfframeid),chip=chiptag[i])
             # Created the 2D EPSF
             outstr,back,ymodel,epsf = psf.extractwing(chstr,modelpsffile1,epsffile1,tracefile,trace2dfile)
             head = outstr['header']
@@ -1121,27 +1119,27 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
  
         # apPSF files
         if planstr['sparseid'] != 0:
-            if load.exists('Sparse',num=planstr['sparseid']):
+            if load.product_exists('sparse', planstr['sparseid']):
                 print(load.filename('Sparse',num=planstr['sparseid'])+' already made')
             else:
                 sout = subprocess.run(['makecal','--sparse',str(planstr['sparseid']),
                                        '--vers',load.apred,'--telescope',str(planstr['telescope'])],shell=False)
         if planstr['fiberid'] != 0: 
-            if load.exists('ETrace',num=planstr['fiberid']):
-                print(load.filename('ETrace',num=planstr['fiberid'],chips=True)+' already made')
+            if load.product_exists('fiber', planstr['fiberid']):
+                print(load.filename('ETrace',num=planstr['fiberid'])+' already made')
             else:
                 sout = subprocess.run(['makecal','--fiber',str(planstr['fiberid']),
                                        '--vers',load.apred,'--telescope',str(planstr['telescope'])],shell=False)
         if 'psfid' in planstr.keys() and planstr['psfid'] != 0:
-            if load.exists('PSF',num=planstr['psfid']):
-                print(load.filename('PSF',num=planstr['psfid'],chips=True)+' already made')
+            if load.product_exists('psf', planstr['psfid']):
+                print(load.filename('PSF',num=planstr['psfid'])+' already made')
             else:
                 cmd = ['makecal','--psf',str(planstr['psfid']),'--vers',load.apred,
                        '--telescope',str(planstr['telescope'])]
                 if calclobber:
                     cmd += ['--clobber']
                 sout = subprocess.run(cmd,shell=False)
-            tracefiles = load.filename('PSF',num=planstr['psfid'],chips=True)
+            tracefiles = load.filename('PSF',num=planstr['psfid'])
             tracefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
             tracefile = os.path.dirname(tracefiles[0])+'/%08d' % int(planstr['psfid'])
             tracetest = [os.path.exists(t) for t in tracefiles]
@@ -1165,7 +1163,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         if waveid > 0: 
             # This is now normally a dailywave with the MJD name  
             if int(waveid) < 1e7:
-                wfile = load.filename('Wave',num=planstr['waveid'],chips=True)[0:-13]+str(planstr['waveid'])+'.fits'
+                wfile = load.filename('Wave',num=planstr['waveid'])[0:-13]+str(planstr['waveid'])+'.fits'
                 wavefiles = [wfile.replace('Wave-','Wave-'+ch+'-') for ch in chiptag]
                 exists = [os.path.exists(f) for f in wavefiles]
                 if np.sum(exists)==3:
@@ -1174,8 +1172,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                     sout = subprocess.run(['makecal','--dailywave',str(waveid),
                                            '--vers',load.apred,'--telescope',str(planstr['telescope'])],shell=False)
             else:
-                if load.exists('Wave',num=planstr['waveid']):
-                    print(load.filename('Wave',num=planstr['waveid'],chips=True)+' already made')
+                if load.product_exists('wave', planstr['waveid']):
+                    print(load.filename('Wave',num=planstr['waveid'])+' already made')
                 else:
                     sout = subprocess.run(['makecal','--multiwave',str(waveid),
                                            '--vers',load.apred,'--telescope',str(planstr['telescope'])],shell=False)
@@ -1188,8 +1186,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
  
         # apFlux files : since individual frames are usually made per plate
         if int(planstr['fluxid']) != 0: 
-            if load.exists('Flux',num=planstr['fluxid']):
-                print(load.filename('Flux',num=planstr['fluxid'],chips=True)+' already made')
+            if load.product_exists('flux', planstr['fluxid']):
+                print(load.filename('Flux',num=planstr['fluxid'])+' already made')
             else:
                 #makecal,flux=planstr.fluxid,psf=planstr.psfid,clobber=calclobber 
                 cmd = ['makecal','--flux',str(planstr['fluxid']),'--psf',str(planstr['psfid']),
@@ -1197,7 +1195,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 if calclobber:
                     cmd += ['--clobber']
                 sout = subprocess.run(cmd,shell=False)
-            fluxfiles = load.filename('Flux',num=planstr['fluxid'],chips=True)
+            fluxfiles = load.filename('Flux',num=planstr['fluxid'])
             fluxfiles = [fluxfiles.replace('Flux-','Flux-'+ch+'-') for ch in chiptag]
             fluxfile = os.path.dirname(fluxfiles[0])+'/%08d' % int(planstr['fluxid'])
             fluxtest = [os.path.exists(f) for f in fluxfiles]
@@ -1217,13 +1215,13 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         if 'responseid' not in planstr.keys():
             planstr['responseid'] = 0
         if int(planstr['responseid']) != 0: 
-            if load.exists('Response',num=planstr['responseid']):
+            if load.product_exists('response', planstr['responseid']):
                 print(load.filename('Response',num=planstr['responseid'])+' exists already')
             else:
                 sout = subprocess.run(['makecal','--response',str(planstr['responseid']),
                                        '--vers',load.apred,'--telescope',str(planstr['telescope'])],shell=False)
-            responsefiles = load.filename('Response',num=planstr['responseid'],chips=True) 
-            responsefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
+            responsefiles = list(load.filename(
+                'Response', num=planstr['responseid'], chip=chiptag).values())
             responsefile = os.path.dirname(responsefiles[0])+'/%08d' % planstr['responseid']
             responsetest = [os.path.exists(f) for f in responsefiles]
             if np.sum(responsetest) != 3:
@@ -1236,14 +1234,13 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                     
         # Model PSF files
         if 'modelpsf' in planstr.keys():
-            if load.exists('PSFModel',num=planstr['modelpsf']):
-                print(load.filename('PSFModel',num=planstr['modelpsf'],chips=True)+' exists already')
+            if load.product_exists('modelpsf', planstr['modelpsf']):
+                print(load.filename('PSFModel',num=planstr['modelpsf'])+' exists already')
             else:
                 sout = subprocess.run(['makecal','--modelpsf',str(planstr['responseid']),
                                        '--vers',load.apred,'--telescope',str(planstr['telescope'])],shell=False)
             print('Using Model PSF: '+str(modelpsf))
-            modelpsffiles = load.filename('PSFModel',num=planstr['modelpsf'],chips=True)
-            modelpsffiles = [modelpsffiles.replace('PSFModel-','PSFModel-'+ch+'-') for ch in chiptag]
+            modelpsffiles = load.filename('PSFModel',num=planstr['modelpsf'],chip=chiptag)
             modelpsffile = os.path.dirname(modelpsffiles[0])+'/'+str(planstr['modelpsf'])
             modelpsftest = [os.path.exists(t) for t in modelpsffiles]
             exttype = 5
@@ -1316,8 +1313,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                 print('psfid=0, using modelpsf='+str(planstr['APEXP']['psfid'][i])+' instead')
             
             # Get trace files
-            tracefiles = load.filename('PSF',num=planstr['APEXP']['psfid'][i],chips=True)
-            tracefiles = [tracefiles.replace('PSF-','PSF-'+ch+'-') for ch in chiptag]
+            tracefiles = load.filename('PSF',num=planstr['APEXP']['psfid'][i],chip=chiptag)
             tracefile = os.path.dirname(tracefiles[0])+'/%08d' % planstr['APEXP']['psfid'][i]
             tracetest = [os.path.exists(t) for t in tracefiles]
             if np.sum(tracetest) != 3:
@@ -1333,16 +1329,16 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                         print( 'halt: tracefile ', tracefiles[ichip],' does not have 300 traces')
          
             # Make the filenames and check the files
-            rawfiles = load.filename('R',num=planstr['APEXP']['name'][j],chips=True)
-            rawfiles = [rawfiles.replace('R-','R-'+ch+'-') for ch in chiptag]
+            rawfiles = load.filename('R',num=planstr['APEXP']['name'][j],chip=chiptag)
             framenum = planstr['APEXP']['name'][j]
             #rawinfo = apfileinfo(rawfiles)        # this returns useful info even if the files don't exist
             #framenum = rawinfo[0].fid8       # the frame number the frame number 
-            files = load.filename('2D',num=framenum,chips=True)
+            files = load.filename('2D',num=framenum)
             files = [files.replace('2D-','2D-'+ch+'-') for ch in chiptag]
             inpfile = os.path.dirname(files[0])+'/{:08d}'.format(framenum)
             #info = apfileinfo(files) 
-            okay = load.exists('R',num=planstr['APEXP']['name'][j]) and load.exists('2D',num=planstr['APEXP']['name'][j])
+            okay = (load.exists('R', num=planstr['APEXP']['name'][j],chip=chiptag) and
+                    load.exists('2D', num=planstr['APEXP']['name'][j],chip=chiptag))
             #okay = (info.exists and info.sp2dfmt and info.allchips and (info.mjd5 == planstr.mjd) and 
             #        ((info.naxis == 3) or (info.exten == 1))) 
             if okay==False:
@@ -1356,7 +1352,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
             print('-------------------------------------------')
             
             # Run AP2DPROC
-            outdir = os.path.dirname(load.filename('1D',num=framenum,chips=True))
+            outdir = os.path.dirname(load.filename('1D',num=framenum))
             if os.path.exists(outdir)==False:
                 file_mkdir,outdir 
             if fluxtest==False or planstr['APEXP']['flavor'][j]=='flux': 
@@ -1381,7 +1377,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
 
             # Check if there is FPI flux in the 2 fibers
             if fpiid > 0: 
-                outfile1 = load.filename('1D',num=framenum,chips=True).replace('1D-','1D-b-')
+                outfile1 = load.filename('1D',num=framenum,chip='b')
                 if os.path.exists(outfile1)==False: 
                     print(outfile1+' not found')
                     return      
@@ -1412,10 +1408,9 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         # Compress 2D files
         nframes = len(planstr['APEXP']) 
         for j in range(nframes): 
-            files = load.filename('2D',num=planstr['APEXP']['name'][j],chips=True)
-            files = [files.replace('2D-','2D-'+ch+'-') for ch in chiptag]
-            modfiles = load.filename('2Dmodel',num=planstr['APEXP']['name'][j],mjd=load.cmjd(planstr['APEXP']['name'][j]),chips=True)
-            modfiles = [modfiles.replace('2Dmodel-','2Dmodel-'+ch+'-') for ch in chiptag]
+            files = load.filename('2D',num=planstr['APEXP']['name'][j],chip=chiptag)
+            modfiles = load.filename('2Dmodel',num=planstr['APEXP']['name'][j],
+                                     mjd=load.cmjd(planstr['APEXP']['name'][j]),chip=chiptag)
             for jj in range(len(files)): 
                 if os.path.exists(files[jj]): 
                     if os.path.exists(files[jj]+'.fz'): os.remove(files[jj]+'.fz')

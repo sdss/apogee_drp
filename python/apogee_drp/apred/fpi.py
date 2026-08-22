@@ -219,13 +219,13 @@ def dailyfpiwave(mjd5,observatory='apo',apred='daily',num=None,clobber=False,ver
     for i in range(len(ind)):
         fpinum1 = expinfo['num'][ind[i]]     
         print('%d/%d  %d' % (i+1,len(ind),fpinum1))
-        if load.exists('1D',num=fpinum1)==False:
-            print(load.filename('1D',num=fpinum1,chips=True)+' NOT FOUND')
+        if not load.exists('1D', num=fpinum1, chip=chips):
+            print(load.filename('1D',num=fpinum1)+' NOT FOUND')
             continue
         fpiframe = load.ap1D(fpinum1)
         # Check if the file exists already
         fpiwavefile = reduxdir+'cal/'+instrument+'/wave/'+load.prefix+'WaveFPI-%5d-%8d.fits' % (mjd5,fpinum1)
-        if load.exists('WaveFPI',num=fpinum1) and clobber==False:
+        if load.product_exists('fpi', fpinum1) and clobber==False:
             print(fpiwavefile+' already exists and clobber not set')
             continue
         # 1) Fit peaks to the FPI data
@@ -785,7 +785,7 @@ def fpi1dwavecal(planfile=None,frameid=None,out=None,instrument=None,fpiid=None,
             frame[chip][0].header['WAVEHDU'] = 5
 
         # Rewrite out 1D file with adjusted wavelength information
-        outname = load.filename('1D',num=int(name),mjd=load.cmjd(int(name)),chips=True)
+        outname = load.filename('1D',num=int(name),mjd=load.cmjd(int(name)))
         print('Writing to ',outname)
         for ichip,chip in enumerate(chips) :
             hdu = fits.HDUList()

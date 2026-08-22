@@ -830,7 +830,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                 p4 = exptype
                 p5 = ' '; p6 = ' '; p7 = ' '; p8 = ' '; p9 = ' '; p10 = ' '
                 p11 = ' '; p12 = ' '; p13 = ' '; p14 = ' '; p15 = ' '
-                twodfile = load.filename('2D',num=num, chips=True).replace('2D-','2D-b-')
+                twodfile = load.filename('2D',num=num,chip='b')
                 if os.path.exists(twodfile):
                     flx = fits.getdata(twodfile)
                     hdr = fits.getheader(twodfile)
@@ -848,7 +848,7 @@ def monitor(instrument='apogee-n', apred='daily', clobber=True, makesumfiles=Tru
                         p11 = 'yes'
                         if os.path.exists(twodfile.replace('2D','1D')): p12 = 'yes'
                         if hdr['CONFIGID'] != '':
-                            cframe = load.filename('Cframe', plate=hdr['CONFIGID'], mjd=smjd, num=num, chips=True, fps=True).replace('Cframe-','Cframe-b-')
+                            cframe = load.filename('Cframe', plate=hdr['CONFIGID'], mjd=smjd, num=num, fps=True, chip='b')
                             if os.path.exists(cframe): p13 = 'yes'
                             visits = glob.glob(os.path.dirname(cframe)+'/'+prefix+'Visit-*fits')
                             if len(visits) > 1: p14 = 'yes'
@@ -5448,7 +5448,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
                     chp = 'c'
                     if ichip == 1: chp = 'b'
                     if ichip == 2: chp = 'a'
-                    file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome], chips='c')
+                    file1d = load.filename('1D', mjd=str(umjd[idome]), num=gdcal['NUM'][idome],chip='c')
                     file1d = file1d.replace('1D-', '1D-' + chp + '-')
                     if os.path.exists(file1d):
                         hdr = fits.getheader(file1d)
@@ -5520,7 +5520,7 @@ def getSnrStruct2(data1=None, data2=None, iexp=None, field=None, sumfile=None):
         #            chp = 'c'
         #            if ichip == 1: chp = 'b'
         #            if ichip == 2: chp = 'a'
-        #            file1d = load.filename('1D', mjd='59567', num=gdcal['NUM'][iqtz], chips='c')
+        #            file1d = load.filename('1D', mjd='59567', num=gdcal['NUM'][iqtz],chip='c')
         #            file1d = file1d.replace('1D-', '1D-' + chp + '-')
         #            if os.path.exists(file1d):
         #                oned = fits.getdata(file1d)

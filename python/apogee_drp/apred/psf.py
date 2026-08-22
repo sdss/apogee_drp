@@ -1258,14 +1258,14 @@ def mkmodelpsf(name,psfid,sparseid,apred,telescope,nfbin=5,ncbin=200,verbose=Fal
     print('Column binning: '+str(ncbin))
 
     load = apload.ApLoad(apred=apred,telescope=telescope)
-    sparsefile = load.filename('Sparse',num=sparseid,chips=True)
-    psffile = load.filename('EPSF',num=psfid,chips=True)
+    sparsefile = load.filename('Sparse',num=sparseid)
+    psffile = load.filename('EPSF',num=psfid)
     for ch in chips:
         psffile1 = psffile.replace('EPSF-','EPSF-'+ch+'-')
         data,mnx,mny,profiles,y,fsparse = makeprofilegrid(psffile1,sparsefile,verbose=verbose)
         labels = [mnx,mny]
         p = PSF((profiles,labels,y),kind='grid',log=False)
-        outfile = load.filename('PSFModel',num=name,chips=True).replace('PSFModel-','PSFModel-'+ch+'-')
+        outfile = load.filename('PSFModel', num=name, chip=ch)
         print('Writing to '+outfile)
         p.write(outfile)
 

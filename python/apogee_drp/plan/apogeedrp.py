@@ -414,33 +414,22 @@ def check_mastercals(names,caltype,logfiles,pbskey,apred,telescope,verbose=False
         chkmaster['checktime'][i] = str(datetime.now())
         chkmaster['success'][i] = False
         load = apload.ApLoad(apred=apred,telescope=chkmaster['telescope'][i])
-        # Final calibration file
-        #-----------------------
-        if caltype[i] == 'Fiber':
-            base = load.filename('ETrace',num=name,chips=True)
-            base = base.replace('ETrace','Fiber')
-        else:
-            base = load.filename(caltype[i],num=name,chips=True)
-        chkmaster['calfile'][i] = base
-        # Sparse, only one file, not chip tag
-        if caltype[i]=='Sparse':
-            chfiles = [base]
-        # Littrow, only detector b
-        elif caltype[i]=='Littrow':
-            chfiles = [base.replace(caltype[i]+'-',caltype[i]+'-b-')]
-        # Fiber
-        chfiles = [base.replace(caltype[i]+'-',caltype[i]+'-'+ch+'-') for ch in ['a','b','c']]
+        # Final logical calibration product
+        #----------------------------------
+        product = {
+            'PSFModel': 'modelpsf',
+            'ETrace': 'fiber',
+        }.get(caltype[i], str(caltype[i]).lower())
+        chfiles = load.product_files(product, name)
+        chkmaster['calfile'][i] = chfiles[0]
         chinfo = info.file_status(chfiles)
-        if chinfo['okay'][0]:  # get V_APRED (git version) from file
-            chead = fits.getheader(chfiles[0])
+        fits_files = [filename for filename in chfiles
+                      if str(filename).lower().endswith(('.fits', '.fits.gz'))]
+        if fits_files and chinfo['okay'][0]:
+            chead = fits.getheader(fits_files[0])
             chkmaster['v_apred'][i] = chead.get('V_APRED')
         # Overall success
-        if caltype[i]=='Fiber':
-            if np.sum(chinfo['exists'])==3:
-                chkmaster['success'][i] = True
-        else:
-            if load.exists(caltype[i],num=name):
-                chkmaster['success'][i] = True
+        chkmaster['success'][i] = load.product_exists(product, name)
 
         if verbose:
             logger.info('')
@@ -498,7 +487,7 @@ def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=Non
         chk3d['exposure_pk'] = expinfo['pk'][i]
         chk3d['num'][i] = num
         mjd = int(load.cmjd(num))
-        outfile = load.filename('2D',num=num,mjd=mjd,chips=True)
+        outfile = load.filename('2D',num=num,mjd=mjd)
         outfiles = [outfile.replace('2D-','2D-'+ch+'-') for ch in chips]
         planfile = os.path.dirname(outfile)+'/logs/'+os.path.basename(outfile)
         planfile = outfile.replace('2D','3DPlan').replace('.fits','.yaml')
@@ -598,7 +587,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         # AP3D
         #-----
         if caltype != 'DailyWave':
-            base = load.filename('2D',num=num,mjd=mjd,chips=True)
+            base = load.filename('2D',num=num,mjd=mjd)
             chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
             chinfo3 = info.file_status(chfiles)
             if chinfo3['okay'][0] and chinfo3['size'][0]>0: # get V_APRED (git version) from file 
@@ -611,7 +600,7 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         # AP2D
         #-----
         if caltype != 'DailyWave':
-            base = load.filename('1D',num=num,mjd=mjd,chips=True)
+            base = load.filename('1D',num=num,mjd=mjd)
             chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
             chinfo2 = info.file_status(chfiles)
             if np.sum(chinfo2['okay'])==3:
@@ -622,11 +611,11 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
         #-----------------------
         if caltype.lower()=='fpi':
             # Should really check fpi/apFPILines-EXPNUM8.fits
-            base = load.filename('Wave',num=num,chips=True).replace('Wave-','WaveFPI-'+str(mjd)+'-')
+            base = load.filename('Wave',num=num).replace('Wave-','WaveFPI-'+str(mjd)+'-')
         elif caltype.lower()=='dailywave':
-            base = load.filename('Wave',num=num,chips=True)[0:-13]+str(num)+'.fits'
+            base = load.filename('Wave',num=num)[0:-13]+str(num)+'.fits'
         else:
-            base = load.filename(caltype,num=num,chips=True)
+            base = load.filename(caltype,num=num)
         chkcal['calfile'][i] = base
         chfiles = [base.replace(filecode+'-',filecode+'-'+ch+'-') for ch in ['a','b','c']]
         chinfo = info.file_status(chfiles)
@@ -700,7 +689,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,dbload=True,logger=None):
             #plugmap = platedata.getdata(plate,mjd,apred_vers,telescope,plugid=planstr['plugmap'])
             #fiberdata = plugmap['fiberdata']
             # This is very slow, get it directly from apPlate file
-            base = load.filename('Plate',plate=plate,mjd=mjd,chips=True,field=field)
+            base = load.filename('Plate',plate=plate,mjd=mjd,field=field)
             chfiles = [base.replace('Plate-','Plate-'+ch+'-') for ch in ['a','b','c']]
             chinfo = info.file_status(chfiles)
             if chinfo['okay'][0]:
@@ -750,7 +739,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,dbload=True,logger=None):
             chkexp1['exposure_pk'][cnt] = exposure_pk
             chkexp1['num'][cnt] = num
             chkexp1['proctype'][cnt] = 'AP3D'
-            base = load.filename('2D',num=num,mjd=mjd,chips=True)
+            base = load.filename('2D',num=num,mjd=mjd)
             chfiles = [base.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']]
             chinfo3 = info.file_status(chfiles)
             if chinfo3['okay'][0]:  # get V_APRED (git version) from file
@@ -766,7 +755,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,dbload=True,logger=None):
                 chkexp1['exposure_pk'][cnt] = exposure_pk
                 chkexp1['num'][cnt] = num
                 chkexp1['proctype'][cnt] = 'AP2D'
-                base = load.filename('1D',num=num,mjd=mjd,chips=True)
+                base = load.filename('1D',num=num,mjd=mjd)
                 chfiles = [base.replace('1D-','1D-'+ch+'-') for ch in ['a','b','c']]
                 chinfo2 = info.file_status(chfiles)
                 if chinfo2['okay'][0]:  # get V_APRED (git version) from file
@@ -781,7 +770,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,dbload=True,logger=None):
                 chkexp1['exposure_pk'][cnt] = exposure_pk
                 chkexp1['num'][cnt] = num
                 chkexp1['proctype'][cnt] = 'APCFRAME'
-                base = load.filename('Cframe',num=num,mjd=mjd,plate=plate,chips=True,field=field)
+                base = load.filename('Cframe',num=num,mjd=mjd,plate=plate,field=field)
                 chfiles = [base.replace('Cframe-','Cframe-'+ch+'-') for ch in ['a','b','c']]
                 chinfo = info.file_status(chfiles)
                 if chinfo['okay'][0]:  # get V_APRED (git version) from file
@@ -838,7 +827,7 @@ def check_apred(expinfo,planfiles,pbskey,verbose=False,dbload=True,logger=None):
         if platetype=='normal':
             # apPlate
             chkap1['applate_success'] = False
-            base = load.filename('Plate',plate=plate,mjd=mjd,chips=True,field=field)
+            base = load.filename('Plate',plate=plate,mjd=mjd,field=field)
             chfiles = [base.replace('Plate-','Plate-'+ch+'-') for ch in ['a','b','c']]
             chinfo = info.file_status(chfiles)
             if chinfo['okay'][0]:  # get V_APRED (git version) from file
@@ -1758,8 +1747,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Loop over the files and link them
                 psfid = np.unique(psfid)
                 for i in range(len(psfid)):
-                    srcfile = sload.filename('PSF',num=psfid[i],chips=True)
-                    destfile = dload.filename('PSF',num=psfid[i],chips=True)
+                    srcfile = sload.filename('PSF',num=psfid[i])
+                    destfile = dload.filename('PSF',num=psfid[i])
                     for ch in chips:
                         srcfile1 = srcfile.replace('PSF-','PSF-'+ch+'-')
                         destfile1 = destfile.replace('PSF-','PSF-'+ch+'-')
@@ -1768,8 +1757,8 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                             srcfile1 = srcfile.replace('PSF-','EPSF-'+ch+'-')
                             destfile1 = destfile.replace('PSF-','EPSF-'+ch+'-')
                             subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
-                            srcfile1 = sload.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
-                            destfile1 = load.filename('ETrace',num=psfid[i],chips=True).replace('ETrace-','ETrace-'+ch+'-')
+                            srcfile1 = sload.filename('ETrace',num=psfid[i]).replace('ETrace-','ETrace-'+ch+'-')
+                            destfile1 = load.filename('ETrace',num=psfid[i]).replace('ETrace-','ETrace-'+ch+'-')
                             subprocess.run(['ln -s '+srcfile1+' '+destfile1],shell=True)
 
         return
@@ -1852,7 +1841,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(detdict)):
             name = detdict['name'][i]
             if graph.is_required('detector', name):
-                outfile = load.filename('Detector',num=name,chips=True)
+                outfile = load.filename('Detector',num=name)
                 logfile1 = os.path.dirname(outfile)+'/mkdet-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -1864,7 +1853,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
-                    if load.exists('Detector',num=name):
+                    if load.product_exists('detector', name):
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:
@@ -1926,7 +1915,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(darkdict)):
             name = darkdict['name'][i]
             if graph.is_required('dark', name):
-                outfile = load.filename('Dark',num=name,chips=True)
+                outfile = load.filename('Dark',num=name)
                 logfile1 = os.path.dirname(outfile)+'/mkdark-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -1938,7 +1927,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
-                    if load.exists('Dark',num=name):
+                    if load.product_exists('dark', name):
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:
@@ -2002,7 +1991,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(flatdict)):
             name = flatdict['name'][i]
             if graph.is_required('flat', name):
-                outfile = load.filename('Flat',num=name,chips=True)
+                outfile = load.filename('Flat',num=name)
                 logfile1 = os.path.dirname(outfile)+'/mkflat-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2014,7 +2003,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
-                    if load.exists('Flat',num=name):
+                    if load.product_exists('flat', name):
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:
@@ -2078,7 +2067,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(bpmdict)):
             name = bpmdict['name'][i]
             if graph.is_required('bpm', name):
-                outfile = load.filename('BPM',num=name,chips=True)
+                outfile = load.filename('BPM',num=name)
                 logfile1 = os.path.dirname(outfile)+'/mkbpm-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2090,7 +2079,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
-                    if load.exists('BPM',num=name):
+                    if load.product_exists('bpm', name):
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:
@@ -2146,7 +2135,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(fiberdict)):
             name = fiberdict['name'][i]
             if graph.is_required('fiber', name):
-                outfile = load.filename('Fiber',num=name,chips=True)
+                outfile = load.filename('Fiber',num=name)
                 logfile1 = os.path.dirname(outfile)+'/mkfiber-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2161,7 +2150,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                     #files = [outfile.replace('Fiber-','Fiber-'+chip+'-') for chip in ['a','b','c']]
                     #files_exist = [os.path.exists(f) for f in files]
                     #if np.sum(files_exist)==3:
-                    if load.exists('Fiber',num=name):
+                    if load.product_exists('fiber', name):
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:
@@ -2217,7 +2206,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(sparsedict)):
             name = sparsedict['name'][i]
             if graph.is_required('sparse', name):
-                outfile = load.filename('Sparse',num=name,chips=True)
+                outfile = load.filename('Sparse',num=name)
                 logfile1 = os.path.dirname(outfile)+'/mksparse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2229,7 +2218,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
-                    if load.exists('Sparse',num=name):
+                    if load.product_exists('sparse', name):
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:
@@ -2286,7 +2275,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(littdict)):
             name = littdict['name'][i]
             if graph.is_required('littrow', name):
-                outfile = load.filename('Littrow',num=name,chips=True)
+                outfile = load.filename('Littrow',num=name)
                 logfile1 = os.path.dirname(outfile)+'/mklittrow-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2298,7 +2287,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
-                    if load.exists('Littrow',num=name):
+                    if load.product_exists('littrow', name):
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:
@@ -2354,7 +2343,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(responsedict)):
             name = responsedict['name'][i]
             if graph.is_required('response', name):
-                outfile = load.filename('Response',num=name,chips=True)
+                outfile = load.filename('Response',num=name)
                 logfile1 = os.path.dirname(outfile)+'/mkresponse-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2366,7 +2355,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
-                    if load.exists('Response',num=name):
+                    if load.product_exists('response', name):
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:
@@ -2422,7 +2411,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(modelpsfdict)):
             name = modelpsfdict['name'][i]
             if graph.is_required('modelpsf', name):
-                outfile = load.filename('PSFModel',num=name,chips=True)
+                outfile = load.filename('PSFModel',num=name)
                 logfile1 = os.path.dirname(outfile)+'/mkpsfmodel-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2434,7 +2423,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
-                    if load.exists('PSFModel',num=name):
+                    if load.product_exists('modelpsf', name):
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:
@@ -2497,15 +2486,15 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(multiwavedict)):
             name = multiwavedict['name'][i]
             if graph.is_required('multiwave', name):
-                if clobber or load.exists('Wave',num=multiwavedict['name'][i])==False:
+                if clobber or load.product_exists('wave', multiwavedict['name'][i])==False:
                     multiwave_names.append(name)
                     wnames = multiwavedict['frames'][i].split(',')
                     wave_names += wnames
                 else:
-                    logger.info(load.filename('Wave',num=multiwavedict['name'][i],chips=True)+' exists already')
+                    logger.info(load.filename('Wave',num=multiwavedict['name'][i])+' exists already')
         logger.info(str(len(multiwave_names))+' multiwave files need to be made')
         wave_names = list(np.unique(wave_names))
-        wave_names = [n for n in wave_names if load.exists('Wave',num=n)==False]
+        wave_names = [n for n in wave_names if load.product_exists('wave', n)==False]
         logger.info(str(len(wave_names))+' apWave files need to be made')
                 
         # Which PSFs are we going to use for the apWave files
@@ -2526,7 +2515,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 psfid = qtzinfo['num'][bestind]
                 psf_names.append(psfid)
         psf_names = list(np.unique(psf_names))
-        psf_names = [n for n in psf_names if clobber or load.exists('PSF',num=n)==False]
+        psf_names = [n for n in psf_names if clobber or load.product_exists('psf', n)==False]
         logger.info(str(len(psf_names))+' apPSF files need to be made')
 
         # Create the apPSF files so we can extract the individual wave files
@@ -2545,7 +2534,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(psf_names)):
             name = psf_names[i]
             mjd = int(load.cmjd(int(name)))
-            outfile = load.filename('PSF',num=name,chips=True)
+            outfile = load.filename('PSF',num=name)
             logfile1 = os.path.dirname(outfile)+'/'+load.prefix+'PSF-'+str(name)+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2557,7 +2546,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                if clobber or load.exists('PSF',num=name):
+                if clobber or load.product_exists('psf', name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
@@ -2611,7 +2600,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(wave_names)):
             name = wave_names[i]
             mjd = int(load.cmjd(int(name)))
-            outfile = load.filename('Wave',num=name,chips=True)
+            outfile = load.filename('Wave',num=name)
             logfile1 = os.path.dirname(outfile)+'/'+load.prefix+'Wave-'+str(name)+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2636,7 +2625,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                if load.exists('Wave',num=name):
+                if load.product_exists('wave', name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
@@ -2686,7 +2675,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         logfiles = []
         for i in range(len(multiwave_names)):
             name = multiwave_names[i]
-            outfile = load.filename('Wave',num=name,chips=True)
+            outfile = load.filename('Wave',num=name)
             logfile1 = os.path.dirname(outfile)+'/mkmultiwave-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
             errfile1 = logfile1.replace('.log','.err')
             if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2698,7 +2687,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             # Check if files exist already
             docal[i] = True
             if clobber is not True:
-                if load.exists('Wave',num=name):
+                if load.product_exists('wave', name):
                     logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                     docal[i] = False
             if docal[i]:
@@ -2754,7 +2743,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
         for i in range(len(lsfdict)):
             name = lsfdict['name'][i]
             if graph.is_required('lsf', name):
-                outfile = load.filename('LSF',num=name,chips=True)
+                outfile = load.filename('LSF',num=name)
                 logfile1 = os.path.dirname(outfile)+'/mklsf-'+str(name)+'-'+telescope+'_pbs.'+logtime+'.log'
                 errfile1 = logfile1.replace('.log','.err')
                 if os.path.exists(os.path.dirname(logfile1))==False:
@@ -2766,7 +2755,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
                 # Check if files exist already
                 docal[i] = True
                 if clobber is not True:
-                    if load.exists('LSF',num=name):
+                    if load.product_exists('lsf', name):
                         logger.info(os.path.basename(outfile)+' already exists and clobber==False')
                         docal[i] = False
                 if docal[i]:
@@ -2912,8 +2901,8 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None,inputlist=None,sparseg
         # Check if files exist already
         do3d[i] = True
         if clobber is not True:
-            outfile = load.filename('2D',num=num,mjd=mjd,chips=True)
-            if load.exists('2D',num=num):
+            outfile = load.filename('2D',num=num,mjd=mjd)
+            if load.exists('2D', num=num, chip=chips):
                 logger.info(str(i+1)+' '+os.path.basename(outfile)+' already exists and clobber==False')
                 do3d[i] = False
     logger.info(str(np.sum(do3d))+' exposures to run')
@@ -2935,7 +2924,7 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None,inputlist=None,sparseg
         for i in range(ntorun):
             num = expinfo['num'][torun[i]]
             mjd = int(load.cmjd(num))
-            logfile1 = load.filename('2D',num=num,mjd=mjd,chips=True).replace('2D','3D')
+            logfile1 = load.filename('2D',num=num,mjd=mjd).replace('2D','3D')
             logfile1 = os.path.dirname(logfile1)+'/logs/'+os.path.basename(logfile1)
             logfile1 = logfile1.replace('.fits','_pbs.'+logtime+'.log')
             if os.path.exists(os.path.dirname(logfile1))==False:
@@ -3359,22 +3348,19 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,
                 # Check if files exist already
                 docal[j] = True
                 if clobber is not True:
-                    if ctype=='dailywave':
-                        outfile = load.filename(filecodes[i],num=num1,mjd=mjd1,chips=True)
-                        outfile = outfile[0:-13]+str(mjd1)+'.fits'
-                        allfiles = [outfile.replace('Wave-','Wave-'+ch+'-') for ch in chips]
-                        allexist = [os.path.exists(f) for f in allfiles]
-                        exists = np.sum(allexist)==3
-                    else:
-                        outfile = load.filename(filecodes[i],num=num1,mjd=mjd1,chips=True)
-                        exists = load.exists(filecodes[i],num=num1,mjd=mjd1)
-                    # WaveFPI files are not getting checked properly!!!!
+                    outfile = load.filename(
+                        filecodes[i], num=num1, mjd=mjd1)
+                    product = {
+                        'arcs': 'wave',
+                        'dailywave': 'dailywave',
+                    }.get(ctype, ctype)
+                    exists = load.product_exists(product, num1)
                     if exists:
                         logger.info(str(j+1)+'  '+os.path.basename(outfile)+' already exists and clobber==False')
                         docal[j] = False               
                 # Make sure the 2D files exist and the 3D step was run (not dailywave)
                 if docal[j]==True and ctype!='dailywave' and ctype!='telluric':
-                    base2d = load.filename('2D',num=num1,mjd=mjd1,chips=True)
+                    base2d = load.filename('2D',num=num1,mjd=mjd1)
                     status2d = info.file_status([base2d.replace('2D-','2D-'+ch+'-') for ch in ['a','b','c']])
                     if status2d['okay'][0]==False:
                         logger.info(str(j+1)+'  '+os.path.basename(base2d)+' not found. Make sure to run 3D step first!')
@@ -3621,7 +3607,7 @@ def runapred(load,mjds,slurmpars,clobber=False,logger=None):
                 # apPlan-3370-59623.yaml
                 config1,mjd1 = pfbase.split('.')[0].split('-')[1:3]
                 # check for apVisitSum file
-                outfile = load.filename('VisitSum',plate=config1,mjd=mjd1,chips=True)
+                outfile = load.filename('VisitSum',plate=config1,mjd=mjd1)
                 outexists = os.path.exists(outfile)
             # apCalPlan
             elif pfbase.startswith(load.prefix+'CalPlan'):
@@ -4617,4 +4603,3 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
     summary_email(observatory,apred,mjd,steps,chkmaster=chkmaster,chk3d=chk3d,chkcal=chkcal,
                   planfiles=planfiles,chkexp=chkexp,chkvisit=chkvisit,chkrv=chkrv,logfile=logfile,
                   slurmpars=slurmpars,clobber=clobber,debug=debug,error=planerror)
-

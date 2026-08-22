@@ -276,7 +276,7 @@ def apqaMJD(mjd='59146', observatory='apo', apred='daily', makeplatesum=True, ma
             # 0 = not reduced, 1 = reduced
             imsReduced = np.zeros(n_ims)
             for j in range(n_ims):
-                cframe = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[j], chips=True, fps=fps)
+                cframe = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[j], fps=fps)
                 if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[j] = 1
             good, = np.where(imsReduced == 1)
             if len(good) < 1:
@@ -370,7 +370,7 @@ def apqa(plate='15000', mjd='59146', telescope='apo25m', apred='daily', makeplat
         # 0 = not reduced, 1 = reduced
         imsReduced = np.zeros(n_ims)
         for i in range(n_ims):
-            cframe = load.filename('Cframe', field=field, plate=int(plate), mjd=mjd, num=ims[i], chips=True)
+            cframe = load.filename('Cframe', field=field, plate=int(plate), mjd=mjd, num=ims[i])
             if os.path.exists(cframe.replace('Cframe-','Cframe-a-')): imsReduced[i] = 1
         good, = np.where(imsReduced == 1)
         if len(good) > 0:
@@ -487,10 +487,10 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     # Get the fiber association for this plate. Also get some other values
     if ims[0] == 0:
         n_exposures = 1
-        onedfile = load.filename('1D', num=ims[1], mjd=mjd, chips=True)
+        onedfile = load.filename('1D', num=ims[1], mjd=mjd)
     else:
         n_exposures = len(ims)
-        onedfile = load.filename('1D', num=ims[0], mjd=mjd, chips=True)
+        onedfile = load.filename('1D', num=ims[0], mjd=mjd)
 
     tothdr = fits.getheader(onedfile.replace('1D-','1D-a-'))
     ra = tothdr.get('RADEG')
@@ -649,8 +649,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
     # Loop over the exposures.
     for i in range(n_exposures):
         if ims[0] == 0: 
-            pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))
-            dfile = load.filename('Plate',  plate=int(plate), mjd=mjd, chips=True, fps=fps)
+            pfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, fps=fps))
+            dfile = load.filename('Plate',  plate=int(plate), mjd=mjd, fps=fps)
             d = load.apPlate(int(plate), mjd) 
             cframe = load.apPlate(int(plate), mjd)
             if type(d)!=dict: print("----> makePlateSum: Problem with apPlate!")
@@ -660,8 +660,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
                 print("----> makePlateSum: Problem with apPlate!")
                 return 'bad'
         else:
-            pfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True))
-            dfile = load.filename('1D', num=ims[i], mjd=mjd, chips=True)
+            pfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd))
+            dfile = load.filename('1D', num=ims[i], mjd=mjd)
             d = load.ap1D(ims[i])
             cframe = load.apCframe(field, int(plate), mjd, ims[i])
             if type(d)!=dict: print("----> makePlateSum: Problem with ap1D!")
@@ -673,7 +673,7 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
         ind = 1
         if len(ims) < 2: ind = 0
-        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[ind], chips='c', fps=fps)
+        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[ind],chip='c', fps=fps)
         cframehdr = fits.getheader(cframefile.replace('Cframe-','Cframe-a-'))
         pfile = pfile.replace('.fits','')
 
@@ -1081,7 +1081,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     # Flat field/throughput plots.
     fluxfile = ''
     if fluxid is not None:
-        fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True)).replace('.fits','.png')
+        fluxfile = os.path.basename(load.filename('Flux', num=fluxid)).replace('.fits','.png')
         plotfile = fluxfile.replace('Flux','Tput')
         html.write('<H3>Fiber Throughput:</H3>\n')
         html.write('<P><b>Note:</b> Points are color-coded by median dome flat flux divided by the maximum median dome flat flux.</P>\n')
@@ -1232,7 +1232,7 @@ def makeObsHTML(load=None, ims=None, imsReduced=None, plate=None, mjd=None, fiel
     for i in range(n_exposures):
         gd, = np.where(ims[i] == tab1['IM'])
         if len(gd) >= 1:
-            oneDfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd, chips=True)).replace('.fits','')
+            oneDfile = os.path.basename(load.filename('1D', num=ims[i], mjd=mjd)).replace('.fits','')
             #html.write('<TR><TD bgcolor="'+thcolor+'"><A HREF=../html/'+oneDfile+'.html>'+str(im)+'</A>\n')
             html.write('<TR><TD bgcolor="'+thcolor+'">'+str(int(round(ims[i])))+'\n')
             html.write('<TD><TABLE BORDER=1><TD><TD bgcolor="'+thcolor+'">RED<TD bgcolor="'+thcolor+'">GREEN<TD bgcolor="'+thcolor+'">BLUE\n')
@@ -1299,7 +1299,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     expinfo = info.expinfo(observatory=load.observatory, mjd5=int(mjd))
 
     # Make plot and html directories if they don't already exist.
-    platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps))
+    platedir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, fps=fps))
     plotsdir = platedir+'/plots/'
     if len(glob.glob(plotsdir)) == 0:
         os.makedirs(plotsdir,exist_ok=True)
@@ -1459,7 +1459,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     #----------------------------------------------------------------------------------------------
     # PLOTS 3-7: flat field flux and fiber blocks... previously done by plotflux.pro
     #----------------------------------------------------------------------------------------------
-    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    fluxfile = os.path.basename(load.filename('Flux', num=fluxid))
     #flux = load.apFlux(fluxid)
     flux = load.ap1D(fluxid)
     ypos = 300 - platesum2['FIBERID']
@@ -1733,7 +1733,7 @@ def makeObsPlots(load=None, ims=None, imsReduced=None, plate=None, mjd=None, ins
     #----------------------------------------------------------------------------------------------
     # PLOTS 7: sky, telluric, science fiber positions, colored by Hmag
     #----------------------------------------------------------------------------------------------
-    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    fluxfile = os.path.basename(load.filename('Flux', num=fluxid))
     flux = load.apFlux(fluxid)
     ypos = 300 - platesum2['FIBERID']
     block = np.floor((plSum2['FIBERID'] - 1) / 30) #[::-1]
@@ -2195,12 +2195,12 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     apodir = os.environ.get('APOGEE_REDUX') + '/'
 
     # Make html directory if it doesn't already exist.
-    htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/html/'
+    htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, fps=fps)) + '/html/'
     if os.path.exists(htmldir) == False: os.makedirs(htmldir,exist_ok=True)
     plotdir = htmldir.replace('html','plots')
 
     # Get the HTML file name... apPlate-plate-mjd
-    htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)).replace('.fits','')
+    htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, fps=fps)).replace('.fits','')
 
     # Base directory where star-level stuff goes
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
@@ -2217,7 +2217,7 @@ def makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, telesc
     # Read in flux file to get an idea of throughput
     # fluxid might equal 0 for some reason.
     try:
-        fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+        fluxfile = os.path.basename(load.filename('Flux', num=fluxid))
         flux = load.apFlux(int(fluxid))
         medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
         throughput = medflux / np.nanmax(medflux)
@@ -2885,7 +2885,7 @@ def apVisitPlots(load=None, plate=None, mjd=None, telescope=None):
     cnfiber = str(nfiber)
 
     # Make plot and html directories if they don't already exist.
-    plotsdir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/plots/'
+    plotsdir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, fps=fps)) + '/plots/'
     if os.path.exists(plotsdir) == False: os.makedirs(plotsdir,exist_ok=True)
 
     # Loop over the fibers
@@ -3397,9 +3397,9 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
     html.write('<TR bgcolor='+thcolor+'><TH>ID<TH>NFRAMES/NREAD<TH>TYPE<TH>PLATEID<TH>CARTID<TH>1D missing<TH>2D missing\n')
     for i in range(nuExposures):
         n = int(round(uExposures[i]))
-        file1d = load.filename('1D', mjd=mjd, num=n, chips='c').replace('1D-', '1D-c-')
+        file1d = load.filename('1D', mjd=mjd, num=n, chip='c')
         if os.path.exists(file1d) == False:
-            file2d = load.filename('2D', mjd=mjd, num=n, chips='c').replace('2D-', '2D-c-')
+            file2d = load.filename('2D', mjd=mjd, num=n, chip='c')
             if (os.path.exists(file2d) == False) & (os.path.exists(file2d + '.fz') == False):
                 miss2d = 1
             else:
@@ -3408,7 +3408,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
             imtype = 'unknown'
             color = 'white'
 
-            rawfile = load.filename('R', num=n, mjd=mjd, chips='a').replace('R-', 'R-c-')
+            rawfile = load.filename('R', num=n, mjd=mjd, chip='c')
             if os.path.exists(rawfile):
                 rawdata = load.apR(n)
                 head = rawdata['a'][1].header
@@ -3474,7 +3474,7 @@ def makeNightQA(load=None, mjd=None, telescope=None, apred=None):
                 html.write('<TD align="center">')
                 if len(unplugged) >= 0: html.write(str(300 - unplugged) + '\n')
                 html.write('<TD align="center">')
-                expfile = load.filename('1D', num=planstr['fluxid'], chips='b')
+                expfile = load.filename('1D', num=planstr['fluxid'],chip='b')
                 if os.path.exists(expfile):
                     domeflat = fits.getdata(expfile)
                     level = np.nanmedian(domeflat, axis=1)
@@ -4792,7 +4792,7 @@ def makeExpFits(instrument=None, apodir=None, apred=None, load=None, mjd=None, c
 
             # Get median fluxes from Dome Flats
             if struct['IMAGETYP'][i] == 'DomeFlat':
-                fluxfile = load.filename('Flux', num=int(imnum), chips=True).replace('Flux-', 'Flux-c-')
+                fluxfile = load.filename('Flux', num=int(imnum)).replace('Flux-', 'Flux-c-')
                 if os.path.exists(fluxfile):
                     tmp = load.apFlux(int(imnum))
                     for ichip in range(nchips):
@@ -4873,7 +4873,7 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
     apodir = os.environ.get('APOGEE_REDUX') + '/'
 
     # Make html directory if it doesn't already exist.
-    htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)) + '/html/'
+    htmldir = os.path.dirname(load.filename('Plate', plate=int(plate), mjd=mjd, fps=fps)) + '/html/'
     if os.path.exists(htmldir) == False: os.makedirs(htmldir,exist_ok=True)
 
     #if os.path.exists(htmldir + 'sorttable.js') == False:
@@ -4882,7 +4882,7 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
     #    subprocess.call(['mv', 'sorttable.js', htmldir])
 
     # Get the HTML file name... apPlate-plate-mjd
-    htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps)).replace('.fits','')
+    htmlfile = os.path.basename(load.filename('Plate', plate=int(plate), mjd=mjd, fps=fps)).replace('.fits','')
     
     # Base directory where star-level stuff goes
     starHTMLbase = apodir + apred + '/stars/' + telescope +'/'
@@ -4922,7 +4922,7 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
     nfiber = len(data)
 
     # Read in flux file to get an idea of throughput
-    fluxfile = os.path.basename(load.filename('Flux', num=fluxid, chips=True))
+    fluxfile = os.path.basename(load.filename('Flux', num=fluxid))
     flux = load.apFlux(fluxid)
     medflux = np.nanmedian(flux['a'][1].data, axis=1)[::-1]
     throughput = medflux / np.nanmax(medflux)
@@ -4949,7 +4949,7 @@ def old_makeVisHTML(load=None, plate=None, mjd=None, survey=None, apred=None, te
     vishtml.write('<TH>S/N <TH>Vrad<BR>(km/s) <TH>N<BR>comp <TH>RV<BR>Teff (K) <TH>RV<BR>log(g) <TH>RV<BR>[Fe/H] <TH>Dome Flat<BR>Throughput <TH>apVisit Plot\n')
 #    vishtml.write('<TR><TH>Fiber<TH>APOGEE ID<TH>H<TH>H - obs<TH>S/N<TH>Target<BR>Type<TH>Target & Data Flags<TH>Spectrum Plot\n')
 
-    tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, chips=True, fps=fps).replace('apPlate', 'throughput').replace('fits', 'dat')
+    tputfile = load.filename('Plate', plate=int(plate), mjd=mjd, fps=fps).replace('apPlate', 'throughput').replace('fits', 'dat')
     tputdat = open(tputfile, 'w')
 
     db = apogeedb.DBSession()

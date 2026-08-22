@@ -82,7 +82,7 @@ def getinfo(num,apred,telescope):
     load = apload.ApLoad(apred=apred,telescope=telescope)
 
     # Does 3D file exist
-    filename3d = load.filename('R',num=num,chips=True).replace('R-','R-b-')
+    filename3d = load.filename('R',num=num).replace('R-','R-b-')
     expinfo['filename3d'] = filename3d
     if os.path.exists(filename3d)==False:
         expinfo['exists3d'] = False
@@ -91,7 +91,7 @@ def getinfo(num,apred,telescope):
         expinfo['exists3d'] = True
     # Does 2D file exist
     mjd = int(load.cmjd(num))
-    filename2d = load.filename('2D',num=num,mjd=mjd,chips=True).replace('2D-','2D-b-')
+    filename2d = load.filename('2D',num=num,mjd=mjd).replace('2D-','2D-b-')
     expinfo['filename2d'] = filename2d
     if os.path.exists(filename2d)==False:
         expinfo['exists2d'] = False

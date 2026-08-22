@@ -2037,7 +2037,7 @@ def ap3d(
             name: (
                 None
                 if cal_id is None
-                else load.filename(root, num=cal_id, chips=True)
+                else load.filename(root, num=cal_id)
             )
             for (name, cal_id), root in zip(cal_ids.items(), cal_roots.values())
         }
@@ -2062,8 +2062,8 @@ def ap3d(
                 settings["max_read"] = int(plan_max_read)
             settings.update(process_options)
 
-            raw_base = load.filename("R", num=number, mjd=mjd, chips=True)
-            output_base = load.filename("2D", num=number, mjd=mjd, chips=True)
+            raw_base = load.filename("R", num=number, mjd=mjd)
+            output_base = load.filename("2D", num=number, mjd=mjd)
             if verbose:
                 _log(f"Exposure {exposure_index + 1}/{len(exposures)}: "
                     f"{number:08d} ({flavor})",plan_started)
