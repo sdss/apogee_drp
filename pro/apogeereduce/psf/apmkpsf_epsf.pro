@@ -81,7 +81,7 @@ print,'Found ',strtrim(ntrace,2),' traces'
 
 ;; Getting reference positions from FIBER calibration file
 if fiberid gt 0 then begin
-  file = apogee_filename('ETrace',chip=chip[ichip],num=fiberid)
+  file = apogee_filename('Fiber',chip=chip[ichip],num=fiberid)
   ref = mrdfits(file)
   fibers = ref[1000,*]
 
