@@ -53,31 +53,42 @@ def sample_linearity(cube: np.ndarray, chip: int, *, nskip: int = 4,
 
     records = []
     reads = np.arange(2, data.shape[0], nskip, dtype=int)
+    reference_counts = np.float32(reference_counts)
     for ix in range(0, 40, 5):
         x1 = 24 + ix * 50
         for iy in range(0, 40, 5):
             y1 = 24 + iy * 50
-            region = data[:, y1:y1 + 10, x1:x1 + 10].astype(float)
-            counts = np.array([np.nanmedian(region[r] - region[1]) for r in reads])
-            elapsed = reads - 1
-            rates = counts / elapsed
-            counts = counts * (reads + 1) / elapsed  # extrapolate to zero read
-            instant = np.array([
-                np.nanmedian(region[r] - region[r - 1]) for r in reads
-            ])
-            use = (np.abs(counts - reference_counts) < 2000)
-            use &= np.isfinite(counts) & np.isfinite(rates)
-            if use.sum() < 3:
+            # IDL ix1:ix2 and iy1:iy2 are inclusive: 11 × 11 pixels.
+            region = np.asarray(data[:, y1:y1 + 11, x1:x1 + 11],
+                                dtype=np.float32)
+            counts = np.zeros(len(reads), dtype=np.float32)
+            rates = np.zeros(len(reads), dtype=np.float32)
+            instantaneous_rates = np.zeros(len(reads),dtype=np.float32)
+
+            for index, read in enumerate(reads):
+                counts[index] = np.median( region[read] - region[1] )
+                rates[index] = counts[index] / np.float32(read - 1)
+                # Correct to the nominal zero read after calculating rate.
+                counts[index] *= ( np.float32(read + 1) /
+                                   np.float32(read - 1) )
+                instantaneous_rates[index] = np.median(region[read] -
+                                                       region[read - 1] )
+            use = ( (counts > reference_counts - np.float32(2000.0)) &
+                    (counts < reference_counts + np.float32(2000.0)) )
+            if np.count_nonzero(use) <= 2:
+                continue
+            # mklinearity.pro requires measurements to bracket cref.
+            if ( np.min(counts[use]) > reference_counts or
+                 np.max(counts[use]) < reference_counts ):
                 continue
             local = np.polynomial.polynomial.polyfit(counts[use], rates[use], 2)
             reference_rate = np.polynomial.polynomial.polyval(reference_counts, local)
             if not np.isfinite(reference_rate) or reference_rate == 0:
                 continue
-            for read, count, rate, instantaneous in zip(reads, counts, rates, instant):
-                if np.all(np.isfinite([count, rate, instantaneous])):
-                    records.append((read, chip, ix, iy, count,
-                                    rate / reference_rate,
-                                    instantaneous / reference_rate))
+            for read, count, rate, instantaneous in zip(reads, counts,
+                                                        rates, instantaneous_rates):
+                records.append((read, chip, ix, iy, count, rate /
+                                reference_rate, instantaneous / reference_rate) )
     return np.asarray(records, dtype=LINEARITY_DTYPE)
 
 
@@ -151,8 +162,8 @@ def measure_linearity(frameid: int, *, apred: str = "daily",
             values = np.column_stack(
                 [measurements[field] for field in LINEARITY_DTYPE.names]
             )
-            np.savetxt(filename,values,
-                       fmt="%3d %3d %5d %5d %12.4f %12.7f %12.7f",
+            np.savetxt(filename, values,
+                       fmt="%3d %3d %5d %5d %12.4f %12.4f %12.4f",
                        header="read chip ix iy counts rate instantaneous_rate")
         else:
             measurements = np.atleast_1d(
@@ -190,13 +201,14 @@ def build_detector(detid: int, *, linid: int | None = None,
             coefficients = np.asarray(linearity_function(
                 int(linid), apred=apred, telescope=telescope, unlock=unlock,
                 clobber=clobber, verbose=verbose), dtype=float)
-        linearity = np.tile(coefficients, (4, 1))
+        linearity = np.tile(coefficients[:, np.newaxis], (1, 4)).astype(np.float32)
         
         gain_value, read_noise_dn = DETECTOR_CONSTANTS[telescope[:3]]
         # chip loop
         for chip_name, output in outputs.items():
-            gain = np.full(4, gain_value)
-            read_noise = np.full(4, read_noise_dn[chip_name] * gain_value)
+            gain = np.full(4, gain_value, dtype=np.float32)
+            read_noise = np.full(4, read_noise_dn[chip_name] *
+                                 gain_value, dtype=np.float32)
             
             fits.HDUList([
                 fits.PrimaryHDU(), fits.ImageHDU(read_noise, name="READNOISE"),
