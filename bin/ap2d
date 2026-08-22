@@ -90,7 +90,7 @@ if __name__ == '__main__' :
             psflibrary = False
         # Is this a cal file
         # arc, flat
-        filename = load.filename('2D',num=num,chips=True).replace('2D-','2D-a-')
+        filename = load.filename('2D',num=num,chip='a')
         if os.path.exists(filename)==False:
             raise FileNotFoundError(filename)
         hdu = fits.open(filename)

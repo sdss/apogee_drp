@@ -91,7 +91,7 @@ if __name__ == '__main__' :
         try:
 
             # Check if the output apLines file exists already
-            wavefile = load.filename('Wave',num=exp,chips=True)
+            wavefile = load.filename('Wave',num=exp)
             linesfile = wavefile.replace('Wave','Lines')
 
             # load 1D frame
