@@ -27,13 +27,17 @@ class FakeLoad:
         self.exists_values = {}
         self.frame = None
 
-    def filename(self, product, num=None, chips=True, **kwargs):
-        del chips, kwargs
+    def filename(self, product, num=None, chip=None, **kwargs):
+        del chip, kwargs
         number = int(num) if num is not None else 0
         return str(self.root / f"ap{product}-{number:08d}.fits")
 
     def exists(self, product, num=None, **kwargs):
         del num, kwargs
+        return self.exists_values.get(product, True)
+
+    def product_exists(self, product, name, **kwargs):
+        del name, kwargs
         return self.exists_values.get(product, True)
 
     def ap2D(self, number):

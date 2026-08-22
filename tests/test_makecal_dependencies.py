@@ -6,7 +6,7 @@ class FakeLoad:
     apred = 'test'
     telescope = 'apo25m'
 
-    def exists(self, root, num=None):
+    def product_exists(self, product, name):
         return False
 
 

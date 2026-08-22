@@ -138,8 +138,8 @@ class TestPlanWrapper:
                 self.apred = apred
                 self.telescope = telescope
 
-            def filename(self, root, num=None, mjd=None, chips=True):
-                del mjd, chips
+            def filename(self, root, num=None, mjd=None, chip=None):
+                del mjd, chip
                 return str(tmp_path / f"ap{root}-{int(num):08d}.fits")
 
         plan_data = {

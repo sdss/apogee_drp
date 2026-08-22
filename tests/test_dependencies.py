@@ -15,6 +15,10 @@ class FakeLoad:
     def cmjd(self, exposure):
         return int(exposure) // 1000
 
+    def product_exists(self, product, name):
+        del product, name
+        return False
+
 
 def sample_caldict():
     common = [("mjd1", int), ("mjd2", int), ("name", "U20")]
