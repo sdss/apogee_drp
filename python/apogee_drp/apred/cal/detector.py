@@ -162,14 +162,18 @@ def measure_linearity(frameid: int, *, apred: str = "daily",
             values = np.column_stack(
                 [measurements[field] for field in LINEARITY_DTYPE.names]
             )
-            np.savetxt(filename, values,
-                       fmt="%3d %3d %5d %5d %12.4f %12.4f %12.4f",
-                       header="read chip ix iy counts rate instantaneous_rate")
-        else:
-            measurements = np.atleast_1d(
-                np.genfromtxt(filename, dtype=LINEARITY_DTYPE)
-            )            
-            
+            np.savetxt(
+                filename,
+                values,
+                fmt="%3d %3d %5d %5d %12.4f %12.4f %12.4f",
+            )
+
+    # mklinearity.pro writes its measurements and then reads the rounded
+    # values back from disk before performing the final polynomial fit.
+    measurements = np.atleast_1d(
+        np.genfromtxt(filename, dtype=LINEARITY_DTYPE)
+    )
+
     return fit_linearity(measurements, telescope=telescope,
                          minread=minread, order=order)
 
@@ -204,11 +208,12 @@ def build_detector(detid: int, *, linid: int | None = None,
         linearity = np.tile(coefficients[:, np.newaxis], (1, 4)).astype(np.float32)
         
         gain_value, read_noise_dn = DETECTOR_CONSTANTS[telescope[:3]]
+        gain_value = np.float32(gain_value)
         # chip loop
         for chip_name, output in outputs.items():
             gain = np.full(4, gain_value, dtype=np.float32)
-            read_noise = np.full(4, read_noise_dn[chip_name] *
-                                 gain_value, dtype=np.float32)
+            read_noise_value = ( np.float32(read_noise_dn[chip_name]) * gain_value)
+            read_noise = np.full(4, read_noise_value,dtype=np.float32)
             
             fits.HDUList([
                 fits.PrimaryHDU(), fits.ImageHDU(read_noise, name="READNOISE"),
