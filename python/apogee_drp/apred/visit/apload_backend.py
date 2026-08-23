@@ -17,7 +17,7 @@ from astropy.io import fits
 from astropy.table import Table, vstack
 
 from .backend import NativeVisitBackendMixin
-from .io import IMAGE_EXTENSIONS
+from .models import ChipFrame, VisitFrame
 
 _CHIPS = ("a", "b", "c")
 
@@ -32,16 +32,6 @@ def _field(row: Any, name: str, default: Any = None) -> Any:
         return row[name]
     except (KeyError, IndexError, TypeError, ValueError):
         return getattr(row, name, default)
-
-
-def _chip_filenames(template: str, kind: str, chips: Sequence[str]) -> list[str]:
-    """Expand the chip-placeholder filename returned by ``ApLoad``."""
-
-    marker = f"{kind}-"
-    if marker in template:
-        return [template.replace(marker, f"{kind}-{chip}-", 1) for chip in chips]
-    path = Path(template)
-    return [str(path.with_name(f"{path.stem}-{chip}{path.suffix}")) for chip in chips]
 
 
 def _hdu_by_name(hdul: fits.HDUList, name: str, fallback: int | None = None) -> Any:
@@ -127,6 +117,7 @@ class ApLoadVisitBackend(NativeVisitBackendMixin):
         plan["plate_files"] = self._files(
             "Plate", plan=plan, chips=_CHIPS
         )
+        self._current_plan = plan
         return plan
 
     def directories(self, plan: Mapping[str, Any]) -> Mapping[str, Any]:
@@ -141,11 +132,7 @@ class ApLoadVisitBackend(NativeVisitBackendMixin):
     def filename(self, kind: str, **kwargs: Any) -> str:
         chip = kwargs.pop("chip", None)
         directory = bool(kwargs.pop("directory", False))
-        chips = kwargs.pop("chips", False)
-        template = str(self.load.filename(kind, chips=bool(chips), **kwargs))
-        if chip is not None:
-            template = _chip_filenames(template, kind, [str(chip)])[0]
-        return str(Path(template).parent) if directory else template
+        return self.load.filename(kind, chip=chip, directory=directory, **kwargs)
 
     def _product_filename(self, kind: str, **kwargs: Any) -> str:
         """Resolve products whose sdss_access template uses ``reduction``."""
@@ -169,8 +156,8 @@ class ApLoadVisitBackend(NativeVisitBackendMixin):
                     "Plate", "Cframe", "Visit", "VisitSum", "Tellstar"
                 }:
                     kwargs[target] = plan[key]
-        template = str(self.load.filename(kind, chips=True, **kwargs))
-        return _chip_filenames(template, kind, chips)
+        filenames = self.load.filename(kind, chip=list(chips), **kwargs)
+        return [str(filenames[chip]) for chip in chips]
 
     def load_plugmap(
         self, plan: Mapping[str, Any], *, mapper_data: Any = None
@@ -258,7 +245,10 @@ class ApLoadVisitBackend(NativeVisitBackendMixin):
     def load_frame(self, files: Sequence[str], *, kind: str) -> Any:
         lower = kind.lower()
         if lower == "cframe":
-            return super().load_frame(files, kind=kind)
+            plan = self._current_plan
+            loaded = self.load.cframe(self._number_from_filename(files[0]),
+                                      plan["plateid"], plan["mjd"], field=plan.get("field"))
+            return VisitFrame.from_mapping(loaded)
         if lower == "plate":
             if len(files) == 1:
                 first = str(files[0])
@@ -266,13 +256,14 @@ class ApLoadVisitBackend(NativeVisitBackendMixin):
                     first.replace("Plate-a-", f"Plate-{chip}-", 1)
                     for chip in _CHIPS
                 ]
-            return self._read_apload_chips(
-                self.load.apPlate, files, plate_mode=True
-            )
+            return self._read_plate_files(files)
         if lower == "1d":
             number = self._number_from_filename(files[0])
-            loaded = self.load.ap1D(number)
-            return self._convert_ap1d(loaded, files)
+            loaded = self.load.spectrum(number)
+            frame = VisitFrame.from_mapping(loaded)
+            for index, chip in enumerate(frame):
+                chip.filename = str(files[index])
+            return frame
         raise ValueError(f"unsupported frame kind {kind!r}")
 
     @staticmethod
@@ -280,54 +271,59 @@ class ApLoadVisitBackend(NativeVisitBackendMixin):
         stem = Path(filename).name.rsplit(".", 1)[0]
         return int(stem.rsplit("-", 1)[-1])
 
-    def _read_apload_chips(
-        self, method: Callable[..., Any], files: Sequence[str], *, plate_mode: bool
-    ) -> Any:
+    def _read_plate_files(self, files: Sequence[str]) -> VisitFrame:
         # Plate loading is rarely reached (only when reusing an existing
         # product); reading the explicit files avoids reconstructing arguments.
         loaded = {
             chip: fits.open(path, memmap=False)
             for chip, path in zip(_CHIPS, files)
         }
-        return self._convert_ap1d(loaded, files)
+        return self._convert_plate_hdus(loaded, files)
 
-    def _convert_ap1d(
+    def _convert_plate_hdus(
         self, loaded: Any, files: Sequence[str]
-    ) -> dict[str, Any]:
+    ) -> VisitFrame:
         if not isinstance(loaded, Mapping) or not all(
             chip in loaded for chip in _CHIPS
         ):
-            raise OSError("ApLoad.ap1D() did not return three chip HDU lists")
-        frame: dict[str, Any] = {"shift": {}}
-        for index, chip_name in enumerate(_CHIPS):
-            hdul = loaded[chip_name]
-            flux = _hdu_by_name(hdul, "FLUX", 1)
-            error = _hdu_by_name(hdul, "ERROR", 2)
-            mask = _hdu_by_name(hdul, "MASK", 3)
-            if flux is None or error is None or mask is None:
-                raise ValueError(f"ap1D chip {chip_name} lacks flux/error/mask")
-            chip: dict[str, Any] = {
-                "filename": str(files[index]),
-                "header": hdul[0].header.copy(),
-                "flux": np.asarray(flux, dtype=np.float32).copy(),
-                "err": np.asarray(error, dtype=np.float32).copy(),
-                "mask": np.asarray(mask, dtype=np.int16).copy(),
-            }
-            optional = {
-                "wavelength": ("WAVELENGTH", 4, np.float64),
-                "sky": ("SKYFLUX", 5, np.float32),
-                "skyerr": ("SKYERROR", 6, np.float32),
-                "telluric": ("TELLURIC", 7, np.float32),
-                "telluricerr": ("TELLURICERROR", 8, np.float32),
-                "wcoef": ("WAVECOEFFICIENTS", 9, np.float64),
-                "lsfcoef": ("LSFCOEFFICIENTS", 10, np.float64),
-            }
-            for name, (extname, fallback, dtype) in optional.items():
-                value = _hdu_by_name(hdul, extname, fallback)
-                if value is not None:
-                    chip[name] = np.asarray(value, dtype=dtype).copy()
-            frame[f"chip{chip_name}"] = chip
-        return frame
+            raise OSError("plate input does not contain three chip HDU lists")
+        try:
+            chips = []
+            for index, chip_name in enumerate(_CHIPS):
+                hdul = loaded[chip_name]
+                flux = _hdu_by_name(hdul, "FLUX", 1)
+                error = _hdu_by_name(hdul, "ERROR", 2)
+                mask = _hdu_by_name(hdul, "MASK", 3)
+                if flux is None or error is None or mask is None:
+                    raise ValueError(f"plate chip {chip_name} lacks flux/error/mask")
+                values: dict[str, Any] = {
+                    "filename": str(files[index]), "header": hdul[0].header.copy(),
+                    "flux": np.asarray(flux, dtype=np.float32).copy(),
+                    "err": np.asarray(error, dtype=np.float32).copy(),
+                    "mask": np.asarray(mask, dtype=np.int16).copy(),
+                }
+                optional = {
+                    "wavelength": ("WAVELENGTH", 4, np.float64),
+                    "sky": ("SKYFLUX", 5, np.float32),
+                    "skyerr": ("SKYERROR", 6, np.float32),
+                    "telluric": ("TELLURIC", 7, np.float32),
+                    "telluricerr": ("TELLURICERROR", 8, np.float32),
+                    "wcoef": ("WAVECOEFFICIENTS", 9, np.float64),
+                    "lsfcoef": ("LSFCOEFFICIENTS", 10, np.float64),
+                }
+                for name, (extname, fallback, dtype) in optional.items():
+                    value = _hdu_by_name(hdul, extname, fallback)
+                    if value is not None:
+                        values[name] = np.asarray(value, dtype=dtype).copy()
+                chips.append(ChipFrame(**values))
+            frame = VisitFrame(*chips)
+            frame.validate()
+            return frame
+        finally:
+            for hdul in loaded.values():
+                close = getattr(hdul, "close", None)
+                if close is not None:
+                    close()
 
     def prepare_frame(
         self,
@@ -339,23 +335,25 @@ class ApLoadVisitBackend(NativeVisitBackendMixin):
         plate_dir: str,
         newwave: bool,
     ) -> Any:
+        if isinstance(frame, Mapping):
+            frame = VisitFrame.from_mapping(frame)
         for index, chip_name in enumerate(_CHIPS):
-            chip = frame[f"chip{chip_name}"]
+            chip = frame.chip(chip_name)
             with fits.open(lsffiles[index], memmap=False) as hdul:
-                chip["lsfcoef"] = np.asarray(hdul[0].data, dtype=np.float64).copy()
-            chip["lsffile"] = str(lsffiles[index])
-            chip["wavefile"] = str(wavefiles[index])
-            chip["wave_dir"] = str(plate_dir)
-            if "wcoef" not in chip or "wavelength" not in chip:
+                chip.lsfcoef = np.asarray(hdul[0].data, dtype=np.float64).copy()
+            chip.lsffile = str(lsffiles[index])
+            chip.wavefile = str(wavefiles[index])
+            chip.wave_dir = str(plate_dir)
+            if chip.wcoef is None or chip.wavelength is None:
                 raise ValueError(
                     "ap1D file lacks Python ap1dwavecal wavelength products; "
                     "run ap1dwavecal before ap1dvisit"
                 )
-            shape = chip["flux"].shape
-            chip.setdefault("sky", np.zeros(shape, dtype=np.float32))
-            chip.setdefault("skyerr", np.zeros(shape, dtype=np.float32))
-            chip.setdefault("telluric", np.ones(shape, dtype=np.float32))
-            chip.setdefault("telluricerr", np.zeros(shape, dtype=np.float32))
+            shape = chip.flux.shape
+            if chip.sky is None: chip.sky = np.zeros(shape, dtype=np.float32)
+            if chip.skyerr is None: chip.skyerr = np.zeros(shape, dtype=np.float32)
+            if chip.telluric is None: chip.telluric = np.ones(shape, dtype=np.float32)
+            if chip.telluricerr is None: chip.telluricerr = np.zeros(shape, dtype=np.float32)
         return frame
 
     def plate_file(self, plan: Mapping[str, Any]) -> str:

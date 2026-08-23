@@ -829,7 +829,7 @@ class ApLoad:
         spectrum : dict
             With ``chip=None``, a dictionary keyed by chip. Otherwise, the
             spectrum dictionary for the requested chip. Spectral arrays use
-            ``(pixel, fiber)`` ordering.
+            ``(fiber, pixel)`` ordering.
         """
         if chip is not None and chip not in ("a", "b", "c"):
             raise ValueError("chip must be 'a', 'b', 'c', or None")
@@ -851,12 +851,66 @@ class ApLoad:
                         f"extensions: {filename}"
                     ) 
 
-                spectra[current_chip] = {"header": hdus[0].header.copy(),
-                                         "flux": np.asarray(hdus[1].data).T.copy(),
-                                         "err": np.asarray(hdus[2].data).T.copy(),
-                                         "mask": np.asarray(hdus[3].data).T.copy()}
+                spectrum = {"header": hdus[0].header.copy(),
+                            "flux": np.asarray(hdus[1].data).copy(),
+                            "err": np.asarray(hdus[2].data).copy(),
+                            "mask": np.asarray(hdus[3].data).copy()}
+                extensions = {"wavelength": ("WAVELENGTH", 4), "sky": ("SKYFLUX", 5),
+                              "skyerr": ("SKYERROR", 6), "telluric": ("TELLURIC", 7),
+                              "telluricerr": ("TELLURICERROR", 8),
+                              "wcoef": ("WAVECOEFFICIENTS", 9),
+                              "lsfcoef": ("LSFCOEFFICIENTS", 10)}
+                names = {str(hdu.header.get("EXTNAME", "")).replace(" ", "").upper(): hdu.data
+                         for hdu in hdus[1:]}
+                for name, (extname, index) in extensions.items():
+                    value = names.get(extname)
+                    if value is None and index < len(hdus):
+                        value = hdus[index].data
+                    if value is not None:
+                        spectrum[name] = np.asarray(value).copy()
+                spectra[current_chip] = spectrum
 
         return spectra if chip is None else spectra[chip]
+
+
+    def cframe(self, num, plate, mjd, field=None, chip=None, *, download=False):
+        """Load a wavelength-, sky-, and telluric-corrected exposure.
+
+        With ``chip=None`` the result contains the three chip dictionaries and
+        the common ``plugmap``, ``tellstar``, and ``shift`` tables. A scalar
+        chip returns only that chip dictionary. Arrays use ``(fiber, pixel)``.
+        """
+        if chip is not None and chip not in ("a", "b", "c"):
+            raise ValueError("chip must be 'a', 'b', 'c', or None")
+
+        chips = ("a", "b", "c") if chip is None else (chip,)
+        frames = {}
+        common = {}
+        fields = ("flux", "err", "mask", "wavelength", "sky", "skyerr",
+                  "telluric", "telluricerr", "wcoef", "lsfcoef")
+
+        for current_chip in chips:
+            kwargs = {"num": num, "plate": plate, "mjd": mjd,
+                      "field": field, "chip": current_chip}
+            filename = self.allfile("Cframe", download=True, **kwargs) if download else \
+                       self.filename("Cframe", **kwargs)
+            with fits.open(filename, memmap=False) as hdus:
+                if len(hdus) < 11:
+                    raise ValueError("Cframe does not contain the required extensions: " + filename)
+                frame = {"header": hdus[0].header.copy(), "filename": filename}
+                for index, name in enumerate(fields, start=1):
+                    frame[name] = np.asarray(hdus[index].data).copy()
+                frames[current_chip] = frame
+                if current_chip == chips[0] and len(hdus) > 14:
+                    common = {"plugmap": {"fiberdata": Table(hdus[11].data),
+                                          "metadata": Table(hdus[12].data)},
+                              "tellstar": Table(hdus[13].data),
+                              "shift": Table(hdus[14].data)}
+
+        if chip is not None:
+            return frames[chip]
+        frames.update(common)
+        return frames
 
 
     def wave(self, num, chip=None, *, download=False):

@@ -1,11 +1,9 @@
-"""Testable Python driver for the APOGEE visit-level reduction.
+"""Python driver for APOGEE visit-level reduction.
 
-This module translates the control flow in ``ap1dvisit.pro``.  The numerical
-reduction stages are deliberately supplied by a backend: most of those stages
-are independent IDL programs and have not yet been translated on the ``daily``
-branch.  Keeping them behind :class:`VisitBackend` makes the driver executable
-with either compatibility wrappers or native Python implementations, and makes
-the orchestration testable without real APOGEE files.
+This module follows the control flow in ``ap1dvisit.pro`` and dispatches to the
+native Python shift, sky, telluric, combination, flux, and output routines.
+``VisitBackend`` remains temporarily as an I/O compatibility boundary while
+the visit code migrates to the canonical frame models in :mod:`.models`.
 
 The important array convention is the native Python convention used elsewhere
 in ``apogee_drp``: spectra have shape ``(nfiber, npix)``.  A backend wrapping
@@ -385,8 +383,10 @@ def _shift_record(
 
 def ap1dvisit(
     planfiles: str | Path | Sequence[str | Path],
-    backend: VisitBackend,
+    backend: VisitBackend | None = None,
     *,
+    apred: str | None = None,
+    telescope: str | None = None,
     clobber: bool = False,
     verbose: bool = False,
     newwave: bool = False,
@@ -413,6 +413,11 @@ def ap1dvisit(
         plans = [str(path) for path in planfiles]
     if not plans:
         return []
+    if backend is None:
+        if apred is None or telescope is None:
+            raise ValueError("apred and telescope are required when backend is omitted")
+        from .apload_backend import ApLoadVisitBackend
+        backend = ApLoadVisitBackend(apred=apred, telescope=telescope, verbose=verbose)
     if ap1dwavecal:
         newwave = True
 

@@ -26,6 +26,7 @@ from .driver import (
     ap1dvisit,
 )
 from .io import BADERR, read_cframes, write_cframes
+from .models import ChipFrame, VisitFrame
 from .backend import NativeVisitBackendMixin
 from .apload_backend import ApLoadVisitBackend
 from .flux import BADMASK, H_ZEROPOINT_FLAMBDA, flux_calibrate
@@ -45,6 +46,7 @@ __all__ = [
     "BADERR",
     "BADMASK",
     "CombinedSpectrum",
+    "ChipFrame",
     "DitherPair",
     "DitherShiftResult",
     "FrameFailure",
@@ -55,6 +57,7 @@ __all__ = [
     "ApLoadVisitBackend",
     "ShiftRecord",
     "VisitBackend",
+    "VisitFrame",
     "VisitProductResult",
     "VisitResult",
     "ap1dvisit",

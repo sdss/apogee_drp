@@ -19,6 +19,8 @@ import numpy as np
 from astropy.io import fits
 from astropy.table import Table
 
+from .models import ChipFrame, VisitFrame
+
 BADERR = np.float32(1.0e10)
 
 IMAGE_EXTENSIONS = (
@@ -254,28 +256,26 @@ def write_cframes(
     return written
 
 
-def read_cframes(files: Sequence[str | Path]) -> dict[str, Any]:
+def read_cframes(files: Sequence[str | Path]) -> VisitFrame:
     """Read three files written by :func:`write_cframes`."""
 
     if len(files) != 3:
         raise ValueError("files must contain exactly three chip filenames")
-    frame: dict[str, Any] = {}
+    chips = []
     tellstar = None
     shift = None
     plugmap = None
     for index, filename in enumerate(files):
         with fits.open(filename, memmap=False) as hdul:
-            chip: dict[str, Any] = {
-                "filename": str(filename),
-                "header": hdul[0].header.copy(),
-            }
+            values: dict[str, Any] = {"filename": str(filename),
+                                      "header": hdul[0].header.copy()}
             for hdu_index, (field, dtype, _, _) in enumerate(
                 IMAGE_EXTENSIONS, start=1
             ):
-                chip[field] = np.asarray(
+                values[field] = np.asarray(
                     hdul[hdu_index].data, dtype=dtype
                 ).copy()
-            frame[f"chip{'abc'[index]}"] = chip
+            chips.append(ChipFrame(**values))
             if index == 0:
                 plugmap = {
                     "fiberdata": Table(hdul[11].data),
@@ -283,7 +283,6 @@ def read_cframes(files: Sequence[str | Path]) -> dict[str, Any]:
                 }
                 tellstar = Table(hdul[13].data)
                 shift = Table(hdul[14].data)
-    frame["tellstar"] = tellstar
-    frame["shift"] = shift
-    frame["plugmap"] = plugmap
+    frame = VisitFrame(*chips, tellstar=tellstar, shift=shift)
+    frame.metadata["plugmap"] = plugmap
     return frame

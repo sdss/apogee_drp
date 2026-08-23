@@ -75,6 +75,36 @@ def spectrum_load(load, tmp_path, monkeypatch):
             fits.ImageHDU(np.full((3, 4), index + 0.1)),
             fits.ImageHDU(np.full((3, 4), index, dtype=np.uint16)),
         ]).writeto(path)
+    path = Path(filename("1D", num=125, chip="a"))
+    hdus = [fits.PrimaryHDU(), fits.ImageHDU(np.ones((2, 4))),
+            fits.ImageHDU(np.ones((2, 4))), fits.ImageHDU(np.zeros((2, 4), dtype=np.int16))]
+    for index, name in enumerate(("WAVELENGTH", "SKY FLUX", "SKY ERROR", "TELLURIC",
+                                  "TELLURIC ERROR", "WAVE COEFFICIENTS", "LSF COEFFICIENTS"), 4):
+        hdus.append(fits.ImageHDU(np.full((2, 4), index), name=name))
+    fits.HDUList(hdus).writeto(path)
+    return load
+
+
+@pytest.fixture
+def cframe_load(load, tmp_path, monkeypatch):
+    """Create a lightweight loader backed by synthetic apCframe files."""
+    def filename(kind, num=None, plate=None, mjd=None, field=None, chip=None, **kwargs):
+        assert kind == "Cframe"
+        return str(tmp_path / f"apCframe-{chip}-{int(num):08d}.fits")
+
+    monkeypatch.setattr(load, "filename", filename)
+    fields = (np.float32, np.float32, np.int16, np.float64, np.float32,
+              np.float32, np.float32, np.float32, np.float64, np.float64)
+    for offset, chip in enumerate("abc"):
+        hdus = [fits.PrimaryHDU(header=fits.Header({"CHIP": chip}))]
+        hdus.extend(fits.ImageHDU(np.full((2, 4), offset + 1, dtype=dtype))
+                    for dtype in fields)
+        hdus.extend([fits.BinTableHDU.from_columns([fits.Column(name="FIBERID", format="J", array=[1, 2])]),
+                     fits.BinTableHDU.from_columns([fits.Column(name="NAME", format="8A", array=["test"])]),
+                     fits.BinTableHDU.from_columns([fits.Column(name="FIBER", format="J", array=[1])]),
+                     fits.BinTableHDU.from_columns([fits.Column(name="SHIFTFIT", format="2E", array=[[0, 0]])])])
+        fits.HDUList(hdus).writeto(filename("Cframe", num=123, plate=1, mjd=60000,
+                                            field="field", chip=chip))
     return load
 
 
@@ -491,12 +521,12 @@ class TestSpectrum:
         assert set(spectrum) == {"header", "flux", "err", "mask"}
         np.testing.assert_array_equal(spectrum["flux"], 2.0)
 
-    def test_transposes_spectral_arrays(self, spectrum_load):
+    def test_preserves_fiber_pixel_orientation(self, spectrum_load):
         spectrum = spectrum_load.spectrum(123, chip="a")
 
-        assert spectrum["flux"].shape == (4, 3)
-        assert spectrum["err"].shape == (4, 3)
-        assert spectrum["mask"].shape == (4, 3)
+        assert spectrum["flux"].shape == (3, 4)
+        assert spectrum["err"].shape == (3, 4)
+        assert spectrum["mask"].shape == (3, 4)
 
     def test_rejects_invalid_chip(self, spectrum_load):
         with pytest.raises(ValueError, match="chip"):
@@ -510,6 +540,13 @@ class TestSpectrum:
         assert spectrum["mask"].flags.owndata
         np.testing.assert_array_equal(spectrum["flux"], 1.0)
 
+    def test_loads_optional_visit_extensions(self, spectrum_load):
+        spectrum = spectrum_load.spectrum(125, chip="a")
+
+        assert {"wavelength", "sky", "skyerr", "telluric", "telluricerr",
+                "wcoef", "lsfcoef"} <= set(spectrum)
+        np.testing.assert_array_equal(spectrum["lsfcoef"], 10)
+
     def test_requires_all_extensions(self, spectrum_load):
         filename = Path(
             spectrum_load.filename("1D", num=124, chip="a")
@@ -518,6 +555,39 @@ class TestSpectrum:
 
         with pytest.raises(ValueError, match="required extensions"):
             spectrum_load.spectrum(124, chip="a")
+
+
+class TestCframe:
+    def test_loads_all_chips_and_common_tables(self, cframe_load):
+        frame = cframe_load.cframe(123, 1, 60000, field="field")
+
+        assert {"a", "b", "c", "plugmap", "tellstar", "shift"} <= set(frame)
+        assert frame["b"]["header"]["CHIP"] == "b"
+        assert list(frame["plugmap"]["fiberdata"]["FIBERID"]) == [1, 2]
+        np.testing.assert_array_equal(frame["c"]["flux"], 3)
+
+    def test_can_load_one_chip(self, cframe_load):
+        frame = cframe_load.cframe(123, 1, 60000, chip="b")
+
+        assert frame["flux"].shape == (2, 4)
+        assert frame["filename"].endswith("apCframe-b-00000123.fits")
+
+    def test_rejects_invalid_chip(self, cframe_load):
+        with pytest.raises(ValueError, match="chip"):
+            cframe_load.cframe(123, 1, 60000, chip="d")
+
+    def test_arrays_remain_available_after_file_closes(self, cframe_load):
+        frame = cframe_load.cframe(123, 1, 60000, chip="a")
+
+        assert frame["wavelength"].flags.owndata
+        np.testing.assert_array_equal(frame["wavelength"], 1)
+
+    def test_requires_all_extensions(self, cframe_load):
+        filename = Path(cframe_load.filename("Cframe", num=124, plate=1, mjd=60000,
+                                             field="field", chip="a"))
+        fits.PrimaryHDU().writeto(filename)
+        with pytest.raises(ValueError, match="required extensions"):
+            cframe_load.cframe(124, 1, 60000, field="field", chip="a")
 
 
 class TestWave:
