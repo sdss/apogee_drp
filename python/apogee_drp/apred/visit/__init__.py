@@ -4,7 +4,7 @@ The public API is deliberately small.  Numerical stages live in focused
 modules so they can be compared with their IDL counterparts independently.
 """
 
-from .dither import DitherPair, dither_pairs
+from .dither import DitherPair, dither_pairs, find_dither_pairs
 from .combine import (
     CombinedSpectrum,
     combine_pair_frames,
@@ -35,12 +35,13 @@ try:
 except ImportError:  # The standalone translation bundle omits full Yanny I/O.
     check = None
 from .shift import DitherShiftResult, LinePeak, dither_shift
-from .output import (
+from .products import (
     VisitProductResult,
     build_visit_hdul,
     write_plate_products,
     write_visit_products,
 )
+from .plate import write_plate_products
 
 __all__ = [
     "BADERR",
@@ -69,6 +70,7 @@ __all__ = [
     "convert_wcoef_to_half_pixel",
     "dither_combine",
     "dither_pairs",
+    "find_dither_pairs",
     "dither_shift",
     "estimate_continuum",
     "flux_calibrate",

@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Sequence
+from typing import Sequence
 
 import numpy as np
 
@@ -23,21 +23,8 @@ class DitherPair:
     index: np.ndarray
 
 
-def _field(records: Sequence[Any], name: str) -> np.ndarray:
-    try:
-        return np.asarray(records[name])
-    except (IndexError, KeyError, TypeError, ValueError):
-        values = []
-        for row in records:
-            if isinstance(row, dict):
-                values.append(row[name])
-            else:
-                values.append(getattr(row, name))
-        return np.asarray(values)
-
-
-def dither_pairs(
-    shifts: Sequence[Any],
+def find_dither_pairs(
+    shifts: Sequence[object],
     *,
     snsort: bool = False,
     minshift: float = 0.2,
@@ -55,11 +42,10 @@ def dither_pairs(
     if nframes < 2:
         raise ValueError("Only ONE frame input. Need at least TWO")
 
-    indices = _field(shifts, "index").astype(np.int64)
-    names = _field(shifts, "framenum").astype(str)
+    names = np.asarray([row.framenum for row in shifts]).astype(str)
     numbers = names.astype(np.int64)
-    shift_values = _field(shifts, "shift").astype(np.float32)
-    sn = _field(shifts, "sn").astype(np.float32)
+    shift_values = np.asarray([row.shift for row in shifts], dtype=np.float32)
+    sn = np.asarray([row.sn for row in shifts], dtype=np.float32)
     nused = np.zeros(nframes, dtype=np.int64)
 
     if snsort:
@@ -162,3 +148,6 @@ def dither_pairs(
             pair.relshift = np.float32(-pair.relshift)
         pair.refshift = np.float32(pair.shift[0])
     return pairs
+
+
+dither_pairs = find_dither_pairs

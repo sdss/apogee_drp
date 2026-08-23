@@ -17,7 +17,7 @@ import numpy as np
 from .combine import dither_combine
 from .flux import flux_calibrate as native_flux_calibrate
 from .io import BADERR, read_cframes, write_cframes as native_write_cframes
-from .output import write_visit_products as native_write_visit_products
+from .products import write_visit_products as native_write_visit_products
 from .shift import dither_shift as native_dither_shift
 
 

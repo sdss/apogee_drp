@@ -17,6 +17,7 @@ from scipy.ndimage import median_filter, uniform_filter1d
 
 from .io import BADERR
 from .dither import DitherPair, dither_pairs
+from .models import ChipFrame, VisitFrame
 
 
 @dataclass
@@ -400,52 +401,20 @@ def estimate_continuum(
     return np.asarray(continuum, dtype=dtype)
 
 
-def _item(container: Any, key: str) -> Any:
-    if isinstance(container, dict):
-        if key in container:
-            return container[key]
-        for name, value in container.items():
-            if str(name).lower() == key.lower():
-                return value
-    if hasattr(container, key):
-        return getattr(container, key)
-    raise KeyError(key)
-
-
-def _chip(frame: Any, index: int) -> Any:
-    for key in (f"chip{'abc'[index]}", f"CHIP{'ABC'[index]}"):
-        try:
-            return _item(frame, key)
-        except KeyError:
-            pass
-    return frame[index]
-
-
-def _shift_data(frame: Any) -> Any:
-    return _item(frame, "shift")
-
-
-def _shift_chipfit(frame: Any) -> np.ndarray:
-    shift = _shift_data(frame)
-    value = _item(shift, "chipfit")
+def _shift_chipfit(frame: VisitFrame) -> np.ndarray:
+    value = frame.shift["chipfit"] if isinstance(frame.shift, dict) else frame.shift.chipfit
     array = np.asarray(value)
     return array[0] if array.ndim > 1 and array.shape[0] == 1 else array
 
 
-def _empty_like_pair(frame: Any, npix: int) -> dict[str, Any]:
-    output: dict[str, Any] = {}
-    for ichip in range(3):
-        source = _chip(frame, ichip)
-        target: dict[str, Any] = {}
-        for key, value in source.items():
-            if key.lower() in SPECTRAL_FIELDS:
+def _empty_like_pair(frame: VisitFrame, npix: int) -> VisitFrame:
+    output = copy.deepcopy(frame)
+    for target in output:
+        for name in SPECTRAL_FIELDS:
+            value = getattr(target, name)
+            if value is not None:
                 array = np.asarray(value)
-                target[key] = np.zeros(
-                    (array.shape[0], npix), dtype=array.dtype
-                )
-            else:
-                target[key] = copy.deepcopy(value)
-        output[f"chip{'abc'[ichip]}"] = target
+                setattr(target, name, np.zeros((array.shape[0], npix), dtype=array.dtype))
     return output
 
 
@@ -505,7 +474,7 @@ def _interlace_mask(
 
 
 def interlace_frame_pair(
-    frames: list[Any],
+    frames: list[VisitFrame],
     pair: DitherPair,
     *,
     reference_index: int,
@@ -517,17 +486,17 @@ def interlace_frame_pair(
     average_wave: bool = True,
     bad_mask: int = 0x40FF,
     mask_thresholds: Any | None = None,
-) -> dict[str, Any]:
+) -> VisitFrame:
     """Interlace all chips and fibers for one APDITHERCOMB pair."""
 
     frame1 = frames[int(pair.index[0])]
     frame2 = frames[int(pair.index[1])]
     reference = frames[int(reference_index)]
-    source = _chip(frame1, 0)
-    nfiber, npix = np.asarray(_item(source, "flux")).shape
+    source = frame1.chipa
+    nfiber, npix = source.flux.shape
     output = _empty_like_pair(frame1, 2 * npix)
-    output["filename1"] = _item(source, "filename") if isinstance(source, dict) and "filename" in source else ""
-    output["filename2"] = _item(_chip(frame2, 0), "filename") if isinstance(_chip(frame2, 0), dict) and "filename" in _chip(frame2, 0) else ""
+    output.metadata["filename1"] = source.filename
+    output.metadata["filename2"] = frame2.chipa.filename
     thresholds = (
         np.full(16, 0.1, dtype=np.float64)
         if mask_thresholds is None
@@ -544,9 +513,9 @@ def interlace_frame_pair(
 
     for ifiber in range(nfiber):
         for ichip in range(3):
-            chip1 = _chip(frame1, ichip)
-            chip2 = _chip(frame2, ichip)
-            outchip = _chip(output, ichip)
+            chip1 = frame1.chip(ichip)
+            chip2 = frame2.chip(ichip)
+            outchip = output.chip(ichip)
             absolute_shift = (
                 fit0[0] * ifiber + fit0[ichip + 1]
                 - fit1[0] * ifiber
@@ -557,12 +526,9 @@ def interlace_frame_pair(
                 - fit2[0] * ifiber
                 - fit2[ichip + 1]
             )
-            f1 = np.asarray(_item(chip1, "flux"))[ifiber].copy()
-            f2 = np.asarray(_item(chip2, "flux"))[ifiber].copy()
-            e1 = np.asarray(_item(chip1, "err"))[ifiber].copy()
-            e2 = np.asarray(_item(chip2, "err"))[ifiber].copy()
-            m1 = np.asarray(_item(chip1, "mask"))[ifiber]
-            m2 = np.asarray(_item(chip2, "mask"))[ifiber]
+            f1, f2 = chip1.flux[ifiber].copy(), chip2.flux[ifiber].copy()
+            e1, e2 = chip1.err[ifiber].copy(), chip2.err[ifiber].copy()
+            m1, m2 = chip1.mask[ifiber], chip2.mask[ifiber]
             scale1 = scale2 = None
             if types[ifiber].strip() != "SKY" and not no_scale:
                 scale1 = estimate_continuum(f1, m1, bad_mask=bad_mask)
@@ -587,9 +553,9 @@ def interlace_frame_pair(
                 scale2=scale2,
                 npad=npad,
             )
-            outchip["flux"][ifiber] = combined_flux
-            outchip["err"][ifiber] = combined_error
-            outchip["mask"][ifiber] = _interlace_mask(
+            outchip.flux[ifiber] = combined_flux
+            outchip.err[ifiber] = combined_error
+            outchip.mask[ifiber] = _interlace_mask(
                 m1,
                 m2,
                 shift=float(relative_shift),
@@ -597,15 +563,14 @@ def interlace_frame_pair(
                 npad=npad,
                 thresholds=thresholds,
             )
-            bad = (outchip["mask"][ifiber].astype(np.int64) & bad_mask) != 0
-            outchip["err"][ifiber, bad] *= 10
-            negative = outchip["flux"][ifiber] < -5 * outchip["err"][ifiber]
+            bad = (outchip.mask[ifiber].astype(np.int64) & bad_mask) != 0
+            outchip.err[ifiber, bad] *= 10
+            negative = outchip.flux[ifiber] < -5 * outchip.err[ifiber]
             if np.any(negative):
-                unsigned = outchip["mask"][ifiber].view(np.uint16)
+                unsigned = outchip.mask[ifiber].view(np.uint16)
                 unsigned[negative] |= np.uint16(1 << 15)
 
-            wcoef1 = np.asarray(_item(chip1, "wcoef"))[ifiber]
-            wcoef2 = np.asarray(_item(chip2, "wcoef"))[ifiber]
+            wcoef1, wcoef2 = chip1.wcoef[ifiber], chip2.wcoef[ifiber]
             y = np.arange(npix, dtype=np.float64)
             wave1 = np.empty(2 * npix, dtype=np.float64)
             wave2 = np.empty(2 * npix, dtype=np.float64)
@@ -618,7 +583,7 @@ def interlace_frame_pair(
                 y + 0.5 - absolute_shift - relative_shift, wcoef2
             )
             wave = 0.5 * (wave1 + wave2) if average_wave else wave1
-            outchip["wavelength"][ifiber] = wave
+            outchip.wavelength[ifiber] = wave
             combined_wcoef = wcoef1.copy()
             if average_wave:
                 newy = np.empty(2 * npix, dtype=np.float64)
@@ -627,23 +592,22 @@ def interlace_frame_pair(
                 combined_wcoef[6:10] = np.polynomial.polynomial.polyfit(
                     (newy + wcoef1[0]) / 3000.0, wave, 3
                 )
-            outchip["wcoef"][ifiber] = combined_wcoef
+            outchip.wcoef[ifiber] = combined_wcoef
             for field in ("sky", "skyerr", "telluric", "telluricerr"):
-                outchip[field][ifiber] = _interlace_extra(
-                    np.asarray(_item(chip1, field))[ifiber],
-                    np.asarray(_item(chip2, field))[ifiber],
+                getattr(outchip, field)[ifiber] = _interlace_extra(
+                    getattr(chip1, field)[ifiber], getattr(chip2, field)[ifiber],
                     float(absolute_shift),
                 )
 
     for ichip in range(3):
-        chip = _chip(output, ichip)
-        chip["wcoef"] = convert_wcoef_to_half_pixel(chip["wcoef"])
-        chip["lsfcoef"] = convert_lsf_to_half_pixel(chip["lsfcoef"])
+        chip = output.chip(ichip)
+        chip.wcoef = convert_wcoef_to_half_pixel(chip.wcoef)
+        chip.lsfcoef = convert_lsf_to_half_pixel(chip.lsfcoef)
     return output
 
 
 def combine_pair_frames(
-    pair_frames: list[Any],
+    pair_frames: list[VisitFrame],
     *,
     fiber_types: Any | None = None,
     no_scale: bool = False,
@@ -651,7 +615,7 @@ def combine_pair_frames(
     global_weight: bool = False,
     average_wave: bool = True,
     bad_mask: int = 0x40FF,
-) -> dict[str, Any]:
+) -> VisitFrame:
     """Combine all fully sampled pair frames into the visit frame."""
 
     if not pair_frames:
@@ -659,7 +623,7 @@ def combine_pair_frames(
     if len(pair_frames) == 1:
         return copy.deepcopy(pair_frames[0])
     first = pair_frames[0]
-    nfiber, npix = np.asarray(_item(_chip(first, 0), "flux")).shape
+    nfiber, npix = first.chipa.flux.shape
     output = _empty_like_pair(first, npix)
     types = (
         np.full(nfiber, "", dtype="U1")
@@ -668,10 +632,10 @@ def combine_pair_frames(
     )
     for ifiber in range(nfiber):
         for ichip in range(3):
-            chips = [_chip(frame, ichip) for frame in pair_frames]
-            flux = np.asarray([_item(chip, "flux")[ifiber] for chip in chips])
-            error = np.asarray([_item(chip, "err")[ifiber] for chip in chips])
-            mask = np.asarray([_item(chip, "mask")[ifiber] for chip in chips])
+            chips = [frame.chip(ichip) for frame in pair_frames]
+            flux = np.asarray([chip.flux[ifiber] for chip in chips])
+            error = np.asarray([chip.err[ifiber] for chip in chips])
+            mask = np.asarray([chip.mask[ifiber] for chip in chips])
             scales = np.ones_like(flux)
             if types[ifiber].strip() != "SKY" and not no_scale:
                 for index in range(len(chips)):
@@ -685,36 +649,32 @@ def combine_pair_frames(
                 scales=scales,
                 global_weight=global_weight,
             )
-            outchip = _chip(output, ichip)
-            outchip["flux"][ifiber] = result.flux
-            outchip["err"][ifiber] = result.error
-            outchip["mask"][ifiber] = result.mask
+            outchip = output.chip(ichip)
+            outchip.flux[ifiber] = result.flux
+            outchip.err[ifiber] = result.error
+            outchip.mask[ifiber] = result.mask
             for field in ("sky", "skyerr", "telluricerr"):
-                outchip[field][ifiber] = np.sum(
-                    [_item(chip, field)[ifiber] for chip in chips], axis=0
-                )
-            outchip["telluric"][ifiber] = np.mean(
-                [_item(chip, "telluric")[ifiber] for chip in chips], axis=0
-            )
-            waves = np.asarray(
-                [_item(chip, "wavelength")[ifiber] for chip in chips]
-            )
-            outchip["wavelength"][ifiber] = (
+                getattr(outchip, field)[ifiber] = np.sum(
+                    [getattr(chip, field)[ifiber] for chip in chips], axis=0)
+            outchip.telluric[ifiber] = np.mean(
+                [chip.telluric[ifiber] for chip in chips], axis=0)
+            waves = np.asarray([chip.wavelength[ifiber] for chip in chips])
+            outchip.wavelength[ifiber] = (
                 np.mean(waves, axis=0) if average_wave else waves[0]
             )
-            wcoef = np.asarray(_item(chips[0], "wcoef"))[ifiber].copy()
+            wcoef = chips[0].wcoef[ifiber].copy()
             if average_wave:
                 wcoef[6:10] = np.polynomial.polynomial.polyfit(
                     (np.arange(npix) + wcoef[0]) / 3000.0,
-                    outchip["wavelength"][ifiber],
+                    outchip.wavelength[ifiber],
                     3,
                 )
-            outchip["wcoef"][ifiber] = wcoef
+            outchip.wcoef[ifiber] = wcoef
     return output
 
 
 def dither_combine(
-    frames: list[Any],
+    frames: list[VisitFrame],
     shifts: Any,
     *,
     fiber_types: Any | None = None,
@@ -726,7 +686,7 @@ def dither_combine(
     global_weight: bool = False,
     average_wave: bool = True,
     bad_mask: int = 0x40FF,
-) -> tuple[dict[str, Any], list[DitherPair] | None]:
+) -> tuple[VisitFrame, list[DitherPair] | None]:
     """High-level native Python equivalent of ``APDITHERCOMB``."""
 
     if len(frames) != len(shifts):

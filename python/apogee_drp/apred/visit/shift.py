@@ -15,6 +15,8 @@ from scipy.ndimage import median_filter
 from scipy.optimize import curve_fit
 from scipy.signal import find_peaks
 
+from .models import ChipFrame, VisitFrame
+
 
 @dataclass
 class DitherShiftResult:
@@ -38,28 +40,12 @@ class LinePeak:
     height_error: float
 
 
-def _field(value: Any, name: str) -> Any:
-    if isinstance(value, dict):
-        for key in (name, name.lower(), name.upper()):
-            if key in value:
-                return value[key]
-    for key in (name, name.lower(), name.upper()):
-        if hasattr(value, key):
-            return getattr(value, key)
-    raise ValueError(f"required field {name!r} is missing")
-
-
-def _chips(frame: Any) -> list[Any]:
-    return [_field(frame, name) for name in ("chipa", "chipb", "chipc")]
-
-
-def _validate_frames(frame1: Any, frame2: Any) -> tuple[list[Any], list[Any]]:
-    chips1, chips2 = _chips(frame1), _chips(frame2)
+def _validate_frames(frame1: VisitFrame, frame2: VisitFrame) -> tuple[list[ChipFrame], list[ChipFrame]]:
+    chips1, chips2 = list(frame1), list(frame2)
     shape = None
     for chip in chips1 + chips2:
-        for name in ("header", "flux", "err", "mask"):
-            _field(chip, name)
-        flux = np.asarray(_field(chip, "flux"))
+        chip.validate()
+        flux = np.asarray(chip.flux)
         if flux.ndim != 2:
             raise ValueError("chip flux arrays must have [fiber, pixel] shape")
         if shape is None:
@@ -181,9 +167,9 @@ def _fit_correlation_peak(lags: np.ndarray, correlation: np.ndarray) -> float:
 def _plugged_fibers(plugmap: Any | None, nfibers: int) -> np.ndarray:
     if plugmap is None:
         return np.arange(nfibers, dtype=int)
-    fiberdata = _field(plugmap, "fiberdata")
-    spectrograph = np.asarray(_field(fiberdata, "spectrographid"))
-    fiberid = np.asarray(_field(fiberdata, "fiberid"))
+    fiberdata = plugmap["fiberdata"] if isinstance(plugmap, dict) else plugmap.fiberdata
+    spectrograph = np.asarray(fiberdata["spectrographid"])
+    fiberid = np.asarray(fiberdata["fiberid"])
     fibers = 300 - fiberid[spectrograph == 2].astype(int)
     if np.any((fibers < 0) | (fibers >= nfibers)):
         raise ValueError("plugmap contains a fiber outside the frame")
@@ -191,21 +177,21 @@ def _plugged_fibers(plugmap: Any | None, nfibers: int) -> np.ndarray:
 
 
 def _cross_correlation_shifts(
-    chips1: list[Any],
-    chips2: list[Any],
+    chips1: list[ChipFrame],
+    chips2: list[ChipFrame],
     fibers: np.ndarray,
     *,
     normalize_object: bool,
 ) -> np.ndarray:
-    npix = np.asarray(_field(chips1[0], "flux")).shape[1]
+    npix = chips1[0].flux.shape[1]
     lags = np.arange(-10, 11, dtype=np.float64)
     lo, stop = 21, npix - 21
     if stop <= lo:
         raise ValueError("spectra must contain at least 43 pixels")
     output = np.full((fibers.size, 3), -100.0, dtype=np.float32)
     for chip_index, (chip1, chip2) in enumerate(zip(chips1, chips2)):
-        first = np.asarray(_field(chip1, "flux"), dtype=np.float64)[fibers].copy()
-        second = np.asarray(_field(chip2, "flux"), dtype=np.float64)[fibers].copy()
+        first = np.asarray(chip1.flux, dtype=np.float64)[fibers].copy()
+        second = np.asarray(chip2.flux, dtype=np.float64)[fibers].copy()
         if normalize_object:
             first /= np.maximum(
                 median_filter(first, size=(1, 100), mode="nearest"), 1.0
@@ -225,10 +211,10 @@ def _cross_correlation_shifts(
     return output
 
 
-def _default_peak_finder(chip: Any) -> list[LinePeak]:
+def _default_peak_finder(chip: ChipFrame) -> list[LinePeak]:
     """Approximate APPEAKFIT with local Gaussian fits for isolated lines."""
 
-    flux = np.asarray(_field(chip, "flux"), dtype=np.float64)
+    flux = np.asarray(chip.flux, dtype=np.float64)
     peaks: list[LinePeak] = []
     xall = np.arange(flux.shape[1], dtype=np.float64)
     for fiber, spectrum in enumerate(flux):
@@ -289,9 +275,9 @@ def _match_lines(first: list[LinePeak], second: list[LinePeak]) -> list[tuple[Li
 
 
 def _line_shift(
-    chips1: list[Any],
-    chips2: list[Any],
-    peak_finder: Callable[[Any], list[LinePeak]],
+    chips1: list[ChipFrame],
+    chips2: list[ChipFrame],
+    peak_finder: Callable[[ChipFrame], list[LinePeak]],
 ) -> DitherShiftResult:
     accepted: list[float] = []
     for chip_index, (chip1, chip2) in enumerate(zip(chips1, chips2), start=1):
@@ -313,8 +299,8 @@ def _line_shift(
 
 
 def dither_shift(
-    frame1: Any,
-    frame2: Any,
+    frame1: VisitFrame,
+    frame2: VisitFrame,
     *,
     xcorr: bool = False,
     lines: bool | None = None,
@@ -323,7 +309,7 @@ def dither_shift(
     nofit: bool = False,
     mjd: int = 999999,
     return_shiftarr: bool = False,
-    peak_finder: Callable[[Any], list[LinePeak]] | None = None,
+    peak_finder: Callable[[ChipFrame], list[LinePeak]] | None = None,
 ) -> DitherShiftResult:
     """Measure the pixel shift from ``frame1`` to ``frame2``.
 
@@ -337,7 +323,7 @@ def dither_shift(
     if not xcorr:
         return _line_shift(chips1, chips2, peak_finder or _default_peak_finder)
 
-    nfibers = np.asarray(_field(chips1[0], "flux")).shape[0]
+    nfibers = chips1[0].flux.shape[0]
     fibers = _plugged_fibers(plugmap, nfibers)
     measured = _cross_correlation_shifts(
         chips1, chips2, fibers, normalize_object=object_spectra

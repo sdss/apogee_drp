@@ -7,6 +7,7 @@ from scipy.ndimage import uniform_filter
 import warnings
 
 from ...utils import lock
+from ...utils.numerics import robust_polyfit
 from .flatsmooth import flatsmooth
 from .robust_slope import robust_slope
 
@@ -193,89 +194,6 @@ def safe_divide(numerator, denominator):
     )
     np.divide(numerator, denominator, out=output, where=valid)
     return output
-
-
-def robust_polyfit(x, y, degree, maxiter=5, clip=5.0):
-    """Fit a polynomial while iteratively rejecting outliers.
-
-    Coefficients are returned in increasing order, following
-    ``numpy.polynomial.polynomial`` conventions.
-
-    Parameters
-    ----------
-    x, y : array-like
-        Coordinates and values to fit.
-    degree : int
-        Polynomial degree.
-    maxiter : int, optional
-        Maximum number of rejection iterations.
-    clip : float, optional
-        Rejection threshold in units of the median absolute deviation.
-
-    Returns
-    -------
-    coefficients : numpy.ndarray
-        Polynomial coefficients in increasing order.
-
-    Raises
-    ------
-    ValueError
-        If the inputs are invalid or too few finite points remain.
-    """
-    x = np.asarray(x, dtype=float).ravel()
-    y = np.asarray(y, dtype=float).ravel()
-
-    if x.shape != y.shape:
-        raise ValueError("x and y must have the same shape")
-
-    if isinstance(degree, (bool, np.bool_)) or int(degree) != degree:
-        raise ValueError("degree must be a non-negative integer")
-    degree = int(degree)
-
-    if degree < 0:
-        raise ValueError("degree must be a non-negative integer")
-
-    if isinstance(maxiter, (bool, np.bool_)) or int(maxiter) != maxiter:
-        raise ValueError("maxiter must be a non-negative integer")
-    maxiter = int(maxiter)
-
-    if maxiter < 0:
-        raise ValueError("maxiter must be a non-negative integer")
-
-    if not np.isfinite(clip) or clip <= 0:
-        raise ValueError("clip must be positive and finite")
-
-    good = np.isfinite(x) & np.isfinite(y)
-
-    if np.count_nonzero(good) <= degree:
-        raise ValueError("too few finite points for polynomial fit")
-
-    for _ in range(maxiter):
-        coefficients = np.polynomial.polynomial.polyfit(
-            x[good], y[good], degree
-        )
-        model = np.polynomial.polynomial.polyval(x, coefficients)
-        residual = y - model
-
-        center = np.nanmedian(residual[good])
-        scatter = np.nanmedian(np.abs(residual[good] - center))
-
-        if not np.isfinite(scatter) or scatter == 0:
-            break
-
-        keep = good & (np.abs(residual - center) <= clip * scatter)
-
-        if np.count_nonzero(keep) <= degree:
-            break
-
-        if np.array_equal(keep, good):
-            break
-
-        good = keep
-
-    return np.polynomial.polynomial.polyfit(
-        x[good], y[good], degree
-    )
 
 
 def running_nanmedian(values, width, axis=0):

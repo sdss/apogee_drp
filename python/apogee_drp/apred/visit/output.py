@@ -14,11 +14,11 @@ from ...utils.bitmask import PixelBitMask, StarBitMask
 from .io import (
     BADERR,
     _as_header,
-    _chip,
     _get,
     _plugmap_metadata,
     _table_hdu,
 )
+from .models import ChipFrame, VisitFrame
 
 FLUX_SCALE = 1.0e-17
 BADMASK = 16639
@@ -47,44 +47,17 @@ def _column(fiberdata: Any, name: str, default: Any = None) -> np.ndarray:
     return np.asarray(value)
 
 
-def _validate_frame(frame: Any) -> tuple[list[Any], int, int]:
-    chips = [_chip(frame, index) for index in range(3)]
-    required = (
-        "header",
-        "flux",
-        "err",
-        "mask",
-        "wavelength",
-        "sky",
-        "skyerr",
-        "telluric",
-        "telluricerr",
-        "lsfcoef",
-        "wcoef",
-    )
-    shape = None
+def _validate_frame(frame: VisitFrame) -> tuple[list[ChipFrame], int, int]:
+    frame.validate()
+    chips = list(frame)
+    shape = chips[0].flux.shape
     for chip in chips:
-        for name in required:
-            _get(chip, name)
-        flux = np.asarray(_get(chip, "flux"))
-        if flux.ndim != 2:
-            raise ValueError("flux must have [fiber, pixel] shape")
-        if shape is None:
-            shape = flux.shape
-        elif flux.shape != shape:
-            raise ValueError("all chip flux arrays must have the same shape")
-        for name in (
-            "err",
-            "mask",
-            "wavelength",
-            "sky",
-            "skyerr",
-            "telluric",
-            "telluricerr",
-        ):
-            if np.asarray(_get(chip, name)).shape != flux.shape:
+        for name in ("wavelength", "sky", "skyerr", "telluric", "telluricerr"):
+            value = getattr(chip, name)
+            if value is None or np.asarray(value).shape != shape:
                 raise ValueError(f"{name} must have the same shape as flux")
-    assert shape is not None
+        if chip.lsfcoef is None or chip.wcoef is None:
+            raise ValueError("lsfcoef and wcoef are required")
     return chips, shape[0], shape[1]
 
 
@@ -168,7 +141,7 @@ def _structure_hdu(value: Any, name: str) -> fits.BinTableHDU:
 
 
 def write_plate_products(
-    frame: Any,
+    frame: VisitFrame,
     plugmap: Any,
     shiftstr: Any,
     pairstr: Any,
@@ -188,12 +161,12 @@ def write_plate_products(
     mjd = int(_get(plugmap, "mjd"))
     locid = _optional(plugmap, "locationid", -1)
     fiberdata = _get(plugmap, "fiberdata")
-    fluxcorr = _optional(frame, "fluxcorr")
+    fluxcorr = frame.metadata.get("fluxcorr")
     written: list[str] = []
 
     for chip, filename in zip(chips, files):
         primary = _primary_header(
-            _get(chip, "header"),
+            chip.header,
             plate=plate,
             mjd=mjd,
             locid=locid,
@@ -201,13 +174,13 @@ def write_plate_products(
             reduction_version=reduction_version,
             software_version=software_version,
         )
-        flux, nonfinite = _flux_array(_get(chip, "flux"))
-        mask = np.asarray(_get(chip, "mask"), dtype=np.int16).copy()
+        flux, nonfinite = _flux_array(chip.flux)
+        mask = np.asarray(chip.mask, dtype=np.int16).copy()
         mask[nonfinite] |= np.int16(PIXEL_BITS.getval("BADPIX"))
-        sky = np.asarray(_get(chip, "sky"), dtype=np.float32) / np.float32(
+        sky = np.asarray(chip.sky, dtype=np.float32) / np.float32(
             FLUX_SCALE
         )
-        skyerr = _error_array(_get(chip, "skyerr"))
+        skyerr = _error_array(chip.skyerr)
         hdus: list[fits.hdu.base.ExtensionHDU | fits.PrimaryHDU] = [
             fits.PrimaryHDU(header=primary),
             _image_hdu(
@@ -218,7 +191,7 @@ def write_plate_products(
                 dtype=np.float32,
             ),
             _image_hdu(
-                _error_array(_get(chip, "err")),
+                _error_array(chip.err),
                 "ERROR",
                 "Flux Error (10^-17 ergs/s/cm^2/Ang)",
                 axis2="Fiber",
@@ -232,7 +205,7 @@ def write_plate_products(
                 dtype=np.int16,
             ),
             _image_hdu(
-                _get(chip, "wavelength"),
+                chip.wavelength,
                 "WAVELENGTH",
                 "Wavelength (Ang)",
                 axis2="Fiber",
@@ -253,26 +226,26 @@ def write_plate_products(
                 dtype=np.float32,
             ),
             _image_hdu(
-                _get(chip, "telluric"),
+                chip.telluric,
                 "TELLURIC",
                 "Telluric",
                 axis2="Fiber",
                 dtype=np.float32,
             ),
             _image_hdu(
-                _get(chip, "telluricerr"),
+                chip.telluricerr,
                 "TELLURIC ERROR",
                 "Telluric Error",
                 axis2="Fiber",
                 dtype=np.float32,
             ),
             _coefficient_hdu(
-                _get(chip, "wcoef"),
+                chip.wcoef,
                 "WAVE COEFFICIENTS",
                 "Wavelength Coefficients",
             ),
             _coefficient_hdu(
-                _get(chip, "lsfcoef"), "LSF COEFFICIENTS", "LSF Coefficients"
+                chip.lsfcoef, "LSF COEFFICIENTS", "LSF Coefficients"
             ),
             _table_hdu(fiberdata, "PLUGMAP"),
             _plugmap_header_hdu(plugmap),
@@ -407,7 +380,7 @@ def _relative_fluxes(relflux: Any | None, nfibers: int) -> tuple[np.ndarray, np.
 
 
 def build_visit_hdul(
-    frame: Any,
+    frame: VisitFrame,
     plugmap: Any,
     fiber_row: int,
     *,
@@ -439,13 +412,13 @@ def build_visit_hdul(
     this_mtp = None if relative is None else float(relative[1][fiber_row])
 
     raw_flux = np.stack(
-        [np.asarray(_get(chip, "flux"))[fiber_row] for chip in chips]
+        [chip.flux[fiber_row] for chip in chips]
     ).astype(np.float32)
     raw_error = np.stack(
-        [np.asarray(_get(chip, "err"))[fiber_row] for chip in chips]
+        [chip.err[fiber_row] for chip in chips]
     ).astype(np.float32)
     mask = np.stack(
-        [np.asarray(_get(chip, "mask"))[fiber_row] for chip in chips]
+        [chip.mask[fiber_row] for chip in chips]
     ).astype(np.int16)
     visit_flag, snr, mask = _visit_flag(
         raw_flux.copy(),
@@ -457,7 +430,7 @@ def build_visit_hdul(
         mtpflux=this_mtp,
     )
 
-    source_header = _as_header(_get(chips[0], "header"))
+    source_header = _as_header(chips[0].header)
     header = fits.Header()
     for key in ("DATE-OBS", "EXPTIME", "JD-MID", "UT-MID", "NPAIRS"):
         if key in source_header:
@@ -523,7 +496,7 @@ def build_visit_hdul(
         header["RELFLUX"] = float(relative[0][fiber_row])
         header["MTPFLUX"] = float(relative[1][fiber_row])
     header["VISITFLG"] = visit_flag
-    fluxcorr = _optional(frame, "fluxcorr")
+    fluxcorr = frame.metadata.get("fluxcorr")
     if fluxcorr is not None:
         array = np.asarray(fluxcorr)
         header["FLUXFLAM"] = (
@@ -537,25 +510,25 @@ def build_visit_hdul(
 
     flux, _ = _flux_array(raw_flux)
     wave = np.stack(
-        [np.asarray(_get(chip, "wavelength"))[fiber_row] for chip in chips]
+        [chip.wavelength[fiber_row] for chip in chips]
     )
     sky = np.stack(
-        [np.asarray(_get(chip, "sky"))[fiber_row] for chip in chips]
+        [chip.sky[fiber_row] for chip in chips]
     ) / np.float32(FLUX_SCALE)
     skyerr = np.stack(
-        [np.asarray(_get(chip, "skyerr"))[fiber_row] for chip in chips]
+        [chip.skyerr[fiber_row] for chip in chips]
     ) / np.float32(FLUX_SCALE)
     telluric = np.stack(
-        [np.asarray(_get(chip, "telluric"))[fiber_row] for chip in chips]
+        [chip.telluric[fiber_row] for chip in chips]
     )
     telluricerr = np.stack(
-        [np.asarray(_get(chip, "telluricerr"))[fiber_row] for chip in chips]
+        [chip.telluricerr[fiber_row] for chip in chips]
     )
     wcoef = np.stack(
-        [np.asarray(_get(chip, "wcoef"))[fiber_row] for chip in chips]
+        [chip.wcoef[fiber_row] for chip in chips]
     )
     lsfcoef = np.stack(
-        [np.asarray(_get(chip, "lsfcoef"))[fiber_row] for chip in chips]
+        [chip.lsfcoef[fiber_row] for chip in chips]
     )
     hdus: list[fits.hdu.base.ExtensionHDU | fits.PrimaryHDU] = [
         fits.PrimaryHDU(header=header),
@@ -624,7 +597,7 @@ def build_visit_hdul(
 
 
 def write_visit_products(
-    frame: Any,
+    frame: VisitFrame,
     plugmap: Any,
     shiftstr: Any,
     pairstr: Any,

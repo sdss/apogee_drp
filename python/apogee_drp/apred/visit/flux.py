@@ -3,97 +3,34 @@
 from __future__ import annotations
 
 import copy
-from collections.abc import Mapping
 from typing import Any
 
 import numpy as np
 
 from .io import BADERR
+from .models import ChipFrame, VisitFrame
+from ...utils.numerics import median_absolute_deviation, robust_polyfit
 
 BADMASK = 16639
 H_ZEROPOINT_FLAMBDA = 1.133e-10
 
 
-def _field(value: Any, name: str) -> Any:
-    if isinstance(value, Mapping):
-        for key in (name, name.lower(), name.upper()):
-            if key in value:
-                return value[key]
-        for key in value:
-            if str(key).lower() == name.lower():
-                return value[key]
-    for key in (name, name.lower(), name.upper()):
-        if hasattr(value, key):
-            return getattr(value, key)
-    raise ValueError(f"required field {name!r} is missing")
-
-
-def _set_field(value: Any, name: str, data: Any) -> None:
-    if isinstance(value, dict):
-        for key in value:
-            if str(key).lower() == name.lower():
-                value[key] = data
-                return
-        value[name] = data
-        return
-    setattr(value, name, data)
-
-
-def _chips(frame: Any) -> list[Any]:
-    return [_field(frame, f"chip{letter}") for letter in "abc"]
-
-
 def _column(fiberdata: Any, name: str) -> np.ndarray:
-    return np.asarray(_field(fiberdata, name))
+    try:
+        return np.asarray(fiberdata[name])
+    except (KeyError, IndexError, TypeError, ValueError):
+        return np.asarray(getattr(fiberdata, name))
 
 
-def _mad(values: Any) -> float:
-    values = np.asarray(values, dtype=np.float64)
-    values = values[np.isfinite(values)]
-    if values.size == 0:
-        return np.nan
-    center = np.median(values)
-    return float(np.median(np.abs(values - center)))
-
-
-def _robust_polyfit(x: Any, y: Any, degree: int) -> np.ndarray:
-    """Polynomial coefficients in IDL order: constant through highest power."""
-
-    x = np.asarray(x, dtype=np.float64).ravel()
-    y = np.asarray(y, dtype=np.float64).ravel()
-    good = np.isfinite(x) & np.isfinite(y)
-    if np.count_nonzero(good) <= degree:
-        raise ValueError("too few finite samples for response polynomial")
-    for _ in range(5):
-        coefficients = np.polynomial.polynomial.polyfit(x[good], y[good], degree)
-        residual = y - np.polynomial.polynomial.polyval(x, coefficients)
-        scatter = _mad(residual[good])
-        if scatter == 0 or not np.isfinite(scatter):
-            break
-        keep = good & (np.abs(residual) <= 5.0 * scatter)
-        if np.count_nonzero(keep) <= degree or np.array_equal(keep, good):
-            break
-        good = keep
-    return np.polynomial.polynomial.polyfit(x[good], y[good], degree)
-
-
-def _validate_frame(frame: Any) -> tuple[list[Any], int, int]:
-    chips = _chips(frame)
-    shape: tuple[int, int] | None = None
+def _validate_frame(frame: VisitFrame) -> tuple[list[ChipFrame], int, int]:
+    frame.validate()
+    chips = list(frame)
+    shape = chips[0].flux.shape
     for chip in chips:
-        for name in ("header", "flux", "err", "mask", "wavelength", "sky", "skyerr"):
-            _field(chip, name)
-        flux = np.asarray(_field(chip, "flux"))
-        if flux.ndim != 2:
-            raise ValueError("chip arrays must have [fiber, pixel] shape")
-        if shape is None:
-            shape = flux.shape
-        elif flux.shape != shape:
-            raise ValueError("all chip flux arrays must have the same shape")
         for name in ("err", "mask", "wavelength", "sky", "skyerr"):
-            if np.asarray(_field(chip, name)).shape != flux.shape:
+            value = getattr(chip, name)
+            if value is None or np.asarray(value).shape != shape:
                 raise ValueError(f"{name} must have the same shape as flux")
-    assert shape is not None
     return chips, shape[0], shape[1]
 
 
@@ -105,7 +42,7 @@ def _fiber_rows(fiberid: np.ndarray, nfibers: int) -> np.ndarray:
 
 
 def _add_header_metadata(
-    chips: list[Any], coefficients: np.ndarray, telluric_fibers: np.ndarray
+    chips: list[ChipFrame], coefficients: np.ndarray, telluric_fibers: np.ndarray
 ) -> None:
     history = (
         "AP1DFLUXING: 5th order polynomial fit to telluric stars",
@@ -115,7 +52,7 @@ def _add_header_metadata(
         "AP1DFLUXING: " + ",".join(str(value) for value in telluric_fibers),
     )
     for chip in chips:
-        header = _field(chip, "header")
+        header = chip.header
         if hasattr(header, "add_history"):
             for line in history:
                 header.add_history(line)
@@ -133,7 +70,7 @@ def _add_header_metadata(
 
 
 def _fit_relative_response(
-    chips: list[Any],
+    chips: list[ChipFrame],
     telluric_rows: np.ndarray,
     telluric_fibers: np.ndarray,
     npix: int,
@@ -147,7 +84,7 @@ def _fit_relative_response(
 
     medflux = np.empty((3, nppix, telluric_rows.size), dtype=np.float64)
     for chip_index, chip in enumerate(chips):
-        flux = np.asarray(_field(chip, "flux"), dtype=np.float64)
+        flux = np.asarray(chip.flux, dtype=np.float64)
         blocks = flux[telluric_rows, xlo : xhi + 10].reshape(
             telluric_rows.size, nppix, 10
         )
@@ -157,23 +94,23 @@ def _fit_relative_response(
     star_offsets = np.nanmedian(logmedflux, axis=(0, 1))
     delta = logmedflux - star_offsets[None, None, :]
     initial_flux = np.nanmedian(delta, axis=2)
-    center_row = min(150, np.asarray(_field(chips[0], "flux")).shape[0] - 1)
+    center_row = min(150, chips[0].flux.shape[0] - 1)
     initial_x = np.stack(
         [
-            np.asarray(_field(chip, "wavelength"), dtype=np.float64)[
+            np.asarray(chip.wavelength, dtype=np.float64)[
                 center_row, sample_pixels
             ]
             - 16000.0
             for chip in chips
         ]
     )
-    initial_coefficients = _robust_polyfit(initial_x, initial_flux, 5)
+    initial_coefficients = robust_polyfit(initial_x, initial_flux, 5)
 
     design_parts: list[np.ndarray] = []
     value_parts: list[np.ndarray] = []
     for star_index, row in enumerate(telluric_rows):
         for chip in chips:
-            wavelength = np.asarray(_field(chip, "wavelength"), dtype=np.float64)[
+            wavelength = np.asarray(chip.wavelength, dtype=np.float64)[
                 row, sample_pixels
             ]
             x = wavelength - 16000.0
@@ -182,7 +119,7 @@ def _fit_relative_response(
             block[:, 5 + star_index] = 1.0
             with np.errstate(divide="ignore", invalid="ignore"):
                 logflux = np.log10(
-                    np.asarray(_field(chip, "flux"), dtype=np.float64)[
+                    np.asarray(chip.flux, dtype=np.float64)[
                         row, sample_pixels
                     ]
                 )
@@ -190,7 +127,7 @@ def _fit_relative_response(
                 np.polynomial.polynomial.polyval(x, initial_coefficients)
                 + star_offsets[star_index]
             )
-            threshold = max(3.0 * _mad(logflux - model), 0.1)
+            threshold = max(3.0 * median_absolute_deviation(logflux - model), 0.1)
             logflux[np.abs(logflux - model) > threshold] = np.nan
             design_parts.append(block)
             value_parts.append(logflux)
@@ -213,7 +150,7 @@ def _fit_relative_response(
 
     coefficients = parameters[:5]
     for chip in chips:
-        wavelength = np.asarray(_field(chip, "wavelength"), dtype=np.float64)
+        wavelength = np.asarray(chip.wavelength, dtype=np.float64)
         x = wavelength - 16000.0
         log_response = sum(
             coefficients[index] * x ** (5 - index) for index in range(5)
@@ -224,20 +161,20 @@ def _fit_relative_response(
         if np.any(~np.isfinite(response) | (response <= 0)):
             raise ValueError("relative response is non-finite or non-positive")
         for name in ("flux", "err", "sky", "skyerr"):
-            original = np.asarray(_field(chip, name))
+            original = np.asarray(getattr(chip, name))
             bad_error = (original == BADERR) if name == "err" else None
             calibrated = original / response
             if bad_error is not None:
                 calibrated[bad_error] = BADERR
-            _set_field(chip, name, calibrated.astype(original.dtype, copy=False))
+            setattr(chip, name, calibrated.astype(original.dtype, copy=False))
 
     _add_header_metadata(chips, coefficients, telluric_fibers)
     return np.asarray(coefficients, dtype=np.float64)
 
 
-def _set_fluxnorm(chips: list[Any], value: float) -> None:
+def _set_fluxnorm(chips: list[ChipFrame], value: float) -> None:
     for chip in chips:
-        header = _field(chip, "header")
+        header = chip.header
         if isinstance(header, dict):
             header["FLUXNORM"] = float(value)
         else:
@@ -245,12 +182,12 @@ def _set_fluxnorm(chips: list[Any], value: float) -> None:
 
 
 def flux_calibrate(
-    frame: Any,
+    frame: VisitFrame,
     plugmap: Any,
     *,
     badmask: int = BADMASK,
     copy_frame: bool = True,
-) -> Any:
+) -> VisitFrame:
     """Apply the relative and absolute calibrations from ``AP1DFLUXING``.
 
     The returned frame gains a ``fluxcorr`` vector.  Pixels with ``BADERR``
@@ -260,12 +197,12 @@ def flux_calibrate(
     original_chips, nfibers, npix = _validate_frame(frame)
     output = copy.deepcopy(frame) if copy_frame else frame
     chips, _, _ = _validate_frame(output)
-    fiberdata = _field(plugmap, "fiberdata")
+    fiberdata = plugmap["fiberdata"] if isinstance(plugmap, dict) else plugmap.fiberdata
     spectrograph = _column(fiberdata, "spectrographid").astype(int)
     holetype = np.char.upper(_column(fiberdata, "holetype").astype(str))
     objtype = np.char.upper(_column(fiberdata, "objtype").astype(str))
     fiberid = _column(fiberdata, "fiberid").astype(int)
-    magnitude = np.asarray(_field(fiberdata, "mag"), dtype=np.float64)
+    magnitude = np.asarray(_column(fiberdata, "mag"), dtype=np.float64)
     if magnitude.ndim != 2 or magnitude.shape[1] < 2:
         raise ValueError("plugmap fiberdata.mag must contain J and H magnitudes")
     nrows = fiberid.size
@@ -279,7 +216,7 @@ def flux_calibrate(
     good_telluric_fibers: list[int] = []
     for index in hot_indices:
         row = _fiber_rows(np.asarray([fiberid[index]]), nfibers)[0]
-        mask = np.asarray(_field(chips[1], "mask"))[row]
+        mask = np.asarray(chips[1].mask)[row]
         if np.count_nonzero((mask.astype(np.int64) & int(badmask)) > 0) < 500:
             good_telluric_fibers.append(int(fiberid[index]))
     telluric_fibers = np.asarray(good_telluric_fibers, dtype=int)
@@ -296,7 +233,7 @@ def flux_calibrate(
     if sky_indices.size:
         sky_rows = _fiber_rows(fiberid[sky_indices], nfibers)
         medsky = float(
-            np.median(np.asarray(_field(original_chips[1], "flux"))[sky_rows])
+            np.median(np.asarray(original_chips[1].flux)[sky_rows])
         )
     else:
         medsky = 0.0
@@ -312,7 +249,7 @@ def flux_calibrate(
             row = _fiber_rows(np.asarray([fiber]), nfibers)[0]
             hmag = magnitude[index, 1]
             medflux = float(
-                np.median(np.asarray(_field(original_chips[1], "flux"))[row])
+                np.median(np.asarray(original_chips[1].flux)[row])
             )
             if hmag != 0 and hmag < 30 and medflux - medsky > 100:
                 denominator = max(medflux - medsky, 1.0)
@@ -334,7 +271,7 @@ def flux_calibrate(
         fluxcorr[row] = np.float32(norm)
         for chip in chips:
             for name in ("flux", "err", "sky", "skyerr"):
-                original = np.asarray(_field(chip, name))
+                original = np.asarray(getattr(chip, name))
                 bad_error = (original[row] == BADERR) if name == "err" else None
                 original[row] *= norm
                 if bad_error is not None:
@@ -348,12 +285,12 @@ def flux_calibrate(
         fluxcorr[row] = np.float32(mednorm)
         for chip in chips:
             for name in ("flux", "err", "sky", "skyerr"):
-                original = np.asarray(_field(chip, name))
+                original = np.asarray(getattr(chip, name))
                 bad_error = (original[row] == BADERR) if name == "err" else None
                 original[row] *= mednorm
                 if bad_error is not None:
                     original[row, bad_error] = BADERR
 
     _set_fluxnorm(chips, mednorm)
-    _set_field(output, "fluxcorr", fluxcorr)
+    output.metadata["fluxcorr"] = fluxcorr
     return output
