@@ -99,6 +99,8 @@ def wave_load(load, tmp_path, monkeypatch):
 
 def _fake_full(root, **kwargs):
     """Make a recognizable fake path from the arguments passed to Path.full."""
+    if "chip" not in kwargs:
+        raise KeyError("Missing required keyword argument: chip")
     chip = kwargs.get("chip")
     number = kwargs.get("num")
     chip_part = f"-{chip}" if chip is not None else ""
@@ -110,7 +112,24 @@ def test_filename_chipless(load):
     result = load.filename("Dark", num=123)
 
     assert result == "/redux/apDark-123.fits"
-    assert load.sdss_path.full.call_args.kwargs["chip"] is None
+    # sdss_access requires a chip, so allfile() renders chip a and removes
+    # the chip token from the resulting basename.
+    assert load.sdss_path.full.call_args.kwargs["chip"] == "a"
+    assert "-None-" not in result
+
+
+@pytest.mark.parametrize(
+    ("root", "expected"),
+    [
+        ("R", "/redux/apR-123.fits"),
+        ("2D", "/redux/ap2D-123.fits"),
+    ],
+)
+def test_filename_exposure_template_omits_none_chip(load, root, expected):
+    result = load.filename(root, num=123)
+
+    assert result == expected
+    assert "-None-" not in Path(result).name
 
 
 @pytest.mark.parametrize("chip", ["a", "b", "c"])
@@ -147,6 +166,49 @@ def test_filename_chip_subset_preserves_order(load):
         "/redux/apDark-c-123.fits",
         "/redux/apDark-a-123.fits",
     ]
+
+
+def test_exists_without_chip_requires_all_three_files(load, tmp_path,
+                                                       monkeypatch):
+    filenames = {
+        chip: tmp_path / f"apR-{chip}-00000123.apz"
+        for chip in "abc"
+    }
+
+    def filename(root, num=None, chip=None, **kwargs):
+        assert root == "R"
+        assert chip in "abc"
+        return str(filenames[chip])
+
+    monkeypatch.setattr(load, "filename", filename)
+    for path in filenames.values():
+        path.write_bytes(b"complete")
+
+    assert load.exists("R", num=123)
+
+    filenames["b"].unlink()
+    assert not load.exists("R", num=123)
+
+
+def test_exists_with_chip_sequence_checks_dictionary_values(load, tmp_path,
+                                                            monkeypatch):
+    filenames = {
+        chip: tmp_path / f"apR-{chip}-00000123.apz"
+        for chip in "abc"
+    }
+
+    def filename(root, num=None, chip=None, **kwargs):
+        assert root == "R"
+        return {value: str(filenames[value]) for value in chip}
+
+    monkeypatch.setattr(load, "filename", filename)
+    for path in filenames.values():
+        path.write_bytes(b"complete")
+
+    assert load.exists("R", num=123, chip=["a", "b", "c"])
+
+    filenames["c"].write_bytes(b"")
+    assert not load.exists("R", num=123, chip=["a", "b", "c"])
 
 
 def test_filename_empty_chip_sequence(load):
