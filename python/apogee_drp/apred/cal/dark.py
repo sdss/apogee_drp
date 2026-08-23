@@ -246,13 +246,15 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
         plotdir = os.path.join(darkdir, "plots")
         os.makedirs(plotdir, exist_ok=True)
 
+        temporary_root = Path(utils.localdir()) / apred
+        temporary_root.mkdir(parents=True, exist_ok=True)
+        
         for ichip, chip in enumerate(CHIPS):
             started = time.time()
-            with tempfile.TemporaryDirectory(prefix=f"mkdark-{chip}-") as workdir:
-                ramps, header = _load_ramps(
-                    load, images, chip, workdir, unlock=unlock,
-                    verbose=verbose,
-                )
+            with tempfile.TemporaryDirectory(prefix=f"mkdark-{chip}-",
+                                             dir=str(temporary_root)) as workdir:
+                ramps, header = _load_ramps(load, images, chip,
+                                            workdir, unlock=unlock, verbose=verbose)
                 dark, chi2, mask, rate, stats = combine_dark_ramps(ramps)
                 del ramps
             _add_provenance(header, darkid, load)
