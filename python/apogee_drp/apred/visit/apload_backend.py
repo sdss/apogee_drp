@@ -553,7 +553,10 @@ class ApLoadVisitBackend(NativeVisitBackendMixin):
                 field=plan.get("field", ""),
             )
         )
-        tables = [Table(item) for item in tellstars]
+        tables = [Table({str(key): np.asarray(value).reshape(
+                        (1,) + np.asarray(value).shape)
+                        for key, value in item.items()})
+                  for item in tellstars]
         combined = tables[0] if len(tables) == 1 else vstack(tables)
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
         combined.write(filename, overwrite=True)

@@ -165,9 +165,7 @@ def _table_hdu(value: Any, name: str) -> fits.BinTableHDU:
         columns = {}
         for key, item in value.items():
             array = np.asarray(item)
-            if array.ndim == 0:
-                array = array.reshape(1)
-            columns[str(key)] = array
+            columns[str(key)] = array.reshape((1,) + array.shape)
         table = Table(columns)
     elif hasattr(value, "__dataclass_fields__"):
         table = Table(

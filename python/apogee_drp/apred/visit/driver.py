@@ -547,6 +547,7 @@ def ap1dvisit(
                                                       plugmap=plugmap, plan=plan,
                                                       plots_dir=plots_dir, test=test,
                                                       force=use_force)
+                            tellstar["im"] = np.int32(int(framenum))                            
                             tellstars.append(tellstar)
                             backend.write_cframes(frame, plugmap, cfiles)
 

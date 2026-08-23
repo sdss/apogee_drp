@@ -325,9 +325,16 @@ def apply_telluric_correction(
 
 def _field(value: Any, name: str) -> Any:
     if isinstance(value, Mapping):
-        for key, item in value.items():
+        for key in value:
             if str(key).lower() == name.lower():
-                return item
+                return value[key]
+    names = getattr(value, "colnames", None)
+    if names is None:
+        names = getattr(getattr(value, "dtype", None), "names", None)
+    if names is not None:
+        for key in names:
+            if str(key).lower() == name.lower():
+                return value[key]
     for key in (name, name.lower(), name.upper()):
         if hasattr(value, key):
             return getattr(value, key)
