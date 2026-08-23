@@ -1063,8 +1063,6 @@ class ApLoad:
         Uses sdss_access to create filenames
         '''
 
-        if self.verbose:
-            print("allfile: root=", root, "chip=", chip)
         if self.instrument == 'apogee-n' : prefix='ap'
         else : prefix='as'
         if fz : suffix = '.fz'
@@ -1135,9 +1133,6 @@ class ApLoad:
             directory_name, basename = os.path.split(file_path)
             basename = basename.replace("-a-", "-", 1)
             file_path = os.path.join(directory_name, basename)
-
-        if self.verbose:
-            print("filePath:", file_path, os.path.exists(file_path))
 
         if not os.path.exists(file_path) and download:
             if self.verbose:

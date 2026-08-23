@@ -38,7 +38,6 @@ from .shift import DitherShiftResult, LinePeak, dither_shift
 from .products import (
     VisitProductResult,
     build_visit_hdul,
-    write_plate_products,
     write_visit_products,
 )
 from .plate import write_plate_products

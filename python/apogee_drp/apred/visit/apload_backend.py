@@ -45,6 +45,28 @@ def _hdu_by_name(hdul: fits.HDUList, name: str, fallback: int | None = None) -> 
     return None
 
 
+def _fiber_rows(data, nfiber, name):
+    """Return a two-dimensional calibration array with fibers in rows."""
+    array = np.asarray(data, dtype=np.float64)
+    if array.ndim != 2:
+        raise ValueError(f"{name} must be two-dimensional; got {array.shape}")
+    if array.shape[0] == nfiber:
+        return array.copy()
+    if array.shape[1] == nfiber:
+        return array.T.copy()
+    raise ValueError(f"{name} has no {nfiber}-fiber axis: {array.shape}")
+
+
+def _pixel_image(data, shape, name):
+    """Return a calibration image in (fiber, pixel) orientation."""
+    array = np.asarray(data, dtype=np.float64)
+    if array.shape == shape:
+        return array.copy()
+    if array.T.shape == shape:
+        return array.T.copy()
+    raise ValueError(f"{name} shape {array.shape} does not match frame {shape}")
+
+
 class ApLoadVisitBackend(NativeVisitBackendMixin):
     """Connect the translated visit reducer to a normal APOGEE reduction tree.
 
@@ -200,10 +222,19 @@ class ApLoadVisitBackend(NativeVisitBackendMixin):
     def calibration_files(
         self, plan: Mapping[str, Any], chips: Sequence[str]
     ) -> tuple[Sequence[str], Sequence[str]]:
-        wave = self._files("Wave", num=plan["waveid"], chips=chips)
+        waveid = int(plan["waveid"])
+        wave_product = "dailywave" if waveid < 10_000_000 else "wave"
+        wave_files = self.load.product_files(wave_product, waveid)
+        if len(wave_files) != 3:
+            raise ValueError(
+                f"{wave_product} {waveid} resolved to "
+                f"{len(wave_files)} files"
+            )
+        wave_by_chip = dict(zip(_CHIPS, wave_files))
+        wave = [wave_by_chip[chip] for chip in chips]
         lsf = self._files("LSF", num=plan["lsfid"], chips=chips)
         return wave, lsf
-
+    
     def resolve_telluric_files(self, frame, plan):
         """Resolve the preconvolved Telluric calibration for this visit."""
         tellid = f"{plan['waveid']}-{plan['lsfid']}"
@@ -349,21 +380,37 @@ class ApLoadVisitBackend(NativeVisitBackendMixin):
             frame = VisitFrame.from_mapping(frame)
         for index, chip_name in enumerate(_CHIPS):
             chip = frame.chip(chip_name)
+            shape = chip.flux.shape
+            nfiber = shape[0]
             with fits.open(lsffiles[index], memmap=False) as hdul:
-                chip.lsfcoef = np.asarray(hdul[0].data, dtype=np.float64).copy()
+                lsf_data = next((hdu.data for hdu in hdul if hdu.data
+                                 is not None and np.asarray(hdu.data).ndim == 2 and
+                                 nfiber in np.asarray(hdu.data).shape), None, )
+                if lsf_data is None:
+                    raise ValueError(
+                        f"no two-dimensional LSF coefficient array with "
+                        f"{nfiber} fibers in {lsffiles[index]}"
+                    )
+                chip.lsfcoef = _fiber_rows(lsf_data, nfiber, "LSF coefficients")
+            if newwave or chip.wcoef is None or chip.wavelength is None:
+                with fits.open(wavefiles[index], memmap=False) as hdul:
+                    if newwave or chip.wcoef is None:
+                        chip.wcoef = _fiber_rows(
+                            hdul[1].data, nfiber, "wave coefficients")
+                    if newwave or chip.wavelength is None:
+                        chip.wavelength = _pixel_image(
+                            hdul[2].data, shape, "wavelength image")
             chip.lsffile = str(lsffiles[index])
             chip.wavefile = str(wavefiles[index])
             chip.wave_dir = str(plate_dir)
-            if chip.wcoef is None or chip.wavelength is None:
-                raise ValueError(
-                    "ap1D file lacks Python ap1dwavecal wavelength products; "
-                    "run ap1dwavecal before ap1dvisit"
-                )
-            shape = chip.flux.shape
-            if chip.sky is None: chip.sky = np.zeros(shape, dtype=np.float32)
-            if chip.skyerr is None: chip.skyerr = np.zeros(shape, dtype=np.float32)
-            if chip.telluric is None: chip.telluric = np.ones(shape, dtype=np.float32)
-            if chip.telluricerr is None: chip.telluricerr = np.zeros(shape, dtype=np.float32)
+            if chip.sky is None:
+                chip.sky = np.zeros(shape, dtype=np.float32)
+            if chip.skyerr is None:
+                chip.skyerr = np.zeros(shape, dtype=np.float32)
+            if chip.telluric is None:
+                chip.telluric = np.ones(shape, dtype=np.float32)
+            if chip.telluricerr is None:
+             chip.telluricerr = np.zeros(shape, dtype=np.float32)
         return frame
 
     def plate_file(self, plan: Mapping[str, Any]) -> str:
