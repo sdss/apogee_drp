@@ -149,16 +149,11 @@ def _load_ramps(load, images, chip, directory, max_read=None, unlock=False,
         rawfile = load.filename("R", num=int(number), chip=chip)
         if verbose:
             print(f"{iframe + 1}/{len(images)} {chip} {int(number)}")
-        cube, current_header = ap3d.load_raw_ramp(
-            rawfile,
-            max_read=max_read,
-            temporary_directory=directory,
-            unlock=unlock,
-            verbose=verbose,
-        )
-        ramp, _, _, _ = ap3d.reference_correct(
-            cube, current_header, indiv=3
-        )
+        cube, current_header = ap3d.load_raw_ramp(rawfile, max_read=max_read,
+                                                  temporary_directory=directory,
+                                                  unlock=unlock, verbose=verbose)
+        ramp, _, _, _ = ap3d.reference_correct(cube, current_header, indiv=3)
+        del cube
         baseline = ramp[1].copy()
         ramp[1:] -= baseline[None, :, :]
         ramp = ramp.astype(np.float32, copy=False)
@@ -173,6 +168,8 @@ def _load_ramps(load, images, chip, directory, max_read=None, unlock=False,
                 f"received {ramp.shape} for exposure {number}"
             )
         ramps[iframe] = ramp
+        del ramp
+        del baseline
     if ramps is None:
         raise RuntimeError("No dark ramps were loaded")
     ramps.flush()
@@ -253,10 +250,18 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
             started = time.time()
             with tempfile.TemporaryDirectory(prefix=f"mkdark-{chip}-",
                                              dir=str(temporary_root)) as workdir:
-                ramps, header = _load_ramps(load, images, chip,
-                                            workdir, unlock=unlock, verbose=verbose)
-                dark, chi2, mask, rate, stats = combine_dark_ramps(ramps)
-                del ramps
+                ramps = None
+                try:
+                    ramps, header = _load_ramps(load, images, chip, workdir,
+                                                unlock=unlock, verbose=verbose)
+                    dark, chi2, mask, rate, stats = combine_dark_ramps(ramps)
+                finally:
+                    if ramps is not None:
+                        ramps.flush()
+                        mmap = getattr(ramps, "_mmap", None)
+                        if mmap is not None and not mmap.closed:
+                            mmap.close()
+                        del ramps
             _add_provenance(header, darkid, load)
             fits.HDUList([
                 fits.PrimaryHDU(header=header),
