@@ -6,7 +6,6 @@ import platform
 import socket
 import tempfile
 import time
-import warnings
 from pathlib import Path
 
 import numpy as np
@@ -76,9 +75,7 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
     for ylo in range(0, ny, row_block):
         yhi = min(ylo + row_block, ny)
         samples = np.asarray(ramps[:, :, ylo:yhi, :], dtype=np.float32)
-        with warnings.catch_warnings():
-            warnings.simplefilter("ignore", RuntimeWarning)
-            model = np.nanmedian(samples, axis=0)
+        model = utils.idl_median(samples, axis=0).astype(np.float32, copy=False)
         dark[:, ylo:yhi, :] = model
         variance = dark_variance(model, nread=1, gain=gain,
                                  readnoise=readnoise)
@@ -98,17 +95,29 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
     mask[nonfinite_rate] |= np.uint8(1)
     mask[hot] |= np.uint8(2)
 
-    neighbor_seed = hot | nonfinite_rate
-    neighbor_candidates = np.isfinite(rate) & (rate > maxrate / 4.0)
-    cross = np.array([[0, 1, 0], [1, 1, 1], [0, 1, 0]], dtype=bool)
-    hot_neighbors = binary_dilation(neighbor_seed, structure=cross)
-    hot_neighbors &= neighbor_candidates & ~neighbor_seed
-    mask[hot_neighbors] |= np.uint8(4)
+    # Reproduce the flattened-index neighbor handling in mkdark.pro.
+    flat_rate = rate.ravel()
+    flat_mask = mask.ravel()
+    npixel = flat_rate.size
+    hot_indices = np.flatnonzero(hot)
+    bad_indices = np.flatnonzero(nonfinite_rate)
+    hot_neighbors = np.zeros(rate.shape, dtype=bool)
+    flat_hot_neighbors = hot_neighbors.ravel()
+    for seed_indices in (hot_indices, bad_indices):
+        for offset in (-1, 1, -nx, nx):
+            neighbors = seed_indices + offset
+            on_detector = ( (neighbors >= 0) & (neighbors < npixel) )
+            neighbors = neighbors[on_detector]
+            selected = (np.isfinite(flat_rate[neighbors]) &
+                        (flat_rate[neighbors] > maxrate / 4.0) )
+            selected_neighbors = neighbors[selected]
+            flat_mask[selected_neighbors] |= np.uint8(4)
+            flat_hot_neighbors[selected_neighbors] = True
 
     nbad = int(np.count_nonzero(~np.isfinite(dark)))
     dark[~np.isfinite(dark)] = 0.0
     chi2[~np.isfinite(chi2)] = 0.0
-    medrate = float(np.nanmedian(rate))
+    medrate = float(utils.idl_median(rate))
     rate[~np.isfinite(rate)] = 0.0
 
     for ylo in range(0, ny, row_block):
@@ -229,12 +238,10 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
             if path.exists() or path.is_symlink():
                 path.unlink()
 
-        dtype = np.dtype([
-            ("num", np.int64), ("chip", "S1"), ("nframes", np.int32),
-            ("nreads", np.int32), ("nsat", np.int64), ("nhot", np.int64),
-            ("nhotneigh", np.int64), ("nbad", np.int64),
-            ("medrate", np.float64), ("psfid", np.int64), ("nneg", np.int64),
-        ])
+        dtype = np.dtype([("NUM", np.int64), ("NFRAMES", np.int32),
+                          ("NREADS", np.int32), ("NSAT", np.int64), ("NHOT", np.int64),
+                          ("NHOTNEIGH", np.int64), ("NBAD", np.int64),
+                          ("MEDRATE",np.float64), ("PSFID", np.int64), ("NNEG", np.int64)])
         darklog = np.zeros(3, dtype=dtype)
         plotdir = os.path.join(darkdir, "plots")
         os.makedirs(plotdir, exist_ok=True)
@@ -261,7 +268,7 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
             )
             darkplot(np.moveaxis(dark, 0, -1), mask, plotbase)
             darklog[ichip] = (
-                darkid, chip.encode(), stats["nframes"], stats["nreads"],
+                darkid, stats["nframes"], stats["nreads"],
                 stats["nsat"], stats["nhot"], stats["nhotneigh"], stats["nbad"],
                 stats["medrate"], 0, stats["nneg"],
             )
@@ -270,13 +277,20 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
 
         fits.BinTableHDU(darklog, name="DARKLOG").writeto(summary_file,
                                                           overwrite=True)
+
+
         html_rows = []
-        for row in darklog:
+        for ichip, row in enumerate(darklog):
             html_rows.append({
-                "num": int(row["num"]), "chip": row["chip"].decode(),
-                "nreads": int(row["nreads"]), "nframes": int(row["nframes"]),
-                "medrate": float(row["medrate"]), "nsat": int(row["nsat"]),
-                "nhot": int(row["nhot"]), "nhotneigh": int(row["nhotneigh"]),
-                "nbad": int(row["nbad"]), "nneg": int(row["nneg"]),
+                "num": int(row["NUM"]),
+                "chip": CHIPS[ichip],
+                "nreads": int(row["NREADS"]),
+                "nframes": int(row["NFRAMES"]),
+                "medrate": float(row["MEDRATE"]),
+                "nsat": int(row["NSAT"]),
+                "nhot": int(row["NHOT"]),
+                "nhotneigh": int(row["NHOTNEIGH"]),
+                "nbad": int(row["NBAD"]),
+                "nneg": int(row["NNEG"]),
             })
         darkhtml(darkdir, html_rows)
