@@ -3348,12 +3348,8 @@ def rundailycals(load,mjds,slurmpars,caltypes=None,clobber=False,logger=None,
                 # Check if files exist already
                 docal[j] = True
                 if clobber is not True:
-                    outfile = load.filename(
-                        filecodes[i], num=num1, mjd=mjd1)
-                    product = {
-                        'arcs': 'wave',
-                        'dailywave': 'dailywave',
-                    }.get(ctype, ctype)
+                    outfile = load.filename(filecodes[i], num=num1, mjd=mjd1)
+                    product = {'arcs':'wave','dailywave':'dailywave'}.get(ctype, ctype)
                     exists = load.product_exists(product, num1)
                     if exists:
                         logger.info(str(j+1)+'  '+os.path.basename(outfile)+' already exists and clobber==False')
