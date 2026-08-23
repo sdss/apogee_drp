@@ -204,6 +204,16 @@ class ApLoadVisitBackend(NativeVisitBackendMixin):
         lsf = self._files("LSF", num=plan["lsfid"], chips=chips)
         return wave, lsf
 
+    def resolve_telluric_files(self, frame, plan):
+        """Resolve the preconvolved Telluric calibration for this visit."""
+        tellid = f"{plan['waveid']}-{plan['lsfid']}"
+        files = self.load.product_files("telluric", tellid)
+        if len(files) != 3:
+            raise ValueError(
+                f"Telluric product {tellid} resolved to {len(files)} files"
+            )
+        return files
+    
     def read_relflux(self, filename: str) -> np.ndarray:
         with fits.open(filename, memmap=False) as hdul:
             index = 2 if len(hdul) > 2 else 1

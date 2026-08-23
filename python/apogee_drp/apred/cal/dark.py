@@ -6,6 +6,7 @@ import platform
 import socket
 import tempfile
 import time
+import gc
 from pathlib import Path
 
 import numpy as np
@@ -88,6 +89,7 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
                   where=number > 0)
         chi2[:, ylo:yhi, :][number == 0] = 0.0
 
+    del samples, model, variance, good, contribution, number
     rate = (dark[-1] - dark[1]) / float(nread - 2)
     mask = np.zeros((ny, nx), dtype=np.uint8)
     nonfinite_rate = ~np.isfinite(rate)
@@ -259,9 +261,12 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
                     if ramps is not None:
                         ramps.flush()
                         mmap = getattr(ramps, "_mmap", None)
+                        del ramps
+                        gc.collect()
                         if mmap is not None and not mmap.closed:
                             mmap.close()
-                        del ramps
+                        del mmap
+                        gc.collect()
             _add_provenance(header, darkid, load)
             fits.HDUList([
                 fits.PrimaryHDU(header=header),
