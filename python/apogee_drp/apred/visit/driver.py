@@ -431,32 +431,23 @@ def ap1dvisit(
             plan["platetype"] = plate_type
             plan.setdefault("field", "")
             fps = int(plan["mjd"]) >= 59556
-            survey = str(
-                plan.get(
-                    "survey",
-                    "mwm" if int(plan["plateid"]) >= 15000 or int(plan["plateid"]) == 0
-                    else "apogee",
-                )
-            )
+            survey = str(plan.get("survey", "mwm" if
+                                  int(plan["plateid"]) >= 15000 or int(plan["plateid"])
+                                  == 0 else "apogee"))
             use_force = bool(plan.get("force", False) if force is None else force)
             dirs = backend.directories(plan)
             plugmap = None if plate_type == "cal" else backend.load_plugmap(
-                plan, mapper_data=mapper_data
-            )
+                plan, mapper_data=mapper_data)
             if plugmap is not None:
                 backend.set_plugmap_mjd(plugmap, int(plan["mjd"]))
                 fiberdata = backend.fiber_data(plugmap)
-                science = _science_indices(
-                    fiberdata, single=plate_type == "single"
-                )
+                science = _science_indices(fiberdata,single=plate_type == "single")
             else:
                 fiberdata = None
                 science = np.array([], dtype=int)
 
             if plugmap is not None and int(plan.get("fluxid", 0)) != 0:
-                fluxfile = backend.filename(
-                    "Flux", chip="b", num=plan["fluxid"]
-                )
+                fluxfile = backend.filename("Flux", chip="b", num=plan["fluxid"])
                 relflux = backend.read_relflux(str(fluxfile))
             else:
                 relflux = np.ones(300, dtype=np.float32)
@@ -465,16 +456,9 @@ def ap1dvisit(
             wavefiles, lsffiles = backend.calibration_files(plan, CHIPS)
             backend.validate_files(wavefiles, mjd=int(plan["mjd"]), kind="Wave")
             backend.validate_files(lsffiles, mjd=int(plan["mjd"]), kind="LSF")
-            plate_dir = str(
-                backend.filename(
-                    "Plate",
-                    mjd=plan["mjd"],
-                    plate=plan["plateid"],
-                    chip="a",
-                    field=plan["field"],
-                    directory=True,
-                )
-            )
+            plate_dir = str(backend.filename("Plate",mjd=plan["mjd"],
+                                             plate=plan["plateid"], chip="a",
+                                             field=plan["field"], directory=True))
             Path(plate_dir).mkdir(parents=True, exist_ok=True)
             plots_dir = str(Path(plate_dir) / "plots")
             Path(plots_dir).mkdir(parents=True, exist_ok=True)
@@ -492,9 +476,7 @@ def ap1dvisit(
 
             if Path(outcome.plate_file).exists() and not clobber:
                 outcome.skipped_plate_reduction = True
-                source_frame = backend.load_frame(
-                    [outcome.plate_file], kind="Plate"
-                )
+                source_frame = backend.load_frame([outcome.plate_file],kind="Plate")
             else:
                 for j, exposure in enumerate(exposures):
                     frame_start = time.monotonic()
@@ -502,55 +484,32 @@ def ap1dvisit(
                     cfiles = list(backend.cframe_files(plan, framenum, CHIPS))
                     try:
                         if clobber or not all(Path(f).exists() for f in cfiles):
-                            files = list(
-                                backend.one_d_files(plan, framenum, CHIPS)
-                            )
-                            backend.validate_files(
-                                files, mjd=int(plan["mjd"]), kind="1D"
-                            )
+                            files = list(backend.one_d_files(plan,framenum,CHIPS))
+                            backend.validate_files(files,mjd=int(plan["mjd"]),kind="1D")
                             raw = backend.load_frame(files, kind="1D")
-                            sanitize_frame(
-                                raw,
-                                chip_arrays=backend.chip_pixel_arrays,
-                            )
-                            frame = backend.prepare_frame(
-                                raw,
-                                plan=plan,
-                                wavefiles=wavefiles,
-                                lsffiles=lsffiles,
-                                plate_dir=plate_dir,
-                                newwave=newwave,
-                            )
-                            commanded = float(
-                                backend.header_value(frame, "DITHPIX", 0.0)
-                            )
-                            if (
-                                j > 0
-                                and commanded != 0
-                                and reference_command is not None
-                                and abs(commanded - reference_command) > 0.002
-                            ):
+                            sanitize_frame(raw,chip_arrays=backend.chip_pixel_arrays)
+                            frame = backend.prepare_frame(raw, plan=plan,
+                                                          wavefiles=wavefiles,
+                                                          lsffiles=lsffiles,
+                                                          plate_dir=plate_dir,
+                                                          newwave=newwave)
+                            commanded = float(backend.header_value(frame, "DITHPIX",0.0))
+                            if (j > 0 and commanded != 0 and reference_command is not None and
+                                 abs(commanded - reference_command) > 0.002 ):
                                 nodither = False
                             nofit = plate_type == "single"
                             if j > 0 and reference_frame is not None:
                                 shiftout = backend.dither_shift(
-                                    reference_frame,
-                                    frame,
-                                    plugmap=plugmap,
-                                    plan=plan,
-                                    plotfile=str(
-                                        Path(plots_dir)
-                                        / f"dithershift-{framenum}"
-                                    ),
-                                    nofit=nofit,
-                                )
+                                    reference_frame, frame,
+                                    plugmap=plugmap, plan=plan,
+                                    plotfile=str( Path(plots_dir) /
+                                                  f"dithershift-{framenum}" ),
+                                    nofit=nofit)
                             else:
-                                shiftout = {
-                                    "shiftfit": np.zeros(2),
-                                    "shifterr": 0.0,
-                                    "chipshift": np.zeros((3, 2)),
-                                    "chipfit": np.zeros(4),
-                                }
+                                shiftout = {"shiftfit": np.zeros(2),
+                                            "shifterr": 0.0,
+                                            "chipshift": np.zeros((3, 2)),
+                                            "chipfit": np.zeros(4)}
                             if j == 0 or nodither:
                                 reference_frame = frame
                                 if commanded != 0:
@@ -563,53 +522,33 @@ def ap1dvisit(
                                 frame, "APDITHERSHIFT: Measuring dither shift"
                             )
                             if shiftfit[0] == 0:
-                                backend.add_history(
-                                    frame,
-                                    "APDITHERSHIFT: This is the reference frame",
-                                )
+                                backend.add_history(frame,
+                                        "APDITHERSHIFT: This is the reference frame")
                             backend.add_header(frame, "DITHSH", float(shiftfit[0]))
-                            backend.add_header(
-                                frame, "DITHSLOP", float(shiftfit[1])
-                            )
-                            backend.add_header(
-                                frame,
-                                "EDITHSH",
-                                float(shiftout.get("shifterr", 0.0)),
-                            )
+                            backend.add_header(frame, "DITHSLOP", float(shiftfit[1]))
+                            backend.add_header(frame, "EDITHSH",
+                                               float(shiftout.get("shifterr", 0.0)))
                             if ap1dwavecal:
                                 frame = backend.wavelength_calibrate(
-                                    frame,
-                                    plugmap=plugmap,
-                                    plan=plan,
-                                    plotfile=str(
-                                        Path(plots_dir)
-                                        / f"pixshift-{framenum}"
-                                    ),
-                                    dithonly=dithonly,
-                                )
-                            frame = backend.sky_subtract(
-                                frame, plugmap=plugmap, force=use_force
-                            )
+                                    frame, plugmap=plugmap, plan=plan,
+                                    plotfile=str( Path(plots_dir) /
+                                                  f"pixshift-{framenum}" ),
+                                    dithonly=dithonly)
+                            frame = backend.sky_subtract(frame, plugmap=plugmap,
+                                                         force=use_force)
                             if plate_type in {"sky", "cal"}:
                                 continue
-                            frame, tellstar = backend.telluric_correct(
-                                frame,
-                                plugmap=plugmap,
-                                plan=plan,
-                                plots_dir=plots_dir,
-                                test=test,
-                                force=use_force,
-                            )
+                            frame, tellstar = backend.telluric_correct(frame,
+                                                      plugmap=plugmap, plan=plan,
+                                                      plots_dir=plots_dir, test=test,
+                                                      force=use_force)
                             tellstars.append(tellstar)
                             backend.write_cframes(frame, plugmap, cfiles)
 
-                        backend.validate_files(
-                            cfiles, mjd=int(plan["mjd"]), kind="Cframe"
-                        )
+                        backend.validate_files(cfiles,
+                                               mjd=int(plan["mjd"]), kind="Cframe" )
                         frame = backend.load_frame(cfiles, kind="Cframe")
-                        commanded = float(
-                            backend.header_value(frame, "DITHPIX", 0.0)
-                        )
+                        commanded = float(backend.header_value(frame,"DITHPIX",0.0))
                         if reference_command is None:
                             reference_command = commanded
                             reference_frame = frame
@@ -618,26 +557,14 @@ def ap1dvisit(
                             and abs(commanded - reference_command) > 0.002
                         ):
                             nodither = False
-                        score = _frame_score(
-                            backend,
-                            frame,
-                            fiberdata,
-                            science,
-                            single=plate_type == "single",
-                        )
-                        shifts.append(
-                            _shift_record(
-                                backend, frame, j, framenum, score
-                            )
-                        )
+                        score = _frame_score(backend, frame, fiberdata,
+                                             science, single=plate_type=="single")
+                        shifts.append(_shift_record(backend,frame,j,framenum,score))
                         allframes.append(frame)
                         outcome.processed_frames += 1
-                        log.info(
-                            "%s frame %s completed in %.1f s",
-                            planfile,
-                            framenum,
-                            time.monotonic() - frame_start,
-                        )
+                        log.info("%s frame %s completed in %.1f s",
+                                 planfile, framenum, time.monotonic() -
+                                 frame_start)
                     except Exception as exc:
                         outcome.failed_frames += 1
                         message = f"frame {framenum}: {exc}"
@@ -661,21 +588,15 @@ def ap1dvisit(
                     raise PlanFailure(
                         f"{telluric_errors} frame(s) had telluric errors"
                     )
-                combined, pairs = backend.combine_dithers(
-                    allframes, shifts, plugmap=plugmap, nodither=nodither
-                )
+                combined, pairs = backend.combine_dithers(allframes,shifts,
+                                                          plugmap=plugmap,
+                                                          nodither=nodither)
                 if pairs is None and not nodither:
                     raise PlanFailure("no dither pairs")
                 final = backend.flux_calibrate(combined, plugmap=plugmap)
-                backend.write_visit_products(
-                    final,
-                    plan=plan,
-                    plugmap=plugmap,
-                    shifts=shifts,
-                    pairs=pairs,
-                    survey=survey,
-                    relflux=relflux,
-                )
+                backend.write_visit_products(final, plan=plan, plugmap=plugmap,
+                                             shifts=shifts, pairs=pairs,
+                                             survey=survey, relflux=relflux)
                 source_frame = final
 
             if plate_type not in {"normal", "single"}:
@@ -685,17 +606,12 @@ def ap1dvisit(
             outcome.visit_summary_file = summary
             if Path(summary).exists() and not clobber:
                 continue
-            rows = backend.build_visit_rows(
-                plan=plan,
-                plugmap=plugmap,
-                object_indices=object_indices,
-                survey=survey,
-                nframes=nframes,
-                relflux=relflux,
-            )
-            backend.write_visit_summary(
-                summary, rows, plan=plan, source_frame=source_frame
-            )
+            rows = backend.build_visit_rows(plan=plan, plugmap=plugmap,
+                                            object_indices=object_indices,
+                                            survey=survey, nframes=nframes,
+                                            relflux=relflux)
+            backend.write_visit_summary(summary, rows, plan=plan,
+                                        source_frame=source_frame)
             if object_indices.size:
                 backend.ingest_visits(rows)
         except Exception as exc:
