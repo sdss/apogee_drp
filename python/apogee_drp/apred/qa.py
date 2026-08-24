@@ -673,8 +673,8 @@ def makePlateSum(load=None, telescope=None, ims=None, imsReduced=None, plate=Non
 
         ind = 1
         if len(ims) < 2: ind = 0
-        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[ind],chip='c', fps=fps)
-        cframehdr = fits.getheader(cframefile.replace('Cframe-','Cframe-a-'))
+        cframefile = load.filename('Cframe', plate=int(plate), mjd=mjd, num=ims[ind],chip='a', fps=fps)
+        cframehdr = fits.getheader(cframefile)
         pfile = pfile.replace('.fits','')
 
         # Get moon distance and phase.
