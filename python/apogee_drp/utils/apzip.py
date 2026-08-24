@@ -625,6 +625,7 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
             if os.path.exists(files): os.remove(files)
 
     finally:
+        # remove temporary apzip file
         if outfile_uncmp is not None and os.path.exists(outfile_uncmp):
             try:
                 os.remove(outfile_uncmp)
@@ -633,8 +634,16 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
                     f"Could not remove temporary APZIP file "
                     f"{outfile_uncmp}: {error}"
                 )
-
-        # Remove lock file
+        # remove incomplete apzip output
+        if not completed and os.path.exists(finalfile):
+            try:
+                os.remove(finalfile)
+            except OSError as error:
+                warnings.warn(
+                    f"Could not remove incomplete APZIP output "
+                    f"{finalfile}: {error}"
+                )
+        # remove lock file
         if os.path.exists(lockfile):
             try:
                 os.remove(lockfile)
