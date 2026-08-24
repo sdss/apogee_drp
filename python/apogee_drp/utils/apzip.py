@@ -157,6 +157,7 @@ def zip(files,delete=True,verbose=True):
         if verbose: print('Step I: Making dCounts temporary file')
 
         tid,tfile = tempfile.mkstemp(prefix="apzip",dir=tempdir)
+        tid.close()
         dcounts_tempfile = tfile
 
         # Initialize the dCounts temporary file
@@ -187,7 +188,6 @@ def zip(files,delete=True,verbose=True):
             if shape != shape1:
                 print('Images dimensions of READ1 (in exten=1) and READ'+str(i)+' (in exten='+str(i)+') do NOT MATCH')
                 if os.path.exists(dcounts_tempfile): os.remove(dcounts_tempfile)
-                os.close(tid)
                 inhdul.close()
                 return
 
@@ -216,7 +216,6 @@ def zip(files,delete=True,verbose=True):
         # Close dcounts_tempfile
         temphdul.writeto(dcounts_tempfile,overwrite=True,checksum=True)
         temphdul.close()
-        os.close(tid)
 
         # Calculate average dCounts
         avg_dcounts = np.round( tot_dcounts/(nreads-1) ).astype(np.int32)  # must be an integer
@@ -225,6 +224,7 @@ def zip(files,delete=True,verbose=True):
         # Initialize the final (pre-compressed) file
         #--------------------------------------------
         tid2,tfile2 = tempfile.mkstemp(prefix="apzip",dir=tempdir)
+        tid2.close()
         outfile_precmp = tfile2
 
         # Put Average dCounts in HDU0 with the original header
@@ -304,6 +304,7 @@ def zip(files,delete=True,verbose=True):
     else:
         # Making pre-compressed temporary filename
         tid2,tfile2 = tempfile.mkstemp(prefix="apzip",dir=tempdir)
+        tid2.close()
         outfile_precmp = tfile2
         shutil.filecopy(files,outfile_precmp)
 
@@ -351,7 +352,6 @@ def zip(files,delete=True,verbose=True):
 
     # Delete temporary files
     if os.path.exists(outfile_precmp): os.remove(outfile_precmp)  # delete temporary file
-    os.close(tid2)
 
     # Delete original file
     if delete:
@@ -498,9 +498,10 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
 
     # Uncompress the input file to a temporary file
     # get a unique filename (and delete the created empty file)
-    tid2,outfile_uncmp = tempfile.mkstemp(prefix="apzip",dir=tempdir)
+    tid2, outfile_uncmp = tempfile.mkstemp(prefix="apzip", dir=tempdir)
+    os.close(tid2)
     if os.path.exists(outfile_uncmp): os.remove(outfile_uncmp)
-
+    
 
     # Step I: Uncompress the file with funpack
     #-------------------------------------------
