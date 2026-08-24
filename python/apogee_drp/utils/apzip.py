@@ -519,159 +519,105 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
                 import pdb; pdb.set_trace()
                 return
 
-    # Get number of reads
-    flag = 0
-    nreads = 0
-    hdu = fits.open(outfile_uncmp)
-    nreads = len(hdu)-1
-    hdu.close()
+    # Now read the fits file
+    with fits.open(outfile_uncmp, memmap=False, uint=True) as packed:
+        nreads = len(packed) - 1
 
-    if silent==False:
-        print('        Nreads = ',str(nreads))
+        if not silent:
+            print(f"        Nreads = {nreads}")
 
-    # There is data to uncompress, Nreads>0
-    #---------------------------------------
-    if nreads>=1:
+        if nreads >= 1:
+            if not silent:
+                print("Step II: Reconstructing the original reads")
 
-        # Step II: Reconstructing the reads
-        #-----------------------------------
-        if silent==False:
-            print('Step II: Reconstructing the original reads')
+            # average dCounts image
+            avg_dcounts = np.array(packed[0].data, copy=True)
+            head0 = packed[0].header.copy()
 
-        # Load average dCounts image
-        avg_dcounts,head0 = fits.getdata(outfile_uncmp,0,header=True)
-        #FITS_READ,outfile_uncmp,avg_dcounts,head0,exten=0,/no_abort,/noscale
-        dcount = head0.get('CHECKSUM')
-        sz0 = avg_dcounts.shape
-        if dcount is not None and no_checksum==False:
-            print('checking checksum 0')
-            pass
-            #res = FITS_TEST_CHECKSUM(head0,avg_dcounts,errmsg=errmsg)
-            #if res == -1:
-            #    error = '        Checksum failed on '+files+' (ext=0)'
-            #    if silent==False then print,error
-            #    return
+            # Load read=1 (first one)
+            read1 = np.array(packed[1].data, copy=True)
+            head1 = packed[1].header.copy()
 
-        # Load read=1 (first one)
-        read1,head1 = fits.getdata(outfile_uncmp,1,header=True)
-        sz1 = read1.shape
-        dcount = head1.get('CHECKSUM')
-        if dcount is not None and no_checksum==False:
-            print('checking checksum 1')
-            pass
-            #res = FITS_TEST_CHECKSUM(head1,read1,errmsg=errmsg)
-            #if res == -1:
-            #    error = '        Checksum failed on '+files+' (ext=1)'
-            #    if silent==False then print,error
-            #    return
+            if avg_dcounts.shape != read1.shape:
+                raise ValueError(
+                    "AVERAGE DCOUNTS and READ1 dimensions do not match: "
+                    f"{avg_dcounts.shape} != {read1.shape}"
+                )
 
-        # Check that image dimensions of AVG_DCOUNTS and READ1 match
-        if sz0 != sz1:
-            error = '         Images dimensions of AVERAGE DCOUNTS (in exten=0) and READ1 (in exten=1) do NOT MATCH'
-            if silent==False:
-                print(error)
-            if os.path.exists(outfile_uncmp): os.remove(outfile_uncmp)  # delete temporary file
-            return
+            output_hdus = fits.HDUList()
 
-        # Initiate output HDUList
-        hdu = fits.HDUList()
+            # Prepare the output primary header
+            head0["SIMPLE"] = True
+            head0["BITPIX"] = 16
+            head0["NAXIS"] = 0
+            for key in ("NAXIS1", "NAXIS2", "PCOUNT", "GCOUNT",
+                        "CHECKSUM", "DATASUM", "BZERO", "BSCALE"):
+                head0.remove(key, ignore_missing=True)
+            output_hdus.append(fits.PrimaryHDU(header=head0))
 
-        # Write primary HDU
-        head0['SIMPLE'] = 'T',''
-        head0['BITPIX'] = 16,''
-        head0['NAXIS'] = 0
-        todel = ['NAXIS1','NAXIS2','PCOUNT','GCOUNT','CHECKSUM','DATASUM','BZERO','BSCALE']
-        for nd in todel:
-            if head0.get(nd) is not None:
-                del head0[nd]
-        hdu.append(fits.PrimaryHDU(header=head0))
+            # First reconstructed read
+            head1["XTENSION"] = "IMAGE"
+            head1["NAXIS"] = 2
+            head1["NAXIS1"] = read1.shape[1]
+            head1["NAXIS2"] = read1.shape[0]
+            head1["PCOUNT"] = 0
+            head1["GCOUNT"] = 1
+            for key in ("SIMPLE", "CHECKSUM", "DATASUM"):
+                head1.remove(key, ignore_missing=True)
+            output_hdus.append(fits.ImageHDU(read1, head1))
 
-        # Write first read
-        head1['XTENSION'] = 'IMAGE',''
-        bitpix = head1.get('BITPIX')
-        if bitpix is not None:
-            head1['BITPIX'] = bitpix,''
-        head1['NAXIS'] = 2
-        head1['NAXIS1'] = len(read1[0,:]),''
-        head1['NAXIS2'] = len(read1[:,0]),''
-        head1['PCOUNT'] = 0,''
-        head1['GCOUNT'] = 1,''
-        todel = ['SIMPLE','CHECKSUM','DATASUM']
-        for nd in todel:
-            if head1.get(nd) is not None:
-                del head1[nd]
-        hdu.append(fits.ImageHDU(read1,head1))        
+            # Loop through extensions and add them together
+            last_image = read1
+            for index in range(2, nreads + 1):
+                resid = np.array(packed[index].data, dtype=np.int32, copy=True)
+                header = packed[index].header.copy()
 
-        # Loop through extensions and add them together
-        lastim = read1
-        for i in np.arange(2,nreads+1):
-            # Read in "residual" image
-            residim,head = fits.getdata(outfile_uncmp,i,header=True)
-            dcount = head.get('CHECKSUM')
-            sz = residim.shape
-            if dcount is not None and no_checksum==False:
-                print('checking checksum',i)
-                pass
-                #res = FITS_TEST_CHECKSUM(head,residim,errmsg=errmsg)
-                #if res == -1:
-                #    error = '         Checksum failed on '+files+' (ext='+strtrim(i,2)+')'
-                #    if silent==False then print,error
-                #    return
+                if resid.shape != read1.shape:
+                    raise ValueError(
+                        f"READ1 and residual {index - 1} dimensions do not "
+                        f"match: {read1.shape} != {resid.shape}"
+                    )
 
-            # Check that the image dimension is correct
-            if sz != sz1:
-                error = '         Images dimensions of READ1 (in exten=1) and RESID'+strtrim(i-1,2)+' (in exten='+strtrim(i,2)+') do NOT MATCH'
-                if silent==False:
-                    print(error)
-                if os.path.exists(outfile_uncmp): os.remove(outfile_uncmp)  # delete temporary file
-                return
+                # Re-construct the original counts
+                #----------------------------------
+                #  This is how the dcounts/resid were created:
+                #    dcounts[i] = read[i+1]-read[i]
+                #    resid[i] = dcounts[i] - avg_dcounts
+                #  So, adding avg_dcounts to resid gives back dcounts
+                #  and you just keep adding dCounts to the last read to
+                #  reconstruct all of the reads.
+                
+                original = (last_image.astype(np.int32) + resid +
+                            avg_dcounts ).astype(np.uint32)
 
-            # Re-construct the original counts
-            #----------------------------------
-            #  This is how the dcounts/resid were created:
-            #    dcounts[i] = read[i+1]-read[i]
-            #    resid[i] = dcounts[i] - avg_dcounts
-            #  So, adding avg_dcounts to resid gives back dcounts
-            #  and you just keep adding dCounts to the last read to
-            #  reconstruct all of the reads.
-            origim = lastim.astype(int) + residim + avg_dcounts
-            origim = origim.astype(np.uint32)         # must be unsigned integer
-            
-            # Fix header
-            head['BITPIX'] = 16,''     # unsigned integer
-            head['XTENSION'] = 'IMAGE','' #,before='SIMPLE'
-            head['NAXIS'] = 2
-            head['NAXIS1'] = len(origim[0,:]),'' #, after='NAXIS'
-            head['NAXIS2'] = len(origim[:,0]),'' #, after='NAXIS1'
-            head['PCOUNT'] = 0,'' #, after='NAXIS2'
-            head['GCOUNT'] = 1,'' #, after='PCOUNT'
-            head['BZERO'] = 32768,''
-            head['BSCALE'] = 1,''
-            todel = ['SIMPLE','CHECKSUM','DATASUM']
-            for nd in todel:
-                if head.get(nd) is not None:
-                    del head[nd]
-            
-            # Now write the original read
-            hdu.append(fits.ImageHDU(origim,head))   
+                header["BITPIX"] = 16
+                header["XTENSION"] = "IMAGE"
+                header["NAXIS"] = 2
+                header["NAXIS1"] = original.shape[1]
+                header["NAXIS2"] = original.shape[0]
+                header["PCOUNT"] = 0
+                header["GCOUNT"] = 1
+                header["BZERO"] = 32768
+                header["BSCALE"] = 1
+                for key in ("SIMPLE", "CHECKSUM", "DATASUM"):
+                    header.remove(key, ignore_missing=True)
 
-            # Save last read
-            lastim = origim
+                output_hdus.append(fits.ImageHDU(original, header))
+                last_image = original
 
-        hdu.writeto(finalfile,overwrite=True,checksum=True)
-        hdu.close()
+            output_hdus.writeto(finalfile, overwrite=True, checksum=True)
+            output_hdus.close()
 
-    # No data to uncompress, Nreads=0
-    #---------------------------------
-    else:
-        # Just copy the file
-        if os.path.exists(finalfile): os.remove(finalfile)
-        shutil.copyfile(outfile_uncmp,finalfile)
-
-    print('Writing to '+finalfile)
+        # No data to uncompress, Nreads=0
+        else:
+            # just copy the file
+            shutil.copyfile(outfile_uncmp, finalfile)
 
     # Delete temporary file
-    if os.path.exists(outfile_uncmp): os.remove(outfile_uncmp)
+    if os.path.exists(outfile_uncmp):
+        os.remove(outfile_uncmp)
+
+    print('Writing to '+finalfile)
 
     # Delete original file
     if delete:
