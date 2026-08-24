@@ -12,7 +12,7 @@ import warnings
 
 import numpy as np
 from astropy.io import fits
-from scipy.ndimage import binary_dilation, median_filter
+from scipy.ndimage import median_filter
 
 from ...utils import apload, utils
 from .. import ap3d

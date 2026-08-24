@@ -172,13 +172,17 @@ def test_load_ramps_creates_memmap(monkeypatch, tmp_path):
     monkeypatch.setattr(dark.ap3d, "load_raw_ramp", load_raw)
     monkeypatch.setattr(dark.ap3d, "reference_correct", correct)
     ramps, header = dark._load_ramps(
-        load, [11, 12], "b", tmp_path, max_read=7, unlock=True,
-        verbose=True)
-    assert isinstance(ramps, np.memmap)
-    assert ramps.shape == (2, 4, 3, 2)
-    np.testing.assert_array_equal(ramps[:, :, 0, 0],
-                                  [[10, 0, 1, 2], [20, 0, 1, 2]])
-    assert header["TEST"] == 1
+    load, [11, 12], "b", tmp_path, max_read=7,
+    unlock=True, verbose=True)
+    try:
+        assert isinstance(ramps, np.memmap)
+        assert ramps.shape == (2, 4, 3, 2)
+        np.testing.assert_array_equal(
+            ramps[:, :, 0, 0],
+            [[10, 0, 1, 2], [20, 0, 1, 2]])
+        assert header["TEST"] == 1
+    finally:
+        dark._close_memmap(ramps)
     assert Path(load_calls[0][0]).name == "apR-b-00000011.fits"
     assert load_calls[0][1] == {
         "max_read": 7, "temporary_directory": tmp_path,
@@ -186,7 +190,7 @@ def test_load_ramps_creates_memmap(monkeypatch, tmp_path):
     }
     assert correction_calls == [{"indiv": 3}, {"indiv": 3}]
 
-
+    
 def test_load_ramps_rejects_inconsistent_shapes(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
     shapes = iter([(4, 3, 2), (5, 3, 2)])
