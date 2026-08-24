@@ -488,8 +488,8 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
 
 
     outfile_uncmp = None
+    completed = False
     try:
-
         if os.path.exists(finalfile) and clobber==False:
             if silent==False:
                 print('Overwriting ',finalfile)
@@ -609,12 +609,14 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
 
                 output_hdus.writeto(finalfile, overwrite=True, checksum=True)
                 output_hdus.close()
-
+                completed = True
+                
             # No data to uncompress, Nreads=0
             else:
                 # just copy the file
                 shutil.copyfile(outfile_uncmp, finalfile)
-
+                completed = True
+                
         if silent==False:
             print('Writing to '+finalfile)
 
