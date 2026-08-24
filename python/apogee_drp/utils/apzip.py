@@ -486,146 +486,166 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
         os.makedirs(os.path.dirname(lockfile),exist_ok=True)
     open(lockfile,'w').close()
 
-    if os.path.exists(finalfile) and clobber==False:
-        if silent==False:
-            print('Overwriting ',finalfile)
-        if os.path.exists(finalfile): os.remove(finalfile)
-    if os.path.exists(finalfile) and clobber==False:
-        if silent==False:
-            print(finalfile,' exists already.  Writing compressed file to ',finalfile+'.1')
-        finalfile = finalfile+'.1'
+
+    outfile_uncmp = None
+    try:
+
+        if os.path.exists(finalfile) and clobber==False:
+            if silent==False:
+                print('Overwriting ',finalfile)
+            if os.path.exists(finalfile): os.remove(finalfile)
+        if os.path.exists(finalfile) and clobber==False:
+            if silent==False:
+                print(finalfile,' exists already.  Writing compressed file to ',finalfile+'.1')
+            finalfile = finalfile+'.1'
 
 
-    # Uncompress the input file to a temporary file
-    # get a unique filename (and delete the created empty file)
-    tid2, outfile_uncmp = tempfile.mkstemp(prefix="apzip", dir=tempdir)
-    os.close(tid2)
-    if os.path.exists(outfile_uncmp): os.remove(outfile_uncmp)
+        # Uncompress the input file to a temporary file
+        # get a unique filename (and delete the created empty file)
+        tid2, outfile_uncmp = tempfile.mkstemp(prefix="apzip", dir=tempdir)
+        os.close(tid2)
+        if os.path.exists(outfile_uncmp): os.remove(outfile_uncmp)
     
 
-    # Step I: Uncompress the file with funpack
-    #-------------------------------------------
-    if silent==False:
-        print('Step I: Uncompress with funpack')
+        # Step I: Uncompress the file with funpack
+        #-------------------------------------------
+        if silent==False:
+            print('Step I: Uncompress with funpack')
 
-    try:
-        # -C suppresses checksum update
-        subprocess.run(["funpack", "-O", outfile_uncmp, "-C", files],
-                       shell=False, check=True)
-    except (OSError, subprocess.CalledProcessError):
-        if not silent:
-            print("funpack failed")
-        raise
-
-    # Now read the fits file
-    with fits.open(outfile_uncmp, memmap=False, uint=True) as packed:
-        nreads = len(packed) - 1
-
-        if not silent:
-            print(f"        Nreads = {nreads}")
-
-        if nreads >= 1:
+        try:
+            # -C suppresses checksum update
+            subprocess.run(["funpack", "-O", outfile_uncmp, "-C", files],
+                           shell=False, check=True)
+        except (OSError, subprocess.CalledProcessError):
             if not silent:
-                print("Step II: Reconstructing the original reads")
+                print("funpack failed")
+            raise
 
-            # average dCounts image
-            avg_dcounts = np.array(packed[0].data, copy=True)
-            head0 = packed[0].header.copy()
+        # Now read the fits file
+        with fits.open(outfile_uncmp, memmap=False, uint=True) as packed:
+            nreads = len(packed) - 1
 
-            # Load read=1 (first one)
-            read1 = np.array(packed[1].data, copy=True)
-            head1 = packed[1].header.copy()
+            if not silent:
+                print(f"        Nreads = {nreads}")
 
-            if avg_dcounts.shape != read1.shape:
-                raise ValueError(
-                    "AVERAGE DCOUNTS and READ1 dimensions do not match: "
-                    f"{avg_dcounts.shape} != {read1.shape}"
-                )
+            if nreads >= 1:
+                if not silent:
+                    print("Step II: Reconstructing the original reads")
 
-            output_hdus = fits.HDUList()
+                # average dCounts image
+                avg_dcounts = np.array(packed[0].data, copy=True)
+                head0 = packed[0].header.copy()
 
-            # Prepare the output primary header
-            head0["SIMPLE"] = True
-            head0["BITPIX"] = 16
-            head0["NAXIS"] = 0
-            for key in ("NAXIS1", "NAXIS2", "PCOUNT", "GCOUNT",
-                        "CHECKSUM", "DATASUM", "BZERO", "BSCALE"):
-                head0.remove(key, ignore_missing=True)
-            output_hdus.append(fits.PrimaryHDU(header=head0))
+                # Load read=1 (first one)
+                read1 = np.array(packed[1].data, copy=True)
+                head1 = packed[1].header.copy()
 
-            # First reconstructed read
-            head1["XTENSION"] = "IMAGE"
-            head1["NAXIS"] = 2
-            head1["NAXIS1"] = read1.shape[1]
-            head1["NAXIS2"] = read1.shape[0]
-            head1["PCOUNT"] = 0
-            head1["GCOUNT"] = 1
-            for key in ("SIMPLE", "CHECKSUM", "DATASUM"):
-                head1.remove(key, ignore_missing=True)
-            output_hdus.append(fits.ImageHDU(read1, head1))
-
-            # Loop through extensions and add them together
-            last_image = read1
-            for index in range(2, nreads + 1):
-                resid = np.array(packed[index].data, dtype=np.int32, copy=True)
-                header = packed[index].header.copy()
-
-                if resid.shape != read1.shape:
+                if avg_dcounts.shape != read1.shape:
                     raise ValueError(
-                        f"READ1 and residual {index - 1} dimensions do not "
-                        f"match: {read1.shape} != {resid.shape}"
+                        "AVERAGE DCOUNTS and READ1 dimensions do not match: "
+                        f"{avg_dcounts.shape} != {read1.shape}"
                     )
 
-                # Re-construct the original counts
-                #----------------------------------
-                #  This is how the dcounts/resid were created:
-                #    dcounts[i] = read[i+1]-read[i]
-                #    resid[i] = dcounts[i] - avg_dcounts
-                #  So, adding avg_dcounts to resid gives back dcounts
-                #  and you just keep adding dCounts to the last read to
-                #  reconstruct all of the reads.
-                
-                original = (last_image.astype(np.int32) + resid +
-                            avg_dcounts ).astype(np.uint32)
+                output_hdus = fits.HDUList()
 
-                header["BITPIX"] = 16
-                header["XTENSION"] = "IMAGE"
-                header["NAXIS"] = 2
-                header["NAXIS1"] = original.shape[1]
-                header["NAXIS2"] = original.shape[0]
-                header["PCOUNT"] = 0
-                header["GCOUNT"] = 1
-                header["BZERO"] = 32768
-                header["BSCALE"] = 1
+                # Prepare the output primary header
+                head0["SIMPLE"] = True
+                head0["BITPIX"] = 16
+                head0["NAXIS"] = 0
+                for key in ("NAXIS1", "NAXIS2", "PCOUNT", "GCOUNT",
+                            "CHECKSUM", "DATASUM", "BZERO", "BSCALE"):
+                    head0.remove(key, ignore_missing=True)
+                output_hdus.append(fits.PrimaryHDU(header=head0))
+
+                # First reconstructed read
+                head1["XTENSION"] = "IMAGE"
+                head1["NAXIS"] = 2
+                head1["NAXIS1"] = read1.shape[1]
+                head1["NAXIS2"] = read1.shape[0]
+                head1["PCOUNT"] = 0
+                head1["GCOUNT"] = 1
                 for key in ("SIMPLE", "CHECKSUM", "DATASUM"):
-                    header.remove(key, ignore_missing=True)
+                    head1.remove(key, ignore_missing=True)
+                output_hdus.append(fits.ImageHDU(read1, head1))
 
-                output_hdus.append(fits.ImageHDU(original, header))
-                last_image = original
+                # Loop through extensions and add them together
+                last_image = read1
+                for index in range(2, nreads + 1):
+                    resid = np.array(packed[index].data, dtype=np.int32, copy=True)
+                    header = packed[index].header.copy()
 
-            output_hdus.writeto(finalfile, overwrite=True, checksum=True)
-            output_hdus.close()
+                    if resid.shape != read1.shape:
+                        raise ValueError(
+                            f"READ1 and residual {index - 1} dimensions do not "
+                            f"match: {read1.shape} != {resid.shape}"
+                        )
 
-        # No data to uncompress, Nreads=0
-        else:
-            # just copy the file
-            shutil.copyfile(outfile_uncmp, finalfile)
+                    # Re-construct the original counts
+                    #----------------------------------
+                    #  This is how the dcounts/resid were created:
+                    #    dcounts[i] = read[i+1]-read[i]
+                    #    resid[i] = dcounts[i] - avg_dcounts
+                    #  So, adding avg_dcounts to resid gives back dcounts
+                    #  and you just keep adding dCounts to the last read to
+                    #  reconstruct all of the reads.
+                
+                    original = (last_image.astype(np.int32) + resid +
+                                avg_dcounts ).astype(np.uint32)
 
-    # Delete temporary file
-    if os.path.exists(outfile_uncmp):
-        os.remove(outfile_uncmp)
+                    header["BITPIX"] = 16
+                    header["XTENSION"] = "IMAGE"
+                    header["NAXIS"] = 2
+                    header["NAXIS1"] = original.shape[1]
+                    header["NAXIS2"] = original.shape[0]
+                    header["PCOUNT"] = 0
+                    header["GCOUNT"] = 1
+                    header["BZERO"] = 32768
+                    header["BSCALE"] = 1
+                    for key in ("SIMPLE", "CHECKSUM", "DATASUM"):
+                        header.remove(key, ignore_missing=True)
 
-    if silent==False:
-        print('Writing to '+finalfile)
+                    output_hdus.append(fits.ImageHDU(original, header))
+                    last_image = original
 
-    # Delete original file
-    if delete:
+                output_hdus.writeto(finalfile, overwrite=True, checksum=True)
+                output_hdus.close()
+
+            # No data to uncompress, Nreads=0
+            else:
+                # just copy the file
+                shutil.copyfile(outfile_uncmp, finalfile)
+
+        # Delete temporary file
+        if os.path.exists(outfile_uncmp):
+            os.remove(outfile_uncmp)
+
         if silent==False:
-            print('Deleting Original file ',files)
-        if os.path.exists(files): os.remove(files)
+            print('Writing to '+finalfile)
 
-    # Remove lock file
-    if os.path.exists(finalfile+'.lock'): os.remove(finalfile+'.lock')
+        # Delete original file
+        if delete:
+            if silent==False:
+                print('Deleting Original file ',files)
+            if os.path.exists(files): os.remove(files)
+
+    finally:
+        if outfile_uncmp is not None and os.path.exists(outfile_uncmp):
+            try:
+                os.remove(outfile_uncmp)
+            except OSError as error:
+                warnings.warn(
+                    f"Could not remove temporary APZIP file "
+                    f"{outfile_uncmp}: {error}"
+                )
+
+        # Remove lock file
+        if os.path.exists(lockfile):
+            try:
+                os.remove(lockfile)
+            except OSError as error:
+                warnings.warn(
+                    f"Could not remove APZIP lock {lockfile}: {error}"
+                )
 
     # Time elapsed
     dt = time.time()-t0
