@@ -515,7 +515,7 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
     except (OSError, subprocess.CalledProcessError):
         if not silent:
             print("funpack failed")
-            raise
+        raise
 
     # Now read the fits file
     with fits.open(outfile_uncmp, memmap=False, uint=True) as packed:
