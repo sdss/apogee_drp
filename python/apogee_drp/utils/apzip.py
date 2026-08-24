@@ -157,7 +157,7 @@ def zip(files,delete=True,verbose=True):
         if verbose: print('Step I: Making dCounts temporary file')
 
         tid,tfile = tempfile.mkstemp(prefix="apzip",dir=tempdir)
-        tid.close()
+        os.close(tid)
         dcounts_tempfile = tfile
 
         # Initialize the dCounts temporary file
@@ -224,7 +224,7 @@ def zip(files,delete=True,verbose=True):
         # Initialize the final (pre-compressed) file
         #--------------------------------------------
         tid2,tfile2 = tempfile.mkstemp(prefix="apzip",dir=tempdir)
-        tid2.close()
+        os.close(tid2)
         outfile_precmp = tfile2
 
         # Put Average dCounts in HDU0 with the original header
@@ -304,7 +304,7 @@ def zip(files,delete=True,verbose=True):
     else:
         # Making pre-compressed temporary filename
         tid2,tfile2 = tempfile.mkstemp(prefix="apzip",dir=tempdir)
-        tid2.close()
+        os.close(tid2)
         outfile_precmp = tfile2
         shutil.filecopy(files,outfile_precmp)
 
