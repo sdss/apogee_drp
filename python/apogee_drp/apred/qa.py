@@ -3127,7 +3127,10 @@ def apStarPlots(objid=None, load=None, plate=None, mjd=None, apred=None, telesco
         apStarNewest = os.path.basename(apStarCheck[-1])
         apStarPath = starDir + apStarNewest
         hdr = fits.getheader(apStarPath)
-        chmag = str("%.3f" % round(hdr['HMAG'], 3))
+        if np.isnan(float(hdr['HMAG'])):
+            chmag = 'NaN'
+        else:
+            chmag = str("%.3f" % round(hdr['HMAG'], 3))
         apStarModelPath = apStarPath.replace('.fits', '_out_doppler.pkl')
 
         # Read the apStar file

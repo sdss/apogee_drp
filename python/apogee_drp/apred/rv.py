@@ -99,7 +99,14 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
     allvisits['visitflag'] = allvisits['visitflag'].astype(np.uint64)
     # Add goodvisit column, default to bad
     allvisits['goodvisit'] = False
-    
+
+    # Lower the S/N threshold for faint stars
+    # need to fix NaNs
+    hmag = np.median(allvisits['hmag'])
+    if np.isnan(hmag) or hmag>=14.0:
+        snmin = 0.2
+        logger.info('H={:}  lowering snmin={:}'.format(hmag,snmin))
+        
     # Reset all the RV flags
     starmask = bitmask.StarBitMask()
     rvflags = ['SUSPECT_RV_COMBINATION','SUSPECT_BROAD_LINES','BAD_RV_COMBINATION','RV_REJECT','RV_SUSPECT',
