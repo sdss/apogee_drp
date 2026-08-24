@@ -6,8 +6,9 @@ import platform
 import socket
 import tempfile
 import time
-import gc
 from pathlib import Path
+import shutil
+import warnings
 
 import numpy as np
 from astropy.io import fits
@@ -140,43 +141,56 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
     }
     return dark, chi2, mask, rate, statistics
 
+def _close_memmap(array):
+    """Flush and close a NumPy memmap without deleting its file."""
+    if array is None:
+        return
+    array.flush()
+    mmap = getattr(array, "_mmap", None)
+    if mmap is not None and not mmap.closed:
+        mmap.close()
 
-def _load_ramps(load, images, chip, directory, max_read=None, unlock=False,
-                verbose=False):
+def _load_ramps(load, images, chip, directory, max_read=None,
+                unlock=False, verbose=False):
     """Store corrected ramps in a disk-backed array and return it."""
     ramps = None
     header = None
     filename = os.path.join(directory, f"ramps-{chip}.npy")
-    for iframe, number in enumerate(images):
-        rawfile = load.filename("R", num=int(number), chip=chip)
-        if verbose:
-            print(f"{iframe + 1}/{len(images)} {chip} {int(number)}")
-        cube, current_header = ap3d.load_raw_ramp(rawfile, max_read=max_read,
-                                                  temporary_directory=directory,
-                                                  unlock=unlock, verbose=verbose)
-        ramp, _, _, _ = ap3d.reference_correct(cube, current_header, indiv=3)
-        del cube
-        baseline = ramp[1].copy()
-        ramp[1:] -= baseline[None, :, :]
-        ramp = ramp.astype(np.float32, copy=False)
+    try:
+        for iframe, number in enumerate(images):
+            rawfile = load.filename("R", num=int(number), chip=chip)
+            if verbose:
+                print(f"{iframe + 1}/{len(images)} {chip} {int(number)}")
+            cube, current_header = ap3d.load_raw_ramp(
+                rawfile, max_read=max_read,
+                temporary_directory=directory,
+                unlock=unlock, verbose=verbose)
+            ramp, _, _, _ = ap3d.reference_correct(
+                cube, current_header, indiv=3)
+            del cube
+            baseline = ramp[1].copy()
+            ramp[1:] -= baseline[None, :, :]
+            ramp = ramp.astype(np.float32, copy=False)
+            if ramps is None:
+                shape = (len(images),) + ramp.shape
+                ramps = np.lib.format.open_memmap(
+                    filename, mode="w+", dtype=np.float32,
+                    shape=shape)
+                header = current_header.copy()
+            elif ramp.shape != ramps.shape[1:]:
+                raise ValueError(
+                    f"All ramps must have the same shape; "
+                    f"expected {ramps.shape[1:]}, received "
+                    f"{ramp.shape} for exposure {number}"
+                )
+            ramps[iframe] = ramp
         if ramps is None:
-            shape = (len(images),) + ramp.shape
-            ramps = np.lib.format.open_memmap(filename, mode="w+", dtype=np.float32,
-                                              shape=shape)
-            header = current_header.copy()
-        elif ramp.shape != ramps.shape[1:]:
-            raise ValueError(
-                f"All ramps must have the same shape; expected {ramps.shape[1:]}, "
-                f"received {ramp.shape} for exposure {number}"
-            )
-        ramps[iframe] = ramp
-        del ramp
-        del baseline
-    if ramps is None:
-        raise RuntimeError("No dark ramps were loaded")
-    ramps.flush()
-    return ramps, header
-
+            raise RuntimeError("No dark ramps were loaded")
+        ramps.flush()
+        return ramps, header
+    except Exception:
+        _close_memmap(ramps)
+        raise
 
 def _add_provenance(header, darkid, load):
     """Add software and execution provenance to a FITS header."""
@@ -214,8 +228,9 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
     darkid = int(images[0])
     load = apload.ApLoad(apred=apred, telescope=telescope)
 
-    with product_build_lock(load, "dark", darkid, clobber=clobber,
-                            unlock=unlock, verbose=verbose) as (build, files):
+    with product_build_lock(
+            load, "dark", darkid, clobber=clobber,
+            unlock=unlock, verbose=verbose) as (build, files):
         if not build:
             return
 
@@ -224,72 +239,90 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
         darkdir = load.filename("Dark", num=darkid, directory=True)
         rate_files = [
             os.path.join(
-                darkdir, f"{load.prefix}DarkRate-{chip}-{darkid:08d}.fits"
-            )
+                darkdir,
+                f"{load.prefix}DarkRate-{chip}-{darkid:08d}.fits")
             for chip in CHIPS
         ]
 
-        # DarkRate files are diagnostics rather than registered product
-        # components, so product_build_lock() intentionally does not know
-        # about them. Remove stale copies whenever the Dark is rebuilt.
+        # DarkRate files are diagnostic files rather than registered product
+        # components. Remove stale copies whenever the Dark is rebuilt.
         for filename in rate_files:
             path = Path(filename)
             if path.exists() or path.is_symlink():
                 path.unlink()
 
-        dtype = np.dtype([("NUM", np.int64), ("NFRAMES", np.int32),
-                          ("NREADS", np.int32), ("NSAT", np.int64), ("NHOT", np.int64),
-                          ("NHOTNEIGH", np.int64), ("NBAD", np.int64),
-                          ("MEDRATE",np.float64), ("PSFID", np.int64), ("NNEG", np.int64)])
-        darklog = np.zeros(3, dtype=dtype)
+        dtype = np.dtype([
+            ("NUM", np.int64),
+            ("NFRAMES", np.int32),
+            ("NREADS", np.int32),
+            ("NSAT", np.int64),
+            ("NHOT", np.int64),
+            ("NHOTNEIGH", np.int64),
+            ("NBAD", np.int64),
+            ("MEDRATE", np.float64),
+            ("PSFID", np.int64),
+            ("NNEG", np.int64),
+        ])
+        darklog = np.zeros(len(CHIPS), dtype=dtype)
+
         plotdir = os.path.join(darkdir, "plots")
         os.makedirs(plotdir, exist_ok=True)
 
         temporary_root = Path(utils.localdir()) / apred
         temporary_root.mkdir(parents=True, exist_ok=True)
-        
+
         for ichip, chip in enumerate(CHIPS):
             started = time.time()
-            with tempfile.TemporaryDirectory(prefix=f"mkdark-{chip}-",
-                                             dir=str(temporary_root)) as workdir:
-                ramps = None
+            workdir = tempfile.mkdtemp(
+                prefix=f"mkdark-{chip}-",
+                dir=str(temporary_root))
+            ramps = None
+
+            try:
+                ramps, header = _load_ramps(load, images, chip,
+                                            workdir, unlock=unlock, verbose=verbose)
                 try:
-                    ramps, header = _load_ramps(load, images, chip, workdir,
-                                                unlock=unlock, verbose=verbose)
                     dark, chi2, mask, rate, stats = combine_dark_ramps(ramps)
                 finally:
-                    if ramps is not None:
-                        ramps.flush()
-                        mmap = getattr(ramps, "_mmap", None)
-                        del ramps
-                        gc.collect()
-                        if mmap is not None and not mmap.closed:
-                            mmap.close()
-                        del mmap
-                        gc.collect()
-            _add_provenance(header, darkid, load)
-            fits.HDUList([
-                fits.PrimaryHDU(header=header),
-                fits.ImageHDU(dark, name="DARK"),
-                fits.ImageHDU(chi2, name="CHI-SQUARED"),
-                fits.ImageHDU(mask, name="MASK"),
-            ]).writeto(output_files[ichip], overwrite=True)
-            fits.writeto(rate_files[ichip], rate.astype(np.float32), overwrite=True)
-            plotbase = os.path.join(
-                plotdir, os.path.splitext(os.path.basename(output_files[ichip]))[0]
-            )
-            darkplot(np.moveaxis(dark, 0, -1), mask, plotbase)
-            darklog[ichip] = (
-                darkid, stats["nframes"], stats["nreads"],
-                stats["nsat"], stats["nhot"], stats["nhotneigh"], stats["nbad"],
-                stats["medrate"], 0, stats["nneg"],
-            )
+                    _close_memmap(ramps)
+                    del ramps
+                    ramps = None
+
+                _add_provenance(header, darkid, load)
+
+                fits.HDUList([
+                    fits.PrimaryHDU(header=header),
+                    fits.ImageHDU(dark, name="DARK"),
+                    fits.ImageHDU(chi2, name="CHI-SQUARED"),
+                    fits.ImageHDU(mask, name="MASK"),
+                ]).writeto(output_files[ichip], overwrite=True)
+
+                fits.writeto(rate_files[ichip],
+                             rate.astype(np.float32), overwrite=True)
+
+                plotbase = os.path.join(plotdir, os.path.splitext(
+                    os.path.basename(output_files[ichip]))[0])
+                darkplot(np.moveaxis(dark, 0, -1), mask, plotbase)
+
+            finally:
+                _close_memmap(ramps)
+                try:
+                    shutil.rmtree(workdir)
+                except OSError as error:
+                    warnings.warn(
+                        f"Could not completely remove dark workspace "
+                        f"{workdir}: {error}"
+                    )
+
+            darklog[ichip] = (darkid, stats["nframes"],
+                              stats["nreads"], stats["nsat"], stats["nhot"],
+                              stats["nhotneigh"], stats["nbad"], stats["medrate"],
+                              0, stats["nneg"], )
             if verbose:
-                print(f"Done {chip} in {time.time() - started:.1f} seconds")
+                elapsed = time.time() - started
+                print(f"Done {chip} in {elapsed:.1f} seconds")
 
-        fits.BinTableHDU(darklog, name="DARKLOG").writeto(summary_file,
-                                                          overwrite=True)
-
+        fits.BinTableHDU(darklog, name="DARKLOG").writeto(summary_file, overwrite=True)
 
         html_rows = []
         for ichip, row in enumerate(darklog):
@@ -305,4 +338,9 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
                 "nbad": int(row["NBAD"]),
                 "nneg": int(row["NNEG"]),
             })
+
         darkhtml(darkdir, html_rows)
+
+
+
+
