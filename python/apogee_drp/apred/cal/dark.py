@@ -141,14 +141,18 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
     }
     return dark, chi2, mask, rate, statistics
 
+
 def _close_memmap(array):
-    """Flush and close a NumPy memmap without deleting its file."""
+    """Flush and close a NumPy memmap; ignore ordinary arrays."""
     if array is None:
         return
-    array.flush()
+    flush = getattr(array, "flush", None)
+    if callable(flush):
+        flush()
     mmap = getattr(array, "_mmap", None)
     if mmap is not None and not mmap.closed:
         mmap.close()
+
 
 def _load_ramps(load, images, chip, directory, max_read=None,
                 unlock=False, verbose=False):
