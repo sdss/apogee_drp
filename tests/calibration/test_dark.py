@@ -172,8 +172,8 @@ def test_load_ramps_creates_memmap(monkeypatch, tmp_path):
     monkeypatch.setattr(dark.ap3d, "load_raw_ramp", load_raw)
     monkeypatch.setattr(dark.ap3d, "reference_correct", correct)
     ramps, header = dark._load_ramps(
-    load, [11, 12], "b", tmp_path, max_read=7,
-    unlock=True, verbose=True)
+        load, [11, 12], "b", tmp_path, max_read=7,
+        unlock=True, verbose=True)
     try:
         assert isinstance(ramps, np.memmap)
         assert ramps.shape == (2, 4, 3, 2)
