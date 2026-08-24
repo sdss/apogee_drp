@@ -615,10 +615,6 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
                 # just copy the file
                 shutil.copyfile(outfile_uncmp, finalfile)
 
-        # Delete temporary file
-        if os.path.exists(outfile_uncmp):
-            os.remove(outfile_uncmp)
-
         if silent==False:
             print('Writing to '+finalfile)
 
