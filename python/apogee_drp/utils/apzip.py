@@ -306,8 +306,8 @@ def zip(files,delete=True,verbose=True):
         tid2,tfile2 = tempfile.mkstemp(prefix="apzip",dir=tempdir)
         os.close(tid2)
         outfile_precmp = tfile2
-        shutil.filecopy(files,outfile_precmp)
-
+        shutil.copyfile(files, outfile_precmp)
+        
     # Close the input file
     inhdul.close()
 
@@ -507,18 +507,15 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
     #-------------------------------------------
     if silent==False:
         print('Step I: Uncompress with funpack')
+
     try:
-        out = subprocess.run(['funpack','-O',outfile_uncmp,'-C',files],shell=False)  # -C suppresses checksum update  
-    except:
-        traceback.print_exc()
-        error = 'halt:    fpack error '
-        if silent==False:
-            if nohalt:
-                print('nohalt:   fpack error')
-            else:
-                print(error)
-                import pdb; pdb.set_trace()
-                return
+        # -C suppresses checksum update
+        subprocess.run(["funpack", "-O", outfile_uncmp, "-C", files],
+                       shell=False, check=True)
+    except (OSError, subprocess.CalledProcessError):
+        if not silent:
+            print("funpack failed")
+            raise
 
     # Now read the fits file
     with fits.open(outfile_uncmp, memmap=False, uint=True) as packed:
@@ -618,7 +615,8 @@ def unzip(input,clobber=False,delete=False,silent=False,no_checksum=True,fitsdir
     if os.path.exists(outfile_uncmp):
         os.remove(outfile_uncmp)
 
-    print('Writing to '+finalfile)
+    if silent==False:
+        print('Writing to '+finalfile)
 
     # Delete original file
     if delete:
