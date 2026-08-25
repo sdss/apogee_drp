@@ -25,10 +25,23 @@ _MISSING = object()
 
 
 def _get(value: Any, name: str, default: Any = _MISSING) -> Any:
+    """Retrieve a field case-insensitively from common table-like objects."""
     if isinstance(value, Mapping):
         for key, item in value.items():
             if str(key).lower() == name.lower():
                 return item
+    names = getattr(value, "colnames", None)
+    if names is None:
+        names = getattr(getattr(value, "dtype", None), "names", None)
+    if names is not None:
+        for key in names:
+            if str(key).lower() == name.lower():
+                return value[key]
+    for candidate in (name, name.lower(), name.upper()):
+        try:
+            return value[candidate]
+        except (KeyError, IndexError, TypeError, ValueError):
+            pass
     for candidate in (name, name.lower(), name.upper()):
         if hasattr(value, candidate):
             return getattr(value, candidate)
@@ -257,12 +270,7 @@ class NativeVisitBackendMixin:
         rows = 300 - fiberids
         valid = (rows >= 0) & (rows < nfibers)
         fiber_types[rows[valid]] = objtypes[valid]
-        return dither_combine(
-            list(frames),
-            shifts,
-            fiber_types=fiber_types,
-            no_dither=nodither,
-        )
+        return dither_combine(list(frames),shifts,fiber_types=fiber_types,no_dither=nodither)
 
     def flux_calibrate(self, frame: Any, *, plugmap: Any) -> Any:
         return native_flux_calibrate(frame, plugmap)

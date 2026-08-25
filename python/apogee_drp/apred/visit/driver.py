@@ -392,8 +392,7 @@ def calibrate_exposure(
     newwave: bool = False,
     log: logging.Logger | None = None,
 ) -> list[FrameResult]:
-    
-    log.info('Calibrating exposure ',exposure)
+
     frame_start = time.monotonic()
     exposures = list(backend.plan["APEXP"])
     j, = np.where(exposures==exposure)
@@ -403,9 +402,13 @@ def calibrate_exposure(
     nodither = True
     
     if not clobber and all(Path(f).exists() for f in cfiles):
-        log.info('exposure files exist already')
+        if verbose:
+            log.info('  {:s} exposure files exist already'.format(framenum))
         return
-        
+
+    if verbose:
+        log.info('Calibrating exposure {:s}'.format(framenum))
+    
     files = list(backend.one_d_files(backend.plan,framenum,CHIPS))
     backend.validate_files(files,mjd=int(backend.plan["mjd"]),kind="1D")
     # Load 1D files
@@ -442,9 +445,12 @@ def calibrate_exposure(
     backend.add_header(frame, "DITHSH", float(shiftfit[0]))
     backend.add_header(frame, "DITHSLOP", float(shiftfit[1]))
     backend.add_header(frame, "EDITHSH", float(shiftout.get("shifterr", 0.0)))
+    if verbose:
+        log.info('  dither shift={:.2f}  slope={:.2f}'.format(shiftfit[0],shiftfit[1]))
     # Wavelength calibration
     if newwave:
-        loglinfo('  Wavelength calibration')
+        if verbose:
+            log.info('  Wavelength calibration')
         frame = backend.wavelength_calibrate(frame, plugmap=backend.plugmap, plan=backend.plan,
                                              plotfile=str(Path(backend.plots_dir) /
                                                           f"pixshift-{framenum}"),
@@ -578,6 +584,10 @@ def ap1dvisit(
     else:
         # Exposure loop
         for j, exposure in enumerate(exposures):
+            log.info('')
+            log.info('-----------------------------------------')
+            log.info('{:d}/{:d}  Processing Frame Number >>{:d}<<'.format(j+1,nframes,exposure['name']))
+            log.info('-----------------------------------------')
             log.info('Processing exposure {:} {:} '.format(j+1,exposure['name']))            
             frame_start = time.monotonic()
             framenum = backend.frame_number(exposure, plan)
@@ -612,7 +622,7 @@ def ap1dvisit(
             shifts.append(_shift_record(backend,frame,j,framenum,score))
             allframes.append(frame)
             outcome.processed_frames += 1
-            log.info("%s frame %s completed in %.1f s",planfile,framenum,time.monotonic()-frame_start)
+            log.info("frame %s completed in %.1f s",framenum,time.monotonic()-frame_start)
                     
 
         if dithonly:
