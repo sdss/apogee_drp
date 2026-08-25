@@ -123,11 +123,18 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
     medrate = float(utils.idl_median(rate))
     rate[~np.isfinite(rate)] = 0.0
 
+    width = 7
+    left = width // 2
+    right = width - left
     for ylo in range(0, ny, row_block):
         yhi = min(ylo + row_block, ny)
-        dark[:, ylo:yhi, :] = median_filter(
-            dark[:, ylo:yhi, :], size=(7, 1, 1), mode="nearest"
-        )
+        section = dark[:, ylo:yhi, :]
+        filtered = median_filter(
+            section, size=(width, 1, 1), mode="nearest")
+        # IDL MEDFILT2D without /EDGE_COPY leaves edge values unchanged.
+        filtered[:left] = section[:left]
+        filtered[-right:] = section[-right:]
+        dark[:, ylo:yhi, :] = filtered
 
     negative = dark < -10
     nneg = int(np.count_nonzero(negative))
@@ -136,7 +143,7 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
         "nframes": int(nframe), "nreads": int(nread),
         "nsat": int(np.count_nonzero(nonfinite_rate)),
         "nhot": int(np.count_nonzero(hot)),
-        "nhotneigh": int(np.count_nonzero(hot_neighbors)),
+        "nhotneigh": 8 * int(np.count_nonzero(hot_neighbors)),
         "nbad": nbad, "medrate": medrate, "nneg": nneg,
     }
     return dark, chi2, mask, rate, statistics

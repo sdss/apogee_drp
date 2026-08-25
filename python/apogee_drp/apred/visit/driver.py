@@ -18,8 +18,8 @@ import time
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Mapping, MutableMapping, Protocol, Sequence
-
 import numpy as np
+from dlnpyutils import utils as dln
 
 __all__ = [
     "CHIPS",
@@ -381,8 +381,94 @@ def _shift_record(
     )
 
 
+
+def calibrate_exposure(
+    exposure: dict,
+    backend: VisitBackend,
+    reference_frame: Frame | None = None,
+    reference_command: float | None = None,
+    clobber: bool = False,
+    verbose: bool = False,
+    newwave: bool = False,
+    log: logging.Logger | None = None,
+) -> list[FrameResult]:
+    
+    log.info('Calibrating exposure ',exposure)
+    frame_start = time.monotonic()
+    exposures = list(backend.plan["APEXP"])
+    j, = np.where(exposures==exposure)
+    framenum = backend.frame_number(exposure, backend.plan)
+    cfiles = list(backend.cframe_files(backend.plan, framenum, CHIPS))
+    wavefiles, lsffiles = backend.calibration_files(backend.plan, CHIPS)
+    nodither = True
+    
+    if not clobber and all(Path(f).exists() for f in cfiles):
+        log.info('exposure files exist already')
+        return
+        
+    files = list(backend.one_d_files(backend.plan,framenum,CHIPS))
+    backend.validate_files(files,mjd=int(backend.plan["mjd"]),kind="1D")
+    # Load 1D files
+    raw = backend.load_frame(files, kind="1D")
+    sanitize_frame(raw,chip_arrays=backend.chip_pixel_arrays)
+    frame = backend.prepare_frame(raw,plan=backend.plan,wavefiles=wavefiles,
+                                  lsffiles=lsffiles,plate_dir=backend.plate_dir,
+                                  newwave=newwave)
+    commanded = float(backend.header_value(frame, "DITHPIX",0.0))
+    if (j > 0 and commanded != 0 and reference_command is not None and
+        abs(commanded - reference_command) > 0.002 ):
+        nodither = False
+    nofit = backend.plan['platetype'] == "single"
+    # Measure dither shift
+    if j > 0 and reference_frame is not None:
+        shiftout = backend.dither_shift(reference_frame, frame,
+                                        plugmap=backend.plugmap, plan=plan,
+                                        plotfile=str(Path(plots_dir)/f"dithershift-{framenum}"),
+                                        nofit=nofit)
+    else:
+        shiftout = {"shiftfit": np.zeros(2),"shifterr": 0.0,
+                    "chipshift": np.zeros((3, 2)),"chipfit": np.zeros(4)}
+    if j == 0 or nodither:
+        reference_frame = frame
+        if commanded != 0:
+            reference_command = commanded
+        shiftout = dict(shiftout)
+        shiftout["shiftfit"] = np.zeros(2)
+        shiftout["shifterr"] = 0.0
+    shiftfit = np.asarray(shiftout["shiftfit"])
+    backend.add_history(frame,"APDITHERSHIFT: Measuring dither shift")
+    if shiftfit[0] == 0:
+        backend.add_history(frame,"APDITHERSHIFT: This is the reference frame")
+    backend.add_header(frame, "DITHSH", float(shiftfit[0]))
+    backend.add_header(frame, "DITHSLOP", float(shiftfit[1]))
+    backend.add_header(frame, "EDITHSH", float(shiftout.get("shifterr", 0.0)))
+    # Wavelength calibration
+    if newwave:
+        loglinfo('  Wavelength calibration')
+        frame = backend.wavelength_calibrate(frame, plugmap=backend.plugmap, plan=backend.plan,
+                                             plotfile=str(Path(backend.plots_dir) /
+                                                          f"pixshift-{framenum}"),
+                                             dithonly=dithonly)
+    # Sky subtraction
+    log.info('  Sky subtraction')
+    frame = backend.sky_subtract(frame,plugmap=backend.plugmap,force=backend.use_force)
+    # Telluric correction
+    if backend.plan['platetype'] not in {"sky", "cal"}:
+        log.info('  Telluric correction')
+        frame, tellstar = backend.telluric_correct(frame,plugmap=backend.plugmap,
+                                                   plan=backend.plan,plots_dir=backend.plots_dir,
+                                                   test=backend.test,force=backend.use_force)
+        tellstar["im"] = np.int32(int(framenum))                            
+        backend.tellstars.append(tellstar)
+    # Write apCframe
+    log.info('  Writing apCframe files')
+    backend.write_cframes(frame, backend.plugmap, cfiles)
+            
+    return
+                
+
 def ap1dvisit(
-    planfiles: str | Path | Sequence[str | Path],
+    planfile: str | Path,
     backend: VisitBackend | None = None,
     *,
     apred: str | None = None,
@@ -398,20 +484,16 @@ def ap1dvisit(
     force: bool | None = None,
     logger: logging.Logger | None = None,
 ) -> list[VisitResult]:
-    """Reduce one or more APOGEE visit plan files.
+    """Reduce one APOGEE visit plan file.
 
     Parameters mirror the IDL keywords.  Unlike IDL, errors are explicit:
     plan-level failures are recorded in the returned :class:`VisitResult`;
     with ``halt=True`` they are raised immediately.  A failed telluric
     correction rejects only that exposure unless ``force=True``.
     """
-
-    log = logger or logging.getLogger(__name__)
-    if isinstance(planfiles, (str, Path)):
-        plans = [str(planfiles)]
-    else:
-        plans = [str(path) for path in planfiles]
-    if not plans:
+    
+    log = logger or dln.basiclogger()
+    if not planfile:
         return []
     if backend is None:
         if apred is None or telescope is None:
@@ -420,211 +502,151 @@ def ap1dvisit(
         backend = ApLoadVisitBackend(apred=apred, telescope=telescope, verbose=verbose)
     if ap1dwavecal:
         newwave = True
-
+        
     started = time.monotonic()
     results: list[VisitResult] = []
-    log.info("RUNNING AP1DVISIT: %d plan file(s)", len(plans))
+    log.info("RUNNING AP1DVISIT")
 
-    for planfile in plans:
-        outcome = VisitResult(planfile=planfile)
-        results.append(outcome)
-        try:
-            plan = backend.load_plan(planfile, verbose=verbose)
-            plate_type = str(plan.get("platetype", "normal")).strip().lower()
-            if plate_type not in ALLOWED_PLATE_TYPES:
-                raise PlanFailure(f"unsupported plate type {plate_type!r}")
-            plan["platetype"] = plate_type
-            plan.setdefault("field", "")
-            fps = int(plan["mjd"]) >= 59556
-            survey = str(plan.get("survey", "mwm" if
-                                  int(plan["plateid"]) >= 15000 or int(plan["plateid"])
-                                  == 0 else "apogee"))
-            use_force = bool(plan.get("force", False) if force is None else force)
-            dirs = backend.directories(plan)
-            plugmap = None if plate_type == "cal" else backend.load_plugmap(
-                plan, mapper_data=mapper_data)
-            if plugmap is not None:
-                backend.set_plugmap_mjd(plugmap, int(plan["mjd"]))
-                fiberdata = backend.fiber_data(plugmap)
-                science = _science_indices(fiberdata,single=plate_type == "single")
-            else:
-                fiberdata = None
-                science = np.array([], dtype=int)
+    log.info('')
+    log.info('=========================================================================')
+    log.info('Processing Plan file '+planfile)
+    log.info('=========================================================================')
+        
+    outcome = VisitResult(planfile=planfile)  # load the plan file
+    # Loading the plugmap file
+    plan = backend.load_plan(planfile, verbose=verbose)
+    plate_type = str(plan.get("platetype", "normal")).strip().lower()
+    if plate_type not in ALLOWED_PLATE_TYPES:
+        raise PlanFailure(f"unsupported plate type {plate_type!r}")
+    plan["platetype"] = plate_type
+    plan.setdefault("field", "")
+    backend.plan = plan
+    backend.test = test
+    fps = int(plan["mjd"]) >= 59556
+    survey = str(plan.get("survey", "mwm" if
+                          int(plan["plateid"]) >= 15000 or int(plan["plateid"])
+                          == 0 else "apogee"))
+    use_force = bool(plan.get("force", False) if force is None else force)
+    backend.use_force = use_force
+    dirs = backend.directories(plan)
+    plugmap = None if plate_type == "cal" else backend.load_plugmap(
+        plan, mapper_data=mapper_data)
+    if plugmap is not None:
+        backend.set_plugmap_mjd(plugmap, int(plan["mjd"]))
+        fiberdata = backend.fiber_data(plugmap)
+        science = _science_indices(fiberdata,single=plate_type == "single")
+    else:
+        fiberdata = None
+        science = np.array([], dtype=int)
+    backend.plugmap = plugmap
+    backend.fiberdata = fiberdata
+    backend.science = science
 
-            if plugmap is not None and int(plan.get("fluxid", 0)) != 0:
-                fluxfile = backend.filename("Flux", chip="b", num=plan["fluxid"])
-                relflux = backend.read_relflux(str(fluxfile))
-            else:
-                relflux = np.ones(300, dtype=np.float32)
+    if plugmap is not None and int(plan.get("fluxid", 0)) != 0:
+        fluxfile = backend.filename("Flux", chip="b", num=plan["fluxid"])
+        relflux = backend.read_relflux(str(fluxfile))
+    else:
+        relflux = np.ones(300, dtype=np.float32)
 
-            backend.make_lsf(plan["lsfid"])
-            wavefiles, lsffiles = backend.calibration_files(plan, CHIPS)
-            backend.validate_files(wavefiles, mjd=int(plan["mjd"]), kind="Wave")
-            backend.validate_files(lsffiles, mjd=int(plan["mjd"]), kind="LSF")
-            plate_dir = str(backend.filename("Plate",mjd=plan["mjd"],
-                                             plate=plan["plateid"], chip="a",
-                                             field=plan["field"], directory=True))
-            Path(plate_dir).mkdir(parents=True, exist_ok=True)
-            plots_dir = str(Path(plate_dir) / "plots")
-            Path(plots_dir).mkdir(parents=True, exist_ok=True)
-            outcome.plate_file = backend.plate_file(plan)
+    backend.make_lsf(plan["lsfid"])
+    wavefiles, lsffiles = backend.calibration_files(plan, CHIPS)
+    backend.validate_files(wavefiles, mjd=int(plan["mjd"]), kind="Wave")
+    backend.validate_files(lsffiles, mjd=int(plan["mjd"]), kind="LSF")
+    plate_dir = str(backend.filename("Plate",mjd=plan["mjd"],
+                                     plate=plan["plateid"], chip="a",
+                                     field=plan["field"], directory=True))
+    backend.plate_dir = plate_dir
+    Path(plate_dir).mkdir(parents=True, exist_ok=True)
+    plots_dir = str(Path(plate_dir) / "plots")
+    backend.plots_dir = plots_dir
+    Path(plots_dir).mkdir(parents=True, exist_ok=True)
+    outcome.plate_file = backend.plate_file(plan)
 
-            exposures = list(plan["APEXP"])
-            nframes = len(exposures)
-            allframes: list[Any] = []
-            tellstars: list[Any] = []
-            shifts: list[ShiftRecord] = []
-            nodither = True
-            reference_frame = None
-            reference_command = None
-            telluric_errors = 0
+    exposures = list(plan["APEXP"])
+    nframes = len(exposures)
+    allframes: list[Any] = []
+    backend.tellstars: list[Any] = []
+    shifts: list[ShiftRecord] = []
+    nodither = True
+    reference_frame = None
+    reference_command = None
+    telluric_errors = 0
+    
+    if Path(outcome.plate_file).exists() and not clobber:
+        outcome.skipped_plate_reduction = True
+        source_frame = backend.load_frame([outcome.plate_file],kind="Plate")
+    else:
+        # Exposure loop
+        for j, exposure in enumerate(exposures):
+            log.info('Processing exposure {:} {:} '.format(j+1,exposure['name']))            
+            frame_start = time.monotonic()
+            framenum = backend.frame_number(exposure, plan)
+            cfiles = list(backend.cframe_files(plan, framenum, CHIPS))
+            # Calibrate single exposure
+            if not backend.load.exists('Cframe',num=framenum) or clobber:
+                try:
+                    calibrate_exposure(exposure,backend,reference_frame=reference_frame,
+                                       reference_command=reference_command,
+                                       newwave=newwave,clobber=clobber,verbose=verbose,log=log)
+                except Exception as exc:
+                    outcome.failed_frames += 1
+                    message = f"frame {framenum}: {exc}"
+                    outcome.errors.append(message)
+                    log.exception("%s %s", planfile, message)
+                    if "tellur" in str(exc).lower():
+                        telluric_errors += 1
+                    if halt:
+                        raise
 
-            if Path(outcome.plate_file).exists() and not clobber:
-                outcome.skipped_plate_reduction = True
-                source_frame = backend.load_frame([outcome.plate_file],kind="Plate")
-            else:
-                for j, exposure in enumerate(exposures):
-                    frame_start = time.monotonic()
-                    framenum = backend.frame_number(exposure, plan)
-                    cfiles = list(backend.cframe_files(plan, framenum, CHIPS))
-                    try:
-                        if clobber or not all(Path(f).exists() for f in cfiles):
-                            files = list(backend.one_d_files(plan,framenum,CHIPS))
-                            backend.validate_files(files,mjd=int(plan["mjd"]),kind="1D")
-                            raw = backend.load_frame(files, kind="1D")
-                            sanitize_frame(raw,chip_arrays=backend.chip_pixel_arrays)
-                            frame = backend.prepare_frame(raw, plan=plan,
-                                                          wavefiles=wavefiles,
-                                                          lsffiles=lsffiles,
-                                                          plate_dir=plate_dir,
-                                                          newwave=newwave)
-                            commanded = float(backend.header_value(frame, "DITHPIX",0.0))
-                            if (j > 0 and commanded != 0 and reference_command is not None and
-                                 abs(commanded - reference_command) > 0.002 ):
-                                nodither = False
-                            nofit = plate_type == "single"
-                            if j > 0 and reference_frame is not None:
-                                shiftout = backend.dither_shift(
-                                    reference_frame, frame,
-                                    plugmap=plugmap, plan=plan,
-                                    plotfile=str( Path(plots_dir) /
-                                                  f"dithershift-{framenum}" ),
-                                    nofit=nofit)
-                            else:
-                                shiftout = {"shiftfit": np.zeros(2),
-                                            "shifterr": 0.0,
-                                            "chipshift": np.zeros((3, 2)),
-                                            "chipfit": np.zeros(4)}
-                            if j == 0 or nodither:
-                                reference_frame = frame
-                                if commanded != 0:
-                                    reference_command = commanded
-                                shiftout = dict(shiftout)
-                                shiftout["shiftfit"] = np.zeros(2)
-                                shiftout["shifterr"] = 0.0
-                            shiftfit = np.asarray(shiftout["shiftfit"])
-                            backend.add_history(
-                                frame, "APDITHERSHIFT: Measuring dither shift"
-                            )
-                            if shiftfit[0] == 0:
-                                backend.add_history(frame,
-                                        "APDITHERSHIFT: This is the reference frame")
-                            backend.add_header(frame, "DITHSH", float(shiftfit[0]))
-                            backend.add_header(frame, "DITHSLOP", float(shiftfit[1]))
-                            backend.add_header(frame, "EDITHSH",
-                                               float(shiftout.get("shifterr", 0.0)))
-                            if ap1dwavecal:
-                                frame = backend.wavelength_calibrate(
-                                    frame, plugmap=plugmap, plan=plan,
-                                    plotfile=str( Path(plots_dir) /
-                                                  f"pixshift-{framenum}" ),
-                                    dithonly=dithonly)
-                            frame = backend.sky_subtract(frame, plugmap=plugmap,
-                                                         force=use_force)
-                            if plate_type in {"sky", "cal"}:
-                                continue
-                            frame, tellstar = backend.telluric_correct(frame,
-                                                      plugmap=plugmap, plan=plan,
-                                                      plots_dir=plots_dir, test=test,
-                                                      force=use_force)
-                            tellstar["im"] = np.int32(int(framenum))                            
-                            tellstars.append(tellstar)
-                            backend.write_cframes(frame, plugmap, cfiles)
+            # Validate and load the Cframe data
+            backend.validate_files(cfiles,mjd=int(plan["mjd"]),kind="Cframe")
+            frame = backend.load_frame(cfiles, kind="Cframe")
+            commanded = float(backend.header_value(frame,"DITHPIX",0.0))
+            if reference_command is None:
+                reference_command = commanded
+                reference_frame = frame
+            elif (commanded != 0 and abs(commanded - reference_command) > 0.002):
+                nodither = False
+            score = _frame_score(backend, frame, fiberdata,
+                                 science, single=plate_type=="single")
+            shifts.append(_shift_record(backend,frame,j,framenum,score))
+            allframes.append(frame)
+            outcome.processed_frames += 1
+            log.info("%s frame %s completed in %.1f s",planfile,framenum,time.monotonic()-frame_start)
+                    
 
-                        backend.validate_files(cfiles,
-                                               mjd=int(plan["mjd"]), kind="Cframe" )
-                        frame = backend.load_frame(cfiles, kind="Cframe")
-                        commanded = float(backend.header_value(frame,"DITHPIX",0.0))
-                        if reference_command is None:
-                            reference_command = commanded
-                            reference_frame = frame
-                        elif (
-                            commanded != 0
-                            and abs(commanded - reference_command) > 0.002
-                        ):
-                            nodither = False
-                        score = _frame_score(backend, frame, fiberdata,
-                                             science, single=plate_type=="single")
-                        shifts.append(_shift_record(backend,frame,j,framenum,score))
-                        allframes.append(frame)
-                        outcome.processed_frames += 1
-                        log.info("%s frame %s completed in %.1f s",
-                                 planfile, framenum, time.monotonic() -
-                                 frame_start)
-                    except Exception as exc:
-                        outcome.failed_frames += 1
-                        message = f"frame {framenum}: {exc}"
-                        outcome.errors.append(message)
-                        log.exception("%s %s", planfile, message)
-                        if "tellur" in str(exc).lower():
-                            telluric_errors += 1
-                        if halt:
-                            raise
+        if dithonly:
+            return results
+        if backend.tellstars and plate_type in {"single", "normal"}:
+            backend.write_tellstar_summary(plan, backend.tellstars)
+        minframes = 1 if nodither else 2
+        if len(allframes) < minframes:
+            raise PlanFailure(f"only {len(allframes)} good frame(s); need {minframes}")
+        if telluric_errors and halt:
+            raise PlanFailure(f"{telluric_errors} frame(s) had telluric errors")
+        # Combine dither pairs
+        combined, pairs = backend.combine_dithers(allframes,shifts,plugmap=plugmap,
+                                                  nodither=nodither)
+        if pairs is None and not nodither:
+            raise PlanFailure("no dither pairs")
+        final = backend.flux_calibrate(combined, plugmap=plugmap)
+        # Write final 
+        backend.write_visit_products(final, plan=plan, plugmap=plugmap, shifts=shifts,
+                                     pairs=pairs, survey=survey, relflux=relflux)
+        source_frame = final
 
-                if dithonly:
-                    continue
-                if tellstars and plate_type in {"single", "normal"}:
-                    backend.write_tellstar_summary(plan, tellstars)
-                minframes = 1 if nodither else 2
-                if len(allframes) < minframes:
-                    raise PlanFailure(
-                        f"only {len(allframes)} good frame(s); need {minframes}"
-                    )
-                if telluric_errors and halt:
-                    raise PlanFailure(
-                        f"{telluric_errors} frame(s) had telluric errors"
-                    )
-                combined, pairs = backend.combine_dithers(allframes,shifts,
-                                                          plugmap=plugmap,
-                                                          nodither=nodither)
-                if pairs is None and not nodither:
-                    raise PlanFailure("no dither pairs")
-                final = backend.flux_calibrate(combined, plugmap=plugmap)
-                backend.write_visit_products(final, plan=plan, plugmap=plugmap,
-                                             shifts=shifts, pairs=pairs,
-                                             survey=survey, relflux=relflux)
-                source_frame = final
-
-            if plate_type not in {"normal", "single"}:
-                continue
-            object_indices = select_visit_objects(fiberdata, fps=fps)
-            summary = backend.visit_summary_file(plan, plugmap)
-            outcome.visit_summary_file = summary
-            if Path(summary).exists() and not clobber:
-                continue
-            rows = backend.build_visit_rows(plan=plan, plugmap=plugmap,
-                                            object_indices=object_indices,
-                                            survey=survey, nframes=nframes,
-                                            relflux=relflux)
-            backend.write_visit_summary(summary, rows, plan=plan,
-                                        source_frame=source_frame)
-            if object_indices.size:
-                backend.ingest_visits(rows)
-        except Exception as exc:
-            outcome.errors.append(str(exc))
-            log.exception("Failed plan %s", planfile)
-            if halt:
-                raise
+    if plate_type not in {"normal", "single"}:
+        return results
+    object_indices = select_visit_objects(fiberdata, fps=fps)
+    summary = backend.visit_summary_file(plan, plugmap)
+    outcome.visit_summary_file = summary
+    if Path(summary).exists() and not clobber:
+        return results
+    rows = backend.build_visit_rows(plan=plan, plugmap=plugmap, object_indices=object_indices,
+                                    survey=survey, nframes=nframes, relflux=relflux)
+    backend.write_visit_summary(summary, rows, plan=plan, source_frame=source_frame)
+    if object_indices.size:
+        backend.ingest_visits(rows)
 
     log.info("AP1DVISIT finished in %.1f s", time.monotonic() - started)
     return results
