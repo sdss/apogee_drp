@@ -116,42 +116,21 @@ def _fit_correlation_peak(lags: np.ndarray, correlation: np.ndarray) -> float:
         return np.nan
     baseline = np.polyfit(lags, correlation, 1)
     center0 = float(lags[np.argmax(correlation)])
-    p0 = [
-        max(float(np.max(correlation) - np.median(correlation)), 1e-12),
-        center0,
-        2.0,
-        baseline[1],
-        baseline[0],
-        0.0,
-        0.0,
-    ]
+    p0 = [max(float(np.max(correlation) - np.median(correlation)),1e-12),
+          center0, 2.0, baseline[1], baseline[0], 0.0, 0.0]
     scale = max(float(np.max(np.abs(correlation))), 1.0)
     try:
-        pars, _ = curve_fit(
-            _gaussian_polynomial,
-            lags,
-            correlation,
-            p0=p0,
-            bounds=(
-                [0.0, -11.0, 0.05, -np.inf, -np.inf, -np.inf, -np.inf],
-                [np.inf, 11.0, 20.0, np.inf, np.inf, np.inf, np.inf],
-            ),
-            x_scale=[scale, 1, 1, scale, scale, scale, scale],
-            maxfev=20_000,
-        )
+        bounds = ([0.0, -11.0, 0.05, -np.inf, -np.inf, -np.inf, -np.inf],
+                  [np.inf, 11.0, 20.0, np.inf, np.inf, np.inf, np.inf])
+        pars, _ = curve_fit(_gaussian_polynomial,lags,correlation,
+                            p0=p0,bounds=bounds,maxfev=20_000,
+                            x_scale=[scale, 1, 1, scale, scale, scale, scale])
         use = np.abs(lags - pars[1]) < 3.0 * abs(pars[2])
         if np.count_nonzero(use) >= 7:
-            pars, _ = curve_fit(
-                _gaussian_polynomial,
-                lags[use],
-                correlation[use],
-                p0=pars,
-                bounds=(
-                    [0.0, -11.0, 0.05, -np.inf, -np.inf, -np.inf, -np.inf],
-                    [np.inf, 11.0, 20.0, np.inf, np.inf, np.inf, np.inf],
-                ),
-                maxfev=20_000,
-            )
+            bounds = ([0.0, -11.0, 0.05, -np.inf, -np.inf, -np.inf, -np.inf],
+                      [np.inf, 11.0, 20.0, np.inf, np.inf, np.inf, np.inf])
+            pars, _ = curve_fit(_gaussian_polynomial,lags[use],correlation[use],
+                                p0=pars,bounds=bounds,maxfev=20_000)
         return float(pars[1])
     except (RuntimeError, ValueError, FloatingPointError):
         peak = int(np.argmax(correlation))
@@ -234,18 +213,11 @@ def _default_peak_finder(chip: ChipFrame) -> list[LinePeak]:
                 return amp * np.exp(-0.5 * ((xx - center) / sigma) ** 2) + base
 
             try:
-                pars, covariance = curve_fit(
-                    model,
-                    x,
-                    y,
-                    p0=[max(residual[location], noise), location, 1.0, 0.0],
-                    bounds=([0, location - 2, 0.2, -np.inf], [np.inf, location + 2, 3, np.inf]),
-                    maxfev=5000,
-                )
+                bounds=([0, location - 2, 0.2, -np.inf], [np.inf, location + 2, 3, np.inf])
+                pars, covariance = curve_fit(model,x,y,maxfev=5000,bounds=bounds,
+                                             p0=[max(residual[location], noise), location, 1.0, 0.0])
                 errors = np.sqrt(np.maximum(np.diag(covariance), 0))
-                peaks.append(
-                    LinePeak(fiber, float(pars[1]), float(errors[1]), float(errors[0]))
-                )
+                peaks.append(LinePeak(fiber, float(pars[1]), float(errors[1]), float(errors[0])))
             except (RuntimeError, ValueError, FloatingPointError):
                 continue
     return peaks
@@ -379,11 +351,7 @@ def dither_shift(
             fit_values[rows[reject], columns[reject]] = -100.0
         chipfit = np.asarray(pars, dtype=np.float32)
 
-    return DitherShiftResult(
-        type="xcorr",
-        shiftfit=shiftfit,
-        shifterr=np.float32(shifterr),
-        chipshift=chipshift,
-        chipfit=chipfit,
-        shiftarr=measured.copy() if return_shiftarr else None,
-    )
+    return DitherShiftResult(type="xcorr", shiftfit=shiftfit,
+                             shifterr=np.float32(shifterr), chipshift=chipshift,
+                             chipfit=chipfit, shiftarr=measured.copy() if return_shiftarr
+                             else None)
