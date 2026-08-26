@@ -21,19 +21,18 @@ from .models import ChipFrame, VisitFrame
 @dataclass
 class DitherShiftResult:
     """Result fields corresponding to the IDL ``shiftstr`` structure."""
-
     type: str
     shiftfit: np.ndarray
     shifterr: np.float32
     chipshift: np.ndarray
     chipfit: np.ndarray
     shiftarr: np.ndarray | None = None
+    nmeasured: int = 0
 
-
+    
 @dataclass
 class LinePeak:
     """One fitted line centroid and the errors used by APDITHERSHIFT."""
-
     fiber: int
     gaussx: float
     center_error: float

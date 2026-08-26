@@ -147,15 +147,11 @@ class NativeVisitBackendMixin:
         nofit: bool,
     ) -> dict[str, Any]:
         mode = str(plan.get("dither_shift_mode", "lines")).lower()
-        result = native_dither_shift(
-            reference,
-            frame,
-            xcorr=mode in {"xcorr", "correlation"},
-            object_spectra=bool(plan.get("dither_object_spectra", False)),
-            plugmap=plugmap,
-            nofit=nofit,
-            mjd=int(plan.get("mjd", 999999)),
-        )
+        result = native_dither_shift(reference, frame,
+                                     xcorr=mode in {"xcorr", "correlation"},
+                                     object_spectra=bool(plan.get("dither_object_spectra",
+                                                                  False)), plugmap=plugmap, nofit=nofit,
+                                     mjd=int(plan.get("mjd", 999999)))
         return asdict(result)
 
     def wavelength_calibrate(self, frame: Any, **kwargs: Any) -> Any:
@@ -183,12 +179,12 @@ class NativeVisitBackendMixin:
         return frame
 
     def sky_subtract(
-        self, frame: Any, *, plugmap: Any, force: bool
-    ) -> Any:
+            self, frame: Any, *, plugmap: Any, force: bool
+    ) -> tuple[Any, Any]:
         from ..sky.subtract import sky_subtract as native_sky_subtract
+        return native_sky_subtract(frame, plugmap, force=force, return_metrics=True)
 
-        return native_sky_subtract(frame, plugmap, force=force)
-
+    
     def resolve_telluric_files(
         self, frame: Any, plan: Mapping[str, Any]
     ) -> Sequence[str]:

@@ -36,6 +36,19 @@ __all__ = [
 CHIPS = ("a", "b", "c")
 ALLOWED_PLATE_TYPES = {"normal", "twilight", "sky", "single", "cal"}
 
+@dataclass
+class VisitContext:
+    plan: MutableMapping[str, Any]
+    plugmap: Any
+    fiberdata: Any
+    science: np.ndarray
+    wavefiles: Sequence[str]
+    lsffiles: Sequence[str]
+    plate_dir: str
+    plots_dir: str
+    force: bool
+    test: bool
+
 
 class PlanFailure(RuntimeError):
     """A plan cannot be reduced."""
@@ -385,13 +398,15 @@ def _shift_record(
 def calibrate_exposure(
     exposure: dict,
     backend: VisitBackend,
+    context: VisitContext,
     reference_frame: Frame | None = None,
     reference_command: float | None = None,
     clobber: bool = False,
     verbose: bool = False,
     newwave: bool = False,
+    dithonly: bool = False,
     log: logging.Logger | None = None,
-) -> list[FrameResult]:
+) -> None:
 
     frame_start = time.monotonic()
     exposures = list(backend.plan["APEXP"])
@@ -526,14 +541,11 @@ def ap1dvisit(
         raise PlanFailure(f"unsupported plate type {plate_type!r}")
     plan["platetype"] = plate_type
     plan.setdefault("field", "")
-    backend.plan = plan
-    backend.test = test
     fps = int(plan["mjd"]) >= 59556
     survey = str(plan.get("survey", "mwm" if
                           int(plan["plateid"]) >= 15000 or int(plan["plateid"])
                           == 0 else "apogee"))
     use_force = bool(plan.get("force", False) if force is None else force)
-    backend.use_force = use_force
     dirs = backend.directories(plan)
     plugmap = None if plate_type == "cal" else backend.load_plugmap(
         plan, mapper_data=mapper_data)
@@ -544,9 +556,6 @@ def ap1dvisit(
     else:
         fiberdata = None
         science = np.array([], dtype=int)
-    backend.plugmap = plugmap
-    backend.fiberdata = fiberdata
-    backend.science = science
 
     if plugmap is not None and int(plan.get("fluxid", 0)) != 0:
         fluxfile = backend.filename("Flux", chip="b", num=plan["fluxid"])
@@ -554,30 +563,34 @@ def ap1dvisit(
     else:
         relflux = np.ones(300, dtype=np.float32)
 
-    backend.make_lsf(plan["lsfid"])
+    #backend.make_lsf(plan["lsfid"])
     wavefiles, lsffiles = backend.calibration_files(plan, CHIPS)
     backend.validate_files(wavefiles, mjd=int(plan["mjd"]), kind="Wave")
     backend.validate_files(lsffiles, mjd=int(plan["mjd"]), kind="LSF")
     plate_dir = str(backend.filename("Plate",mjd=plan["mjd"],
                                      plate=plan["plateid"], chip="a",
                                      field=plan["field"], directory=True))
-    backend.plate_dir = plate_dir
     Path(plate_dir).mkdir(parents=True, exist_ok=True)
     plots_dir = str(Path(plate_dir) / "plots")
-    backend.plots_dir = plots_dir
     Path(plots_dir).mkdir(parents=True, exist_ok=True)
     outcome.plate_file = backend.plate_file(plan)
 
+    # Load all of the plans-specific information into a context
+    context = VisitContext(plan=plan, plugmap=plugmap, fiberdata=fiberdata,
+                           science=science, wavefiles=wavefiles,
+                           lsffiles=lsffiles, plate_dir=plate_dir, plots_dir=plots_dir,
+                           force=use_force, test=test)
+    
     exposures = list(plan["APEXP"])
     nframes = len(exposures)
-    allframes: list[Any] = []
-    backend.tellstars: list[Any] = []
-    shifts: list[ShiftRecord] = []
     nodither = True
     reference_frame = None
     reference_command = None
     telluric_errors = 0
-    
+    allframes = []
+    tellstars = []
+    shifts = []
+
     if Path(outcome.plate_file).exists() and not clobber:
         outcome.skipped_plate_reduction = True
         source_frame = backend.load_frame([outcome.plate_file],kind="Plate")
@@ -595,9 +608,12 @@ def ap1dvisit(
             # Calibrate single exposure
             if not backend.load.exists('Cframe',num=framenum) or clobber:
                 try:
-                    calibrate_exposure(exposure,backend,reference_frame=reference_frame,
+                    calibrate_exposure(exposure, backend, context,
+                                       reference_frame=reference_frame,
                                        reference_command=reference_command,
-                                       newwave=newwave,clobber=clobber,verbose=verbose,log=log)
+                                       clobber=clobber, verbose=verbose,
+                                       newwave=newwave, dithonly=dithonly,
+                                       logger=log)
                 except Exception as exc:
                     outcome.failed_frames += 1
                     message = f"frame {framenum}: {exc}"
@@ -610,7 +626,7 @@ def ap1dvisit(
 
             # Validate and load the Cframe data
             backend.validate_files(cfiles,mjd=int(plan["mjd"]),kind="Cframe")
-            frame = backend.load_frame(cfiles, kind="Cframe")
+            frame = backend.load_frame(cfiles, kind="Cframe", plan=plan)
             commanded = float(backend.header_value(frame,"DITHPIX",0.0))
             if reference_command is None:
                 reference_command = commanded
