@@ -1959,7 +1959,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logger.info('No master Dark calibration files need to be run')
         # Make the dark plots
         if np.sum(docal)>0:
-            cal.darkplot(apred=apred,telescope=telescope)
+            calplots.darkplot(apred=apred,telescope=telescope)
 
 
     # I could process the individual flat exposures in parallel first
@@ -2032,7 +2032,7 @@ def mkmastercals(load,mjds,slurmpars,caltypes=None,clobber=False,linkvers=None,l
             logger.info('No master Flat calibration files need to be run')
         # Make the flat plots
         if np.sum(docal)>0:
-            cal.flatplot(apred=apred,telescope=telescope)
+            calplots.flatplot(apred=apred,telescope=telescope)
 
     
     # Make BPM in parallel
