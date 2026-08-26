@@ -12,7 +12,6 @@ import warnings
 
 import numpy as np
 from astropy.io import fits
-from scipy.ndimage import median_filter
 
 from ...utils import apload, utils
 from .. import ap3d
@@ -104,18 +103,13 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
     npixel = flat_rate.size
     hot_indices = np.flatnonzero(hot)
     bad_indices = np.flatnonzero(nonfinite_rate)
-    hot_neighbors = np.zeros(rate.shape, dtype=bool)
-    flat_hot_neighbors = hot_neighbors.ravel()
     for seed_indices in (hot_indices, bad_indices):
         for offset in (-1, 1, -nx, nx):
             neighbors = seed_indices + offset
-            on_detector = ( (neighbors >= 0) & (neighbors < npixel) )
-            neighbors = neighbors[on_detector]
+            neighbors = neighbors[(neighbors >= 0) & (neighbors < npixel)]
             selected = (np.isfinite(flat_rate[neighbors]) &
-                        (flat_rate[neighbors] > maxrate / 4.0) )
-            selected_neighbors = neighbors[selected]
-            flat_mask[selected_neighbors] |= np.uint8(4)
-            flat_hot_neighbors[selected_neighbors] = True
+                        (flat_rate[neighbors] > maxrate / 4.0))
+            flat_mask[neighbors[selected]] |= np.uint8(4)
 
     nbad = int(np.count_nonzero(~np.isfinite(dark)))
     dark[~np.isfinite(dark)] = 0.0
@@ -123,18 +117,10 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
     medrate = float(utils.idl_median(rate))
     rate[~np.isfinite(rate)] = 0.0
 
-    width = 7
-    left = width // 2
-    right = width - left
-    for ylo in range(0, ny, row_block):
-        yhi = min(ylo + row_block, ny)
-        section = dark[:, ylo:yhi, :]
-        filtered = median_filter(
-            section, size=(width, 1, 1), mode="nearest")
-        # IDL MEDFILT2D without /EDGE_COPY leaves edge values unchanged.
-        filtered[:left] = section[:left]
-        filtered[-right:] = section[-right:]
-        dark[:, ylo:yhi, :] = filtered
+    # MEDFILT2D(slice, 7, DIM=2) filters along the read dimension.
+    dark = np.moveaxis(dark, 0, -1)
+    dark = utils.idl_median_filter_1d(dark, 7, edge_copy=False)
+    dark = np.moveaxis(dark, -1, 0)
 
     negative = dark < -10
     nneg = int(np.count_nonzero(negative))
@@ -143,7 +129,7 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
         "nframes": int(nframe), "nreads": int(nread),
         "nsat": int(np.count_nonzero(nonfinite_rate)),
         "nhot": int(np.count_nonzero(hot)),
-        "nhotneigh": 8 * int(np.count_nonzero(hot_neighbors)),
+        "nhotneigh": 8 * int(np.count_nonzero(hot)),
         "nbad": nbad, "medrate": medrate, "nneg": nneg,
     }
     return dark, chi2, mask, rate, statistics
