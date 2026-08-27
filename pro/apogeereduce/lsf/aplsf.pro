@@ -374,7 +374,6 @@ endfor
 
 
 
-
 ;---------------------------
 ; STEP III:  Find the Lines
 ;---------------------------
@@ -912,9 +911,8 @@ for ii=0,n_elements(ifibers)-1 do begin
       adderr = sqrt(sig^2 - mederr^2)  ; want total median err to be SIG
       ;if adderr gt 0.5*mederr then errspec=sqrt(errspec^2 + adderr^2)
       if mederr gt sig*3 then begin
-        print,'The error spectrum does not match the NOISE'
-        goto,BOMB2
-        stop
+        print,'WARNING: The error spectrum is much larger than the scatter in the continuum'
+        ;;goto,BOMB2
       endif
 
       ;; chip-dependent Porder
