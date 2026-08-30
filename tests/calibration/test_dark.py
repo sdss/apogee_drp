@@ -57,7 +57,7 @@ def test_make_dark_flags_hot_pixel_and_neighbor():
     assert mask[8, 8] & 2
     assert mask[8, 9] & 4
     assert stats["nhot"] == 1
-    assert stats["nhotneigh"] == 1
+    assert stats["nhotneigh"] == 8
 
 
 def test_make_dark_flags_nonfinite_rate():
@@ -109,7 +109,9 @@ def test_combine_dark_ramps_flags_only_cross_neighbors():
     _, _, mask, _, stats = dark.combine_dark_ramps(ramps)
     assert np.all((mask[[7, 9, 8, 8], [8, 8, 7, 9]] & 4) != 0)
     assert mask[7, 7] == 0
-    assert stats["nhotneigh"] == 4
+    # IDL records 8 * NHOT, not the number of flagged neighbors.
+    assert stats["nhot"] == 1
+    assert stats["nhotneigh"] == 8
 
 
 def test_nonfinite_rate_does_not_bias_median_rate():
