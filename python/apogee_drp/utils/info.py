@@ -306,11 +306,15 @@ def file_status(
     max_length = max((len(path) for path in filenames), default=1)
     
     fileinfo = np.empty(nfiles, dtype=[("filename", f"U{max_length}"),
-                                       ("exists", bool),("size", np.int64)])
+                                       ("exists", bool),("size", np.int64),
+                                       ("mtime_ns", np.int64),
+                                       ("fingerprint", np.uint64)])
     fileinfo["filename"] = filenames
     fileinfo["exists"] = False
     fileinfo["size"] = -1
-    
+    fileinfo["mtime_ns"] = -1
+    fileinfo["fingerprint"] = 0
+ 
     if nfiles == 0:
         return fileinfo
 
@@ -328,7 +332,7 @@ def file_status(
             )
 
     check_order = sorted(filenames) if sort else filenames
-    size_by_path = {}
+    status_by_path = {}
 
     with tempfile.NamedTemporaryFile(
         mode="w",
@@ -352,16 +356,16 @@ output_file=$(mktemp "${output_directory}/output.XXXXXX")
 error_file=$(mktemp "${output_directory}/error.XXXXXX")
 
 if [ "$cached_mode" = "always" ]; then
-    stat --cached=always --printf='%s\t%n\n' -- "$@" \
+    stat --cached=always --printf='%s\t%Y\t%y\t%n\n' -- "$@" \
         > "$output_file" \
         2> "$error_file"
 else
-    stat --printf='%s\t%n\n' -- "$@" \
+    stat --printf='%s\t%Y\t%y\t%n\n' -- "$@" \
         > "$output_file" \
         2> "$error_file"
 fi
 '''
-
+            
             cached_mode = "always" if cached else "default"
 
             command = ["xargs", "-a", input_file.name, "-d", "\n",
@@ -389,12 +393,19 @@ fi
                                 continue
 
                             try:
-                                size_text, filename = line.split("\t", 1)
-                                size_by_path[filename] = int(size_text)
+                                size_text, seconds_text, precise_time, filename = line.split("\t", 3)
+                                # GNU stat's %y ends with something like:
+                                # 2026-08-30 14:23:12.123456789 -0600
+                                if "." in precise_time:
+                                    fraction = precise_time.split(".", 1)[1].split(" ", 1)[0]
+                                    fraction = fraction[:9].ljust(9, "0")
+                                    nanoseconds = int(fraction)
+                                else:
+                                    nanoseconds = 0
+                                mtime_ns = int(seconds_text) * 1_000_000_000 + nanoseconds
+                                status_by_path[filename] =  (int(size_text), mtime_ns)
                             except (TypeError, ValueError) as error:
-                                raise RuntimeError(
-                                    f"Could not parse stat output: {line!r}"
-                                ) from error
+                                raise RuntimeError(f"Could not parse stat output: {line!r}") from error
 
                 elif name.startswith("error."):
                     with open(path, encoding="utf-8") as error_file:
@@ -411,12 +422,30 @@ fi
                     if line.strip()
                 )
 
-    for i, filename in enumerate(filenames):
-        size = size_by_path.get(filename)
+    with np.errstate(over="ignore"):
+        for i, filename in enumerate(filenames):
+            status = status_by_path.get(filename)
 
-        if size is not None:
-            fileinfo["exists"][i] = True
-            fileinfo["size"][i] = size
+            if status is not None:
+                size, mtime_ns = status
+
+                # Construct a deterministic 64-bit metadata fingerprint.
+                # Integer overflow is intentional.
+                value = np.uint64(size) ^ (
+                    np.uint64(mtime_ns)
+                    + np.uint64(0x9E3779B97F4A7C15)
+                )
+
+                value ^= value >> np.uint64(30)
+                value *= np.uint64(0xBF58476D1CE4E5B9)
+                value ^= value >> np.uint64(27)
+                value *= np.uint64(0x94D049BB133111EB)
+                value ^= value >> np.uint64(31)
+            
+                fileinfo["exists"][i] = True
+                fileinfo["size"][i] = size
+                fileinfo["mtime_ns"][i] = mtime_ns
+                fileinfo["fingerprint"][i] = value
 
     # xargs returns 123 if one or more stat commands return a nonzero
     # status, which is expected when files are missing.
