@@ -10,6 +10,11 @@ from . import apload,plugmap as plmap
 from astropy.io import fits
 from astropy.table import Table
 
+import subprocess
+import tempfile
+import time
+
+
 def file_status(filename):
     """
     Check on a file's status: exists, size, mtime, okay (not currupted/truncated)
@@ -253,3 +258,187 @@ def getdithergroups(expinfo):
             expinfo['dithergroup'][e] = dithergroup
 
     return expinfo
+
+
+def file_status(
+    filenames,
+    nprocs=4,
+    batch_size=1000,
+    sort=True,
+    cached=False,
+    verbose=False,
+):
+    """
+    Check file existence and size using GNU xargs and stat.
+
+    Parameters
+    ----------
+    filenames : sequence of str or path-like
+        Full paths to check.
+    nprocs : int, optional
+        Number of parallel stat processes.
+    batch_size : int, optional
+        Maximum number of filenames passed to each stat invocation.
+    sort : bool, optional
+        Sort filenames before checking to improve metadata locality.
+        Returned arrays remain aligned with the original input order.
+    cached : bool, optional
+        Use ``stat --cached=always``. This can return stale metadata.
+    verbose : bool, optional
+        Print timing and summary information.
+
+    Returns
+    -------
+    exists : numpy.ndarray
+        Boolean array aligned with the input filenames.
+    sizes : numpy.ndarray
+        File sizes in bytes. Missing or inaccessible files have size -1.
+    errors : list of str
+        Error messages produced by stat, bash, or xargs.
+
+    Notes
+    -----
+    Requires GNU xargs, GNU stat, and bash.
+    """
+    filenames = [os.fspath(path) for path in filenames]
+    nfiles = len(filenames)
+
+    max_length = max((len(path) for path in filenames), default=1)
+    
+    fileinfo = np.empty(nfiles, dtype=[("filename", f"U{max_length}"),
+                                       ("exists", bool),("size", np.int64)])
+    fileinfo["filename"] = filenames
+    fileinfo["exists"] = False
+    fileinfo["size"] = -1
+    
+    if nfiles == 0:
+        return fileinfo
+
+    if nprocs < 1:
+        raise ValueError("nprocs must be at least 1")
+
+    if batch_size < 1:
+        raise ValueError("batch_size must be at least 1")
+
+    for path in filenames:
+        if "\n" in path or "\t" in path:
+            raise ValueError(
+                "Filenames containing tabs or newlines are unsupported: "
+                f"{path!r}"
+            )
+
+    check_order = sorted(filenames) if sort else filenames
+    size_by_path = {}
+
+    with tempfile.NamedTemporaryFile(
+        mode="w",
+        encoding="utf-8",
+        newline="\n",
+    ) as input_file:
+
+        for path in check_order:
+            input_file.write(path)
+            input_file.write("\n")
+
+        input_file.flush()
+
+        with tempfile.TemporaryDirectory() as output_directory:
+            script = r'''
+output_directory=$1
+cached_mode=$2
+shift 2
+
+output_file=$(mktemp "${output_directory}/output.XXXXXX")
+error_file=$(mktemp "${output_directory}/error.XXXXXX")
+
+if [ "$cached_mode" = "always" ]; then
+    stat --cached=always --printf='%s\t%n\n' -- "$@" \
+        > "$output_file" \
+        2> "$error_file"
+else
+    stat --printf='%s\t%n\n' -- "$@" \
+        > "$output_file" \
+        2> "$error_file"
+fi
+'''
+
+            cached_mode = "always" if cached else "default"
+
+            command = ["xargs", "-a", input_file.name, "-d", "\n",
+                       "-P", str(nprocs), "-n", str(batch_size), "bash",
+                       "-c", script, "_", output_directory, cached_mode, ]
+
+            start_time = time.monotonic()
+
+            result = subprocess.run(command,
+                                    stdout=subprocess.DEVNULL, stderr=subprocess.PIPE,
+                                    text=True, check=False)
+
+            elapsed = time.monotonic() - start_time
+            errors = []
+
+            for name in os.listdir(output_directory):
+                path = os.path.join(output_directory, name)
+
+                if name.startswith("output."):
+                    with open(path, encoding="utf-8") as output_file:
+                        for line in output_file:
+                            line = line.rstrip("\n")
+
+                            if not line:
+                                continue
+
+                            try:
+                                size_text, filename = line.split("\t", 1)
+                                size_by_path[filename] = int(size_text)
+                            except (TypeError, ValueError) as error:
+                                raise RuntimeError(
+                                    f"Could not parse stat output: {line!r}"
+                                ) from error
+
+                elif name.startswith("error."):
+                    with open(path, encoding="utf-8") as error_file:
+                        errors.extend(
+                            line.rstrip("\n")
+                            for line in error_file
+                            if line.strip()
+                        )
+
+            if result.stderr:
+                errors.extend(
+                    line
+                    for line in result.stderr.splitlines()
+                    if line.strip()
+                )
+
+    for i, filename in enumerate(filenames):
+        size = size_by_path.get(filename)
+
+        if size is not None:
+            fileinfo["exists"][i] = True
+            fileinfo["size"][i] = size
+
+    # xargs returns 123 if one or more stat commands return a nonzero
+    # status, which is expected when files are missing.
+    if result.returncode not in (0, 123):
+        message = errors[0] if errors else "no error message"
+        raise RuntimeError(
+            f"xargs failed with status {result.returncode}: {message}"
+        )
+
+    if verbose:
+        nfound = int(np.count_nonzero(fileinfo["exists"]))
+        nmissing = nfiles - nfound
+        rate = nfiles / elapsed if elapsed > 0 else float("inf")
+        
+        print(
+            f"Checked {nfiles:,} files in {elapsed:.2f} seconds "
+            f"({rate:,.0f} files/s)"
+        )
+        print(f"Existing: {nfound:,}")
+        print(f"Missing or inaccessible: {nmissing:,}")
+        
+        if errors:
+            print(f"stat/xargs error messages: {len(errors):,}")
+
+    return fileinfo
