@@ -1599,6 +1599,46 @@ class TestFullDetectorSynthetic:
         assert np.all(mask[:4] & ap3d.PIXMASK.getval("BADPIX"))
 
 
+        def test_reference_correct_can_interpolate_rejected_first_read(
+                monkeypatch):
+            nread = 4
+            cube = np.zeros((nread, 2048, 2560), dtype=np.int32)
+            header = fits.Header()
+
+            for read in range(nread):
+                cube[read, :, :2048] = 1000 + 20 * read
+                cube[read, :, 2048:] = 1000 + read
+
+            for read in range(nread):
+                header[f"SLICE{read:03d}"] = read + 1
+
+            original, _, rejected, _ = ap3d.reference_correct(
+                cube, header, indiv=0)
+            interpolated, _, rejected2, _ = ap3d.reference_correct(
+                cube, header, indiv=0, interpolate_rejected=True)
+
+            assert rejected[0]
+            np.testing.assert_array_equal(rejected2, rejected)
+            assert np.all(original[0] == 0)
+
+            # Endpoint extrapolation from the first two accepted reads.
+            expected = 2 * interpolated[1] - interpolated[2]
+            np.testing.assert_array_equal(interpolated[0], expected)
+
+            
+    def test_interpolate_bad_reads_extrapolates_first_read():
+        cube = np.zeros((4, 2, 2), dtype=np.int32)
+        cube[1] = 0
+        cube[2] = 20
+        cube[3] = 40
+        bad = np.array([True, False, False, False])
+        
+        result = ap3d._interpolate_bad_reads(cube, bad)
+
+        np.testing.assert_array_equal(result[0], -20)
+        np.testing.assert_array_equal(result[1:], cube[1:])
+        
+
 def _real_data_options():
     """Build process_file calibration options from AP3D_* variables."""
 

@@ -190,9 +190,12 @@ def test_load_ramps_creates_memmap(monkeypatch, tmp_path):
         "max_read": 7, "temporary_directory": tmp_path,
         "unlock": True, "verbose": True,
     }
-    assert correction_calls == [{"indiv": 3}, {"indiv": 3}]
+    assert correction_calls == [
+        {"indiv": 3, "interpolate_rejected": True},
+        {"indiv": 3, "interpolate_rejected": True},
+    ]
 
-
+    
 def test_load_ramps_rejects_inconsistent_shapes(monkeypatch, tmp_path):
     load = FakeLoad(tmp_path)
     shapes = iter([(4, 3, 2), (5, 3, 2)])

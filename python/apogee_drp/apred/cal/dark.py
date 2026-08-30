@@ -162,8 +162,8 @@ def _load_ramps(load, images, chip, directory, max_read=None,
                 rawfile, max_read=max_read,
                 temporary_directory=directory,
                 unlock=unlock, verbose=verbose)
-            ramp, _, _, _ = ap3d.reference_correct(
-                cube, current_header, indiv=3)
+            ramp, _, _, _ = ap3d.reference_correct(cube, current_header,
+                                                   indiv=3, interpolate_rejected=True)
             del cube
             baseline = ramp[1].copy()
             ramp[1:] -= baseline[None, :, :]

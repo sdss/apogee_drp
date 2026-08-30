@@ -330,6 +330,7 @@ def reference_correct(
     noflip: bool = False,
     q3fix: bool = False,
     keep_reference: bool = False,
+    interpolate_rejected=False,
     saturation: float = 55_000.0,
     verbose: bool = False,
     debug: bool = False,
@@ -345,6 +346,7 @@ def reference_correct(
         Positive: subtract each reference output, median-filtered with this
         width when greater than one.  Negative: subtract the mean reference
         pattern.  Zero: do not subtract the reference output.
+
     Returns
     -------
     corrected, mask, read_mask, last_good
@@ -487,6 +489,10 @@ def reference_correct(
     mask[:, -4:] |= PIXMASK.getval("BADPIX")
     if refout is not None:
         out = np.concatenate((out, refout), axis=2)
+
+    if interpolate_rejected and np.any(read_mask):
+        out = _interpolate_bad_reads(out, read_mask)
+        
     return out, mask, read_mask, last_good
 
 
