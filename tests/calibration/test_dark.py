@@ -130,6 +130,29 @@ def test_combine_dark_ramps_zeros_strongly_negative_values():
     assert stats["nneg"] == ramps.shape[1]
 
 
+def test_combine_dark_ramps_matches_idl_rejected_read_behavior():
+    ramps = make_ramps(nframe=3, nread=8, ny=4, nx=5)
+    original = ramps.copy()
+    read_masks = np.zeros((3, 8), dtype=bool)
+    read_masks[:, 0] = True
+
+    model, chi2, _, _, stats = dark.combine_dark_ramps(
+        ramps, read_masks=read_masks)
+
+    # IDL's invalid LONG plane contributes to NNEG and is then zeroed.
+    assert stats["nneg"] == 4 * 5
+    np.testing.assert_array_equal(model[0], 0)
+    np.testing.assert_array_equal(chi2[0], 0)
+    np.testing.assert_allclose(model[1:], ramps[0, 1:])
+    np.testing.assert_array_equal(ramps, original)
+
+
+def test_combine_dark_ramps_rejects_bad_read_mask_shape():
+    with pytest.raises(ValueError, match="read_masks"):
+        dark.combine_dark_ramps(
+            make_ramps(), read_masks=np.zeros((3, 7), dtype=bool))
+
+
 def test_combine_dark_ramps_row_block_does_not_change_result():
     rng = np.random.default_rng(12)
     ramps = make_ramps(nframe=5, ny=11, nx=9)
@@ -169,11 +192,12 @@ def test_load_ramps_creates_memmap(monkeypatch, tmp_path):
 
     def correct(cube, header, **kwargs):
         correction_calls.append(kwargs)
-        return cube, None, None, None
+        read_mask = np.array([True, False, False, False])
+        return cube, None, read_mask, None
 
     monkeypatch.setattr(dark.ap3d, "load_raw_ramp", load_raw)
     monkeypatch.setattr(dark.ap3d, "reference_correct", correct)
-    ramps, header = dark._load_ramps(
+    ramps, header, read_masks = dark._load_ramps(
         load, [11, 12], "b", tmp_path, max_read=7,
         unlock=True, verbose=True)
     try:
@@ -183,6 +207,11 @@ def test_load_ramps_creates_memmap(monkeypatch, tmp_path):
             ramps[:, :, 0, 0],
             [[10, 0, 1, 2], [20, 0, 1, 2]])
         assert header["TEST"] == 1
+        np.testing.assert_array_equal(
+            read_masks,
+            [[True, False, False, False],
+             [True, False, False, False]],
+        )
     finally:
         dark._close_memmap(ramps)
     assert Path(load_calls[0][0]).name == "apR-b-00000011.fits"
@@ -191,8 +220,8 @@ def test_load_ramps_creates_memmap(monkeypatch, tmp_path):
         "unlock": True, "verbose": True,
     }
     assert correction_calls == [
-        {"indiv": 3, "interpolate_rejected": True},
-        {"indiv": 3, "interpolate_rejected": True},
+        {"indiv": 3},
+        {"indiv": 3},
     ]
 
     
@@ -274,7 +303,8 @@ def dark_environment(monkeypatch, tmp_path):
     monkeypatch.setattr(
         dark, "_load_ramps",
         lambda load, images, chip, directory, **kwargs:
-        (make_ramps(nframe=len(images), ny=6, nx=7), fits.Header()),
+        (make_ramps(nframe=len(images), ny=6, nx=7), fits.Header(),
+         np.zeros((len(images), 8), dtype=bool)),
     )
     monkeypatch.setattr(
         dark, "darkplot",
@@ -362,3 +392,4 @@ def test_build_dark_clears_lock_after_failure(dark_environment, monkeypatch):
     with pytest.raises(RuntimeError, match="bad ramp"):
         dark.build_dark([203])
     assert lock_calls[-1][1] == {"clear": True}
+

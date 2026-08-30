@@ -21,6 +21,7 @@ from .darkplot import darkplot
 
 
 CHIPS = ("a", "b", "c")
+_IDL_LONG_INVALID = np.float32(np.iinfo(np.int32).min)
 
 __all__ = ["CHIPS", "build_dark", "combine_dark_ramps", "dark_variance"]
 
@@ -33,7 +34,7 @@ def dark_variance(data, nread=1, gain=1.9, readnoise=18.0):
 
 
 def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
-                       row_block=32):
+                       row_block=32, read_masks=None):
     """Combine corrected dark ramps and construct calibration arrays.
 
     Parameters
@@ -48,6 +49,10 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
         Pixels accumulating faster than this many counts/read are hot.
     row_block : int, optional
         Number of detector rows processed at once.
+    read_masks : array-like of bool, shape (nframe, nread), optional
+        Rejected reads returned by ap3d.reference_correct. During
+        combination, rejected samples receive IDL's invalid LONG value.
+        They are counted in NNEG and zeroed in the returned dark cube.
 
     Returns
     -------
@@ -69,6 +74,13 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
         raise ValueError("gain must be positive and readnoise non-negative")
     if maxrate <= 0:
         raise ValueError("maxrate must be positive")
+    if read_masks is not None:
+        read_masks = np.asarray(read_masks, dtype=bool)
+        if read_masks.shape != (nframe, nread):
+            raise ValueError(
+                "read_masks must have shape (nframe, nread); "
+                f"expected {(nframe, nread)}, received {read_masks.shape}"
+            )
 
     dark = np.empty((nread, ny, nx), dtype=np.float32)
     chi2 = np.zeros((nread, ny, nx), dtype=np.float32)
@@ -76,6 +88,12 @@ def combine_dark_ramps(ramps, gain=1.9, readnoise=18.0, maxrate=10.0,
     for ylo in range(0, ny, row_block):
         yhi = min(ylo + row_block, ny)
         samples = np.asarray(ramps[:, :, ylo:yhi, :], dtype=np.float32)
+        if read_masks is not None and np.any(read_masks):
+            # aprefcorr.pro assigns !VALUES.F_NAN to a LONG array for a
+            # rejected read. IDL stores the minimum LONG value. Work on a
+            # copy so the disk-backed Python ramp cache remains unchanged.
+            samples = samples.copy()
+            samples[read_masks] = _IDL_LONG_INVALID
         model = utils.idl_median(samples, axis=0).astype(np.float32, copy=False)
         dark[:, ylo:yhi, :] = model
         variance = dark_variance(model, nread=1, gain=gain,
@@ -151,6 +169,7 @@ def _load_ramps(load, images, chip, directory, max_read=None,
                 unlock=False, verbose=False):
     """Store corrected ramps in a disk-backed array and return it."""
     ramps = None
+    read_masks = None
     header = None
     filename = os.path.join(directory, f"ramps-{chip}.npy")
     try:
@@ -162,8 +181,8 @@ def _load_ramps(load, images, chip, directory, max_read=None,
                 rawfile, max_read=max_read,
                 temporary_directory=directory,
                 unlock=unlock, verbose=verbose)
-            ramp, _, _, _ = ap3d.reference_correct(cube, current_header,
-                                                   indiv=3, interpolate_rejected=True)
+            ramp, _, current_read_mask, _ = ap3d.reference_correct(
+                cube, current_header, indiv=3)
             del cube
             baseline = ramp[1].copy()
             ramp[1:] -= baseline[None, :, :]
@@ -174,17 +193,28 @@ def _load_ramps(load, images, chip, directory, max_read=None,
                     filename, mode="w+", dtype=np.float32,
                     shape=shape)
                 header = current_header.copy()
+                read_masks = np.zeros(
+                    (len(images), ramp.shape[0]), dtype=bool)
             elif ramp.shape != ramps.shape[1:]:
                 raise ValueError(
                     f"All ramps must have the same shape; "
                     f"expected {ramps.shape[1:]}, received "
                     f"{ramp.shape} for exposure {number}"
                 )
+            if current_read_mask is not None:
+                current_read_mask = np.asarray(current_read_mask, dtype=bool)
+                if current_read_mask.shape != (ramp.shape[0],):
+                    raise ValueError(
+                        "reference_correct returned a read mask with "
+                        f"shape {current_read_mask.shape}; expected "
+                        f"{(ramp.shape[0],)}"
+                    )
+                read_masks[iframe] = current_read_mask
             ramps[iframe] = ramp
         if ramps is None:
             raise RuntimeError("No dark ramps were loaded")
         ramps.flush()
-        return ramps, header
+        return ramps, header, read_masks
     except Exception:
         _close_memmap(ramps)
         raise
@@ -276,10 +306,12 @@ def build_dark(ims, apred="daily", telescope="apo25m", psfid=None,
             ramps = None
 
             try:
-                ramps, header = _load_ramps(load, images, chip,
-                                            workdir, unlock=unlock, verbose=verbose)
+                ramps, header, read_masks = _load_ramps(
+                    load, images, chip, workdir,
+                    unlock=unlock, verbose=verbose)
                 try:
-                    dark, chi2, mask, rate, stats = combine_dark_ramps(ramps)
+                    dark, chi2, mask, rate, stats = combine_dark_ramps(
+                        ramps, read_masks=read_masks)
                 finally:
                     _close_memmap(ramps)
                     del ramps
