@@ -262,7 +262,7 @@ def build_flat(images, apred="daily", telescope="apo25m", detid=None,
         flatsum, flatmasks, header = combine_flat_frames(load, images, nrep)
         flatsum = normalize_flat_chips(flatsum)
 
-        dtype = np.dtype([("name", "S256"), ("num", np.int64), ("nframes", np.int32)])
+        dtype = np.dtype([("NAME", "S256"), ("NUM", np.int64), ("NFRAMES", np.int32)])
         flatlog = np.zeros(3, dtype=dtype)
         plotdir = os.path.join(flatdir, "plots")
         os.makedirs(plotdir, exist_ok=True)
