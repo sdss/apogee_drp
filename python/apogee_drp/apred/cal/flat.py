@@ -9,6 +9,7 @@ from datetime import datetime
 import numpy as np
 from astropy.io import fits
 from scipy.ndimage import binary_dilation
+from dlnpyutils import robust
 
 from ...utils import apload, utils
 from ...utils.bitmask import PixelBitMask
@@ -155,7 +156,8 @@ def make_flat_chip(flat,flatmask,dithered=False,kludge=False,bad_pixel_bits=None
         x = np.arange(flat.shape[1], dtype=float)
         good = np.isfinite(profile)
         if np.count_nonzero(good) >= 3:
-            coefficients = np.polyfit(x[good], profile[good], 2)
+            #coefficients = np.polyfit(x[good], profile[good], 2)
+            coefficeints = robust.polyfit(x[good], profile[good], 2)
             profile = np.polyval(coefficients, x)
         else:
             profile = np.ones(flat.shape[1], dtype=float)
@@ -226,8 +228,8 @@ def _add_provenance(header, darkfile, flatid):
 
 
 def build_flat(images, apred="daily", telescope="apo25m", detid=None,
-               darkid=None, clobber=False, kludge=False, nrep=1,
-               dithered=False, unlock=False, verbose=False):
+               darkid=None, clobber=False, process_clobber=False, kludge=False,
+               nrep=1, dithered=False, unlock=False, verbose=False):
     """Make APOGEE superflat calibration files from individual flat ramps."""
     images = np.atleast_1d(images).astype(np.int64)
     if images.size == 0:
@@ -253,7 +255,7 @@ def build_flat(images, apred="daily", telescope="apo25m", detid=None,
             load=load,
             detectorid=detid,
             darkid=darkid,
-            overwrite=clobber,
+            overwrite=process_clobber,
             verbose=verbose,
             detect_cosmic_rays=False,
             up_the_ramp=False,
