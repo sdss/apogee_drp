@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+#
+# Make APOGEE daily plan files for a single MJD
+
+import traceback
+import os
+import sys
+import shlex
+from argparse import ArgumentParser
+import datetime
+import time
+from dlnpyutils import utils as dln
+from apogee_drp.plan import mkplan
+from apogee_drp.plan import dbload_plans
+
+# Main command-line program
+if __name__ == "__main__":
+    # print out what was executed for the logfile
+    print(shlex.join([sys.executable, *sys.argv]))
+    parser = ArgumentParser(description='Make APOGEE plan files')
+    parser.add_argument('mjd', type=int, nargs=1, help='MJD to run')
+    parser.add_argument('apred', type=str, nargs=1, help='APOGEE Reduction version')
+    parser.add_argument('telescope', type=str, nargs=1, help='Telescope')
+    parser.add_argument('--clobber', action='store_true', help='Overwrite any existing files')
+    parser.add_argument('--verbose', action='store_true', help='Verbose output')
+    args = parser.parse_args()
+
+    mjd = args.mjd[0]
+    apred = args.apred[0]
+    telescope = args.telescope[0]
+
+    logger = dln.basiclogger()
+    
+    now = datetime.datetime.now()
+    start = time.time()
+    logger.info("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+    
+    logger.info(' ')
+    logger.info('Making plan files for MJD='+str(mjd))
+    plandicts,planfiles0 = mkplan.make_mjd5_yaml(mjd,apred,telescope,clobber=clobber,logger=logger)
+    mjd5planfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+apred+'/'+telescope+'/'+telescope+'_'+str(m)+'.yaml'
+    if os.path.exists(mjd5planfile):
+        try:
+            planfiles = mkplan.run_mjd5_yaml(mjd5planfile,clobber=clobber,logger=logger)
+            nplanfiles = len(planfiles)
+        except:
+            logger.exception('Error making plan files')
+            e = traceback.format_exc()
+            error.append(e)
+            nplanfiles1 = 0
+
+        logger.info('Writing list of plan files to '+logdir+str(mjd)+'.plans')
+        if nplanfiles>0:
+            dbload_plans(planfiles)  # load plans into db                                                
+            # Write planfiles to MJD5.plans                                                               
+            dln.writelines(logdir+str(mjd)+'.plans',[os.path.basename(pf) for pf in planfiles1])
+            planfiles += planfiles1
+        else:
+            dln.writelines(logdir+str(mjd)+'.plans','')   # write blank file                                
+
+    else:
+        logger.info(mjd5planfile+' NOT FOUND')
+        
+    now = datetime.datetime.now()
+    logger.info("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info("elapsed: ",time.time()-start)
