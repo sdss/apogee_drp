@@ -34,6 +34,10 @@ if __name__ == "__main__":
     now = datetime.datetime.now()
     start = time.time()
     logger.info("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+
+    # Reduction logs directory
+    plansdir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/plans/'
+    os.makedirs(plansdir,exist_ok=True)
     
     logger.info(' ')
     logger.info('Making plan files for MJD='+str(mjd))
@@ -49,14 +53,14 @@ if __name__ == "__main__":
             error.append(e)
             nplanfiles1 = 0
 
-        logger.info('Writing list of plan files to '+logdir+str(mjd)+'.plans')
+        logger.info('Writing list of plan files to '+plansdir+str(mjd)+'.plans')
         if nplanfiles>0:
             dbload_plans(planfiles)  # load plans into db                                                
             # Write planfiles to MJD5.plans                                                               
-            dln.writelines(logdir+str(mjd)+'.plans',[os.path.basename(pf) for pf in planfiles1])
+            dln.writelines(plansdir+str(mjd)+'.plans',[os.path.basename(pf) for pf in planfiles1])
             planfiles += planfiles1
         else:
-            dln.writelines(logdir+str(mjd)+'.plans','')   # write blank file                                
+            dln.writelines(plansdir+str(mjd)+'.plans','')   # write blank file                                
 
     else:
         logger.info(mjd5planfile+' NOT FOUND')
