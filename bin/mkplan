@@ -11,7 +11,7 @@ import datetime
 import time
 from dlnpyutils import utils as dln
 from apogee_drp.plan import mkplan
-from apogee_drp.plan import dbload_plans
+from apogee_drp.plan import apogeedrp
 
 # Main command-line program
 if __name__ == "__main__":
@@ -28,21 +28,29 @@ if __name__ == "__main__":
     mjd = args.mjd[0]
     apred = args.apred[0]
     telescope = args.telescope[0]
-
+    clobber = args.clobber
+    verbose = args.verbose
+    
     logger = dln.basiclogger()
     
     now = datetime.datetime.now()
     start = time.time()
-    logger.info("Start: ",now.strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info("Start: "+now.strftime("%Y-%m-%d %H:%M:%S"))
 
     # Reduction logs directory
+    observatory = telescope[:3]
     plansdir = os.environ['APOGEE_REDUX']+'/'+apred+'/log/'+observatory+'/plans/'
     os.makedirs(plansdir,exist_ok=True)
     
     logger.info(' ')
     logger.info('Making plan files for MJD='+str(mjd))
+
+    # Make the MJD5 file
     plandicts,planfiles0 = mkplan.make_mjd5_yaml(mjd,apred,telescope,clobber=clobber,logger=logger)
-    mjd5planfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+apred+'/'+telescope+'/'+telescope+'_'+str(m)+'.yaml'
+    mjd5planfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+apred+'/'+telescope+'/'+telescope+'_'+str(mjd)+'.yaml'
+
+    # Make the individual plan files
+    error = []
     if os.path.exists(mjd5planfile):
         try:
             planfiles = mkplan.run_mjd5_yaml(mjd5planfile,clobber=clobber,logger=logger)
@@ -50,15 +58,15 @@ if __name__ == "__main__":
         except:
             logger.exception('Error making plan files')
             e = traceback.format_exc()
+            logger.info(e)
             error.append(e)
-            nplanfiles1 = 0
-
+            nplanfiles = 0
+            
         logger.info('Writing list of plan files to '+plansdir+str(mjd)+'.plans')
         if nplanfiles>0:
-            dbload_plans(planfiles)  # load plans into db                                                
+            apogeedrp.dbload_plans(planfiles)  # load plans into db                                                
             # Write planfiles to MJD5.plans                                                               
-            dln.writelines(plansdir+str(mjd)+'.plans',[os.path.basename(pf) for pf in planfiles1])
-            planfiles += planfiles1
+            dln.writelines(plansdir+str(mjd)+'.plans',[os.path.basename(pf) for pf in planfiles])
         else:
             dln.writelines(plansdir+str(mjd)+'.plans','')   # write blank file                                
 
@@ -66,5 +74,5 @@ if __name__ == "__main__":
         logger.info(mjd5planfile+' NOT FOUND')
         
     now = datetime.datetime.now()
-    logger.info("End: ",now.strftime("%Y-%m-%d %H:%M:%S"))
-    logger.info("elapsed: ",time.time()-start)
+    logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))
+    logger.info("elapsed: {:.2f} sec".format(time.time()-start))

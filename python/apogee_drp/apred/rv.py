@@ -461,9 +461,11 @@ def doppler_rv(star,apred,telescope,mjd=None,nres=[5,4.25,3.5],windows=None,twea
         apstar = visitcomb(starvisits[gdvisits],starver,load=load,
                            apstar_vers=apstar_vers,apred=apred,nres=nres,logger=logger)
         startab['snr'] = apstar.header['SNR']
+        startab['rv_ccpfwhm'] = apstar.header.get('CCFWHM', np.nan)
+        startab['rv_autofwhm'] = apstar.header.get('AUTOFWHM', np.nan)
     else:
         logger.info('No good visits for '+star)
-    
+        
     # Load information into the database
     dbingest(startab,starvisits)
         
