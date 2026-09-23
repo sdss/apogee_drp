@@ -264,7 +264,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     #md5sumfile = mjddatadir+'/'+str(mjd5)+'.md5sum'
     #dummyfile = mjddatadir+'/'+str(mjd5)+'.dummy'
     
-    if len(apzfiles)==0 and os.path.exists(md5sumfile) and os.path.exists(transfer_donefile):
+    if len(apzfiles)==0 and os.path.exists(transfer_donefile):
         print('No data for MJD5='+str(mjd5)+'. Incrementing to next night.')
         writeNewMJD(observatory,mjd5,apred=apred)        
         return
