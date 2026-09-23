@@ -245,7 +245,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
                       'lco':os.environ['LCO_STAGING_DATA']}[observatory] + '/log/mos/'
     transfer_donefile = os.path.join(staging_logdir,str(mjd5),'transfer-{:d}.done'.format(mjd5))
     #if os.path.exists(mjddatadir)==False:
-    if os.path.exists(mjddatadir)==False or os.path.exist(transfer_donefile)==False:
+    if os.path.exists(mjddatadir)==False or os.path.exists(transfer_donefile)==False:
         print('Data for '+str(mjd5)+' has not finished transferring yet')
         return
 
