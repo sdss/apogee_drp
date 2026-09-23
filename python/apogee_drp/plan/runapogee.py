@@ -239,7 +239,13 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     # Make sure the data is there
     mjddatadir = {'apo':os.environ['APOGEE_DATA_N'],
                   'lco':os.environ['APOGEE_DATA_S']}[observatory] + '/'+str(mjd5)
-    if os.path.exists(mjddatadir)==False:
+    # check "done" file
+    # data/staging/apo/log/mos/61304/transfer-61304.done
+    staging_logdir = {'apo':os.environ['APO_STAGING_DATA'],
+                      'lco':os.environ['LCO_STAGING_DATA']}[observatory] + '/log/mos/'
+    transfer_donefile = os.path.join(staging_logdir,str(mjd5),'transfer-{:d}.done'.format(mjd5))
+    #if os.path.exists(mjddatadir)==False:
+    if os.path.exists(mjddatadir)==False or os.path.exist(transfer_donefile)==False:
         print('Data for '+str(mjd5)+' has not finished transferring yet')
         return
 
@@ -286,6 +292,7 @@ def run_daily(observatory,mjd5=None,apred=None,alloc='sdss-np',
     db = apogeedb.DBSession()
 
     # Check that daily data transfer completed
+    # WE ALREADY CHECKED THIS ABOVE!!
     datadir = {'apo':os.environ['APOGEE_DATA_N'],'lco':os.environ['APOGEE_DATA_S']}[observatory]
     datadir += '/'+str(mjd5)+'/'
     if os.path.exists(datadir)==False:
