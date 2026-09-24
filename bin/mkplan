@@ -12,6 +12,7 @@ import time
 from dlnpyutils import utils as dln
 from apogee_drp.plan import mkplan
 from apogee_drp.plan import apogeedrp
+from apogee_drp.utils import apload
 
 # Main command-line program
 if __name__ == "__main__":
@@ -21,6 +22,7 @@ if __name__ == "__main__":
     parser.add_argument('mjd', type=int, nargs=1, help='MJD to run')
     parser.add_argument('apred', type=str, nargs=1, help='APOGEE Reduction version')
     parser.add_argument('telescope', type=str, nargs=1, help='Telescope')
+    parser.add_argument('--pbskey', type=str, nargs=1, default='', help='Slurm key')
     parser.add_argument('--clobber', action='store_true', help='Overwrite any existing files')
     parser.add_argument('--verbose', action='store_true', help='Verbose output')
     args = parser.parse_args()
@@ -30,6 +32,9 @@ if __name__ == "__main__":
     telescope = args.telescope[0]
     clobber = args.clobber
     verbose = args.verbose
+    pbskey = args.pbskey
+    if isinstance(pbskey,list):
+        pbskey = pbskey[0]
     
     logger = dln.basiclogger()
     
@@ -64,14 +69,19 @@ if __name__ == "__main__":
             
         logger.info('Writing list of plan files to '+plansdir+str(mjd)+'.plans')
         if nplanfiles>0:
-            apogeedrp.dbload_plans(planfiles)  # load plans into db                                                
-            # Write planfiles to MJD5.plans                                                               
-            dln.writelines(plansdir+str(mjd)+'.plans',[os.path.basename(pf) for pf in planfiles])
+            apogeedrp.dbload_plans(planfiles,pbskey)  # load plans into db
+            # Write planfiles to MJD5.plans
+            #dln.writelines(plansdir+str(mjd)+'.plans',[os.path.basename(pf) for pf in planfiles])
+            dln.writelines(plansdir+str(mjd)+'.plans',planfiles)
         else:
             dln.writelines(plansdir+str(mjd)+'.plans','')   # write blank file                                
 
     else:
         logger.info(mjd5planfile+' NOT FOUND')
+
+    # Run the check
+    load = apload.ApLoad(apred=apred,telescope=telescope)
+    chkplan = apogeedrp.check_plan([mjd],load,pbskey,dbload=False,verbose=True,logger=logger)
         
     now = datetime.datetime.now()
     logger.info("End: "+now.strftime("%Y-%m-%d %H:%M:%S"))

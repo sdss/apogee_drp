@@ -582,11 +582,11 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
     else:
         out['fpi'] = 0
     if fps:
-        if configid is None or str(configid)=='': configid=0
+        if configid in [None,'None'] or str(configid)=='': configid=0
         out['configid'] = int(configid)
-        if designid is None or str(designid)=='': designid=0
+        if designid in [None,'None'] or str(designid)=='': designid=0
         out['designid'] = int(designid)
-        if fieldid is None or str(fieldid)=='': fieldid=0
+        if fieldid in [None,'None'] or str(fieldid)=='': fieldid=0
         out['fieldid'] = int(fieldid)
     out['mjd'] = mjd
     out['planfile'] = os.path.basename(planfile)
