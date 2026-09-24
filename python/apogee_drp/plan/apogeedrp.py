@@ -101,7 +101,7 @@ def loadsteps(steps):
     return steps
 
 
-def dbload_plans(planfiles):
+def dbload_plans(planfiles,pbskey=''):
     """  Load plan files into the database."""
     db = apogeedb.DBSession()   # open db session
     nplans = len(planfiles)
@@ -111,8 +111,9 @@ def dbload_plans(planfiles):
     # Loop over the planfiles
     dtype = np.dtype([('planfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),('telescope',(str,10)),
                       ('instrument',(str,20)),('mjd',int),('plate',int),('configid',(str,20)),('designid',(str,20)),
-                      ('fieldid',(str,20)),('fps',bool),('platetype',(str,20))])
+                      ('fieldid',(str,20)),('fps',bool),('platetype',(str,20)),('pbskey',(str,20))])
     plantab = np.zeros(nplans,dtype=dtype)
+    plantab['pbskey'] = pbskey
     for i,planfile in enumerate(planfiles):
         planstr = plan.load(planfile)
         plantab['planfile'][i] = planfile
@@ -510,7 +511,7 @@ def check_ap3d(expinfo,pbskey,apred=None,telescope=None,verbose=False,logger=Non
     success, = np.where(chk3d['success']==True)
     logger.info('%d/%d succeeded' % (len(success),nexp))
     
-    # Inset into the database
+    # Insert into the database
     db.ingest('exposure_status',chk3d)
     db.close()        
 
@@ -640,6 +641,141 @@ def check_calib(expinfo,logfiles,pbskey,apred,verbose=False,logger=None):
     db.close()
 
     return chkcal
+
+
+def check_plan(mjds,load,pbskey,dbload=False,verbose=False,logger=None):
+    """ Check that the plan files got created correctly. """
+
+    if logger is None:
+        logger = dln.basiclogger()
+
+    if verbose==True:
+        logger.info('')
+        logger.info('--------------------')
+        logger.info('Checking PLAN files')
+        logger.info('====================')
+
+    # Check all of the planfiles for each MJD
+        
+    dtypeplan = [('planfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),
+                 ('telescope',(str,10)),('instrument',(str,10)),('mjd',int),
+                 ('plate',int),('configid',(str,20)),('designid',(str,20)),
+                 ('fieldid',(str,20)),('fps',bool),('platetype',(str,50)),
+                 ('pbskey',(str,50)),('hasfiberdata',bool),('checktime',(str,100)),
+                 ('exists',bool),('success',bool)]
+
+    dt = [('mjd',int),('apred_vers',str,20),('telescope',str,10),('instrument',str,10),
+          ('pbskey',str,50),('nplanfiles',int),('success',bool)]
+    chkmjd = np.zeros(len(mjds),dtype=np.dtype(dt))
+    chkmjd['mjd'] = mjds
+    chkmjd['apred_vers'] = load.apred
+    chkmjd['telescope'] = load.telescope
+    chkmjd['instrument'] = load.instrument
+    chkmjd['pbskey'] = pbskey
+    chkmjd['success'] = False
+
+    chkplan = None
+    
+    for i in range(len(mjds)):
+        m = mjds[i]
+        if verbose:
+            logger.info('---------')
+            logger.info('{:3d} {:d}'.format(i+1,m))
+            logger.info('---------')
+        # Check MJD5 plan file
+        mjd5file = os.path.join(os.environ['APOGEEREDUCEPLAN_DIR'],'yaml',load.apred,
+                                load.telescope,load.telescope+'_{:d}.yaml'.format(m))
+        # Load list of plan files
+        planlistfile = os.path.join(os.environ['APOGEE_REDUX'],load.apred,'log',
+                                    load.telescope[:3],'plans','{:d}.plans'.format(m))
+        if os.path.exists(mjd5file)==False or os.path.exists(planlistfile)==False:
+            chkplan['success'][i] = False
+            continue
+        # Load the plan files
+        planfiles = dln.readlines(planlistfile)
+        if len(planfiles)==0:
+            chkplan['success'][i] = True
+            continue
+        calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=m))
+        oplanfiles = planfiles.copy()
+        chkplan1 = np.zeros(len(planfiles),dtype=dtypeplan)
+        chkplan1['planfile'] = planfiles
+        chkplan1['apred_vers'] = load.apred
+        chkplan1['telescope'] = load.telescope
+        chkplan1['instrument'] = load.instrument
+        chkplan1['pbskey'] = pbskey
+        chkplan1['mjd'] = m
+        # Check that the fiber data exists
+        for j in range(len(chkplan1)):
+            planfile = planfiles[j]
+            prefix = os.path.basename(planfile).split('-')[0][2:]
+            if os.path.dirname(planfile)=='':
+                if prefix=='Plan':
+                    plate,mjd = os.path.basename(planfile)[:-5].split('-')[1:]
+                    planfile = load.filename('Plan',plate=plate,mjd=mjd)
+                else:
+                    planfile = os.path.join(calplandir,planfile)
+            planstr = plan.load(planfile,np=True)
+
+            chkplan1['planfile'][j] = planfile
+            chkplan1['plate'][j] = planstr['plateid']
+            chkplan1['designid'][j] = planstr['designid']
+            chkplan1['fieldid'][j] = planstr['fieldid']
+            chkplan1['fps'][j] = planstr['fps']
+            chkplan1['platetype'][j] = planstr['platetype']
+            chkplan1['exists'][j] = os.path.exists(planfile)
+
+            if planstr['platetype']=='normal':
+                platedatafile = os.path.join(os.path.dirname(planfile),
+                                             load.prefix+'PlateData-{:d}-{:d}.fits'.format(planstr['plateid'],m))
+                exists = [os.path.exists(planfile),os.path.exists(platedatafile)]
+                cmt = '  '
+                if exists[0]:
+                    cmt += 'plan exists, '
+                else:
+                    cmt += 'plan not found, '
+                if exists[1]:
+                    cmt += 'fiber data exists'
+                else:
+                    cmt += 'fiber data not found'
+                chkplan1['hasfiberdata'][j] = exists[1]
+                chkplan1['success'][j] = np.all(exists)
+            else:
+                chkplan1['success'][j] = chkplan1['exists'][j]
+                if chkplan1['exists'][j]:
+                    cmt = '  plan exists'
+                else:
+                    cmt = '  plan not found'
+            chkplan1['checktime'][j] = str(datetime.now())
+
+            if verbose:
+                logger.info('{:3d} {:s} {:s}'.format(j+1,os.path.basename(planfile),cmt))
+                
+        # MJD-level success
+        chkmjd['nplanfiles'][i] = len(chkplan1)
+        chkmjd['success'][i] = np.all(chkplan1['success'])
+
+        # Append plan
+        if chkplan is None:
+            chkplan = chkplan1
+        else:
+            chkplan = np.hstack((chkplan,chkplan1))
+
+    # MJD-level success summary
+    if verbose:
+        for i in range(len(chkmjd)):
+            logger.info('{:3d} {:d} {:d} {:s}'.format(i+1,chkmjd['mjd'][i],chkmjd['nplanfiles'][i],str(chkmjd['success'][i])))
+    
+    # Load everything into the database
+    if dbload:
+        db = apogeedb.DBSession()
+        # remove some extra columns
+        remove = {"pbskey", "hasfiberdata", "checktime", "exists", "success"}
+        chkplan = chkplan[[name for name in chkplan.dtype.names if name not in remove]]
+        db.ingest('plan',chkplan)
+        db.close()
+
+    return chkplan
 
 
 def check_apred(expinfo,planfiles,pbskey,verbose=False,dbload=True,logger=None):
@@ -2947,7 +3083,7 @@ def runap3d(load,mjds,slurmpars,clobber=False,logger=None,inputlist=None,sparseg
         #logger.info('PBS key is '+queue.key)
         #queue_wait(queue,sleeptime=60,verbose=True,logger=logger)  # wait for jobs to complete
         # This should check if the ap3d ran okay and puts the status in the database
-        chk3d = check_ap3d(expinfo,key,apred,telescope,verbose=True,logger=logger)
+        chk3d = check_ap3d(expinfo,key,apred,telescope,verbose=False,logger=logger)
     else:
         chk3d = None
         logger.info('No exposures need AP3D processing')
@@ -3480,47 +3616,56 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
     if os.path.exists(logdir)==False:
         os.makedirs(logdir,exist_ok=True)
 
-    # Should we parallelise this?  it can take a while to run for many nights
+    # Parallelize
+    slurmpars1 = slurmpars.copy()
+    if len(mjds)<slurmpars1['ppn']:
+        slurmpars1['cpus'] = len(mjds)
+    slurmpars1['ppn'] = 2   # limit it for now so we don't overload the database
+    slurmpars1['cpus'] = 2   # limit it for now so we don't overload the database
     
-    # Loop over MJDs
-    planfiles = []
-    error = []
-    for m in mjds:
-        logger.info(' ')
-        logger.info('Making plan files for MJD='+str(m))
-        plandicts,planfiles0 = mkplan.make_mjd5_yaml(m,apred,telescope,clobber=clobber,logger=logger)
-        mjd5planfile = os.environ['APOGEEREDUCEPLAN_DIR']+'/yaml/'+apred+'/'+telescope+'/'+telescope+'_'+str(m)+'.yaml'
-        if os.path.exists(mjd5planfile)==False:
-            logger.info(mjd5planfile+' NOT FOUND')
-            continue
-        try:
-            planfiles1 = mkplan.run_mjd5_yaml(mjd5planfile,clobber=clobber,logger=logger)
-            nplanfiles1 = len(planfiles1)
-        except:
-            logger.exception('Error making plan files')
-            e = traceback.format_exc()
-            error.append(e)
-            nplanfiles1 = 0
-            
-        logger.info('Writing list of plan files to '+logdir+str(m)+'.plans')
-        if nplanfiles1>0:
-            dbload_plans(planfiles1)  # load plans into db
-            # Write planfiles to MJD5.plans
-            dln.writelines(logdir+str(m)+'.plans',[os.path.basename(pf) for pf in planfiles1])
-            planfiles += planfiles1
-        else:
-            dln.writelines(logdir+str(m)+'.plans','')   # write blank file
-            
-        # Start entry in daily_status table
-        #daycat = np.zeros(1,dtype=np.dtype([('mjd',int),('telescope',(str,10)),('nplanfiles',int),
-        #                                    ('nexposures',int),('begtime',(str,50)),('success',bool)]))
-        #daycat['mjd'] = m
-        #daycat['telescope'] = telescope
-        #daycat['nplanfiles'] = len(planfiles1)
-        #daycat['nexposures'] = len(expinfo1)
-        #daycat['begtime'] = begtime
-        #daycat['success'] = False
-        #db.ingest('daily_status',daycat)
+    slurmpars1['numpy_num_threads'] = 2
+    # use a maximum of one node for now
+    slurmpars1['nodes'] = 1
+    logger.info('Slurm settings: '+str(slurmpars1))
+    tasks = np.zeros(len(mjds),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
+                                            ('errfile',str,1000),('dir',str,1000)]))
+    tasks = Table(tasks)
+    for i in range(len(tasks)):
+        m = mjds[i]
+        calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=m))
+        logfile = calplandir+'/mkplan-'+str(m)+'_pbs.'+logtime+'.log'
+        errfile = logfile.replace('.log','.err')
+        cmd = 'mkplan %s %s %s' % (m,apred,telescope)
+        if clobber:
+            cmd += ' --clobber'
+        logger.info('mkplan %d : %s' % (i+1,m))
+        logger.info('Command : '+cmd)
+        logger.info('Logfile : '+logfile)
+        tasks['cmd'][i] = cmd
+        tasks['outfile'][i] = logfile
+        tasks['errfile'][i] = errfile
+        tasks['dir'][i] = os.path.dirname(logfile)
+    logger.info('Running mkplan on '+str(len(tasks))+' MJDs')
+    key,jobid = slrm.submit(tasks,label='mkplan',verbose=True,logger=logger,**slurmpars1)
+    slrm.queue_wait('mkplan',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
+    
+    # Get planfile information from the database
+    db = apogeedb.DBSession()
+    whr = "pbskey='"+pbskey+"' and apred_vers='"+load.apred+"' and telescope='"+load.telescope+"'"
+    chkplan = db.query(table='plan',where=whr)
+    db.close()
+    if len(chkplan)>0:
+        planfiles = chkplan['planfile']
+    else:
+        planfiles = []
+    
+    # -- Summary statistics --
+    if chkplan is not None:
+        ind, = np.where(chkplan['success']==True)
+        logger.info('%d/%d makeplan successfully make' % (len(ind),len(chkplan)))
+    else:
+        logger.info('0 planfiles successfully made')
+
 
     return planfiles,error
 
