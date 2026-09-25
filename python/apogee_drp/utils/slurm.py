@@ -227,7 +227,8 @@ def queue_wait(label,key,jobid,sleeptime=60,logger=None,verbose=True):
         logger.info(msg)
         
 def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=True,walltime='336:00:00',
-           notification=False,memory=7500,numpy_num_threads=2,stagger=True,ppn=None,verbose=True,logger=None):
+           notification=False,memory=7500,numpy_num_threads=2,stagger=True,ppn=None,key=None,
+           verbose=True,logger=None):
     """
     Submit a bunch of jobs
 
@@ -263,7 +264,8 @@ def submit(tasks,label,nodes=5,cpus=64,alloc='sdss-np',qos='sdss-fast',shared=Tr
         os.makedirs(slurmdir,exist_ok=True)
 
     # Generate unique key
-    key = genkey()
+    if key is None:
+        key = genkey()
     if verbose:
         logger.info('key = '+key)
     # make sure it doesn't exist yet
