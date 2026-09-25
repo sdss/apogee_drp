@@ -111,27 +111,34 @@ def dbload_plans(planfiles,pbskey=''):
     # Loop over the planfiles
     dtype = np.dtype([('planfile',(str,300)),('apred_vers',(str,20)),('v_apred',(str,50)),('telescope',(str,10)),
                       ('instrument',(str,20)),('mjd',int),('plate',int),('configid',(str,20)),('designid',(str,20)),
-                      ('fieldid',(str,20)),('fps',bool),('platetype',(str,20)),('pbskey',(str,20))])
+                      ('fieldid',(str,20)),('fps',bool),('platetype',(str,20)),('pbskey',(str,20)),('success',bool)])
     plantab = np.zeros(nplans,dtype=dtype)
     plantab['pbskey'] = pbskey
     for i,planfile in enumerate(planfiles):
-        planstr = plan.load(planfile)
-        plantab['planfile'][i] = planfile
-        plantab['apred_vers'][i] = planstr['apred_vers']
-        plantab['v_apred'][i] = gitvers
-        plantab['telescope'][i] = planstr['telescope']
-        plantab['instrument'][i] = planstr['instrument']
-        plantab['mjd'][i] = planstr['mjd']
-        plantab['plate'][i] = planstr['plateid']
-        if planstr['fps']:
-            plantab['configid'] = planstr['configid']
-            plantab['designid'] = planstr['designid']
-            plantab['fieldid'] = planstr['fieldid']
-            plantab['fps'] = True
-        else:
-            plantab['fps'] = False
-        plantab['platetype'][i] = planstr['platetype']
-
+        if os.path.exists(planfile)==False:
+            print(planfile,'not found')
+            continue
+        try:
+            planstr = plan.load(planfile)
+            plantab['planfile'][i] = planfile
+            plantab['apred_vers'][i] = planstr['apred_vers']
+            plantab['v_apred'][i] = gitvers
+            plantab['telescope'][i] = planstr['telescope']
+            plantab['instrument'][i] = planstr['instrument']
+            plantab['mjd'][i] = planstr['mjd']
+            plantab['plate'][i] = planstr['plateid']
+            if planstr['fps']:
+                plantab['configid'] = planstr['configid']
+                plantab['designid'] = planstr['designid']
+                plantab['fieldid'] = planstr['fieldid']
+                plantab['fps'] = True
+            else:
+                plantab['fps'] = False
+            plantab['platetype'][i] = planstr['platetype']
+            plantab['success'][i] = True
+        except:
+            traceback.print_exc()
+            
     # Insert into the database
     db.ingest('plan',plantab)
     db.close()   # close db session
@@ -3630,12 +3637,14 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
     tasks = np.zeros(len(mjds),dtype=np.dtype([('cmd',str,1000),('outfile',str,1000),
                                             ('errfile',str,1000),('dir',str,1000)]))
     tasks = Table(tasks)
+    pbskey = slrm.genkey()
     for i in range(len(tasks)):
         m = mjds[i]
         calplandir = os.path.dirname(load.filename('CalPlan',num=0,mjd=m))
         logfile = calplandir+'/mkplan-'+str(m)+'_pbs.'+logtime+'.log'
         errfile = logfile.replace('.log','.err')
         cmd = 'mkplan %s %s %s' % (m,apred,telescope)
+        cmd += ' --pbskey '+pbskey
         if clobber:
             cmd += ' --clobber'
         logger.info('mkplan %d : %s' % (i+1,m))
@@ -3646,7 +3655,7 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
         tasks['errfile'][i] = errfile
         tasks['dir'][i] = os.path.dirname(logfile)
     logger.info('Running mkplan on '+str(len(tasks))+' MJDs')
-    key,jobid = slrm.submit(tasks,label='mkplan',verbose=True,logger=logger,**slurmpars1)
+    key,jobid = slrm.submit(tasks,label='mkplan',key=pbskey,verbose=True,logger=logger,**slurmpars1)
     slrm.queue_wait('mkplan',key,jobid,sleeptime=60,verbose=True,logger=logger) # wait for jobs to complete
     
     # Get planfile information from the database
@@ -3662,12 +3671,12 @@ def makeplanfiles(load,mjds,slurmpars,clobber=False,logger=None):
     # -- Summary statistics --
     if chkplan is not None:
         ind, = np.where(chkplan['success']==True)
-        logger.info('%d/%d makeplan successfully make' % (len(ind),len(chkplan)))
+        logger.info('%d/%d planfiles successfully made' % (len(ind),len(chkplan)))
     else:
         logger.info('0 planfiles successfully made')
 
 
-    return planfiles,error
+    return planfiles
 
 
 def runapred(load,mjds,slurmpars,clobber=False,logger=None):
@@ -4659,7 +4668,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
         rootLogger.info('6) Making plan files')
         rootLogger.info('====================')
         rootLogger.info('')
-        planfiles,planerror = makeplanfiles(load,mjds,**kws)
+        planfiles = makeplanfiles(load,mjds,**kws)
         
     # 6) Run APRED on all of the plan files (ap3d-ap1dvisit), go through each MJD chronologically
     #--------------------------------------------------------------------------------------------
@@ -4743,4 +4752,4 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
     # Summary email
     summary_email(observatory,apred,mjd,steps,chkmaster=chkmaster,chk3d=chk3d,chkcal=chkcal,
                   planfiles=planfiles,chkexp=chkexp,chkvisit=chkvisit,chkrv=chkrv,logfile=logfile,
-                  slurmpars=slurmpars,clobber=clobber,debug=debug,error=planerror)
+                  slurmpars=slurmpars,clobber=clobber,debug=debug)

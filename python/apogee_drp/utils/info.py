@@ -260,7 +260,7 @@ def getdithergroups(expinfo):
     return expinfo
 
 
-def file_status(
+def file_status_new(
     filenames,
     nprocs=4,
     batch_size=1000,

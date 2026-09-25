@@ -65,7 +65,9 @@ if __name__ == "__main__":
             e = traceback.format_exc()
             logger.info(e)
             error.append(e)
-            nplanfiles = 0
+            # use the initial list of plan files
+            planfiles = planfiles0.copy()
+            nplanfiles = len(planfiles)
             
         logger.info('Writing list of plan files to '+plansdir+str(mjd)+'.plans')
         if nplanfiles>0:
