@@ -1261,14 +1261,14 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         plugmap = 0
         skywave = False
         if 'platetype' in planstr.keys():
-            if planstr['platetype'] == 'cal' or fpiid == 0:
+            #if planstr['platetype'] == 'cal' or fpiid == 0:
+            if planstr['platetype'] == 'cal':
                 skywave = False
             else: 
                 skywave = True 
-        #if 'platetype' in planstr.keys():
-        #    if planstr['platetype'] == 'sky': 
-        #        plugmap = 0
-            
+        if 'platetype' in planstr.keys():
+            if planstr['platetype'] == 'sky': 
+                plugmap = 0
             
         # Load the Plug Plate Map file
         #-----------------------------
@@ -1408,7 +1408,7 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
                     cmd += ['--nosky']
             print(' '.join(cmd))
             sout = subprocess.run(cmd,shell=False)
-     
+            
         # Compress 2D files
         nframes = len(planstr['APEXP']) 
         for j in range(nframes): 
