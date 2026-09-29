@@ -1259,7 +1259,8 @@ def ap2d(planfiles,verbose=False,clobber=False,exttype=4,mapper_data=None,
         plugmap = 0
         skywave = False
         if 'platetype' in planstr.keys():
-            if planstr['platetype'] == 'cal' or fpiid == 0:
+            #if planstr['platetype'] == 'cal' or fpiid == 0:
+            if planstr['platetype'] == 'cal':
                 skywave = False
             else: 
                 skywave = True 
