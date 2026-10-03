@@ -201,9 +201,15 @@ class DBSession(object):
         if host=='operations':
             self.dbhost = 'operations.sdss.org'
             self.dbuser = 'sdss'
+            self.database = 'sdss5db'
         elif host=='pipelines':
             self.dbhost = 'pipelines.sdss.org'
             self.dbuser = ''
+            self.database = 'sdss5db'
+        elif host=='as5':
+            self.dbhost = 'operations.sdss.org'
+            self.dbuser = 'sdss'
+            self.database = 'as5db'
         else:
             raise ValueError(str(host)+' not supported')
         self.open()
@@ -211,7 +217,7 @@ class DBSession(object):
     def open(self):
         """ Open the database connection."""
         connection = pg.connect(user=self.dbuser,host=self.dbhost,
-                                password="",port = "5432",database = "sdss5db")
+                                password="",port = "5432",database=self.database)
         self.connection = connection
 
     def close(self):
