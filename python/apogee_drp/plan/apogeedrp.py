@@ -3720,7 +3720,7 @@ def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None
     slurmpars : dictionary
        Dictionary of slurmpars settings.
     limited : boolean, optional
-       Limit the visits to the maximum mjd.  Default is False.
+       Limit the visits to the maximum mjd or the input value.  Default is False.
     daily : boolean, optional
        Run for the daily processing.  Only include visits up to and including this night.
        Deprecated.  Use limited from now on.
@@ -3762,11 +3762,20 @@ def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None
             raise FileNotFoundError(str(inputlist)+' not found')
         inlist_apogeeids = dln.readlines(inputlist)
         logger.info(str(len(inlist_apogeeids))+' rows loaded from '+str(inputlist))
+
+    # Limited MJD
+    if limited:
+        if limited==True:
+            mjdlimit = mjdstop
+        else:
+            mjdlimit = int(limited)  # MJD limit input
+    else:
+        mjdlimit = None
         
     # Get the visit information from the database
     logger.info('Getting visit information from the database')
     if limited:
-        sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and mjd<=%d and telescope='%s'" % (apred,mjdstop,telescope)        
+        sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and mjd<=%d and telescope='%s'" % (apred,mjdlimit,telescope)
     else:
         sql = "SELECT apogee_id,mjd from apogee_drp.visit WHERE apred_vers='%s' and telescope='%s'" % (apred,telescope)
     db = apogeedb.DBSession()
@@ -3828,16 +3837,15 @@ def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None
     if clobber==False:
         logger.info('Checking which stars need to be run')
         dorv = np.zeros(len(vcat),bool)
+        apstarfiles = []
         for i,obj in enumerate(vcat['apogee_id']):
             # We are going to run RV on ALL the visits
             # Use the MAXMJD in the table, now called MJD
             mjd = vcat['mjd'][i]
             apstarfile = load.filename('Star',obj=obj)
-            if limited:
-                # Want all visits up to this day
-                apstarfile = apstarfile.replace('.fits','-'+str(mjds[0])+'.fits')
-            else:
-                apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
+            # The mjd limit was imposed above in the sql query
+            # just use the mjd of the last visit we are using for this star
+            apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')                
             # Check if file exists already
             dorv[i] = True
             if os.path.exists(apstarfile):
@@ -3865,11 +3873,9 @@ def runrv(load,mjds,slurmpars,limited=False,daily=None,clobber=False,logger=None
             # Use the MAXMJD in the table, now called MJD
             mjd = vcat['mjd'][torun[i]]
             apstarfile = load.filename('Star',obj=obj)
-            if limited:
-                # Want all visits up to this day
-                apstarfile = apstarfile.replace('.fits','-'+str(mjdstop)+'.fits')
-            else:
-                apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
+            # The mjd limit was imposed above in the sql query
+            # just use the mjd of the last visit we are using for this star
+            apstarfile = apstarfile.replace('.fits','-'+str(mjd)+'.fits')
             outdir = os.path.dirname(apstarfile)  # make sure the output directories exist
             if os.path.exists(outdir)==False:
                 os.makedirs(outdir,exist_ok=True)
@@ -4282,7 +4288,7 @@ def run(observatory,apred,mjd=None,steps=None,caltypes=None,rvlimited=False,
        Calibration types to run.  This is used to select a subset of the master cals or daily cals
          to run.  Default is to run all of them.
     rvlimited : boolean, optional
-       Limit the visits for RVs and combination to the input MJD range.  Default is False.
+       Limit the visits for RVs and combination to the input MJD range or the given value.  Default is False.
     clobber : boolean, optional
        Overwrite any existing data.  Default is False.
     fresh : boolean, optional
