@@ -512,7 +512,11 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
             
 
     # Planfile name and directory
-    if cal:
+    if ap2d:
+        planfile = load.filename('2D',num=im1,mjd=mjd)
+        planfile = os.path.dirname(planfile)+'/logs/'+os.path.basename(planfile)
+        planfile = planfile.replace('2D','2DPlan').replace('.fits','.yaml')
+    elif cal:
         planfile = load.filename('CalPlan',mjd=mjd)
     elif dark:
         planfile = load.filename('DarkPlan',mjd=mjd)
@@ -522,10 +526,6 @@ def mkplan(ims,plate=0,mjd=None,psfid=None,fluxid=None,apred=None,telescope=None
         planfile = load.filename('2D',num=im1,mjd=mjd)
         planfile = os.path.dirname(planfile)+'/logs/'+os.path.basename(planfile)
         planfile = planfile.replace('2D','3DPlan').replace('.fits','.yaml')
-    elif ap2d:
-        planfile = load.filename('2D',num=im1,mjd=mjd)
-        planfile = os.path.dirname(planfile)+'/logs/'+os.path.basename(planfile)
-        planfile = planfile.replace('2D','2DPlan').replace('.fits','.yaml')
     elif onem:
         planfile = load.filename('Plan',plate=plate,reduction=names[0],mjd=mjd) 
         if suffix is not None:
