@@ -18,6 +18,7 @@ Introduction
 - `Calibration Files <cal.html>`_
 - `Calibration Observations <cals.html>`_    
 - `Radial Velocities <rv.html>`_
+- `apStar Line-spread Functions <apstar_lsf.html>`_
 - `Fabry-Perot Interferometer <fpi.html>`_
 - `Flux Calibration <fluxcal.html>`_
 - `Quality Flags <flags.html>`_
@@ -29,6 +30,7 @@ Introduction
    :maxdepth: 1
 
    modules
+   apstar_lsf
    
 *****
 Index

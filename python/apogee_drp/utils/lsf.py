@@ -1,8 +1,6 @@
 # APOGEE LSF-relevant utilities
 
 import numpy as np
-import doppler
-from doppler import lsf as doplsf
 from scipy.optimize import curve_fit
 #from .norm import apStarWave
 import math
@@ -30,6 +28,7 @@ def apStarWave() :
 class LsfGHFitter:
     def __init__(self,wave,lsfpars):
         # Make sure lsfpars are at least 2D
+        from doppler import lsf as doplsf
         self.lsfpars = lsfpars
         self.lsf = doplsf.GaussHermiteLsf(wave=wave,pars=lsfpars,lsftype='Gauss-Hermite',xtype='Pixels')
 
@@ -83,6 +82,7 @@ class LsfGHFitter:
 
 def fitghpars(w,comblsf,initparams):
     """ Get LSF GH coefficients for a 2D LSF array."""
+    from doppler import lsf as doplsf
 
     # Initialize the fitter
     fitter = LsfGHFitter(w,initparams)
@@ -134,6 +134,7 @@ def fitghpars(w,comblsf,initparams):
     return pars, perr, lsfpars, lsfmodel
 
 def getcoefficients(x,xcenter,params):
+    from doppler import lsf as doplsf
     nowings = False
     
     # Parse x
@@ -173,6 +174,8 @@ def lsfvisitcomb(visitfiles):
     """
     Get LSF of combined spectrum from multiple apVisit files.
     """
+    import doppler
+    from doppler import lsf as doplsf
 
     nspec = len(visitfiles)
     
@@ -306,3 +309,7 @@ def lsfvisitcomb(visitfiles):
     
     return comblsf,coefs,coeferr,finalpars,lsfmodel
 
+
+# Validated response-based replacement; the development routines above are
+# retained for compatibility and are not invoked by this entry point.
+from .apstar_lsf import derive_apstar_lsf
