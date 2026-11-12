@@ -593,6 +593,16 @@ def build_visit_hdul(
                 dtype=np.float32,
             )
         )
+    # Append the authoritative native model without changing historical HDU indices.
+    from ...utils.native_lsf import visit_global_lsf_hdu
+    global_lsf = visit_global_lsf_hdu([chip.lsffile for chip in chips], fiber_id)
+    if global_lsf is not None:
+        hdus.append(global_lsf)
+        hdus[0].header["SIGREFIN"] = (bool(global_lsf.header.get("SIGREFIN",False)),
+                                     "Native LSF sigma constrained by own peaks")
+        hdus[0].header["LSFGLOB"] = (True, "Exact native model in GLOBAL_LSF extension")
+        hdus[0].header["LSFFILL"] = (bool(global_lsf.header.get("LSFFILL",False)),
+                                    "Native LSF estimated from neighboring fibers")
     return fits.HDUList(hdus)
 
 

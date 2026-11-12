@@ -819,7 +819,8 @@ from apogee_drp.apred import wave
 from apogee_drp.apred import sincint
 
 def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5,4.25,3.5],bconly=False,
-              plot=False,write=True,dorvfit=True,apstar_vers='stars',logger=None):
+              plot=False,write=True,dorvfit=True,apstar_vers='stars',logger=None,
+              fit_lsf=True,lsf_options=None):
     """ Combine multiple visits with individual RVs to rest frame sum
     """
 
@@ -846,6 +847,9 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     starflag,andflag = np.uint64(0),np.uint64(0)
     starmask = bitmask.StarBitMask()
 
+    lsf_visitfiles = [None] * nvisit
+    lsf_shifts = np.full(nvisit, np.nan)
+
     # Loop over each visit and interpolate to final wavelength grid
     pixelmask = bitmask.PixelBitMask()
     if plot : fig,ax=plots.multi(1,2,hspace=0.001)
@@ -862,6 +866,15 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
             apvisit = load.apVisit1m(visit['plate'],visit['mjd'],visit['apogee_id'],load=True)
         else:
             apvisit = load.apVisit(int(visit['plate']),visit['mjd'],visit['fiberid'],load=True)
+
+        if fit_lsf:
+            if load.telescope == 'apo1m':
+                lsf_visitfiles[i] = load.allfile('Visit',plate=visit['plate'],mjd=visit['mjd'],
+                                               reduction=visit['apogee_id'])
+            else:
+                lsf_visitfiles[i] = load.filename('Visit',plate=int(visit['plate']),
+                    mjd=visit['mjd'],fiber=visit['fiberid'],field=visit['field'])
+            lsf_shifts[i] = vrel
 
         # Rest-frame wavelengths transformed to this visit spectra
         w = norm.apStarWave()*(1.0+vrel/cspeed)
@@ -976,10 +989,19 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     apstar.header['CTYPE1'] = ('LOG-LINEAR','Logarithmic wavelength scale in subsequent HDU')
     apstar.header['DC-FLAG'] = 1
 
-    # Pixel-by-pixel weighted average
-    cont = np.median(stack.cont,axis=0)
-    apstar.flux[0,:] = np.sum(stack.flux/stack.err**2,axis=0)/np.sum(1./stack.err**2,axis=0) * cont
-    apstar.err[0,:] =  np.sqrt(1./np.sum(1./stack.err**2,axis=0)) * cont
+    # Use the same finite weights for the spectrum and its LSF. Uncovered
+    # pixels and RV-rejected visits have zero errors in stack and contribute
+    # no weight, rather than an infinite inverse variance.
+    from ..utils.resampled_lsf import inverse_variance_weights
+    lsf_pixel_weights = inverse_variance_weights(stack.err)
+    lsf_pixel_weights[~np.isfinite(stack.flux)] = 0.
+    total_weight = lsf_pixel_weights.sum(axis=0)
+    cont = np.ma.median(np.ma.array(stack.cont, mask=lsf_pixel_weights == 0),axis=0).filled(np.nan)
+    clean_flux = np.where(np.isfinite(stack.flux),stack.flux,0.)
+    apstar.flux[0,:] = np.divide(np.sum(clean_flux*lsf_pixel_weights,axis=0),total_weight,
+        out=np.full(nwave,np.nan),where=total_weight>0) * cont
+    apstar.err[0,:] = np.sqrt(np.divide(1.,total_weight,
+        out=np.full(nwave,np.nan),where=total_weight>0)) * cont
     apstar.bitmask[0,:] = np.bitwise_and.reduce(stack.bitmask,0)
     apstar.cont[0,:] = cont
     
@@ -987,10 +1009,15 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
     if nvisit > 1 :
         # "global" weighted average
         newerr = median_filter(stack.err,[1,100],mode='reflect')
-        bd = np.where((stack.bitmask & pixelmask.getval('SIG_SKYLINE')) > 0)[0]
-        if len(bd) > 0 : newerr[bd[0],bd[1]] *= np.sqrt(100)
-        apstar.flux[1,:] = np.sum(stack.flux/newerr**2,axis=0)/np.sum(1./newerr**2,axis=0) * cont
-        apstar.err[1,:] =  np.sqrt(1./np.sum(1./newerr**2,axis=0)) * cont
+        bd = np.where((stack.bitmask & pixelmask.getval('SIG_SKYLINE')) > 0)
+        if len(bd[0]) > 0 : newerr[bd] *= np.sqrt(100)
+        lsf_global_weights = inverse_variance_weights(newerr)
+        lsf_global_weights[~np.isfinite(stack.flux)] = 0.
+        total_global_weight = lsf_global_weights.sum(axis=0)
+        apstar.flux[1,:] = np.divide(np.sum(clean_flux*lsf_global_weights,axis=0),total_global_weight,
+            out=np.full(nwave,np.nan),where=total_global_weight>0) * cont
+        apstar.err[1,:] = np.sqrt(np.divide(1.,total_global_weight,
+            out=np.full(nwave,np.nan),where=total_global_weight>0)) * cont
 
         # Individual visits
         apstar.flux[2:,:] = stack.flux * stack.cont
@@ -1147,13 +1174,30 @@ def visitcomb(allvisit,starver,load=None, apred='r13',telescope='apo25m',nres=[5
                     apstar.header[k] = 'NaN'   # change to string
 
 
-    # Combined star LSF
-    #apvisitfiles = [load.filename('Visit',plate=v['plate'],mjd=v['mjd'],fiber=v['fiberid'],field=v['field']) for v in allvisit] 
-    #out = lsf.lsfvisitcomb(apvisitfiles)
-    #comblsf,coefs,coeferr,finalpars,lsfmodel = out
-    ## it works but takes a long time to converge!!!
-    #import pdb; pdb.set_trace()
-    
+    # Convert the native calibration through the same sinc resampling, and
+    # use the actual (already persistence/sky-adjusted) combination weights.
+    if fit_lsf:
+        from ..utils.resampled_lsf import build_apstar_lsf_table, inverse_variance_weights
+        # RV-rejected visits retain their row but have no valid LSF.
+        # Their filenames are needed only to preserve list indexing.
+        for i in range(nvisit):
+            if lsf_visitfiles[i] is None:
+                lsf_visitfiles[i] = str(allvisit['file'][i])
+        apstar.lsftab = build_apstar_lsf_table(apstar,lsf_visitfiles,
+            lsf_pixel_weights,
+            global_weights=(lsf_global_weights if nvisit > 1 else None),
+            vrel=lsf_shifts,options=lsf_options)
+        apstar.header['LSFMODE'] = ('GLOBAL-GH','Per-flux-row LSFs in HDU8')
+        apstar.header['LSFVER'] = 1
+        apstar.header['SIGREFIN'] = (bool(np.any(apstar.lsftab['NATIVE_SIGMA_REFINED'])),
+                                     'Some native sigma polynomials refined from peaks')
+        apstar.header['LSFFILL'] = (bool(np.any(apstar.lsftab['NATIVE_FILLED'])),
+                                     'Native LSF includes estimated fibers')
+        lsf_warnings = np.flatnonzero(apstar.lsftab['STATUS'] != 'OK')
+        if len(lsf_warnings):
+            logger.warning('LSF quality flags for flux rows %s; see HDU8 STATUS and MAXERR',
+                           apstar.lsftab['ROW'][lsf_warnings].tolist())
+
     # Do a RV fit just to get a template and normalized spectrum, for plotting
     if dorvfit:
         try:

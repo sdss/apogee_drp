@@ -23,7 +23,11 @@ BAD_BITS = sum(1 << i for i in [0, 1, 2, 3, 4, 5, 6, 7, 14, 15])
 
 
 def edge_profile(lo, hi, center, fields, horder, derivatives=False):
-    """Native-pixel probabilities and analytic derivatives in common log lambda.
+    """Bin probabilities and analytic derivatives in the supplied coordinates.
+
+    Bin edges, centers and widths must share units. The native-pixel fitter
+    supplies pixels; the retained wavelength model supplies its log-wavelength
+    coordinate. This routine performs no coordinate conversion.
 
     H1 and H2 are fixed to zero: independent line centers define the centroid,
     and sigma defines the core width. Remaining fields are sigma, H3..Horder,
@@ -115,7 +119,8 @@ class LineWindows:
         return LineWindows(**values, provenance=self.provenance)
 
 
-def load_calibration_windows(files, saved_fit, fiber=22, halfwidth=16, min_snr=15.0):
+def load_calibration_windows(files, saved_fit=None, fiber=22, halfwidth=16, min_snr=15.0,
+                             line_catalog=None, min_lines_per_chip=6):
     """Select clean, isolated line windows using the original saved line list.
 
     Uses paired flux/error/mask/wavelength arrays in each ap1D file. The saved
@@ -124,8 +129,25 @@ def load_calibration_windows(files, saved_fit, fiber=22, halfwidth=16, min_snr=1
     retain their known separation and the equal-component ratio used by APLSF.
     Unresolved catalog neighbors are rejected; other nearby line cores are masked. Every fourth
     accepted line within each chip is held out of the LSF coefficient fit.
+    min_lines_per_chip defaults to six for calibration fitting. Set it to zero
+    to inspect fewer available lines when validating an adopted fixed model;
+    all individual-line masking, isolation and S/N requirements remain intact.
     """
-    saved = readsav(saved_fit, python_dict=True)["linestr"]
+    if int(min_lines_per_chip) != min_lines_per_chip or min_lines_per_chip < 0:
+        raise ValueError("min_lines_per_chip must be a nonnegative integer")
+    if not 1 <= int(fiber) <= 300:
+        raise ValueError("fiber must be in 1..300")
+    if saved_fit is not None and line_catalog is not None:
+        raise ValueError("Supply saved_fit or line_catalog, not both")
+    if saved_fit is None and line_catalog is None:
+        raise ValueError("Supply a line_catalog or saved_fit")
+    saved = (readsav(saved_fit, python_dict=True)["linestr"]
+             if isinstance(saved_fit, (str, Path)) else saved_fit)
+    if line_catalog is not None:
+        from astropy.table import Table
+        catalog = (Table.read(line_catalog, format="ascii.commented_header")
+                   if isinstance(line_catalog, (str, Path)) else line_catalog)
+        catalog = catalog[np.asarray(catalog["USELSF"]) == 1]
     row = 300 - int(fiber)
     all_values = []
     metadata = []
@@ -135,8 +157,23 @@ def load_calibration_windows(files, saved_fit, fiber=22, halfwidth=16, min_snr=1
             e = np.array(h[2].data[row], float)
             mask = np.array(h[3].data[row], np.uint32)
             wave = np.array(h[4].data[row], float)
+        if not np.isfinite(wave).all() or np.any(wave <= 0):
+            raise ValueError(f"Invalid wavelength solution for chip {chip}, fiber {fiber}")
         logmap = CubicSpline(np.arange(len(wave)), np.log10(wave))
-        records = saved[(saved.FIBER == row) & (saved.CHIP == chip)]
+        if saved is not None:
+            records = saved[(saved.FIBER == row) & (saved.CHIP == chip)]
+        else:
+            # Derive approximate line centers from the measured wavelength solution.
+            # The nonlinear fit subsequently adjusts each center independently.
+            from .apstar_lsf import wave_to_pixel
+            use = (np.asarray(catalog["WAVE"]) >= wave.min()) & (np.asarray(catalog["WAVE"]) <= wave.max())
+            tab = catalog[use]
+            records = np.recarray(len(tab), dtype=[("X", float), ("MODEL_ID", int),
+                ("MODEL_WAVE", float), ("MODEL_DOUBLET", int), ("MODEL_DBL_WSEP", float)])
+            records.X = wave_to_pixel(np.asarray(tab["WAVE"]), wave)
+            for key, col in [("MODEL_ID", "ID"), ("MODEL_WAVE", "WAVE"),
+                             ("MODEL_DOUBLET", "DOUBLET"), ("MODEL_DBL_WSEP", "DBL_WSEP")]:
+                records[key] = tab[col]
         positions = np.array([r.X for r in records], float)
         candidates = []
         for r, pos in zip(records, positions):
@@ -206,10 +243,14 @@ def load_calibration_windows(files, saved_fit, fiber=22, halfwidth=16, min_snr=1
                 chip=chip,
                 selected_lines=len(candidates),
                 held_out=sum(not r["train"] for r in candidates),
+                q_min=float((np.log10(wave.min())-LOGW0)/DLOGW),
+                q_max=float((np.log10(wave.max())-LOGW0)/DLOGW),
             )
         )
-    if any(r["selected_lines"] < 6 for r in metadata):
+    if any(r["selected_lines"] < min_lines_per_chip for r in metadata):
         raise ValueError("Too few isolated, unflagged lines per chip: " + str(metadata))
+    if not all_values:
+        raise ValueError("No usable calibration line windows")
     names = [
         "lo",
         "hi",
@@ -231,7 +272,8 @@ def load_calibration_windows(files, saved_fit, fiber=22, halfwidth=16, min_snr=1
             halfwidth=halfwidth,
             minimum_snr=min_snr,
             files=metadata,
-            saved_fit=str(saved_fit),
+            saved_fit=str(saved_fit) if isinstance(saved_fit, (str, Path)) else None,
+            line_catalog=str(line_catalog) if isinstance(line_catalog, (str, Path)) else "supplied table",
         )
     )
 
@@ -400,9 +442,12 @@ def project_lines(profile, lines, derivatives=None):
     return residual, projected, coefficients
 
 
-def fit_native_polynomial(lines, degree=2, horder=5, max_nfev=160):
-    """Fit measured native line pixels with one shared polynomial LSF.
+def fit_native_polynomial(lines, degree=2, horder=5, max_nfev=160, model_factory=None):
+    """Fit measured line bins with one shared polynomial LSF and free centers.
 
+    The coordinate units come from LineWindows. The default model is the
+    retained wavelength-based NativePolynomialLSF; model_factory supplies the
+    direct native-pixel model without changing the optimization machinery.
     Uses only lines marked train. Validation lines are assessed separately by
     fitting their own center/amplitude/background while keeping the LSF fixed.
     Native uncertainties are not rescaled to force chi-square to unity.
@@ -416,10 +461,16 @@ def fit_native_polynomial(lines, degree=2, horder=5, max_nfev=160):
     coefs[0, 0] = 1.1
     coefs[-2, 0] = 0.04
     coefs[-1, 0] = 4.0
-    model = NativePolynomialLSF(coefs, origin, scale, horder, {})
+    factory = NativePolynomialLSF if model_factory is None else model_factory
+    model = factory(coefs, origin, scale, horder, {})
     nshared = coefs.size
     nline = len(data.centers)
-    qcheck = np.linspace(lines.centers.min(), lines.centers.max(), 80)
+    coverage = lines.provenance.get("files", [])
+    qlo = min([lines.centers.min()] + [r["q_min"] for r in coverage if "q_min" in r])
+    qhi = max([lines.centers.max()] + [r["q_max"] for r in coverage if "q_max" in r])
+    # Constrain the model over complete detector coverage, including regions
+    # between the outermost calibration lines and the detector boundaries.
+    qcheck = np.linspace(qlo, qhi, 160)
     vcheck = cheb.chebvander((qcheck - origin) / scale, degree)
     cache = {}
 

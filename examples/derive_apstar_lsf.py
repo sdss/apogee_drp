@@ -10,10 +10,14 @@ p = argparse.ArgumentParser(description=__doc__)
 p.add_argument("apstar")
 p.add_argument("visits", nargs="+")
 p.add_argument("--output", required=True)
-p.add_argument("--degree", type=int, default=3)
-p.add_argument("--horder", type=int, default=8)
+p.add_argument("--degree", type=int, default=4)
+p.add_argument("--horder", type=int, default=5)
 p.add_argument("--centers", type=int, default=24)
 p.add_argument("--fit-h2", action="store_true")
+p.add_argument(
+    "--polynomial-degrees",
+    help="Per-field degrees, comma separated; default H5 mixed orders",
+)
 p.add_argument(
     "--native-calibration", help="Native polynomial fitted to measured lines (.npz)"
 )
@@ -22,7 +26,38 @@ native = None
 if a.native_calibration:
     from apogee_drp.utils.calibration_lsf import NativePolynomialLSF
 
-    native = NativePolynomialLSF.read(a.native_calibration)
+    if Path(a.native_calibration).suffix == ".npz":
+        import numpy as np
+
+        with np.load(a.native_calibration, allow_pickle=False) as data:
+            pixel_native = int(data["format_version"]) == 2
+        if pixel_native:
+            from apogee_drp.utils.pixel_lsf import NativePixelLSF
+
+            native = NativePixelLSF.read(a.native_calibration)
+        else:
+            native = NativePolynomialLSF.read(a.native_calibration)
+    else:
+        from astropy.io import fits
+        from apogee_drp.utils.native_lsf import NativeLSFCalibration
+
+        if len(a.visits) != 1:
+            raise ValueError(
+                "For multiple visits, embed each native model in its apVisit file"
+            )
+        fiber = int(fits.getheader(a.visits[0])["FIBERID"])
+        native = NativeLSFCalibration.read(a.native_calibration).model(fiber)
+degrees = None
+if a.polynomial_degrees:
+    degrees = [int(s) for s in a.polynomial_degrees.split(",")]
+elif a.degree == 4 and a.horder == 5 and not a.fit_h2:
+    from apogee_drp.utils.resampled_lsf import H5_NATIVE_PIXEL_DEGREES
+
+    degrees = H5_NATIVE_PIXEL_DEGREES
+elif a.degree == 3 and a.horder == 5 and not a.fit_h2:
+    from apogee_drp.utils.resampled_lsf import H5_MIXED_DEGREES
+
+    degrees = H5_MIXED_DEGREES
 start = time.perf_counter()
 result = derive_apstar_lsf(
     a.apstar,
@@ -32,6 +67,7 @@ result = derive_apstar_lsf(
     centers_per_chip=a.centers,
     fit_h2=a.fit_h2,
     native_calibration=native,
+    polynomial_degrees=degrees,
 )
 result.provenance["elapsed_seconds"] = time.perf_counter() - start
 result.save(a.output)

@@ -203,3 +203,4 @@ def test_missing_plugmap_fiber_is_reported_as_skipped(tmp_path):
         visit_directory=tmp_path,
     )
     assert result.skipped_fibers == [297]
+

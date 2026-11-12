@@ -188,6 +188,7 @@ class VisitLSF:
     nres: np.ndarray
     coordinate_scale: np.ndarray
     _inverse: list = field(default_factory=list, init=False, repr=False)
+    native_model: object = field(default=None, init=False, repr=False)
 
     def pixel_at_wave(self, wavelength, chip):
         """Evaluate a cached inverse wavelength solution, preserving pipeline math."""
@@ -220,6 +221,13 @@ class VisitLSF:
         with fits.open(filename) as hdul:
             wave = np.array(hdul[4].data, dtype=float, copy=True)
             pars = np.array(hdul[10].data, dtype=float, copy=True)
+            native_model = None
+            if "GLOBAL_LSF" in hdul:
+                from .native_lsf import NativeLSFCalibration
+                fiber = int(hdul[0].header["FIBERID"])
+                # Check availability before interpreting a failed fiber's NaN
+                # compatibility vector, so callers can mark NO_LSF explicitly.
+                native_model = NativeLSFCalibration.from_hdul(hdul).model(fiber)
         if wave.ndim != 2 or wave.shape[0] != 3 or pars.shape[0] != 3:
             raise ValueError(
                 "Expected three native chips and three LSF parameter arrays"
@@ -241,7 +249,9 @@ class VisitLSF:
             or np.any(resolution <= 0)
         ):
             raise ValueError("Coordinate scales and nres must be finite and positive")
-        return cls(str(filename), wave, pars, float(vrel), resolution, scale)
+        result = cls(str(filename), wave, pars, float(vrel), resolution, scale)
+        result.native_model = native_model
+        return result
 
     def response(self, star_wave, center, output_pixels, chip):
         """Propagate an unresolved line at fractional apStar pixel ``center``.
@@ -355,11 +365,11 @@ class ChipLSF:
             binsize=1.0,
             Xoffset=-self.origin,
             Horder=self.horder,
-            Porder=np.full(self.horder + 1, power.shape[1] - 1),
+            Porder=np.array([np.flatnonzero(row)[-1] if np.any(row) else 0 for row in gh]),
             GHcoefs=gh,
             Wproftype=1,
             nWpar=2,
-            WPorder=np.full(2, power.shape[1] - 1),
+            WPorder=np.array([np.flatnonzero(row)[-1] if np.any(row) else 0 for row in power[-2:]]),
             Wcoefs=power[-2:],
         )
         return pack_parameters(params)
@@ -376,6 +386,7 @@ def fit_chip(
     initial_wing_sigma=5.0,
     max_nfev=150,
     fit_h2=False,
+    polynomial_degrees=None,
 ):
     """Fit smooth, conditioned GH coefficients to propagated reference lines.
 
@@ -389,6 +400,14 @@ def fit_chip(
     origin = float((centers.min() + centers.max()) / 2)
     scale = max(float((centers.max() - centers.min()) / 2), 1.0)
     fields = 1 + 1 + (horder - 2) + 2 + int(fit_h2)
+    if polynomial_degrees is None:
+        polynomial_degrees = np.full(fields, degree)
+    polynomial_degrees = np.asarray(polynomial_degrees)
+    if (polynomial_degrees.shape != (fields,) or
+        np.any(polynomial_degrees != polynomial_degrees.astype(int)) or
+        np.any(polynomial_degrees < 0) or np.any(polynomial_degrees > degree)):
+        raise ValueError("Supply one integer polynomial degree in 0..degree per fitted field")
+    free = (np.arange(degree + 1)[None, :] <= polynomial_degrees[:, None]).ravel()
     coefs = np.zeros((fields, degree + 1))
     coefs[0, 0] = initial_sigma
     coefs[-2, 0] = 0.03
@@ -442,11 +461,16 @@ def fit_chip(
     lower[-1], upper[-1] = -15.0, 15.0
     lower[-1, 0], upper[-1, 0] = 0.3, 20.0
     lower[-2], upper[-2] = -0.5, 0.5
+    def expand(x):
+        full = np.zeros(coefs.size)
+        full[free] = x
+        return full
+
     fitted = least_squares(
-        lambda x: evaluate(x)[0],
-        coefs.ravel(),
-        jac=lambda x: evaluate(x)[1],
-        bounds=(lower.ravel(), upper.ravel()),
+        lambda x: evaluate(expand(x))[0],
+        coefs.ravel()[free],
+        jac=lambda x: evaluate(expand(x))[1][:, free],
+        bounds=(lower.ravel()[free], upper.ravel()[free]),
         x_scale="jac",
         max_nfev=max_nfev,
         ftol=1e-10,
@@ -455,10 +479,12 @@ def fit_chip(
     )
     if not fitted.success:
         raise RuntimeError(f"Chip {chip} LSF fit failed: {fitted.message}")
-    model.coefficients = fitted.x.reshape(coefs.shape)
+    model.coefficients = expand(fitted.x).reshape(coefs.shape)
     error = model.evaluate(centers, offsets) - reference
     model.diagnostics = dict(
         nfev=fitted.nfev,
+        polynomial_degrees=polynomial_degrees.tolist(),
+        fitted_coefficients=int(free.sum()),
         rms=float(np.sqrt(np.mean(error**2))),
         max_absolute=float(np.max(np.abs(error))),
         message=fitted.message,
@@ -473,6 +499,7 @@ def fit_polynomial_profiles(
     initial_sigma=1.15,
     initial_wing_sigma=5.0,
     fit_h2=False,
+    polynomial_degrees=None,
 ):
     """Fit one shared polynomial solution directly to all supplied line profiles.
 
@@ -496,6 +523,7 @@ def fit_polynomial_profiles(
         initial_wing_sigma,
         max_nfev=300,
         fit_h2=fit_h2,
+        polynomial_degrees=polynomial_degrees,
     )
     diagnostics = {}
     for chip, p in profiles.items():
@@ -612,6 +640,9 @@ class ApStarLSF:
                     if np.any(p["GHcoefs"][2] != 0)
                     else [1] + list(range(3, p["Horder"] + 1))
                 )
+                gh_width = max(p["GHcoefs"].shape[1], p["Wcoefs"].shape[1])
+                p["GHcoefs"] = np.pad(p["GHcoefs"], ((0, 0), (0, gh_width-p["GHcoefs"].shape[1])))
+                p["Wcoefs"] = np.pad(p["Wcoefs"], ((0, 0), (0, gh_width-p["Wcoefs"].shape[1])))
                 power = np.vstack(
                     [p["GHcoefs"][0], *[p["GHcoefs"][m] for m in orders], *p["Wcoefs"]]
                 )
@@ -717,6 +748,7 @@ def derive_apstar_lsf(
     centers_per_chip=24,
     fit_h2=False,
     native_calibration=None,
+    polynomial_degrees=None,
 ):
     """Derive output-pixel GH coefficients from an apStar and contributing visits.
 
@@ -740,10 +772,13 @@ def derive_apstar_lsf(
     degree, horder : int
         Output coefficient polynomial degree and highest Hermite order. A single
         shared solution is fitted directly across all chip reference profiles.
-    native_calibration : NativePolynomialLSF, optional
+    native_calibration : NativePolynomialLSF or sequence, optional
         Override the three visit parameter vectors with a shared polynomial
         fitted to measured calibration lines. Native integration and visit
-        resampling remain explicit. Currently limited to a single visit.
+        resampling remain explicit. Supply one model per visit for a multi-visit
+        combination. By default models embedded in GLOBAL_LSF visit extensions
+        are used automatically, falling back to classic pixel coefficients only
+        for visits without that extension.
     fit_h2 : bool, optional
         Include H2 as a free polynomial. Default False fixes it to zero to
         reduce its strong degeneracy with width. Compare validation errors
@@ -753,6 +788,11 @@ def derive_apstar_lsf(
     centers_per_chip : int
         Number of training wavelengths per chip, each at three subpixel phases.
         Additional wavelengths/phases are reserved for validation.
+    polynomial_degrees : sequence of int, optional
+        Degree for each fitted field: sigma, H1, H3..Horder, wing fraction,
+        wing sigma (insert H2 after H1 if fit_h2=True). Each must be in
+        0..degree. None gives the same degree to every field. Exact trailing
+        zeros are omitted from the exported standard packed parameter vector.
 
     Returns
     -------
@@ -766,13 +806,18 @@ def derive_apstar_lsf(
     timings = dict(profile_generation=0.0, nonlinear_fit=0.0)
     if halfwidth < 8 or centers_per_chip < degree + 3:
         raise ValueError("Need halfwidth>=8 and enough centers for training/validation")
-    with fits.open(apstar) as hdul:
-        header = hdul[0].header.copy()
-        wh = hdul[1].header
-        nwave = hdul[1].data.shape[-1]
-        wave = 10 ** (
-            wh["CRVAL1"] + (np.arange(nwave) + 1 - wh.get("CRPIX1", 1)) * wh["CDELT1"]
-        )
+    if hasattr(apstar, "wave") and hasattr(apstar, "header"):
+        header = apstar.header.copy()
+        wave = np.asarray(apstar.wave, float).copy()
+        nwave = len(wave)
+    else:
+        with fits.open(apstar) as hdul:
+            header = hdul[0].header.copy()
+            wh = hdul[1].header
+            nwave = hdul[1].data.shape[-1]
+            wave = 10 ** (
+                wh["CRVAL1"] + (np.arange(nwave) + 1 - wh.get("CRPIX1", 1)) * wh["CDELT1"]
+            )
     nvisit = int(header["NVISITS"])
     if len(visitfiles) != nvisit:
         raise ValueError("Supply every visit listed in this apStar")
@@ -790,18 +835,22 @@ def derive_apstar_lsf(
         index = names.index(name)
         scale = None if coordinate_scales is None else np.asarray(coordinate_scales)[i]
         visits.append(VisitLSF.read(path, header[f"VREL{index+1}"], nres, scale))
-    if native_calibration is not None and nvisit != 1:
-        raise ValueError(
-            "A measured native calibration override currently requires one visit"
-        )
-    if native_calibration is not None:
-        expected_fiber = native_calibration.diagnostics.get("fiber")
-        if expected_fiber is not None:
-            with fits.open(visitfiles[0]) as hdul:
-                if hdul[0].header.get("FIBERID") != expected_fiber:
-                    raise ValueError(
-                        "Native calibration fiber does not match the visit"
-                    )
+    if native_calibration is None:
+        native_models = [v.native_model for v in visits]
+    elif isinstance(native_calibration, (list, tuple)):
+        if len(native_calibration) != nvisit:
+            raise ValueError("Supply one native calibration per visit")
+        native_models = list(native_calibration)
+    else:
+        if nvisit != 1:
+            raise ValueError("Supply one native calibration per visit")
+        native_models = [native_calibration]
+    for visit, model in zip(visits, native_models):
+        if model is not None:
+            expected_fiber = model.diagnostics.get("fiber")
+            with fits.open(visit.filename) as hdul:
+                if expected_fiber is not None and hdul[0].header.get("FIBERID") != expected_fiber:
+                    raise ValueError("Native calibration fiber does not match the visit")
     if weights is None:
         if nvisit != 1:
             raise ValueError("Multiple visits require the actual coaddition weights")
@@ -844,10 +893,10 @@ def derive_apstar_lsf(
                 [
                     (
                         v.response(wave, center, q, chip)
-                        if native_calibration is None
-                        else native_calibration.visit_response(v, wave, center, q, chip)
+                        if native is None
+                        else native.visit_response(v, wave, center, q, chip)
                     )
-                    for v in visits
+                    for v, native in zip(visits, native_models)
                 ]
             )
             w = weights[:, q]
@@ -899,6 +948,7 @@ def derive_apstar_lsf(
         initial_sigma=float(np.median(sigmas)),
         initial_wing_sigma=float(np.median(wing_sigmas)),
         fit_h2=fit_h2,
+        polynomial_degrees=polynomial_degrees,
     )
     timings["nonlinear_fit"] = time.perf_counter() - fit_start
     provenance = dict(
@@ -906,13 +956,13 @@ def derive_apstar_lsf(
         native_evaluator="APOGEE-IDL-compatible",
         native_calibration_source=(
             "visit-coefficients"
-            if native_calibration is None
+            if all(m is None for m in native_models)
             else "measured-global-polynomial"
         ),
         native_calibration_diagnostics=(
-            None if native_calibration is None else native_calibration.diagnostics
+            [None if m is None else m.diagnostics for m in native_models]
         ),
-        apstar_sha256=hashlib.sha256(Path(apstar).read_bytes()).hexdigest(),
+        apstar_sha256=(None if hasattr(apstar, "wave") else hashlib.sha256(Path(apstar).read_bytes()).hexdigest()),
         visit_sha256=[
             hashlib.sha256(Path(v.filename).read_bytes()).hexdigest() for v in visits
         ],
@@ -925,6 +975,7 @@ def derive_apstar_lsf(
         degree=degree,
         horder=horder,
         fit_h2=fit_h2,
+        polynomial_degrees=None if polynomial_degrees is None else list(polynomial_degrees),
         halfwidth=halfwidth,
         diagnostics=diagnostics,
         global_diagnostics=model.diagnostics,
