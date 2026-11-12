@@ -569,12 +569,21 @@ def build_lsf(lsfid, waveid, *, apred="daily", telescope="apo25m",
               wproftype=1, binsize=1.0, nsigfit=8.0,
               nlsfpix=None, max_nfev=2000,
               newwave=False, plot=False, nowait=False, unlock=False,
-              verbose=False):
+              verbose=False, global_fit=True, native_degree=3, native_horder=5,
+              line_catalog=None, on_error="record", native_min_snr=15., native_coordinate="pixel", native_degree_overrides=None, native_fill_missing=None,
+              native_fill_method="local_linear", native_fill_neighbors=5,
+              native_check_filled_peaks=True, native_sigma_options=None):
     """Process lamp frames and build three APOGEE LSF calibration files.
 
-    Set full=True to fit the Doppler-backed Gauss-Hermite model used by
-    the historical IDL calibration. The default retains the faster Gaussian
-    model.
+    The default fits one global native-pixel GH solution per fiber,
+    writes the three standard coefficient/profile products and stores the exact
+    models in GLOBAL_LSF extensions and the fourth registered LSF product.
+    Native fitting uses the airglow catalog, without a prior IDL calibration.
+    With global_fit=False the legacy Gaussian/full=True per-chip paths remain
+    available for comparison. fibers uses physical IDs 1..300 in global mode.
+    on_error='record' retains failures and fills them with flagged local fiber
+    estimates by default; native_fill_missing=False leaves them unavailable.
+    A fit failure for every fiber or a poor compatibility projection aborts writing.
     """
     del fiberid, newwave, plot  # retained for API compatibility
     frames = [int(value) for value in np.atleast_1d(lsfid)]
@@ -613,6 +622,48 @@ def build_lsf(lsfid, waveid, *, apred="daily", telescope="apo25m",
         )
 
         spectra = [load.spectrum(frame) for frame in frames]
+        if global_fit:
+            from tempfile import TemporaryDirectory
+            from ...utils.native_lsf import NativeLSFCalibration
+            # Reuse the same exposure preparation and same-dither summation as
+            # the older builder, but fit all three detectors jointly per fiber.
+            with TemporaryDirectory(prefix="apogee-native-lsf-") as temporary:
+                inputs = []
+                wavefiles = load.filename("Wave", num=waveid, chips=True)
+                for chip, wavefile in zip(CHIPS, wavefiles):
+                    combined = combine_frames([
+                        dict(header=sp[chip]["header"], flux=sp[chip]["flux"].T,
+                             err=sp[chip]["err"].T, mask=sp[chip]["mask"].T)
+                        for sp in spectra])
+                    with fits.open(wavefile) as hdul:
+                        wavelength = np.array(hdul[2].data, float)
+                        wavecoeff = np.array(hdul[1].data, float)
+                        if wavelength.shape[0] != 300 and wavelength.shape[1] == 300:
+                            wavelength = wavelength.T
+                    if wavelength.shape != combined["flux"].shape:
+                        raise ValueError("Wave calibration does not match native extraction")
+                    path = Path(temporary) / f"ap1D-{chip}.fits"
+                    head = combined["header"].copy()
+                    head["APRED"] = str(apred); head["LSFID"] = frames[0]
+                    fits.HDUList([fits.PrimaryHDU(header=head),
+                        fits.ImageHDU(combined["flux"]), fits.ImageHDU(combined["err"]),
+                        fits.ImageHDU(combined["mask"]), fits.ImageHDU(wavelength),
+                        fits.ImageHDU(wavecoeff)]).writeto(path)
+                    inputs.append(path)
+                calibration = NativeLSFCalibration.fit(inputs, fibers=fibers,
+                    degree=native_degree, horder=native_horder,
+                    line_catalog=line_catalog, min_snr=native_min_snr, on_error=on_error,coordinate=native_coordinate,degree_overrides=native_degree_overrides,
+                    fill_missing=native_fill_missing,fill_method=native_fill_method,fill_neighbors=native_fill_neighbors,
+                    check_filled_peaks=native_check_filled_peaks,sigma_options=native_sigma_options)
+                calibration.provenance.update(exposures=frames, waveid=str(waveid),
+                    apred=apred, telescope=telescope)
+                calibration.write(inputs, outputs[:3], global_output=outputs[3],
+                    overwrite=True, halfwidth=16 if nlsfpix is None else int(nlsfpix)//2)
+            if not load.product_exists("lsf", frames[0]):
+                raise RuntimeError("Global native LSF did not create all registered products")
+            if native_coordinate == "pixel":
+                calibration.plot_diagnostics(Path(outputs[3]).with_name(Path(outputs[3]).stem + "-diagnostics.pdf"))
+            return calibration
         all_diagnostics = []
         for chip, output in zip(CHIPS, outputs[:3]):
             # ApLoad uses [pixel, fiber], while the LSF fitter uses
