@@ -325,7 +325,7 @@ def test_build_lsf_writes_three_chips_and_diagnostics(monkeypatch, tmp_path):
     load, lock_calls, process_calls = patch_builder(monkeypatch, tmp_path)
     assert lv.build_lsf(
         [123], 60000, psfid=50, continuum_width=11,
-        verbose=True) is None
+        verbose=True, global_fit=False) is None
     outputs = load.product_files("lsf", 123)
     assert all(Path(filename).is_file() for filename in outputs)
     assert process_calls[0][0] == ([123],)
@@ -348,7 +348,7 @@ def test_build_lsf_existing_short_circuit(monkeypatch, tmp_path, capsys):
     for filename in outputs:
         Path(filename).parent.mkdir(parents=True, exist_ok=True)
         Path(filename).write_bytes(b"existing")
-    assert lv.build_lsf(123, 60000, psfid=50, verbose=True) is None
+    assert lv.build_lsf(123, 60000, psfid=50, verbose=True, global_fit=False) is None
     assert not process_calls
     assert not load.spectrum_calls
     assert not lock_calls
@@ -360,7 +360,7 @@ def test_build_lsf_partial_product_is_rebuilt(monkeypatch, tmp_path):
     outputs = load.product_files("lsf", 123)
     Path(outputs[0]).parent.mkdir(parents=True)
     Path(outputs[0]).write_bytes(b"partial")
-    lv.build_lsf(123, 60000, psfid=50, continuum_width=11)
+    lv.build_lsf(123, 60000, psfid=50, continuum_width=11, global_fit=False)
     assert process_calls
     assert all(Path(filename).is_file() for filename in outputs)
 
@@ -370,14 +370,14 @@ def test_build_lsf_clears_lock_on_failure(monkeypatch, tmp_path):
     monkeypatch.setattr(lv, "fit_lsf_chip",
                         lambda *args, **kwargs: (_ for _ in ()).throw(RuntimeError("fit")))
     with pytest.raises(RuntimeError, match="fit"):
-        lv.build_lsf(123, 60000, psfid=50)
+        lv.build_lsf(123, 60000, psfid=50, global_fit=False)
     assert lock_calls[-1][1] == {"clear": True}
 
 
 def test_build_lsf_nowait_uses_zero_wait(monkeypatch, tmp_path):
     _, lock_calls, _ = patch_builder(monkeypatch, tmp_path)
     lv.build_lsf(
-        123, 60000, psfid=50, continuum_width=11, nowait=True)
+        123, 60000, psfid=50, continuum_width=11, nowait=True, global_fit=False)
     assert lock_calls[0][1]["waittime"] == 0
 
 
@@ -399,7 +399,7 @@ def test_build_lsf_full_uses_gauss_hermite_fitter(monkeypatch, tmp_path):
     monkeypatch.setattr(lv, "fit_gauss_hermite_chip", fit)
     lv.build_lsf(
         123, 60000, psfid=50, full=True,
-        porder=(1, 0), wporder=(0, 0))
+        porder=(1, 0), wporder=(0, 0), global_fit=False)
 
     assert len(calls) == 3
     assert calls[0][1]["porder"] == (1, 0)
